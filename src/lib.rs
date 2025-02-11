@@ -1,11 +1,12 @@
 #![deny(warnings)]
 #![warn(rust_2018_idioms)]
 
-use bytes::{buf::Reader, Buf, Bytes};
+use bytes::Buf;
 use http::HeaderValue;
-use http_body_util::{BodyExt, Empty};
+use http_body_util::BodyExt;
 use hyper::Request;
 use hyper_util::rt::TokioIo;
+use serde::Deserialize;
 use std::collections::HashMap;
 use tokio::net::TcpStream;
 use url::Url;
@@ -61,44 +62,44 @@ impl Deboa {
     pub async fn post(
         self,
         path: &str,
-        data: Option<HashMap<String, String>>,
+        data: Option<HashMap<&str, &str>>,
         config: Option<DeboaConfig>,
-    ) -> Result<Reader<impl Buf>> {
+    ) -> Result<impl Buf> {
         self.any("POST", path, data, config).await
     }
 
     pub async fn get(
         self,
         path: &str,
-        params: Option<HashMap<String, String>>,
+        params: Option<HashMap<&str, &str>>,
         config: Option<DeboaConfig>,
-    ) -> Result<Reader<impl Buf>> {
+    ) -> Result<impl Buf> {
         self.any("GET", path, params, config).await
     }
 
     pub async fn put(
         self,
         path: &str,
-        data: Option<HashMap<String, String>>,
+        data: Option<HashMap<&str, &str>>,
         config: Option<DeboaConfig>,
-    ) -> Result<Reader<impl Buf>> {
+    ) -> Result<impl Buf> {
         self.any("PUT", path, data, config).await
     }
 
     pub async fn patch(
         self,
         path: &str,
-        data: Option<HashMap<String, String>>,
+        data: Option<HashMap<&str, &str>>,
         config: Option<DeboaConfig>,
-    ) -> Result<Reader<impl Buf>> {
+    ) -> Result<impl Buf> {
         self.any("PATCH", path, data, config).await
     }
 
-    pub async fn delete(self, path: &str) -> Result<Reader<impl Buf>> {
+    pub async fn delete(self, path: &str) -> Result<impl Buf> {
         self.any("DELETE", path, None, None).await
     }
 
-    pub async fn head(self, path: &str) -> Result<Reader<impl Buf>> {
+    pub async fn head(self, path: &str) -> Result<impl Buf> {
         self.any("HEAD", path, None, None).await
     }
 
@@ -106,10 +107,19 @@ impl Deboa {
         self,
         method: &str,
         path: &str,
-        _params: Option<HashMap<String, String>>,
+        params: Option<HashMap<&str, &str>>,
         config: Option<DeboaConfig>,
-    ) -> Result<Reader<impl Buf>> {
-        let url = Url::parse(format!("{}{}", self.base_url, path).as_str()).unwrap();
+    ) -> Result<impl Buf> {
+        let mut url = Url::parse(format!("{}{}", self.base_url, path).as_str()).unwrap();
+
+        if method.eq_ignore_ascii_case("GET") {
+            if params.is_some() {
+                let req_params = params.clone();
+                for (key, value) in req_params.unwrap() {
+                    url.query_pairs_mut().append_pair(key, value);
+                }
+            }
+        }
 
         let host = url.host().expect("uri has no host");
         let port = url.port().unwrap_or(80);
@@ -144,12 +154,99 @@ impl Deboa {
             }
         }
 
-        let req = builder.body(Empty::<Bytes>::new())?;
+        let body: String = if method == "GET" {
+            "".to_owned()
+        } else {
+            let req_params = params.clone();
+            serde_json::to_string(&req_params).unwrap()
+        };
+
+        print!("{body}");
+
+        let req = builder.body(body).unwrap();
 
         let res = sender.send_request(req).await?;
 
         let body = res.collect().await?.aggregate();
 
-        Ok(body.reader())
+        Ok(body)
     }
+}
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[tokio::test]
+    async fn test_get() {
+        let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
+        let res = api.get("/posts", None, None).await;
+
+        let posts: std::result::Result<Vec<Post>, serde_json::Error> =
+            serde_json::from_reader(res.unwrap().reader());
+
+        println!("posts: {:#?}", posts);
+
+        assert_eq!(1, 1);
+    }
+
+    #[tokio::test]
+    async fn test_get_by_query() {
+        let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
+
+        let query_map = HashMap::from([("id", "1")]);
+
+        let res = api.get("/comments", Some(query_map), None).await;
+
+        let posts: std::result::Result<Vec<Comment>, serde_json::Error> =
+            serde_json::from_reader(res.unwrap().reader());
+
+        println!("comments: {:#?}", posts);
+
+        assert_eq!(1, 1);
+    }
+
+    #[tokio::test]
+    async fn test_post() {
+        let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
+
+        let body_map = HashMap::from([
+            ("id", "1"),
+            ("title", "Test"),
+            ("body", "Some test to do"),
+            ("userId", "1"),
+        ]);
+
+        let res = api.post("/posts", Some(body_map), None).await;
+
+        let posts: std::result::Result<Post, serde_json::Error> =
+            serde_json::from_reader(res.unwrap().reader());
+
+        println!("posts: {:#?}", posts);
+
+        assert_eq!(1, 1);
+    }
+}
+
+#[derive(Deserialize, Debug)]
+struct Post {
+    #[allow(unused)]
+    id: i32,
+    #[allow(unused)]
+    title: String,
+    #[allow(unused)]
+    body: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct Comment {
+    #[allow(unused)]
+    id: i32,
+    #[allow(unused)]
+    name: String,
+    #[allow(unused)]
+    email: String,
+    #[allow(unused)]
+    body: String,
 }
