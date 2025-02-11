@@ -204,7 +204,7 @@ mod tests {
 
         println!("comments: {:#?}", posts);
 
-        assert_eq!(1, 1);
+        assert_eq!(posts.unwrap().len(), 1);
     }
 
     #[tokio::test]
@@ -219,6 +219,62 @@ mod tests {
         ]);
 
         let res = api.post("/posts", Some(body_map), None).await;
+
+        let posts: std::result::Result<Post, serde_json::Error> =
+            serde_json::from_reader(res.unwrap().reader());
+
+        println!("posts: {:#?}", posts);
+
+        assert_eq!(1, 1);
+    }
+
+    #[tokio::test]
+    async fn test_put() {
+        let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
+
+        let body_map = HashMap::from([
+            ("id", "1"),
+            ("title", "Test"),
+            ("body", "Some test to do"),
+            ("userId", "1"),
+        ]);
+
+        let res = api.put("/posts/1", Some(body_map), None).await;
+
+        let posts: std::result::Result<Post, serde_json::Error> =
+            serde_json::from_reader(res.unwrap().reader());
+
+        println!("posts: {:#?}", posts);
+
+        assert_eq!(1, 1);
+    }
+
+    #[tokio::test]
+    async fn test_patch() {
+        let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
+
+        let body_map = HashMap::from([
+            ("id", "1"),
+            ("title", "Test"),
+            ("body", "Some test to do"),
+            ("userId", "1"),
+        ]);
+
+        let res = api.patch("/posts/1", Some(body_map), None).await;
+
+        let posts: std::result::Result<Post, serde_json::Error> =
+            serde_json::from_reader(res.unwrap().reader());
+
+        println!("posts: {:#?}", posts);
+
+        assert_eq!(1, 1);
+    }
+
+    #[tokio::test]
+    async fn test_delete() {
+        let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
+
+        let res = api.delete("/posts/1").await;
 
         let posts: std::result::Result<Post, serde_json::Error> =
             serde_json::from_reader(res.unwrap().reader());
