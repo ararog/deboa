@@ -151,10 +151,20 @@ impl Deboa {
             .method(method)
             .header(hyper::header::HOST, authority);
         {
-            match builder.headers_mut() {
-                Some(req_headers) => match config {
+            match config {
+                Some(config) => match config.headers {
+                    Some(headers) => {
+                        let req_headers = builder.headers_mut().unwrap();
+                        for (key, value) in headers.into_iter() {
+                            req_headers.insert(key, HeaderValue::from_static(value));
+                        }
+                    }
+                    None => {}
+                },
+                None => match self.config {
                     Some(config) => match config.headers {
                         Some(headers) => {
+                            let req_headers = builder.headers_mut().unwrap();
                             for (key, value) in headers.into_iter() {
                                 req_headers.insert(key, HeaderValue::from_static(value));
                             }
@@ -163,7 +173,6 @@ impl Deboa {
                     },
                     None => {}
                 },
-                None => {}
             }
         }
 
