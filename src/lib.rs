@@ -23,35 +23,39 @@ pub struct Deboa {
 }
 
 impl Deboa {
-    pub fn new(base_url: &'static str, config: Option<DeboaConfig>) -> Deboa {
+    pub fn new(base_url: &'static str, config: Option<DeboaConfig>) -> Self {
         let mut default_headers: HashMap<&'static str, &'static str> = HashMap::from([
             ("Accept", "application/json"),
             ("Content-Type", "application/json"),
         ]);
 
-        if config.is_some() {
-            let mut init_config = config.unwrap();
+        match config {
+            Some(mut config) => {
+                match config.headers {
+                    Some(headers) => {
+                        headers
+                            .into_iter()
+                            .fold(&mut default_headers, |acc, (key, value)| {
+                                acc.insert(key, value);
+                                acc
+                            });
+                    }
+                    None => {}
+                };
 
-            let headers = init_config.headers;
-            if headers.is_some() {
-                for (k, v) in headers.unwrap() {
-                    default_headers.insert(k, v);
+                config.headers = Option::from(default_headers);
+
+                Deboa {
+                    base_url: base_url,
+                    config: Option::from(config),
                 }
             }
-
-            init_config.headers = Option::from(default_headers);
-
-            Deboa {
-                base_url: base_url,
-                config: Option::from(init_config),
-            }
-        } else {
-            Deboa {
+            None => Deboa {
                 base_url: base_url,
                 config: Option::from(DeboaConfig {
                     headers: Option::from(default_headers),
                 }),
-            }
+            },
         }
     }
 
@@ -112,14 +116,19 @@ impl Deboa {
     ) -> Result<impl Buf> {
         let mut url = Url::parse(format!("{}{}", self.base_url, path).as_str()).unwrap();
 
-        if method.eq_ignore_ascii_case("GET") {
-            if params.is_some() {
-                let req_params = params.clone();
-                for (key, value) in req_params.unwrap() {
-                    url.query_pairs_mut().append_pair(key, value);
+        let body = match params {
+            Some(params) => {
+                if method.eq_ignore_ascii_case("GET") {
+                    for (key, value) in params.iter() {
+                        url.query_pairs_mut().append_pair(key, value);
+                    }
+                    "".to_owned()
+                } else {
+                    serde_json::to_string(&params).unwrap()
                 }
             }
-        }
+            None => "".to_owned(),
+        };
 
         let host = url.host().expect("uri has no host");
         let port = url.port().unwrap_or(80);
@@ -142,26 +151,21 @@ impl Deboa {
             .method(method)
             .header(hyper::header::HOST, authority);
         {
-            let req_headers = builder.headers_mut().unwrap();
-            if config.is_some() {
-                let req_config = config.unwrap();
-                if req_config.headers.is_some() {
-                    let headers = req_config.headers.unwrap();
-                    for (key, value) in headers {
-                        req_headers.insert(key, HeaderValue::from_static(value));
-                    }
-                }
+            match builder.headers_mut() {
+                Some(req_headers) => match config {
+                    Some(config) => match config.headers {
+                        Some(headers) => {
+                            for (key, value) in headers.into_iter() {
+                                req_headers.insert(key, HeaderValue::from_static(value));
+                            }
+                        }
+                        None => {}
+                    },
+                    None => {}
+                },
+                None => {}
             }
         }
-
-        let body: String = if method == "GET" {
-            "".to_owned()
-        } else {
-            let req_params = params.clone();
-            serde_json::to_string(&req_params).unwrap()
-        };
-
-        print!("{body}");
 
         let req = builder.body(body).unwrap();
 
@@ -285,7 +289,7 @@ mod tests {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug)]
 struct Post {
     #[allow(unused)]
     id: i32,
@@ -295,7 +299,7 @@ struct Post {
     body: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Default, Deserialize, Debug)]
 struct Comment {
     #[allow(unused)]
     id: i32,
