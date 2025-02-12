@@ -2,7 +2,7 @@
 #![warn(rust_2018_idioms)]
 
 use bytes::Buf;
-use http::HeaderValue;
+use http::{HeaderMap, HeaderValue, StatusCode};
 use http_body_util::BodyExt;
 use hyper::Request;
 use hyper_util::rt::TokioIo;
@@ -15,6 +15,11 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>
 
 pub struct DeboaConfig {
     headers: Option<HashMap<&'static str, &'static str>>,
+}
+
+pub struct DeboaResponse {
+    pub status: StatusCode,
+    pub headers: HeaderMap,
 }
 
 pub struct Deboa {
@@ -68,7 +73,7 @@ impl Deboa {
         path: &str,
         data: Option<HashMap<&str, &str>>,
         config: Option<DeboaConfig>,
-    ) -> Result<impl Buf> {
+    ) -> Result<(DeboaResponse, impl Buf)> {
         self.any("POST", path, data, config).await
     }
 
@@ -77,7 +82,7 @@ impl Deboa {
         path: &str,
         params: Option<HashMap<&str, &str>>,
         config: Option<DeboaConfig>,
-    ) -> Result<impl Buf> {
+    ) -> Result<(DeboaResponse, impl Buf)> {
         self.any("GET", path, params, config).await
     }
 
@@ -86,7 +91,7 @@ impl Deboa {
         path: &str,
         data: Option<HashMap<&str, &str>>,
         config: Option<DeboaConfig>,
-    ) -> Result<impl Buf> {
+    ) -> Result<(DeboaResponse, impl Buf)> {
         self.any("PUT", path, data, config).await
     }
 
@@ -95,15 +100,15 @@ impl Deboa {
         path: &str,
         data: Option<HashMap<&str, &str>>,
         config: Option<DeboaConfig>,
-    ) -> Result<impl Buf> {
+    ) -> Result<(DeboaResponse, impl Buf)> {
         self.any("PATCH", path, data, config).await
     }
 
-    pub async fn delete(self, path: &str) -> Result<impl Buf> {
+    pub async fn delete(self, path: &str) -> Result<(DeboaResponse, impl Buf)> {
         self.any("DELETE", path, None, None).await
     }
 
-    pub async fn head(self, path: &str) -> Result<impl Buf> {
+    pub async fn head(self, path: &str) -> Result<(DeboaResponse, impl Buf)> {
         self.any("HEAD", path, None, None).await
     }
 
@@ -113,7 +118,7 @@ impl Deboa {
         path: &str,
         params: Option<HashMap<&str, &str>>,
         config: Option<DeboaConfig>,
-    ) -> Result<impl Buf> {
+    ) -> Result<(DeboaResponse, impl Buf)> {
         let mut url = Url::parse(format!("{}{}", self.base_url, path).as_str()).unwrap();
 
         let body = match params {
@@ -180,9 +185,14 @@ impl Deboa {
 
         let res = sender.send_request(req).await?;
 
+        let response = DeboaResponse {
+            status: res.status(),
+            headers: res.headers().clone(),
+        };
+
         let body = res.collect().await?.aggregate();
 
-        Ok(body)
+        Ok((response, body))
     }
 }
 
@@ -194,12 +204,27 @@ mod tests {
     #[tokio::test]
     async fn test_get() {
         let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
-        let res = api.get("/posts", None, None).await;
+        let api_call_result = api.get("/posts", None, None).await;
 
-        let posts: std::result::Result<Vec<Post>, serde_json::Error> =
-            serde_json::from_reader(res.unwrap().reader());
+        match api_call_result {
+            Ok((res, buf)) => {
+                let posts: std::result::Result<Vec<Post>, serde_json::Error> =
+                    serde_json::from_reader(buf.reader());
 
-        println!("posts: {:#?}", posts);
+                match posts {
+                    Ok(posts) => {
+                        println!("posts: {:#?}", posts);
+                    }
+                    Err(err) => {
+                        println!("error: {}", err);
+                    }
+                }
+                assert_eq!(res.status, StatusCode::OK);
+            }
+            Err(err) => {
+                println!("error: {}", err);
+            }
+        }
 
         assert_eq!(1, 1);
     }
@@ -210,14 +235,28 @@ mod tests {
 
         let query_map = HashMap::from([("id", "1")]);
 
-        let res = api.get("/comments", Some(query_map), None).await;
+        let api_call_result = api.get("/comments", Some(query_map), None).await;
 
-        let posts: std::result::Result<Vec<Comment>, serde_json::Error> =
-            serde_json::from_reader(res.unwrap().reader());
+        match api_call_result {
+            Ok((res, buf)) => {
+                let comments: std::result::Result<Vec<Comment>, serde_json::Error> =
+                    serde_json::from_reader(buf.reader());
 
-        println!("comments: {:#?}", posts);
-
-        assert_eq!(posts.unwrap().len(), 1);
+                match comments {
+                    Ok(comments) => {
+                        println!("comments: {:#?}", comments);
+                        assert_eq!(comments.len(), 1);
+                    }
+                    Err(err) => {
+                        println!("error: {}", err);
+                    }
+                }
+                assert_eq!(res.status, StatusCode::OK);
+            }
+            Err(err) => {
+                println!("error: {}", err);
+            }
+        }
     }
 
     #[tokio::test]
@@ -231,12 +270,27 @@ mod tests {
             ("userId", "1"),
         ]);
 
-        let res = api.post("/posts", Some(body_map), None).await;
+        let api_call_results = api.post("/posts", Some(body_map), None).await;
 
-        let posts: std::result::Result<Post, serde_json::Error> =
-            serde_json::from_reader(res.unwrap().reader());
+        match api_call_results {
+            Ok((res, buf)) => {
+                let posts: std::result::Result<Post, serde_json::Error> =
+                    serde_json::from_reader(buf.reader());
 
-        println!("posts: {:#?}", posts);
+                match posts {
+                    Ok(posts) => {
+                        println!("posts: {:#?}", posts);
+                    }
+                    Err(err) => {
+                        println!("error: {}", err);
+                    }
+                }
+                assert_eq!(res.status, StatusCode::OK);
+            }
+            Err(err) => {
+                println!("error: {}", err);
+            }
+        }
 
         assert_eq!(1, 1);
     }
@@ -252,12 +306,27 @@ mod tests {
             ("userId", "1"),
         ]);
 
-        let res = api.put("/posts/1", Some(body_map), None).await;
+        let api_call_results = api.put("/posts/1", Some(body_map), None).await;
 
-        let posts: std::result::Result<Post, serde_json::Error> =
-            serde_json::from_reader(res.unwrap().reader());
+        match api_call_results {
+            Ok((res, buf)) => {
+                let posts: std::result::Result<Post, serde_json::Error> =
+                    serde_json::from_reader(buf.reader());
 
-        println!("posts: {:#?}", posts);
+                match posts {
+                    Ok(posts) => {
+                        println!("posts: {:#?}", posts);
+                    }
+                    Err(err) => {
+                        println!("error: {}", err);
+                    }
+                }
+                assert_eq!(res.status, StatusCode::OK);
+            }
+            Err(err) => {
+                println!("error: {}", err);
+            }
+        }
 
         assert_eq!(1, 1);
     }
@@ -273,12 +342,25 @@ mod tests {
             ("userId", "1"),
         ]);
 
-        let res = api.patch("/posts/1", Some(body_map), None).await;
-
-        let posts: std::result::Result<Post, serde_json::Error> =
-            serde_json::from_reader(res.unwrap().reader());
-
-        println!("posts: {:#?}", posts);
+        let api_call_results = api.patch("/posts/1", Some(body_map), None).await;
+        match api_call_results {
+            Ok((res, buf)) => {
+                let posts: std::result::Result<Post, serde_json::Error> =
+                    serde_json::from_reader(buf.reader());
+                match posts {
+                    Ok(posts) => {
+                        println!("posts: {:#?}", posts);
+                    }
+                    Err(err) => {
+                        println!("error: {}", err);
+                    }
+                }
+                assert_eq!(res.status, StatusCode::OK);
+            }
+            Err(err) => {
+                println!("error: {}", err);
+            }
+        }
 
         assert_eq!(1, 1);
     }
@@ -287,12 +369,26 @@ mod tests {
     async fn test_delete() {
         let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
 
-        let res = api.delete("/posts/1").await;
+        let api_call_results = api.delete("/posts/1").await;
 
-        let posts: std::result::Result<Post, serde_json::Error> =
-            serde_json::from_reader(res.unwrap().reader());
-
-        println!("posts: {:#?}", posts);
+        match api_call_results {
+            Ok((res, buf)) => {
+                let posts: std::result::Result<Post, serde_json::Error> =
+                    serde_json::from_reader(buf.reader());
+                match posts {
+                    Ok(posts) => {
+                        println!("posts: {:#?}", posts);
+                    }
+                    Err(err) => {
+                        println!("error: {}", err);
+                    }
+                }
+                assert_eq!(res.status, StatusCode::OK);
+            }
+            Err(err) => {
+                println!("error: {}", err);
+            }
+        }
 
         assert_eq!(1, 1);
     }
