@@ -6,7 +6,7 @@ use http::{HeaderMap, HeaderValue, StatusCode};
 use http_body_util::BodyExt;
 use hyper::Request;
 use hyper_util::rt::TokioIo;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tokio::net::TcpStream;
 use url::Url;
@@ -71,7 +71,7 @@ impl Deboa {
     pub async fn post(
         self,
         path: &str,
-        data: Option<HashMap<&str, &str>>,
+        data: Option<HashMap<&str, RequestValue>>,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
         self.any("POST", path, data, config).await
@@ -80,7 +80,7 @@ impl Deboa {
     pub async fn get(
         self,
         path: &str,
-        params: Option<HashMap<&str, &str>>,
+        params: Option<HashMap<&str, RequestValue>>,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
         self.any("GET", path, params, config).await
@@ -89,7 +89,7 @@ impl Deboa {
     pub async fn put(
         self,
         path: &str,
-        data: Option<HashMap<&str, &str>>,
+        data: Option<HashMap<&str, RequestValue>>,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
         self.any("PUT", path, data, config).await
@@ -98,7 +98,7 @@ impl Deboa {
     pub async fn patch(
         self,
         path: &str,
-        data: Option<HashMap<&str, &str>>,
+        data: Option<HashMap<&str, RequestValue>>,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
         self.any("PATCH", path, data, config).await
@@ -116,7 +116,7 @@ impl Deboa {
         self,
         method: &str,
         path: &str,
-        params: Option<HashMap<&str, &str>>,
+        params: Option<HashMap<&str, RequestValue>>,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
         let mut url = Url::parse(format!("{}{}", self.base_url, path).as_str()).unwrap();
@@ -125,7 +125,8 @@ impl Deboa {
             Some(params) => {
                 if method.eq_ignore_ascii_case("GET") {
                     for (key, value) in params.iter() {
-                        url.query_pairs_mut().append_pair(key, value);
+                        url.query_pairs_mut()
+                            .append_pair(key, value.to_string().as_str());
                     }
                     "".to_owned()
                 } else {
@@ -233,7 +234,7 @@ mod tests {
     async fn test_get_by_query() {
         let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
 
-        let query_map = HashMap::from([("id", "1")]);
+        let query_map = HashMap::from([("id", RequestValue::String("1"))]);
 
         let api_call_result = api.get("/comments", Some(query_map), None).await;
 
@@ -264,10 +265,10 @@ mod tests {
         let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
 
         let body_map = HashMap::from([
-            ("id", "1"),
-            ("title", "Test"),
-            ("body", "Some test to do"),
-            ("userId", "1"),
+            ("id", RequestValue::Int(1)),
+            ("title", RequestValue::String("Test")),
+            ("body", RequestValue::String("Some test to do")),
+            ("userId", RequestValue::Int(1)),
         ]);
 
         let api_call_results = api.post("/posts", Some(body_map), None).await;
@@ -300,10 +301,10 @@ mod tests {
         let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
 
         let body_map = HashMap::from([
-            ("id", "1"),
-            ("title", "Test"),
-            ("body", "Some test to do"),
-            ("userId", "1"),
+            ("id", RequestValue::Int(1)),
+            ("title", RequestValue::String("Test")),
+            ("body", RequestValue::String("Some test to do")),
+            ("userId", RequestValue::Int(1)),
         ]);
 
         let api_call_results = api.put("/posts/1", Some(body_map), None).await;
@@ -336,10 +337,10 @@ mod tests {
         let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
 
         let body_map = HashMap::from([
-            ("id", "1"),
-            ("title", "Test"),
-            ("body", "Some test to do"),
-            ("userId", "1"),
+            ("id", RequestValue::Int(1)),
+            ("title", RequestValue::String("Test")),
+            ("body", RequestValue::String("Some test to do")),
+            ("userId", RequestValue::String("1")),
         ]);
 
         let api_call_results = api.patch("/posts/1", Some(body_map), None).await;
@@ -394,7 +395,32 @@ mod tests {
     }
 }
 
-#[derive(Default, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum RequestValue {
+    Int(i32),
+    String(&'static str),
+}
+
+impl From<RequestValue> for String {
+    fn from(value: RequestValue) -> Self {
+        match value {
+            RequestValue::Int(number) => number.to_string(),
+            RequestValue::String(text) => text.to_owned(),
+        }
+    }
+}
+
+impl ToString for RequestValue {
+    fn to_string(&self) -> String {
+        match self {
+            RequestValue::Int(number) => number.to_string(),
+            RequestValue::String(text) => text.to_string(),
+        }
+    }
+}
+
+#[derive(Default, Serialize, Deserialize, Debug)]
 struct Post {
     #[allow(unused)]
     id: i32,
@@ -404,7 +430,7 @@ struct Post {
     body: String,
 }
 
-#[derive(Default, Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 struct Comment {
     #[allow(unused)]
     id: i32,
