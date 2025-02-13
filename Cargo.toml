@@ -7,15 +7,7 @@ homepage = "https://github.com/ararog/deboa"
 description = "A friendly rest client on top of hyper."
 readme = "README.md"
 license = "GPL-3.0-or-later"
-keywords = [
-  "http",
-  "networking",
-  "client",
-  "fetch",
-  "rest",
-  "internet",
-  "hyper",
-]
+keywords = ["http", "networking", "client", "fetch", "rest-client"]
 
 [dependencies]
 serde = { version = "1.0.217", features = ["derive"] }
