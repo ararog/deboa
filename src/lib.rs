@@ -104,12 +104,44 @@ impl Deboa {
         self.any("PATCH", path, data, config).await
     }
 
-    pub async fn delete(self, path: &str) -> Result<(DeboaResponse, impl Buf)> {
-        self.any("DELETE", path, None, None).await
+    pub async fn delete(
+        self,
+        path: &str,
+        config: Option<DeboaConfig>,
+    ) -> Result<(DeboaResponse, impl Buf)> {
+        self.any("DELETE", path, None, config).await
     }
 
-    pub async fn head(self, path: &str) -> Result<(DeboaResponse, impl Buf)> {
-        self.any("HEAD", path, None, None).await
+    pub async fn head(
+        self,
+        path: &str,
+        config: Option<DeboaConfig>,
+    ) -> Result<(DeboaResponse, impl Buf)> {
+        self.any("HEAD", path, None, config).await
+    }
+
+    pub async fn options(
+        self,
+        path: &str,
+        config: Option<DeboaConfig>,
+    ) -> Result<(DeboaResponse, impl Buf)> {
+        self.any("OPTIONS", path, None, config).await
+    }
+
+    pub async fn trace(
+        self,
+        path: &str,
+        config: Option<DeboaConfig>,
+    ) -> Result<(DeboaResponse, impl Buf)> {
+        self.any("TRACE", path, None, config).await
+    }
+
+    pub async fn connect(
+        self,
+        path: &str,
+        config: Option<DeboaConfig>,
+    ) -> Result<(DeboaResponse, impl Buf)> {
+        self.any("CONNECT", path, None, config).await
     }
 
     pub async fn any(
@@ -370,7 +402,7 @@ mod tests {
     async fn test_delete() {
         let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
 
-        let api_call_results = api.delete("/posts/1").await;
+        let api_call_results = api.delete("/posts/1", None).await;
 
         match api_call_results {
             Ok((res, buf)) => {
