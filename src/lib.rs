@@ -7,7 +7,7 @@ use http_body_util::BodyExt;
 use hyper::Request;
 use hyper_util::rt::TokioIo;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 use tokio::net::TcpStream;
 use url::Url;
 
@@ -36,27 +36,24 @@ impl Deboa {
 
         match config {
             Some(mut config) => {
-                match config.headers {
-                    Some(headers) => {
-                        headers
-                            .into_iter()
-                            .fold(&mut default_headers, |acc, (key, value)| {
-                                acc.insert(key, value);
-                                acc
-                            });
-                    }
-                    None => {}
+                if let Some(headers) = config.headers {
+                    headers
+                        .into_iter()
+                        .fold(&mut default_headers, |acc, (key, value)| {
+                            acc.insert(key, value);
+                            acc
+                        });
                 };
 
                 config.headers = Option::from(default_headers);
 
                 Deboa {
-                    base_url: base_url,
+                    base_url,
                     config: Option::from(config),
                 }
             }
             None => Deboa {
-                base_url: base_url,
+                base_url,
                 config: Option::from(DeboaConfig {
                     headers: Option::from(default_headers),
                 }),
@@ -69,84 +66,84 @@ impl Deboa {
     }
 
     pub async fn post(
-        self,
+        &self,
         path: &str,
         data: Option<HashMap<&str, RequestValue>>,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
-        self.any("POST", path, data, config).await
+        self.any(RequestMethod::POST, path, data, config).await
     }
 
     pub async fn get(
-        self,
+        &self,
         path: &str,
         params: Option<HashMap<&str, RequestValue>>,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
-        self.any("GET", path, params, config).await
+        self.any(RequestMethod::GET, path, params, config).await
     }
 
     pub async fn put(
-        self,
+        &self,
         path: &str,
         data: Option<HashMap<&str, RequestValue>>,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
-        self.any("PUT", path, data, config).await
+        self.any(RequestMethod::PUT, path, data, config).await
     }
 
     pub async fn patch(
-        self,
+        &self,
         path: &str,
         data: Option<HashMap<&str, RequestValue>>,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
-        self.any("PATCH", path, data, config).await
+        self.any(RequestMethod::PATCH, path, data, config).await
     }
 
     pub async fn delete(
-        self,
+        &self,
         path: &str,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
-        self.any("DELETE", path, None, config).await
+        self.any(RequestMethod::DELETE, path, None, config).await
     }
 
     pub async fn head(
-        self,
+        &self,
         path: &str,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
-        self.any("HEAD", path, None, config).await
+        self.any(RequestMethod::HEAD, path, None, config).await
     }
 
     pub async fn options(
-        self,
+        &self,
         path: &str,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
-        self.any("OPTIONS", path, None, config).await
+        self.any(RequestMethod::OPTIONS, path, None, config).await
     }
 
     pub async fn trace(
-        self,
+        &self,
         path: &str,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
-        self.any("TRACE", path, None, config).await
+        self.any(RequestMethod::TRACE, path, None, config).await
     }
 
     pub async fn connect(
-        self,
+        &self,
         path: &str,
         config: Option<DeboaConfig>,
     ) -> Result<(DeboaResponse, impl Buf)> {
-        self.any("CONNECT", path, None, config).await
+        self.any(RequestMethod::CONNECT, path, None, config).await
     }
 
     pub async fn any(
-        self,
-        method: &str,
+        &self,
+        method: RequestMethod,
         path: &str,
         params: Option<HashMap<&str, RequestValue>>,
         config: Option<DeboaConfig>,
@@ -155,7 +152,7 @@ impl Deboa {
 
         let body = match params {
             Some(params) => {
-                if method.eq_ignore_ascii_case("GET") {
+                if method.to_string().eq_ignore_ascii_case("GET") {
                     for (key, value) in params.iter() {
                         url.query_pairs_mut()
                             .append_pair(key, value.to_string().as_str());
@@ -186,31 +183,28 @@ impl Deboa {
 
         let mut builder = Request::builder()
             .uri(url.as_str())
-            .method(method)
+            .method(method.to_string().as_str())
             .header(hyper::header::HOST, authority);
         {
             match config {
-                Some(config) => match config.headers {
-                    Some(headers) => {
+                Some(config) => {
+                    if let Some(headers) = config.headers {
                         let req_headers = builder.headers_mut().unwrap();
                         for (key, value) in headers.into_iter() {
                             req_headers.insert(key, HeaderValue::from_static(value));
                         }
                     }
-                    None => {}
-                },
-                None => match self.config {
-                    Some(config) => match config.headers {
-                        Some(headers) => {
+                }
+                None => {
+                    if let Some(config) = &self.config {
+                        if let Some(headers) = config.headers.clone() {
                             let req_headers = builder.headers_mut().unwrap();
                             for (key, value) in headers.into_iter() {
                                 req_headers.insert(key, HeaderValue::from_static(value));
                             }
                         }
-                        None => {}
-                    },
-                    None => {}
-                },
+                    }
+                }
             }
         }
 
@@ -318,7 +312,7 @@ mod tests {
                         println!("error: {}", err);
                     }
                 }
-                assert_eq!(res.status, StatusCode::OK);
+                assert_eq!(res.status, StatusCode::CREATED);
             }
             Err(err) => {
                 println!("error: {}", err);
@@ -427,6 +421,25 @@ mod tests {
     }
 }
 
+/*
+pub enum DeboaParams {
+    Query(HashMap<&'static str, RequestValue>),
+    Body(),
+}
+*/
+#[derive(Debug, Serialize, Deserialize, strum_macros::Display)]
+pub enum RequestMethod {
+    GET,
+    POST,
+    PUT,
+    PATCH,
+    DELETE,
+    OPTIONS,
+    TRACE,
+    HEAD,
+    CONNECT,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
 pub enum RequestValue {
@@ -443,6 +456,16 @@ impl From<RequestValue> for String {
     }
 }
 
+impl Display for RequestValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RequestValue::Int(number) => write!(f, "{}", number),
+            RequestValue::String(text) => write!(f, "{}", text),
+        }
+    }
+}
+
+/*
 impl ToString for RequestValue {
     fn to_string(&self) -> String {
         match self {
@@ -451,6 +474,7 @@ impl ToString for RequestValue {
         }
     }
 }
+*/
 
 #[derive(Default, Serialize, Deserialize, Debug)]
 struct Post {
