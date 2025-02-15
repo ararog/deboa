@@ -7,7 +7,7 @@ similar to apisauce for nodejs/javascript.
 
 ## Install
 
-deboa = { version = "0.0.1" }
+deboa = { version = "0.0.2" }
 
 ## Usage
 
