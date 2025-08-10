@@ -167,7 +167,7 @@ impl Deboa {
 
         let host = url.host().expect("uri has no host");
         let port = url.port().unwrap_or(80);
-        let addr = format!("{}:{}", host, port);
+        let addr = format!("{host}:{port}");
 
         let stream = TcpStream::connect(addr).await?;
         let io = TokioIo::new(stream);
@@ -175,7 +175,7 @@ impl Deboa {
         let (mut sender, conn) = hyper::client::conn::http1::handshake(io).await?;
         tokio::task::spawn(async move {
             if let Err(err) = conn.await {
-                println!("Connection failed: {:?}", err);
+                println!("Connection failed: {err:?}");
             }
         });
 
@@ -225,7 +225,6 @@ impl Deboa {
 
 #[cfg(test)]
 mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
 
     #[tokio::test]
@@ -240,16 +239,16 @@ mod tests {
 
                 match posts {
                     Ok(posts) => {
-                        println!("posts: {:#?}", posts);
+                        println!("posts: {posts:#?}");
                     }
                     Err(err) => {
-                        println!("error: {}", err);
+                        println!("error: {err}");
                     }
                 }
                 assert_eq!(res.status, StatusCode::OK);
             }
             Err(err) => {
-                println!("error: {}", err);
+                println!("error: {err}");
             }
         }
 
@@ -264,26 +263,26 @@ mod tests {
 
         let api_call_result = api.get("/comments", Some(query_map), None).await;
 
-        match api_call_result {
-            Ok((res, buf)) => {
-                let comments: std::result::Result<Vec<Comment>, serde_json::Error> =
-                    serde_json::from_reader(buf.reader());
+        if let Err(err) = api_call_result {
+            panic!("error: {err}");
+        }
 
-                match comments {
-                    Ok(comments) => {
-                        println!("comments: {:#?}", comments);
-                        assert_eq!(comments.len(), 1);
-                    }
-                    Err(err) => {
-                        println!("error: {}", err);
-                    }
-                }
-                assert_eq!(res.status, StatusCode::OK);
+        let (res, buf) = api_call_result.unwrap();
+
+        let comments: std::result::Result<Vec<Comment>, serde_json::Error> =
+            serde_json::from_reader(buf.reader());
+
+        match comments {
+            Ok(comments) => {
+                println!("comments: {comments:#?}");
+                assert_eq!(comments.len(), 1);
             }
             Err(err) => {
-                println!("error: {}", err);
+                panic!("error: {err}");
             }
         }
+
+        assert_eq!(res.status, StatusCode::OK);
     }
 
     #[tokio::test]
@@ -299,25 +298,25 @@ mod tests {
 
         let api_call_results = api.post("/posts", Some(body_map), None).await;
 
-        match api_call_results {
-            Ok((res, buf)) => {
-                let posts: std::result::Result<Post, serde_json::Error> =
-                    serde_json::from_reader(buf.reader());
+        if let Err(err) = api_call_results {
+            panic!("error: {err}");
+        }
 
-                match posts {
-                    Ok(posts) => {
-                        println!("posts: {:#?}", posts);
-                    }
-                    Err(err) => {
-                        println!("error: {}", err);
-                    }
-                }
-                assert_eq!(res.status, StatusCode::CREATED);
+        let (res, buf) = api_call_results.unwrap();
+
+        let posts: std::result::Result<Post, serde_json::Error> =
+            serde_json::from_reader(buf.reader());
+
+        match posts {
+            Ok(posts) => {
+                println!("posts: {posts:#?}");
             }
             Err(err) => {
-                println!("error: {}", err);
+                panic!("error: {err}");
             }
         }
+
+        assert_eq!(res.status, StatusCode::CREATED);
 
         assert_eq!(1, 1);
     }
@@ -335,27 +334,25 @@ mod tests {
 
         let api_call_results = api.put("/posts/1", Some(body_map), None).await;
 
-        match api_call_results {
-            Ok((res, buf)) => {
-                let posts: std::result::Result<Post, serde_json::Error> =
-                    serde_json::from_reader(buf.reader());
+        if let Err(err) = api_call_results {
+            panic!("error: {err}");
+        }
 
-                match posts {
-                    Ok(posts) => {
-                        println!("posts: {:#?}", posts);
-                    }
-                    Err(err) => {
-                        println!("error: {}", err);
-                    }
-                }
-                assert_eq!(res.status, StatusCode::OK);
+        let (res, buf) = api_call_results.unwrap();
+
+        let posts: std::result::Result<Post, serde_json::Error> =
+            serde_json::from_reader(buf.reader());
+
+        match posts {
+            Ok(posts) => {
+                println!("posts: {posts:#?}");
             }
             Err(err) => {
-                println!("error: {}", err);
+                panic!("error: {err}");
             }
         }
 
-        assert_eq!(1, 1);
+        assert_eq!(res.status, StatusCode::OK);
     }
 
     #[tokio::test]
@@ -370,26 +367,26 @@ mod tests {
         ]);
 
         let api_call_results = api.patch("/posts/1", Some(body_map), None).await;
-        match api_call_results {
-            Ok((res, buf)) => {
-                let posts: std::result::Result<Post, serde_json::Error> =
-                    serde_json::from_reader(buf.reader());
-                match posts {
-                    Ok(posts) => {
-                        println!("posts: {:#?}", posts);
-                    }
-                    Err(err) => {
-                        println!("error: {}", err);
-                    }
-                }
-                assert_eq!(res.status, StatusCode::OK);
+
+        if let Err(err) = api_call_results {
+            panic!("error: {err}");
+        }
+
+        let (res, buf) = api_call_results.unwrap();
+
+        let posts: std::result::Result<Post, serde_json::Error> =
+            serde_json::from_reader(buf.reader());
+
+        match posts {
+            Ok(posts) => {
+                println!("posts: {posts:#?}");
             }
             Err(err) => {
-                println!("error: {}", err);
+                panic!("error: {err}");
             }
         }
 
-        assert_eq!(1, 1);
+        assert_eq!(res.status, StatusCode::OK);
     }
 
     #[tokio::test]
@@ -398,26 +395,25 @@ mod tests {
 
         let api_call_results = api.delete("/posts/1", None).await;
 
-        match api_call_results {
-            Ok((res, buf)) => {
-                let posts: std::result::Result<Post, serde_json::Error> =
-                    serde_json::from_reader(buf.reader());
-                match posts {
-                    Ok(posts) => {
-                        println!("posts: {:#?}", posts);
-                    }
-                    Err(err) => {
-                        println!("error: {}", err);
-                    }
-                }
-                assert_eq!(res.status, StatusCode::OK);
+        if let Err(err) = api_call_results {
+            panic!("error: {err}");
+        }
+
+        let (res, buf) = api_call_results.unwrap();
+
+        let posts: std::result::Result<Post, serde_json::Error> =
+            serde_json::from_reader(buf.reader());
+
+        match posts {
+            Ok(posts) => {
+                println!("posts: {posts:#?}");
             }
             Err(err) => {
-                println!("error: {}", err);
+                panic!("error: {err}");
             }
         }
 
-        assert_eq!(1, 1);
+        assert_eq!(res.status, StatusCode::NO_CONTENT);
     }
 }
 
@@ -459,8 +455,8 @@ impl From<RequestValue> for String {
 impl Display for RequestValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RequestValue::Int(number) => write!(f, "{}", number),
-            RequestValue::String(text) => write!(f, "{}", text),
+            RequestValue::Int(number) => write!(f, "{number}"),
+            RequestValue::String(text) => write!(f, "{text}"),
         }
     }
 }
