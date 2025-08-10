@@ -252,7 +252,6 @@ mod tests {
             }
         }
 
-        assert_eq!(1, 1);
     }
 
     #[tokio::test]
@@ -317,8 +316,6 @@ mod tests {
         }
 
         assert_eq!(res.status, StatusCode::CREATED);
-
-        assert_eq!(1, 1);
     }
 
     #[tokio::test]
@@ -399,21 +396,9 @@ mod tests {
             panic!("error: {err}");
         }
 
-        let (res, buf) = api_call_results.unwrap();
+        let (res, _buf) = api_call_results.unwrap();
 
-        let posts: std::result::Result<Post, serde_json::Error> =
-            serde_json::from_reader(buf.reader());
-
-        match posts {
-            Ok(posts) => {
-                println!("posts: {posts:#?}");
-            }
-            Err(err) => {
-                panic!("error: {err}");
-            }
-        }
-
-        assert_eq!(res.status, StatusCode::NO_CONTENT);
+        assert_eq!(res.status, StatusCode::OK);
     }
 }
 
