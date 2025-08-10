@@ -232,26 +232,24 @@ mod tests {
         let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
         let api_call_result = api.get("/posts", None, None).await;
 
-        match api_call_result {
-            Ok((res, buf)) => {
-                let posts: std::result::Result<Vec<Post>, serde_json::Error> =
-                    serde_json::from_reader(buf.reader());
+        if let Err(err) = api_call_result {
+            panic!("error: {err}");
+        }
 
-                match posts {
-                    Ok(posts) => {
-                        println!("posts: {posts:#?}");
-                    }
-                    Err(err) => {
-                        println!("error: {err}");
-                    }
-                }
-                assert_eq!(res.status, StatusCode::OK);
+        let (res, buf) = api_call_result.unwrap();
+
+        let posts: std::result::Result<Vec<Post>, serde_json::Error> =
+            serde_json::from_reader(buf.reader());
+
+        match posts {
+            Ok(posts) => {
+                println!("posts: {posts:#?}");
             }
             Err(err) => {
                 println!("error: {err}");
             }
         }
-
+        assert_eq!(res.status, StatusCode::OK);
     }
 
     #[tokio::test]
