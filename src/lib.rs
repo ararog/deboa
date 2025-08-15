@@ -323,12 +323,12 @@ mod tests {
     async fn test_put() {
         let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
 
-        let body_map = HashMap::from([
-            ("id", RequestValue::Int(1)),
-            ("title", RequestValue::String("Test")),
-            ("body", RequestValue::String("Some test to do")),
-            ("userId", RequestValue::Int(1)),
-        ]);
+        let body_map = maplit::hashmap! {
+            "id" => RequestValue::Int(1),
+            "title" => RequestValue::String("Test"),
+            "body" => RequestValue::String("Some test to do"),
+            "userId" => RequestValue::Int(1),
+        };
 
         let api_call_results = api.put("/posts/1", Some(body_map), None).await;
 
@@ -357,12 +357,12 @@ mod tests {
     async fn test_patch() {
         let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
 
-        let body_map = HashMap::from([
-            ("id", RequestValue::Int(1)),
-            ("title", RequestValue::String("Test")),
-            ("body", RequestValue::String("Some test to do")),
-            ("userId", RequestValue::String("1")),
-        ]);
+        let body_map = maplit::hashmap! {
+            "id" => RequestValue::Int(1),
+            "title" => RequestValue::String("Test"),
+            "body" => RequestValue::String("Some test to do"),
+            "userId" => RequestValue::String("1"),
+        };
 
         let api_call_results = api.patch("/posts/1", Some(body_map), None).await;
 
