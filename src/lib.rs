@@ -1,18 +1,19 @@
 #![deny(warnings)]
 #![warn(rust_2018_idioms)]
 
-use anyhow::{bail, Result};
-use async_native_tls::TlsStream;
 use bytes::Buf;
 use http::{HeaderMap, HeaderValue, StatusCode};
 use http_body_util::BodyExt;
 use hyper::Request;
+use hyper_util::rt::TokioIo;
 use serde::{Deserialize, Serialize};
-use smol::{io, net::TcpStream, prelude::*};
-use smol_hyper::rt::FuturesIo;
-use std::task::{Context, Poll};
-use std::{collections::HashMap, fmt::Display, pin::Pin};
+use std::{collections::HashMap, fmt::Display};
+use tokio::net::TcpStream;
+
+
 use url::Url;
+
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub struct DeboaConfig {
     headers: Option<HashMap<&'static str, &'static str>>,
@@ -167,37 +168,19 @@ impl Deboa {
         };
 
         let host = url.host().expect("uri has no host");
+        let port = url.port().unwrap_or(80);
+        let addr = format!("{host}:{port}");
 
-        let io = {
+        let stream = TcpStream::connect(addr).await?;
+        let io = TokioIo::new(stream);
 
-            match url.scheme() {
-                "http" => {
-                    let stream = {
-                        let port = url.port().unwrap_or(80);
-                        TcpStream::connect((host.to_string(), port)).await?
-                    };
-                    SmolStream::Plain(stream)
-                }
-                "https" => {
-                    // In case of HTTPS, establish a secure TLS connection first.
-                    let stream = {
-                        let port = url.port().unwrap_or(443);
-                        TcpStream::connect((host.to_string(), port)).await?
-                    };
-                    let stream = async_native_tls::connect(host.to_string(), stream).await?;
-                    SmolStream::Tls(stream)
-                }
-                scheme => bail!("unsupported scheme: {:?}", scheme),
+        let (mut sender, conn) = hyper::client::conn::http1::handshake(io).await?;
+        tokio::task::spawn(async move {
+            if let Err(err) = conn.await {
+                println!("Connection failed: {err:?}");
             }
-        };
+        });
 
-        let (mut sender, conn) = hyper::client::conn::http1::handshake(FuturesIo::new(io)).await?;
-        smol::spawn(async move {
-            if let Err(e) = conn.await {
-                println!("Connection failed: {e:?}");
-            }
-        })
-        .detach();
 
         let authority = url.authority();
 
@@ -240,54 +223,6 @@ impl Deboa {
         let body = res.collect().await?.aggregate();
 
         Ok((response, body))
-    }
-}
-
-enum SmolStream {
-    /// A plain TCP connection.
-    Plain(TcpStream),
-
-    /// A TCP connection secured by TLS.
-    Tls(TlsStream<TcpStream>),
-}
-
-impl AsyncRead for SmolStream {
-    fn poll_read(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &mut [u8],
-    ) -> Poll<io::Result<usize>> {
-        match &mut *self {
-            SmolStream::Plain(stream) => Pin::new(stream).poll_read(cx, buf),
-            SmolStream::Tls(stream) => Pin::new(stream).poll_read(cx, buf),
-        }
-    }
-}
-
-impl AsyncWrite for SmolStream {
-    fn poll_write(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &[u8],
-    ) -> Poll<io::Result<usize>> {
-        match &mut *self {
-            SmolStream::Plain(stream) => Pin::new(stream).poll_write(cx, buf),
-            SmolStream::Tls(stream) => Pin::new(stream).poll_write(cx, buf),
-        }
-    }
-
-    fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        match &mut *self {
-            SmolStream::Plain(stream) => Pin::new(stream).poll_close(cx),
-            SmolStream::Tls(stream) => Pin::new(stream).poll_close(cx),
-        }
-    }
-
-    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        match &mut *self {
-            SmolStream::Plain(stream) => Pin::new(stream).poll_flush(cx),
-            SmolStream::Tls(stream) => Pin::new(stream).poll_flush(cx),
-        }
     }
 }
 
@@ -468,12 +403,6 @@ mod tests {
     }
 }
 
-/*
-pub enum DeboaParams {
-    Query(HashMap<&'static str, RequestValue>),
-    Body(),
-}
-*/
 #[derive(Debug, Serialize, Deserialize, strum_macros::Display)]
 pub enum RequestMethod {
     GET,
@@ -511,17 +440,6 @@ impl Display for RequestValue {
         }
     }
 }
-
-/*
-impl ToString for RequestValue {
-    fn to_string(&self) -> String {
-        match self {
-            RequestValue::Int(number) => number.to_string(),
-            RequestValue::String(text) => text.to_string(),
-        }
-    }
-}
-*/
 
 #[derive(Default, Serialize, Deserialize, Debug)]
 struct Post {
