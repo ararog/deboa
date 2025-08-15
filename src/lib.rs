@@ -47,17 +47,17 @@ impl Deboa {
                         });
                 };
 
-                config.headers = Option::from(default_headers);
+                config.headers = Some(default_headers);
 
                 Deboa {
                     base_url,
-                    config: Option::from(config),
+                    config: Some(config),
                 }
             }
             None => Deboa {
                 base_url,
-                config: Option::from(DeboaConfig {
-                    headers: Option::from(default_headers),
+                config: Some(DeboaConfig {
+                    headers: Some(default_headers),
                 }),
             },
         }
