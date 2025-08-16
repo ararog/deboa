@@ -1,19 +1,17 @@
 #![deny(warnings)]
 #![warn(rust_2018_idioms)]
 
+use anyhow::Result;
 use bytes::Buf;
 use http::{HeaderMap, HeaderValue, StatusCode};
 use http_body_util::BodyExt;
 use hyper::Request;
-use hyper_util::rt::TokioIo;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Display};
-use tokio::net::TcpStream;
 
+pub mod runtimes;
 
 use url::Url;
-
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub struct DeboaConfig {
     headers: Option<HashMap<&'static str, &'static str>>,
@@ -167,20 +165,24 @@ impl Deboa {
             None => "".to_owned(),
         };
 
-        let host = url.host().expect("uri has no host");
-        let port = url.port().unwrap_or(80);
-        let addr = format!("{host}:{port}");
-
-        let stream = TcpStream::connect(addr).await?;
-        let io = TokioIo::new(stream);
-
-        let (mut sender, conn) = hyper::client::conn::http1::handshake(io).await?;
+        #[cfg(feature = "tokio-rt")]
+        let (mut sender, conn) = runtimes::tokio::get_connection(&url).await?;
+        #[cfg(feature = "tokio-rt")]
         tokio::task::spawn(async move {
             if let Err(err) = conn.await {
                 println!("Connection failed: {err:?}");
             }
         });
 
+        #[cfg(feature = "smol-rt")]
+        let (mut sender, conn) = runtimes::smol::get_connection(&url).await?;
+        #[cfg(feature = "smol-rt")]
+        smol::spawn(async move {
+            if let Err(err) = conn.await {
+                println!("Connection failed: {err:?}");
+            }
+        })
+        .detach();
 
         let authority = url.authority();
 
