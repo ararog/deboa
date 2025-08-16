@@ -1,0 +1,20 @@
+#![deny(warnings)]
+#![warn(rust_2018_idioms)]
+
+use anyhow::Result;
+use hyper::client::conn::http1::{Connection, SendRequest};
+use hyper_util::rt::TokioIo;
+use tokio::net::TcpStream;
+use url::Url;
+
+pub async fn get_connection(
+    url: &Url,
+) -> Result<(SendRequest<String>, Connection<TokioIo<TcpStream>, String>)> {
+    let host = url.host().unwrap_or("localhost");
+    let port = url.port().unwrap_or(80);
+    let addr = format!("{host}:{port}");
+
+    let stream = TcpStream::connect(addr).await?;
+    let io = TokioIo::new(stream);
+    Ok(hyper::client::conn::http1::handshake(io).await?)
+}
