@@ -7,7 +7,12 @@ similar to apisauce for nodejs/javascript.
 
 ## Install
 
-deboa = { version = "0.0.2" }
+deboa = { version = "0.0.3" }
+
+## Features
+
+- tokio-rt (default)
+- smol-rt
 
 ## Usage
 
