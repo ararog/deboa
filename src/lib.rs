@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub mod runtimes;
+pub mod tests;
 
 use url::{form_urlencoded, Url};
 
@@ -182,106 +183,6 @@ impl Deboa {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_get() -> Result<()> {
-        let api = Deboa::new("https://jsonplaceholder.typicode.com");
-        let mut response = api.get("/posts").await?;
-
-        let posts = response.json::<Vec<Post>>().await?;
-
-        println!("posts: {posts:#?}");
-
-        assert_eq!(response.status, StatusCode::OK);
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_get_by_query() -> Result<()> {
-        let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-
-        let query_map = HashMap::from([("id", "1")]);
-
-        api.set_query(Some(query_map));
-
-        let mut res = api.get("/comments").await?;
-
-        assert_eq!(res.status, StatusCode::OK);
-
-        let comments = res.json::<Vec<Comment>>().await?;
-
-        println!("comments: {comments:#?}");
-        assert_eq!(comments.len(), 1);
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_post() -> Result<()> {
-        let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-
-        let data = Post {
-            id: 1,
-            title: "Test".to_string(),
-            body: "Some test to do".to_string(),
-        };
-
-        let response = api.set_json(data).post("/posts").await?;
-
-        assert_eq!(response.status, StatusCode::CREATED);
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_put() -> Result<()> {
-        let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-
-        let post = Post {
-            id: 1,
-            title: "Test".to_string(),
-            body: "Some test to do".to_string(),
-        };
-
-        let response = api.set_json(post).put("/posts/1").await?;
-
-        assert_eq!(response.status, StatusCode::OK);
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_patch() -> Result<()> {
-        let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-
-        let data = Post {
-            id: 1,
-            title: "Test".to_string(),
-            body: "Some test to do".to_string(),
-        };
-
-        let response = api.set_json(data).patch("/posts/1").await?;
-
-        assert_eq!(response.status, StatusCode::OK);
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_delete() -> Result<()> {
-        let api = Deboa::new("https://jsonplaceholder.typicode.com");
-
-        let response = api.delete("/posts/1").await?;
-
-        assert_eq!(response.status, StatusCode::OK);
-
-        Ok(())
-    }
-}
 
 #[derive(Debug, Serialize, Deserialize, strum_macros::Display, PartialEq)]
 pub enum RequestMethod {
@@ -294,26 +195,4 @@ pub enum RequestMethod {
     TRACE,
     HEAD,
     CONNECT,
-}
-
-#[derive(Default, Serialize, Deserialize, Debug)]
-struct Post {
-    #[allow(unused)]
-    id: i32,
-    #[allow(unused)]
-    title: String,
-    #[allow(unused)]
-    body: String,
-}
-
-#[derive(Default, Serialize, Deserialize, Debug)]
-struct Comment {
-    #[allow(unused)]
-    id: i32,
-    #[allow(unused)]
-    name: String,
-    #[allow(unused)]
-    email: String,
-    #[allow(unused)]
-    body: String,
 }
