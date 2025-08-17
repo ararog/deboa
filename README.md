@@ -7,7 +7,7 @@ similar to apisauce for nodejs/javascript.
 
 ## Install
 
-deboa = { version = "0.0.3" }
+deboa = { version = "0.0.4" }
 
 ## Features
 
@@ -19,12 +19,9 @@ deboa = { version = "0.0.3" }
 ```
 use deboa::Deboa;
 
-let api = Deboa::new("https://jsonplaceholder.typicode.com", None);
+let api = Deboa::new("https://jsonplaceholder.typicode.com");
 
-let res = api.get("/posts").await;
-
-let posts: std::result::Result<Post, serde_json::Error> =
-    serde_json::from_reader(res.unwrap().reader());
+let posts: Vec<Post> = api.get("/posts").await?.json::<Vec<Post>>().await?;
 
 println!("posts: {:#?}", posts);
 ```
