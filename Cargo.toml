@@ -12,7 +12,7 @@ keywords = ["http", "networking", "client", "fetch", "rest-client"]
 [features]
 default = ["tokio-rt"]
 tokio-rt = []
-smol-rt = ["dep:smol", "dep:smol-hyper", "dep:async-native-tls"]
+smol-rt = ["dep:smol", "dep:smol-hyper", "dep:async-native-tls", "dep:smol-macros", "dep:macro_rules_attribute"]
 
 [dependencies]
 anyhow = "1.0.99"
@@ -29,10 +29,12 @@ hyper-util = { version = "0.1.10", features = [
   "client-legacy",
   "tokio",
 ] }
+macro_rules_attribute = { version = "0.2.2", optional = true }
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.138"
 smol = { version = "2.0.2", optional = true }
 smol-hyper = { version = "0.1.0", optional = true }
+smol-macros = { version = "0.1.1", optional = true }
 strum_macros = "0.27.0"
 tokio = { version = "1.43.0", features = ["full"] }
 url = "2.5.4"

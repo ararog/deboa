@@ -1,7 +1,12 @@
+#[cfg(feature = "tokio-rt")]
+use tokio::runtime::Runtime;
+
+#[cfg(feature = "smol-rt")]
+use criterion::async_executor::SmolExecutor;
+
 use criterion::{criterion_group, criterion_main, Criterion};
 use deboa::Deboa;
 use serde::Serialize;
-use tokio::runtime::Runtime;
 
 #[derive(Serialize)]
 struct Post {
@@ -17,11 +22,14 @@ async fn get_async() {
 
 async fn post_async() {
     let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-    let _ = api.set_json(Post {
-        id: 1,
-        title: "Test".to_string(),
-        body: "Some test to do".to_string(),
-    }).post("/posts").await;
+    let _ = api
+        .set_json(Post {
+            id: 1,
+            title: "Test".to_string(),
+            body: "Some test to do".to_string(),
+        })
+        .post("/posts")
+        .await;
 }
 
 fn deboa(c: &mut Criterion) {
@@ -32,7 +40,7 @@ fn deboa(c: &mut Criterion) {
         });
 
         #[cfg(feature = "smol-rt")]
-        b.to_async(Runtime::new().unwrap()).iter(|| async {
+        b.to_async(SmolExecutor).iter(|| async {
             get_async().await;
         });
     });
@@ -44,7 +52,7 @@ fn deboa(c: &mut Criterion) {
         });
 
         #[cfg(feature = "smol-rt")]
-        b.to_async(Runtime::new().unwrap()).iter(|| async {
+        b.to_async(SmolExecutor).iter(|| async {
             post_async().await;
         });
     });
