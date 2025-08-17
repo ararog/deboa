@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use url::{form_urlencoded, Url};
 
-pub mod runtimes;
-pub mod tests;
+mod runtimes;
+mod tests;
 
 pub struct DeboaConfig {
     headers: Option<HashMap<&'static str, &'static str>>,
