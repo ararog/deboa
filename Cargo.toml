@@ -10,7 +10,7 @@ license = "GPL-3.0-or-later"
 keywords = ["http", "networking", "client", "fetch", "rest-client"]
 
 [features]
-default = ["compio-rt"]
+default = ["tokio-rt"]
 tokio-rt = []
 smol-rt = ["dep:smol", "dep:smol-hyper", "dep:async-native-tls", "dep:smol-macros", "dep:macro_rules_attribute"]
 compio-rt = ["dep:compio", "dep:cyper-core", "dep:async-native-tls"]
@@ -43,12 +43,13 @@ tokio = { version = "1.43.0", features = ["full"] }
 url = "2.5.4"
 
 [dev-dependencies]
-criterion = { version = "0.5", features = [
+criterion = {version = "0.7.1", git = "https://github.com/ararog/criterion.rs.git", branch = "test", features = [
   "html_reports",
   "async",
   "async_smol",
   "async_tokio",
-] }
+  "async_compio",
+]}
 tokio = { version = "1", features = ["full"] }
 smol = "2.0.2"
 
