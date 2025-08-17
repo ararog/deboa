@@ -1,6 +1,6 @@
 [package]
 name = "deboa"
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 repository = "https://github.com/ararog/deboa"
 homepage = "https://github.com/ararog/deboa"
@@ -12,11 +12,11 @@ keywords = ["http", "networking", "client", "fetch", "rest-client"]
 [features]
 default = ["tokio-rt"]
 tokio-rt = []
-smol-rt = ["dep:smol", "dep:smol-hyper"]
+smol-rt = ["dep:smol", "dep:smol-hyper", "dep:async-native-tls"]
 
 [dependencies]
 anyhow = "1.0.99"
-async-native-tls = "0.5.0"
+async-native-tls = { version = "0.5.0", optional = true }
 bytes = "1.2"
 http = "1"
 http-body = "1"
@@ -29,7 +29,6 @@ hyper-util = { version = "0.1.10", features = [
   "client-legacy",
   "tokio",
 ] }
-maplit = "1.0.2"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.138"
 smol = { version = "2.0.2", optional = true }
@@ -37,3 +36,17 @@ smol-hyper = { version = "0.1.0", optional = true }
 strum_macros = "0.27.0"
 tokio = { version = "1.43.0", features = ["full"] }
 url = "2.5.4"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = [
+  "html_reports",
+  "async",
+  "async_smol",
+  "async_tokio",
+] }
+tokio = { version = "1", features = ["full"] }
+smol = "2.0.2"
+
+[[bench]]
+name = "deboa_benchmark"
+harness = false
