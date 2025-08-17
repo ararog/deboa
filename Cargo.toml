@@ -10,14 +10,17 @@ license = "GPL-3.0-or-later"
 keywords = ["http", "networking", "client", "fetch", "rest-client"]
 
 [features]
-default = ["tokio-rt"]
+default = ["compio-rt"]
 tokio-rt = []
 smol-rt = ["dep:smol", "dep:smol-hyper", "dep:async-native-tls", "dep:smol-macros", "dep:macro_rules_attribute"]
+compio-rt = ["dep:compio", "dep:cyper-core", "dep:async-native-tls"]
 
 [dependencies]
 anyhow = "1.0.99"
 async-native-tls = { version = "0.5.0", optional = true }
 bytes = "1.2"
+compio = { version = "0.15.0", optional = true, features = ["macros"] }
+cyper-core = { version = "0.4.0", optional = true, features = ["client"] }
 http = "1"
 http-body = "1"
 http-body-util = "0.1"

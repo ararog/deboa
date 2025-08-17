@@ -66,6 +66,12 @@ pub mod deboa_tests {
         let _ = do_get().await;
     }
 
+    #[cfg(feature = "compio-rt")]
+    #[compio::test]
+    async fn test_get() {
+        let _ = do_get().await;
+    }
+
     //
     // GET BY QUERY
     //
@@ -113,6 +119,12 @@ pub mod deboa_tests {
         let _ = do_get_by_query().await;
     }
 
+    #[cfg(feature = "compio-rt")]
+    #[compio::test]
+    async fn test_get_by_query() {
+        let _ = do_get_by_query().await;
+    }
+
     //
     // POST
     //
@@ -142,6 +154,12 @@ pub mod deboa_tests {
 
     #[cfg(feature = "smol-rt")]
     #[apply(test!)]
+    async fn test_post() {
+        let _ = do_post().await;
+    }
+
+    #[cfg(feature = "compio-rt")]
+    #[compio::test]
     async fn test_post() {
         let _ = do_post().await;
     }
@@ -179,6 +197,12 @@ pub mod deboa_tests {
         let _ = do_put().await;
     }
 
+    #[cfg(feature = "compio-rt")]
+    #[compio::test]
+    async fn test_put() {
+        let _ = do_put().await;
+    }
+
     //
     // PATCH
     //
@@ -212,6 +236,12 @@ pub mod deboa_tests {
         let _ = do_patch().await;
     }
 
+    #[cfg(feature = "compio-rt")]
+    #[compio::test]
+    async fn test_patch() {
+        let _ = do_patch().await;
+    }
+
     //
     // DELETE
     //
@@ -235,6 +265,12 @@ pub mod deboa_tests {
 
     #[cfg(feature = "smol-rt")]
     #[apply(test!)]
+    async fn test_delete() {
+        let _ = do_delete().await;
+    }
+
+    #[cfg(feature = "compio-rt")]
+    #[compio::test]
     async fn test_delete() {
         let _ = do_delete().await;
     }

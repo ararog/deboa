@@ -8,11 +8,10 @@ use http_body_util::BodyExt;
 use hyper::Request;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use url::{form_urlencoded, Url};
 
 pub mod runtimes;
 pub mod tests;
-
-use url::{form_urlencoded, Url};
 
 pub struct DeboaConfig {
     headers: Option<HashMap<&'static str, &'static str>>,
@@ -148,6 +147,16 @@ impl Deboa {
         })
         .detach();
 
+        #[cfg(feature = "compio-rt")]
+        let (mut sender, conn) = runtimes::compio::get_connection(&url).await?;
+        #[cfg(feature = "compio-rt")]
+        compio::runtime::spawn(async move {
+            if let Err(err) = conn.await {
+                println!("Connection failed: {err:?}");
+            }
+        })
+        .detach();
+
         let authority = url.authority();
 
         let mut builder = Request::builder()
@@ -182,7 +191,6 @@ impl Deboa {
         Ok(response)
     }
 }
-
 
 #[derive(Debug, Serialize, Deserialize, strum_macros::Display, PartialEq)]
 pub enum RequestMethod {
