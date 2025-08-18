@@ -1,20 +1,30 @@
 #![deny(warnings)]
 #![warn(rust_2018_idioms)]
 
+#[cfg(any(
+    all(feature = "tokio-rt", feature = "smol-rt"),
+    all(feature = "tokio-rt", feature = "compio-rt"),
+    all(feature = "smol-rt", feature = "compio-rt")
+))]
+compile_error!("Only one runtime feature can be enabled at a time.");
+
 use anyhow::Result;
 use bytes::Buf;
-use http::{HeaderMap, HeaderValue, StatusCode};
+use http::{header, HeaderMap, HeaderName, HeaderValue, StatusCode};
 use http_body_util::BodyExt;
 use hyper::Request;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use url::{form_urlencoded, Url};
 
+use crate::request::RequestMethod;
+
 mod runtimes;
 mod tests;
+mod request;
 
 pub struct DeboaConfig {
-    headers: Option<HashMap<&'static str, &'static str>>,
+    headers: Option<HashMap<HeaderName, &'static str>>,
 }
 
 pub struct DeboaResponse {
@@ -44,9 +54,9 @@ pub struct Deboa {
 
 impl Deboa {
     pub fn new(base_url: &'static str) -> Self {
-        let default_headers: HashMap<&'static str, &'static str> = HashMap::from([
-            ("Accept", "application/json"),
-            ("Content-Type", "application/json"),
+        let default_headers: HashMap<HeaderName, &'static str> = HashMap::from([
+            (header::ACCEPT, "application/json"),
+            (header::CONTENT_TYPE, "application/json"),
         ]);
 
         Deboa {
@@ -129,33 +139,45 @@ impl Deboa {
         }
 
         #[cfg(feature = "tokio-rt")]
-        let (mut sender, conn) = runtimes::tokio::get_connection(&url).await?;
-        #[cfg(feature = "tokio-rt")]
-        tokio::task::spawn(async move {
-            if let Err(err) = conn.await {
-                println!("Connection failed: {err:?}");
-            }
-        });
+        let mut sender = {
+            let (sender, conn) = runtimes::tokio::get_connection(&url).await?;
+
+            tokio::task::spawn(async move {
+                if let Err(err) = conn.await {
+                    println!("Connection failed: {err:?}");
+                }
+            });
+            
+            sender
+        };
 
         #[cfg(feature = "smol-rt")]
-        let (mut sender, conn) = runtimes::smol::get_connection(&url).await?;
-        #[cfg(feature = "smol-rt")]
-        smol::spawn(async move {
-            if let Err(err) = conn.await {
-                println!("Connection failed: {err:?}");
-            }
-        })
-        .detach();
+        let mut sender = {
+            let (sender, conn) = runtimes::smol::get_connection(&url).await?;
+            
+            smol::spawn(async move {
+                if let Err(err) = conn.await {
+                    println!("Connection failed: {err:?}");
+                }
+            })
+            .detach();
+
+            sender
+        };
 
         #[cfg(feature = "compio-rt")]
-        let (mut sender, conn) = runtimes::compio::get_connection(&url).await?;
-        #[cfg(feature = "compio-rt")]
-        compio::runtime::spawn(async move {
-            if let Err(err) = conn.await {
-                println!("Connection failed: {err:?}");
-            }
-        })
-        .detach();
+        let mut sender = {
+            let (sender, conn) = runtimes::compio::get_connection(&url).await?;
+
+            compio::runtime::spawn(async move {
+                if let Err(err) = conn.await {
+                    println!("Connection failed: {err:?}");
+                }
+            })
+            .detach();
+
+            sender
+        };
 
         let authority = url.authority();
 
@@ -168,7 +190,7 @@ impl Deboa {
             if let Some(config) = &self.config {
                 if let Some(headers) = &config.headers {
                     headers.iter().fold(req_headers, |acc, (key, value)| {
-                        acc.insert(*key, HeaderValue::from_static(value));
+                        acc.insert(key, HeaderValue::from_static(&value));
                         acc
                     });
                 }
@@ -190,17 +212,4 @@ impl Deboa {
 
         Ok(response)
     }
-}
-
-#[derive(Debug, Serialize, Deserialize, strum_macros::Display, PartialEq)]
-pub enum RequestMethod {
-    GET,
-    POST,
-    PUT,
-    PATCH,
-    DELETE,
-    OPTIONS,
-    TRACE,
-    HEAD,
-    CONNECT,
 }
