@@ -1,13 +1,14 @@
 #[cfg(test)]
 pub mod deboa_tests {
     use crate::Deboa;
-    use crate::StatusCode;
-
+    use http::StatusCode;
     use anyhow::Result;
+    #[cfg(feature = "json")]
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
 
     #[derive(Default, Serialize, Deserialize, Debug)]
+    #[cfg(feature = "json")]
     struct Post {
         #[allow(unused)]
         id: i32,
@@ -18,6 +19,7 @@ pub mod deboa_tests {
     }
 
     #[derive(Default, Serialize, Deserialize, Debug)]
+    #[cfg(feature = "json")]
     struct Comment {
         #[allow(unused)]
         id: i32,
@@ -83,7 +85,11 @@ pub mod deboa_tests {
 
         api.set_query(Some(query_map));
 
+        #[cfg(feature = "json")]
         let mut response = api.get("/comments").await?;
+
+        #[cfg(not(feature = "json"))]
+        let response = api.get("/comments").await?;
 
         assert_eq!(
             response.status,
@@ -93,8 +99,10 @@ pub mod deboa_tests {
             StatusCode::OK.as_u16()
         );
 
+        #[cfg(feature = "json")]
         let comments = response.json::<Vec<Comment>>().await?;
 
+        #[cfg(feature = "json")]
         assert_eq!(
             comments.len(),
             1,
@@ -130,15 +138,24 @@ pub mod deboa_tests {
     //
 
     async fn do_post() -> Result<()> {
+        #[cfg(feature = "json")]
         let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
 
+        #[cfg(not(feature = "json"))]
+        let api = Deboa::new("https://jsonplaceholder.typicode.com");
+
+        #[cfg(feature = "json")]
         let data = Post {
             id: 1,
             title: "Test".to_string(),
             body: "Some test to do".to_string(),
         };
 
+        #[cfg(feature = "json")]
         let response = api.set_json(data).post("/posts").await?;
+
+        #[cfg(not(feature = "json"))]
+        let response = api.post("/posts").await?;
 
         assert_eq!(response.status, StatusCode::CREATED);
 
@@ -169,15 +186,24 @@ pub mod deboa_tests {
     //
 
     async fn do_put() -> Result<()> {
+        #[cfg(feature = "json")]
         let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
 
+        #[cfg(not(feature = "json"))]
+        let api = Deboa::new("https://jsonplaceholder.typicode.com");
+
+        #[cfg(feature = "json")]
         let post = Post {
             id: 1,
             title: "Test".to_string(),
             body: "Some test to do".to_string(),
         };
 
+        #[cfg(feature = "json")]
         let response = api.set_json(post).put("/posts/1").await?;
+
+        #[cfg(not(feature = "json"))]
+        let response = api.put("/posts/1").await?;
 
         assert_eq!(response.status, StatusCode::OK);
 
@@ -208,15 +234,24 @@ pub mod deboa_tests {
     //
 
     async fn do_patch() -> Result<()> {
+        #[cfg(feature = "json")]
         let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
 
+        #[cfg(not(feature = "json"))]
+        let api = Deboa::new("https://jsonplaceholder.typicode.com");
+
+        #[cfg(feature = "json")]
         let data = Post {
             id: 1,
             title: "Test".to_string(),
             body: "Some test to do".to_string(),
         };
 
+        #[cfg(feature = "json")]
         let response = api.set_json(data).patch("/posts/1").await?;
+
+        #[cfg(not(feature = "json"))]
+        let response = api.patch("/posts/1").await?;
 
         assert_eq!(response.status, StatusCode::OK);
 
