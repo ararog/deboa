@@ -9,73 +9,21 @@
 compile_error!("Only one runtime feature can be enabled at a time.");
 
 use anyhow::Result;
-use bytes::Buf;
-use http::{header, HeaderMap, HeaderName, HeaderValue, StatusCode};
+use http::{header, HeaderName, HeaderValue};
 use http_body_util::BodyExt;
 use hyper::Request;
-use serde::{Deserialize, Serialize};
+#[cfg(feature = "json")]
+use serde::Serialize;
 use std::collections::HashMap;
 use url::{form_urlencoded, Url};
 
-use crate::request::RequestMethod;
+use crate::{config::DeboaConfig, request::RequestMethod, response::DeboaResponse};
 
+mod config;
+mod request;
+mod response;
 mod runtimes;
 mod tests;
-mod request;
-
-#[derive(Default)]
-pub struct DeboaConfig {
-    headers: Option<HashMap<HeaderName, &'static str>>,
-}
-
-impl DeboaConfig {
-    pub fn add_header(&mut self, key: &'static str, value: String) -> &mut Self {
-        self.headers.as_mut().unwrap().insert(key, value.leak());
-        self
-    }
-
-    pub fn remove_header(&mut self, key: &'static str) {
-        self.headers.as_mut().unwrap().remove(key);
-    }
-
-    pub fn has_header(&self, key: &'static str) -> bool {
-        self.headers.as_ref().unwrap().contains_key(key)
-    }
-
-    pub fn add_bearer_auth(&mut self, token: String) -> &mut Self {
-        let auth = format!("Bearer {token}");
-        if !self.has_header("Authorization") {
-          self.add_header("Authorization", auth);
-        }
-        self
-    }
-
-    pub fn add_basic_auth(&mut self, token: String) -> &mut Self {
-        let auth = format!("Basic {token}");
-        if !self.has_header("Authorization") {
-          self.add_header("Authorization", auth);
-        }
-        self
-    }
-}
-
-pub struct DeboaResponse {
-    pub status: StatusCode,
-    pub headers: HeaderMap,
-    pub body: Box<dyn Buf>,
-}
-
-impl DeboaResponse {
-    pub async fn json<T: for<'a> Deserialize<'a>>(&mut self) -> Result<T> {
-        let body = self.body.as_mut();
-        let json = serde_json::from_reader(body.reader());
-        if let Err(err) = json {
-            return Err(err.into());
-        }
-
-        Ok(json.unwrap())
-    }
-}
 
 pub struct Deboa {
     base_url: &'static str,
@@ -106,6 +54,7 @@ impl Deboa {
         self
     }
 
+    #[cfg(feature = "json")]
     pub fn set_json<T: Serialize>(&mut self, data: T) -> &mut Self {
         match serde_json::to_string(&data) {
             Ok(json) => self.body = Some(json),
@@ -191,14 +140,14 @@ impl Deboa {
                     println!("Connection failed: {err:?}");
                 }
             });
-            
+
             sender
         };
 
         #[cfg(feature = "smol-rt")]
         let mut sender = {
             let (sender, conn) = runtimes::smol::get_connection(&url).await?;
-            
+
             smol::spawn(async move {
                 if let Err(err) = conn.await {
                     println!("Connection failed: {err:?}");
@@ -234,7 +183,7 @@ impl Deboa {
             if let Some(config) = &self.config {
                 if let Some(headers) = &config.headers {
                     headers.iter().fold(req_headers, |acc, (key, value)| {
-                        acc.insert(key, HeaderValue::from_static(&value));
+                        acc.insert(key, HeaderValue::from_static(value));
                         acc
                     });
                 }

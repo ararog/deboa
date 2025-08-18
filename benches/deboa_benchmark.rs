@@ -11,9 +11,11 @@ use criterion::async_executor::CompioExecutor;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use deboa::Deboa;
+#[cfg(feature = "json")]
 use serde::Serialize;
 
 #[derive(Serialize)]
+#[cfg(feature = "json")]
 struct Post {
     id: u64,
     title: String,
@@ -27,6 +29,7 @@ async fn get_async() {
 
 async fn post_async() {
     let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    #[cfg(feature = "json")]
     let _ = api
         .set_json(Post {
             id: 1,

@@ -1,6 +1,7 @@
-use serde::{Deserialize, Serialize};
+#![allow(clippy::upper_case_acronyms)]
 
-#[derive(Debug, Serialize, Deserialize, strum_macros::Display, PartialEq)]
+
+#[derive(Debug, strum_macros::Display, PartialEq)]
 pub enum RequestMethod {
     GET,
     POST,
