@@ -13,8 +13,40 @@ use url::{form_urlencoded, Url};
 mod runtimes;
 mod tests;
 
+#[derive(Default)]
 pub struct DeboaConfig {
     headers: Option<HashMap<&'static str, &'static str>>,
+}
+
+impl DeboaConfig {
+    pub fn add_header(&mut self, key: &'static str, value: String) -> &mut Self {
+        self.headers.as_mut().unwrap().insert(key, value.leak());
+        self
+    }
+
+    pub fn remove_header(&mut self, key: &'static str) {
+        self.headers.as_mut().unwrap().remove(key);
+    }
+
+    pub fn has_header(&self, key: &'static str) -> bool {
+        self.headers.as_ref().unwrap().contains_key(key)
+    }
+
+    pub fn add_bearer_auth(&mut self, token: String) -> &mut Self {
+        let auth = format!("Bearer {token}");
+        if !self.has_header("Authorization") {
+          self.add_header("Authorization", auth);
+        }
+        self
+    }
+
+    pub fn add_basic_auth(&mut self, token: String) -> &mut Self {
+        let auth = format!("Basic {token}");
+        if !self.has_header("Authorization") {
+          self.add_header("Authorization", auth);
+        }
+        self
+    }
 }
 
 pub struct DeboaResponse {
@@ -79,6 +111,18 @@ impl Deboa {
 
     pub fn set_query(&mut self, params: Option<HashMap<&'static str, &'static str>>) -> &mut Self {
         self.params = params;
+        self
+    }
+
+    pub fn add_monitor(&mut self) -> &mut Self {
+        self
+    }
+
+    pub fn add_request_transformer(&mut self) -> &mut Self {
+        self
+    }
+
+    pub fn add_response_transformer(&mut self) -> &mut Self {
         self
     }
 
