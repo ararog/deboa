@@ -32,7 +32,37 @@ pub struct Deboa {
     body: Option<String>,
 }
 
-impl Deboa {
+trait DeboaMonitor {
+    fn monitor(&self, deboa: &DeboaResponse);
+}
+
+trait DeboaRequestTransformer {
+    fn transform(&self);
+}
+
+trait DeboaResponseTransformer {
+    fn transform(&self, deboa: &mut DeboaResponse);
+}
+
+impl DeboaMonitor for Deboa {
+    fn monitor(&self, deboa: &DeboaResponse) {
+        
+    }
+}
+
+impl DeboaRequestTransformer for Deboa {
+    fn transform(&self) {
+        
+    }
+}
+
+impl DeboaResponseTransformer for Deboa {
+    fn transform(&self, deboa: &mut DeboaResponse) {
+        
+    }
+}
+
+impl   Deboa {
     pub fn new(base_url: &'static str) -> Self {
         let default_headers: HashMap<HeaderName, String> = HashMap::from([
             (header::ACCEPT, "application/json".to_string()),
@@ -63,6 +93,20 @@ impl Deboa {
         self
     }
 
+    #[cfg(feature = "xml")]
+    pub fn set_xml<T: Serialize>(&mut self, data: T) -> &mut Self {
+        match serde_json::to_string(&data) {
+            Ok(json) => self.body = Some(json),
+            Err(_) => self.body = None,
+        }
+        self
+    }
+
+    pub fn set_text(&mut self, text: String) -> &mut Self {
+        self.body = Some(text);
+        self
+    }
+
     pub fn set_config(&mut self, config: Option<DeboaConfig>) -> &mut Self {
         self.config = config;
         self
@@ -70,18 +114,6 @@ impl Deboa {
 
     pub fn set_query(&mut self, params: Option<HashMap<&'static str, &'static str>>) -> &mut Self {
         self.params = params;
-        self
-    }
-
-    pub fn add_monitor(&mut self) -> &mut Self {
-        self
-    }
-
-    pub fn add_request_transformer(&mut self) -> &mut Self {
-        self
-    }
-
-    pub fn add_response_transformer(&mut self) -> &mut Self {
         self
     }
 
@@ -130,6 +162,8 @@ impl Deboa {
                 .finish();
             url.set_query(Some(&query));
         }
+
+        DeboaRequestTransformer::transform(self);
 
         #[cfg(feature = "tokio-rt")]
         let mut sender = {
@@ -198,11 +232,15 @@ impl Deboa {
 
         let res = sender.send_request(req).await?;
 
-        let response = DeboaResponse {
+        let mut response = DeboaResponse {
             status: res.status(),
             headers: res.headers().clone(),
             body: Box::new(res.collect().await?.aggregate()),
         };
+
+       DeboaResponseTransformer::transform(self, &mut response);
+
+       DeboaMonitor::monitor(self, &response);
 
         Ok(response)
     }
