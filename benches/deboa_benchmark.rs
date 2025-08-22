@@ -38,6 +38,19 @@ async fn post_async() {
         })
         .post("/posts")
         .await;
+
+    #[cfg(feature = "xml")]
+    let _ = api
+        .set_xml(Post {
+            id: 1,
+            title: "Test".to_string(),
+            body: "Some test to do".to_string(),
+        })
+        .post("/posts")
+        .await;
+
+    #[cfg(not(any(feature = "json", feature = "xml")))]
+    let _ = api.set_text("Some test to do").post("/posts").await;
 }
 
 fn deboa(c: &mut Criterion) {

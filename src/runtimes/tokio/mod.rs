@@ -2,7 +2,10 @@
 #![warn(rust_2018_idioms)]
 
 use anyhow::Result;
+#[cfg(feature = "http1")]
 use hyper::client::conn::http1::{Connection, SendRequest};
+#[cfg(feature = "http2")]
+use hyper::client::conn::http2::{Connection, SendRequest};
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
 use url::{Host, Url};
@@ -16,5 +19,10 @@ pub async fn get_connection(
 
     let stream = TcpStream::connect(addr).await?;
     let io = TokioIo::new(stream);
-    Ok(hyper::client::conn::http1::handshake(io).await?)
+    
+    #[cfg(feature = "http1")]
+    return Ok(hyper::client::conn::http1::handshake(io).await?);
+
+    #[cfg(feature = "http2")]
+    return Ok(hyper::client::conn::http2::handshake(io).await?);
 }
