@@ -1,7 +1,7 @@
 #[cfg(test)]
 pub mod deboa_tests {
-    use crate::Deboa;
-    use anyhow::Result;
+    #[cfg(feature = "middlewares")]
+    use crate::{middlewares::DeboaMiddleware, response::DeboaResponse, Deboa};
     use http::StatusCode;
     #[cfg(feature = "json")]
     use serde::{Deserialize, Serialize};
@@ -36,12 +36,31 @@ pub mod deboa_tests {
     #[cfg(feature = "smol-rt")]
     use smol_macros::test;
 
+    #[cfg(feature = "middlewares")]
+    #[derive(Default)]
+    struct TestMonitor;
+
+    #[cfg(feature = "middlewares")]
+    impl DeboaMiddleware for TestMonitor {
+        fn on_request(&self, request: &Deboa) {
+            println!("Request is being processed for {}", request.base_url);
+        }
+
+        fn on_response(&self, _request: &Deboa, response: &mut DeboaResponse) {
+            println!("Response status is: {}", response.status);
+        }
+    }
+    
     //
     // GET
     //
 
     async fn do_get() -> Result<()> {
-        let api = Deboa::new("https://jsonplaceholder.typicode.com");
+        let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+
+        #[cfg(feature = "middlewares")]
+        api.add_middleware(Box::new(TestMonitor));
+
         let response = api.get("/posts").await?;
 
         assert_eq!(
@@ -83,7 +102,7 @@ pub mod deboa_tests {
 
         let query_map = HashMap::from([("id", "1")]);
 
-        api.set_query(Some(query_map));
+        api.set_query_params(Some(query_map));
 
         #[cfg(feature = "json")]
         let mut response = api.get("/comments").await?;

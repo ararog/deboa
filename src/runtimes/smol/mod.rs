@@ -3,7 +3,10 @@
 
 use anyhow::{bail, Result};
 use async_native_tls::TlsStream;
+#[cfg(feature = "http1")]
 use hyper::client::conn::http1::{Connection, SendRequest};
+#[cfg(feature = "http2")]
+use hyper::client::conn::http2::{Connection, SendRequest};
 use smol::{io, net::TcpStream, prelude::*};
 use smol_hyper::rt::FuturesIo;
 use std::pin::Pin;
@@ -39,7 +42,11 @@ pub async fn get_connection(
         }
     };
 
-    Ok(hyper::client::conn::http1::handshake(FuturesIo::new(io)).await?)
+    #[cfg(feature = "http1")]
+    return Ok(hyper::client::conn::http1::handshake(FuturesIo::new(io)).await?);
+
+    #[cfg(feature = "http2")]
+    return Ok(hyper::client::conn::http2::handshake(FuturesIo::new(io)).await?);
 }
 
 pub enum SmolStream {

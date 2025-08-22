@@ -7,14 +7,23 @@ similar to apisauce for nodejs/javascript.
 
 ## Install
 
-deboa = { version = "0.0.4" }
+deboa = { version = "0.0.5" }
 
 ## Features
 
 - tokio-rt (default)
 - smol-rt
+- compio-rt
+- json
+- xml
+- msgpack
+- http1
+- http2
+- middlewares
 
 ## Usage
+
+### Serialize request amd deserialize response using json
 
 ```
 use deboa::Deboa;

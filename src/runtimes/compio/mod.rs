@@ -5,7 +5,10 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use cyper_core::{HttpStream, TlsBackend};
+#[cfg(feature = "http1")]
 use hyper::client::conn::http1::{Connection, SendRequest};
+#[cfg(feature = "http2")]
+use hyper::client::conn::http2::{Connection, SendRequest};
 use hyper::Uri;
 use url::Url;
 
@@ -16,5 +19,9 @@ pub async fn get_connection(
 
     let stream = HttpStream::connect(uri, TlsBackend::default()).await?;
 
-    Ok(hyper::client::conn::http1::handshake(stream).await?)
+    #[cfg(feature = "http1")]
+    return Ok(hyper::client::conn::http1::handshake(stream).await?);
+
+    #[cfg(feature = "http2")]
+    return Ok(hyper::client::conn::http2::handshake(stream).await?);
 }
