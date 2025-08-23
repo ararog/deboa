@@ -8,8 +8,8 @@
 ))]
 compile_error!("Only one runtime feature can be enabled at a time.");
 
-use anyhow::Result;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
+use bytes::Buf;
 use http::{header, HeaderName, HeaderValue};
 use http_body_util::BodyExt;
 use hyper::Request;
@@ -21,11 +21,13 @@ use url::{form_urlencoded, Url};
 #[cfg(feature = "middlewares")]
 pub use crate::middlewares::{DeboaMiddleware};
 pub use crate::{request::RequestMethod, response::DeboaResponse};
+pub use crate::errors::{DeboaError};
 
 #[cfg(feature = "middlewares")]
 pub mod middlewares;
 pub mod request;
 pub mod response;
+pub mod errors;
 mod runtimes;
 mod tests;
 
@@ -400,7 +402,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn get(&self, path: &str) -> Result<DeboaResponse> {
+    pub async fn get(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(RequestMethod::GET, path).await
     }
 
@@ -424,7 +426,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn post(&self, path: &str) -> Result<DeboaResponse> {
+    pub async fn post(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(RequestMethod::POST, path).await
     }
 
@@ -448,7 +450,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn put(&self, path: &str) -> Result<DeboaResponse> {
+    pub async fn put(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(RequestMethod::PUT, path).await
     }
 
@@ -472,7 +474,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn patch(&self, path: &str) -> Result<DeboaResponse> {
+    pub async fn patch(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(RequestMethod::PATCH, path).await
     }
 
@@ -496,7 +498,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn delete(&self, path: &str) -> Result<DeboaResponse> {
+    pub async fn delete(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(RequestMethod::DELETE, path).await
     }
 
@@ -520,7 +522,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn head(&self, path: &str) -> Result<DeboaResponse> {
+    pub async fn head(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(RequestMethod::HEAD, path).await
     }
 
@@ -544,7 +546,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn options(&self, path: &str) -> Result<DeboaResponse> {
+    pub async fn options(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(RequestMethod::OPTIONS, path).await
     }
 
@@ -568,7 +570,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn trace(&self, path: &str) -> Result<DeboaResponse> {
+    pub async fn trace(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(RequestMethod::TRACE, path).await
     }
 
@@ -592,7 +594,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn connect(&self, path: &str) -> Result<DeboaResponse> {
+    pub async fn connect(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(RequestMethod::CONNECT, path).await
     }
 
@@ -617,7 +619,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn any(&self, method: RequestMethod, path: &str) -> Result<DeboaResponse> {
+    pub async fn any(&self, method: RequestMethod, path: &str) -> Result<DeboaResponse, DeboaError> {
         let mut url = Url::parse(format!("{}{}", self.base_url, path).as_str()).unwrap();
 
         if self.params.is_some() && method == RequestMethod::GET {
@@ -690,24 +692,69 @@ impl Deboa {
         }
 
         let req = match &self.body {
-            Some(body) => builder.body(body.clone())?,
-            None => builder.body(String::new())?,
+            Some(body) => builder.body(body.clone()),
+            None => builder.body(String::new()),
         };
 
-        let res = sender.send_request(req).await?;
+        if let Err(err) = req {
+            return Err(DeboaError::RequestError {
+                host: url.host().unwrap().to_string(),
+                path: url.path().to_string(),
+                method: method.to_string(),
+                message: err.to_string(),
+            });
+        }
+
+        let res = sender.send_request(req.unwrap()).await;
+
+        if let Err(err) = res {
+            return Err(DeboaError::RequestError {
+                host: url.host().unwrap().to_string(),
+                path: url.path().to_string(),
+                method: method.to_string(),
+                message: err.to_string(),
+            });
+        }
+
+        let res = res.unwrap();
+
+        let status_code = res.status();
+        let headers = res.headers().clone();
+
+        let result = res.collect().await;
+
+        if let Err(err) = result {
+            return Err(DeboaError::DeserializationError {
+                message: err.to_string(),
+            });
+        }
+
+        let mut response_body = result.unwrap().aggregate();
+
+        let body_bytes = response_body.copy_to_bytes(response_body.remaining()).to_vec();
+        
+        let result = String::from_utf8(body_bytes);
+        
+        if let Err(err) = result {
+            return Err(DeboaError::DeserializationError {
+                message: err.to_string(),
+            });
+        }
+
+        let body_text = result.unwrap();
 
         #[cfg(feature = "middlewares")]
         let mut response = DeboaResponse {
-            status: res.status(),
-            headers: res.headers().clone(),
-            body: Box::new(res.collect().await?.aggregate()),
+            status: status_code,
+            headers,
+            body: body_text,
         };
 
         #[cfg(not(feature = "middlewares"))]
         let response = DeboaResponse {
-            status: res.status(),
-            headers: res.headers().clone(),
-            body: Box::new(res.collect().await?.aggregate()),
+            status: status_code,
+            headers,
+            body: body_text,
         };
 
         #[cfg(feature = "middlewares")]

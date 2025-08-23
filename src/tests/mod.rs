@@ -1,11 +1,12 @@
 #[cfg(test)]
 pub mod deboa_tests {
+    use crate::DeboaError;
     #[cfg(feature = "middlewares")]
     use crate::{middlewares::DeboaMiddleware, response::DeboaResponse, Deboa};
     use http::StatusCode;
     #[cfg(feature = "json")]
     use serde::{Deserialize, Serialize};
-    use std::collections::HashMap;
+    use std::{collections::HashMap};
 
     #[derive(Default, Serialize, Deserialize, Debug)]
     #[cfg(feature = "json")]
@@ -50,12 +51,12 @@ pub mod deboa_tests {
             println!("Response status is: {}", response.status);
         }
     }
-    
+
     //
     // GET
     //
 
-    async fn do_get() -> Result<()> {
+    async fn do_get() -> Result<(), DeboaError> {
         let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
 
         #[cfg(feature = "middlewares")]
@@ -76,7 +77,7 @@ pub mod deboa_tests {
 
     #[cfg(feature = "tokio-rt")]
     #[tokio::test]
-    async fn test_get() -> Result<()> {
+    async fn test_get() -> Result<(), DeboaError> {
         do_get().await?;
         Ok(())
     }
@@ -94,10 +95,92 @@ pub mod deboa_tests {
     }
 
     //
+    // GET NOT FOUND
+    //
+
+    async fn do_get_not_found() -> Result<(), DeboaError> {
+        let mut api = Deboa::new("https://jsonplaceholder.typicode.com/dsdsd");
+
+        #[cfg(feature = "middlewares")]
+        api.add_middleware(Box::new(TestMonitor));
+
+        let response = api.get("/posts").await?;
+
+        assert_eq!(
+            response.status,
+            StatusCode::NOT_FOUND,
+            "Status code is {} and should be {}",
+            response.status.as_u16(),
+            StatusCode::NOT_FOUND.as_u16()
+        );
+
+        Ok(())
+    }
+
+    #[cfg(feature = "tokio-rt")]
+    #[tokio::test]
+    async fn test_get_not_found() -> Result<(), DeboaError> {
+        do_get_not_found().await?;
+        Ok(())
+    }
+
+    #[cfg(feature = "smol-rt")]
+    #[apply(test!)]
+    async fn test_get_not_found() {
+        let _ = do_get_not_found().await;
+    }
+
+    #[cfg(feature = "compio-rt")]
+    #[compio::test]
+    async fn test_get_not_found() {
+        let _ = do_get_not_found().await;
+    }
+
+    //
+    // GET INVALID SERVER
+    //
+
+    async fn do_get_invalid_server() -> Result<(), DeboaError> {
+        let mut api = Deboa::new("https://invalid-server.com");
+
+        #[cfg(feature = "middlewares")]
+        api.add_middleware(Box::new(TestMonitor));
+
+        let response = api.get("/posts").await;
+
+        assert!(response.is_err());
+        assert_eq!(response, Err(DeboaError::ConnectionError {
+            host: "invalid-server.com".to_string(),
+            message: "failed to lookup address information: Name or service not known".to_string(),
+        }));
+
+        Ok(())
+    }
+
+    #[cfg(feature = "tokio-rt")]
+    #[tokio::test]
+    async fn test_get_invalid_server() -> Result<(), DeboaError> {
+        do_get_invalid_server().await?;
+        Ok(())
+    }
+
+    #[cfg(feature = "smol-rt")]
+    #[apply(test!)]
+    async fn test_get_invalid_server() {
+        let _ = do_get_invalid_server().await;
+    }
+
+    #[cfg(feature = "compio-rt")]
+    #[compio::test]
+    async fn test_get_invalid_server() {
+        let _ = do_get_invalid_server().await;
+    }
+
+    //
     // GET BY QUERY
     //
 
-    async fn do_get_by_query() -> Result<()> {
+    async fn do_get_by_query() -> Result<(), DeboaError> {
         let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
 
         let query_map = HashMap::from([("id", "1")]);
@@ -135,7 +218,7 @@ pub mod deboa_tests {
 
     #[cfg(feature = "tokio-rt")]
     #[tokio::test]
-    async fn test_get_by_query() -> Result<()> {
+    async fn test_get_by_query() -> Result<(), DeboaError> {
         do_get_by_query().await?;
         Ok(())
     }
@@ -156,7 +239,7 @@ pub mod deboa_tests {
     // POST
     //
 
-    async fn do_post() -> Result<()> {
+    async fn do_post() -> Result<(), DeboaError> {
         #[cfg(feature = "json")]
         let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
 
@@ -183,7 +266,7 @@ pub mod deboa_tests {
 
     #[cfg(feature = "tokio-rt")]
     #[tokio::test]
-    async fn test_post() -> Result<()> {
+    async fn test_post() -> Result<(), DeboaError> {
         do_post().await?;
         Ok(())
     }
@@ -204,7 +287,7 @@ pub mod deboa_tests {
     // PUT
     //
 
-    async fn do_put() -> Result<()> {
+    async fn do_put() -> Result<(), DeboaError> {
         #[cfg(feature = "json")]
         let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
 
@@ -231,7 +314,7 @@ pub mod deboa_tests {
 
     #[cfg(feature = "tokio-rt")]
     #[tokio::test]
-    async fn test_put() -> Result<()> {
+    async fn test_put() -> Result<(), DeboaError> {
         do_put().await?;
         Ok(())
     }
@@ -252,7 +335,7 @@ pub mod deboa_tests {
     // PATCH
     //
 
-    async fn do_patch() -> Result<()> {
+    async fn do_patch() -> Result<(), DeboaError> {
         #[cfg(feature = "json")]
         let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
 
@@ -279,7 +362,7 @@ pub mod deboa_tests {
 
     #[cfg(feature = "tokio-rt")]
     #[tokio::test]
-    async fn test_patch() -> Result<()> {
+    async fn test_patch() -> Result<(), DeboaError> {
         do_patch().await?;
         Ok(())
     }
@@ -300,7 +383,7 @@ pub mod deboa_tests {
     // DELETE
     //
 
-    async fn do_delete() -> Result<()> {
+    async fn do_delete() -> Result<(), DeboaError> {
         let api = Deboa::new("https://jsonplaceholder.typicode.com");
 
         let response = api.delete("/posts/1").await?;
@@ -312,7 +395,7 @@ pub mod deboa_tests {
 
     #[cfg(feature = "tokio-rt")]
     #[tokio::test]
-    async fn test_delete() -> Result<()> {
+    async fn test_delete() -> Result<(), DeboaError> {
         do_delete().await?;
         Ok(())
     }
