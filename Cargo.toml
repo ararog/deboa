@@ -51,6 +51,7 @@ tokio = { version = "1.43.0", features = ["full"] }
 url = "2.5.4"
 mime = "0.3.17"
 base64 = "0.22.1"
+thiserror = "2.0.16"
 
 [dev-dependencies]
 criterion = {version = "0.7.1", git = "https://github.com/ararog/criterion.rs.git", branch = "test", features = [
