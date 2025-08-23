@@ -36,6 +36,7 @@ async fn post_async() {
             title: "Test".to_string(),
             body: "Some test to do".to_string(),
         })
+        .unwrap()
         .post("/posts")
         .await;
 
@@ -46,6 +47,7 @@ async fn post_async() {
             title: "Test".to_string(),
             body: "Some test to do".to_string(),
         })
+        .unwrap()
         .post("/posts")
         .await;
 

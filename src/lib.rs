@@ -16,6 +16,7 @@ use hyper::Request;
 #[cfg(any(feature = "json", feature = "xml"))]
 use serde::Serialize;
 use std::collections::HashMap;
+use std::fmt::Debug;
 use url::{form_urlencoded, Url};
 
 #[cfg(feature = "middlewares")]
@@ -36,8 +37,22 @@ pub struct Deboa {
     headers: Option<HashMap<HeaderName, &'static str>>,
     params: Option<HashMap<&'static str, &'static str>>,
     body: Option<String>,
+    retries: u32,
+    connection_timeout: u64,
+    request_timeout: u64,
     #[cfg(feature = "middlewares")]
     middleware: Option<Box<dyn DeboaMiddleware>>,
+}
+
+impl Debug for Deboa {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Deboa")
+            .field("base_url", &self.base_url)
+            .field("headers", &self.headers)
+            .field("params", &self.params)
+            .field("body", &self.body)
+            .finish()
+    }
 }
 
 impl Deboa {
@@ -50,7 +65,13 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// let api = Deboa::new("https://jsonplaceholder.typicode.com");
+    /// use deboa::{Deboa, DeboaError};
+    /// 
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   Ok(())
+    /// }
     /// ```
     ///
     pub fn new(base_url: &'static str) -> Self {
@@ -64,6 +85,9 @@ impl Deboa {
             headers: Some(default_headers),
             params: None,
             body: None,
+            retries: 0,
+            connection_timeout: 0,
+            request_timeout: 0,
             #[cfg(feature = "middlewares")]
             middleware: None,
         }
@@ -79,8 +103,16 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-    /// api.add_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
+    /// use deboa::{Deboa, DeboaError};
+    /// use mime;
+    /// use http::header;
+    /// 
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   api.add_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref().to_string());
+    ///   Ok(())
+    /// }
     /// ```
     ///
     pub fn add_header(&mut self, key: HeaderName, value: String) -> &mut Self {
@@ -97,8 +129,15 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-    /// api.remove_header(header::CONTENT_TYPE);
+    /// use deboa::{Deboa, DeboaError};
+    /// use http::header;
+    /// 
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   api.remove_header(header::CONTENT_TYPE);
+    ///   Ok(())
+    /// }
     /// ```
     ///
     pub fn remove_header(&mut self, key: HeaderName) -> &mut Self {
@@ -119,8 +158,15 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-    /// api.has_header(header::CONTENT_TYPE);
+    /// use deboa::{Deboa, DeboaError};
+    /// use http::header;
+    /// 
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   api.has_header(header::CONTENT_TYPE);
+    ///   Ok(())
+    /// }
     /// ```
     ///
     pub fn has_header(&self, key: HeaderName) -> bool {
@@ -136,8 +182,14 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-    /// api.add_bearer_auth("token");
+    /// use deboa::{Deboa, DeboaError};
+    /// 
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   api.add_bearer_auth("token".to_string());
+    ///   Ok(())
+    /// }
     /// ```
     ///
     pub fn add_bearer_auth(&mut self, token: String) -> &mut Self {
@@ -158,8 +210,14 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-    /// api.add_basic_auth("username", "password");
+    /// use deboa::{Deboa, DeboaError};
+    /// 
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   api.add_basic_auth("username".to_string(), "password".to_string());
+    ///   Ok(())
+    /// }
     /// ```
     ///
     pub fn add_basic_auth(&mut self, username: String, password: String) -> &mut Self {
@@ -182,11 +240,10 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::Deboa;
+    /// use deboa::{Deboa, DeboaError};
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   api.set_base_url("https://jsonplaceholder.typicode.com").get("/posts").await?;
     ///   Ok(())
@@ -203,11 +260,10 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::Deboa;
+    /// use deboa::{Deboa, DeboaError};
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let base_url = api.base_url();
     ///   println!("Base URL: {}", base_url); 
@@ -217,6 +273,78 @@ impl Deboa {
     ///
     pub fn base_url(&self) -> &'static str {
         self.base_url
+    }
+
+    /// Allow change request retries at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `retries` - The new retries.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use deboa::{Deboa, DeboaError};
+    /// 
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   api.set_retries(3).get("/posts").await?;
+    ///   Ok(())
+    /// }
+    /// ```
+    ///
+    pub fn set_retries(&mut self, retries: u32) -> &mut Self {
+        self.retries = retries;
+        self
+    }
+
+    /// Allow change request connection timeout at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - The new timeout.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use deboa::{Deboa, DeboaError};
+    /// 
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   api.set_connection_timeout(5).get("/posts").await?;
+    ///   Ok(())
+    /// }
+    /// ```
+    ///
+    pub fn set_connection_timeout(&mut self, timeout: u64) -> &mut Self {
+        self.connection_timeout = timeout;
+        self
+    }
+
+    /// Allow change request request timeout at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - The new timeout.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use deboa::{Deboa, DeboaError};
+    /// 
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   api.set_request_timeout(5).get("/posts").await?;
+    ///   Ok(())
+    /// }
+    /// ```
+    ///
+    pub fn set_request_timeout(&mut self, timeout: u64) -> &mut Self {
+        self.request_timeout = timeout;
+        self
     }
 
     #[cfg(feature = "json")]
@@ -229,8 +357,7 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::Deboa;
+    /// use deboa::{Deboa, DeboaError};
     /// use serde::Serialize;
     /// 
     /// #[derive(Serialize)]
@@ -241,19 +368,22 @@ impl Deboa {
     /// }
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   api.set_json(Post { id: 1, title: "title".to_string(), body: "body".to_string() }).post("/posts").await?;
     ///   Ok(())
     /// }
     /// ```
     ///
-    pub fn set_json<T: Serialize>(&mut self, data: T) -> &mut Self {
-        match serde_json::to_string(&data) {
-            Ok(json) => self.body = Some(json),
-            Err(_) => self.body = None,
-        }
-        self
+    pub fn set_json<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
+        let result = serde_json::to_string(&data);
+        if let Err(error) = result {
+            return Err(DeboaError::SerializationError { message: error.to_string() });
+        } 
+        
+        self.body = Some(result.unwrap());
+        
+        Ok(self)
     }
 
     #[cfg(feature = "xml")]
@@ -266,8 +396,7 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::Deboa;
+    /// use deboa::{Deboa, DeboaError};
     /// use serde::Serialize;
     /// 
     /// #[derive(Serialize)]
@@ -278,19 +407,22 @@ impl Deboa {
     /// }
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   api.set_xml(Post { id: 1, title: "title".to_string(), body: "body".to_string() }).post("/posts").await?;
     ///   Ok(())
     /// }
     /// ```
     ///
-    pub fn set_xml<T: Serialize>(&mut self, data: T) -> &mut Self {
-        match serde_xml_rs::to_string(&data) {
-            Ok(xml) => self.body = Some(xml),
-            Err(_) => self.body = None,
-        }
-        self
+    pub fn set_xml<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
+        let result = serde_xml_rs::to_string(&data);
+        if let Err(error) = result {
+            return Err(DeboaError::SerializationError { message: error.to_string() });
+        } 
+        
+        self.body = Some(result.unwrap());
+        
+        Ok(self)
     }
 
     /// Allow set text body at any time.
@@ -302,11 +434,10 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::Deboa;
+    /// use deboa::{Deboa, DeboaError};
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   api.set_text("text".to_string()).post("/posts").await?;
     ///   Ok(())
@@ -327,12 +458,11 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::Deboa;
+    /// use deboa::{Deboa, DeboaError};
     /// use std::collections::HashMap;
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   api.set_query_params(Some(HashMap::from([("id", "1")])));
     ///   Ok(())
@@ -353,9 +483,7 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::Deboa;
-    /// use deboa::DeboaMiddleware;
+    /// use deboa::{Deboa, DeboaError, DeboaMiddleware};
     /// use deboa::DeboaResponse;
     /// 
     /// struct TestMonitor;
@@ -371,14 +499,14 @@ impl Deboa {
     /// }
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-    ///   api.add_middleware(Box::new(TestMonitor));
+    ///   api.add_middleware(TestMonitor);
     ///   Ok(())
     /// }
     ///
-    pub fn add_middleware(&mut self, middleware: Box<dyn DeboaMiddleware>) -> &mut Self {
-        self.middleware = Some(middleware);
+    pub fn add_middleware<M: DeboaMiddleware>(&mut self, middleware: M) -> &mut Self {
+        self.middleware = Some(Box::new(middleware));
         self
     }
 
@@ -391,11 +519,10 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::{Deboa, RequestMethod};
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let response = api.get("/posts").await?;
     ///   Ok(())
@@ -415,11 +542,10 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::{Deboa, RequestMethod};
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let response = api.post("/posts").await?;
     ///   Ok(())
@@ -439,11 +565,10 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::{Deboa, RequestMethod};
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let response = api.put("/posts/1").await?;
     ///   Ok(())
@@ -463,11 +588,10 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::{Deboa, RequestMethod};
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let response = api.patch("/posts/1").await?;
     ///   Ok(())
@@ -487,11 +611,10 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::{Deboa, RequestMethod};
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let response = api.delete("/posts/1").await?;
     ///   Ok(())
@@ -511,11 +634,10 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::{Deboa, RequestMethod};
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let response = api.head("/posts").await?;
     ///   Ok(())
@@ -535,11 +657,10 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::{Deboa, RequestMethod};
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let response = api.options("/posts").await?;
     ///   Ok(())
@@ -559,11 +680,10 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::{Deboa, RequestMethod};
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let response = api.trace("/posts").await?;
     ///   Ok(())
@@ -583,11 +703,10 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::{Deboa, RequestMethod};
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let response = api.connect("/posts").await?;
     ///   Ok(())
@@ -608,11 +727,10 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::{Deboa, RequestMethod};
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
     /// 
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let response = api.any(RequestMethod::GET, "/posts").await?;
     ///   Ok(())
@@ -630,7 +748,7 @@ impl Deboa {
         }
 
         #[cfg(feature = "middlewares")]
-        if let Some(middleware) = self.middleware.as_ref() {
+        if let Some(middleware) = &self.middleware {
             middleware.on_request(self);
         }
 

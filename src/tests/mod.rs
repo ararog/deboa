@@ -44,12 +44,54 @@ pub mod deboa_tests {
     #[cfg(feature = "middlewares")]
     impl DeboaMiddleware for TestMonitor {
         fn on_request(&self, request: &Deboa) {
-            println!("Request is being processed for {}", request.base_url);
+            println!("Request: {request:?}");
         }
 
         fn on_response(&self, _request: &Deboa, response: &mut DeboaResponse) {
-            println!("Response status is: {}", response.status);
+            println!("Response: {response:?}");
         }
+    }
+
+    //
+    // MIDDLEWARES
+    //
+
+    #[cfg(feature = "middlewares")]
+    async fn do_middleware() -> Result<(), DeboaError> {
+        let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+
+        api.add_middleware(TestMonitor);
+
+        let response = api.get("/posts/1").await?;
+
+        assert_eq!(
+            response.status,
+            StatusCode::OK,
+            "Status code is {} and should be {}",
+            response.status.as_u16(),
+            StatusCode::OK.as_u16()
+        );
+
+        Ok(())
+    }
+
+    #[cfg(all(feature = "tokio-rt", feature = "middlewares"))]
+    #[tokio::test]
+    async fn test_middleware() -> Result<(), DeboaError> {
+        do_middleware().await?;
+        Ok(())
+    }
+
+    #[cfg(all(feature = "smol-rt", feature = "middlewares"))]
+    #[apply(test!)]
+    async fn test_middleware() {
+        let _ = do_middleware().await;
+    }
+
+    #[cfg(all(feature = "compio-rt", feature = "middlewares"))]
+    #[compio::test]
+    async fn test_middleware() {
+        let _ = do_middleware().await;
     }
 
     //
@@ -57,10 +99,7 @@ pub mod deboa_tests {
     //
 
     async fn do_get() -> Result<(), DeboaError> {
-        let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-
-        #[cfg(feature = "middlewares")]
-        api.add_middleware(Box::new(TestMonitor));
+        let api = Deboa::new("https://jsonplaceholder.typicode.com");
 
         let response = api.get("/posts").await?;
 
@@ -99,10 +138,7 @@ pub mod deboa_tests {
     //
 
     async fn do_get_not_found() -> Result<(), DeboaError> {
-        let mut api = Deboa::new("https://jsonplaceholder.typicode.com/dsdsd");
-
-        #[cfg(feature = "middlewares")]
-        api.add_middleware(Box::new(TestMonitor));
+        let api = Deboa::new("https://jsonplaceholder.typicode.com/dsdsd");
 
         let response = api.get("/posts").await?;
 
@@ -141,10 +177,7 @@ pub mod deboa_tests {
     //
 
     async fn do_get_invalid_server() -> Result<(), DeboaError> {
-        let mut api = Deboa::new("https://invalid-server.com");
-
-        #[cfg(feature = "middlewares")]
-        api.add_middleware(Box::new(TestMonitor));
+        let api = Deboa::new("https://invalid-server.com");
 
         let response = api.get("/posts").await;
 
@@ -254,7 +287,7 @@ pub mod deboa_tests {
         };
 
         #[cfg(feature = "json")]
-        let response = api.set_json(data).post("/posts").await?;
+        let response = api.set_json(data)?.post("/posts").await?;
 
         #[cfg(not(feature = "json"))]
         let response = api.post("/posts").await?;
@@ -302,7 +335,7 @@ pub mod deboa_tests {
         };
 
         #[cfg(feature = "json")]
-        let response = api.set_json(post).put("/posts/1").await?;
+        let response = api.set_json(post)?.put("/posts/1").await?;
 
         #[cfg(not(feature = "json"))]
         let response = api.put("/posts/1").await?;
@@ -350,7 +383,7 @@ pub mod deboa_tests {
         };
 
         #[cfg(feature = "json")]
-        let response = api.set_json(data).patch("/posts/1").await?;
+        let response = api.set_json(data)?.patch("/posts/1").await?;
 
         #[cfg(not(feature = "json"))]
         let response = api.patch("/posts/1").await?;

@@ -5,7 +5,7 @@ use crate::{Deboa, DeboaResponse};
 ///
 /// Trait that define the middleware pattern for Deboa.
 ///
-pub trait DeboaMiddleware {
+pub trait DeboaMiddleware: Send + Sync + 'static {
     /// This method is called before the request is sent.
     ///
     /// # Arguments
