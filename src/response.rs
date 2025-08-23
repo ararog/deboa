@@ -19,11 +19,10 @@ impl DeboaResponse {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::Deboa;
+    /// use deboa::{Deboa, DeboaError};
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let mut response = api.get("/posts").await?;
     ///   let status = response.status();
@@ -40,11 +39,10 @@ impl DeboaResponse {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::Deboa;
+    /// use deboa::{Deboa, DeboaError};
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let mut response = api.get("/posts").await?;
     ///   let headers = response.headers();
@@ -66,8 +64,7 @@ impl DeboaResponse {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::{Deboa, RequestMethod};
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
     /// use serde::{Serialize, Deserialize};
     ///
     /// #[derive(Serialize, Deserialize)]
@@ -78,7 +75,7 @@ impl DeboaResponse {
     /// }
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let mut response = api.get("/posts").await?;
     ///   let posts = response.json::<Vec<Post>>().await?;
@@ -108,8 +105,7 @@ impl DeboaResponse {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::{Deboa, RequestMethod};
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
     /// use serde::{Serialize, Deserialize};
     ///
     /// #[derive(Serialize, Deserialize)]
@@ -120,7 +116,7 @@ impl DeboaResponse {
     /// }
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let mut response = api.get("/posts").await?;
     ///   let posts = response.xml::<Vec<Post>>().await?;
@@ -146,11 +142,10 @@ impl DeboaResponse {
     /// # Examples
     ///
     /// ```rust
-    /// use anyhow::Result;
-    /// use deboa::{Deboa, RequestMethod};
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<()> {
+    /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let mut response = api.get("/posts").await?;
     ///   let text = response.text().await?;
