@@ -1,7 +1,5 @@
 use syn::{
-    Ident, LitStr, Token, parenthesized,
-    parse::{Parse, ParseStream},
-    punctuated::Punctuated,
+    parenthesized, parse::{Parse, ParseStream}, punctuated::Punctuated, Ident, LitStr, Token, Type
 };
 pub struct BoraApi {
     pub operations: Punctuated<OperationEnum, Token![,]>,
@@ -68,7 +66,7 @@ impl Parse for GetStruct {
 pub enum GetFieldEnum {
     name(NameStruct),
     path(PathStruct),
-    target(TargetStruct),
+    target(Box<TargetStruct>),
 }
 
 impl Parse for GetFieldEnum {
@@ -79,7 +77,7 @@ impl Parse for GetFieldEnum {
             match ident.to_string().as_str() {
                 "name" => Ok(GetFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(GetFieldEnum::path(PathStruct::parse(input)?)),
-                "target" => Ok(GetFieldEnum::target(TargetStruct::parse(input)?)),
+                "target" => Ok(GetFieldEnum::target(Box::new(TargetStruct::parse(input)?))),
                 _ => Err(input.error(format!(
                     "expected one of name, path or target, found '{ident}'"
                 ))),
@@ -120,7 +118,7 @@ impl Parse for PathStruct {
 
 pub struct TargetStruct {
     _equal_token: Token![=],
-    pub value: Ident,
+    pub value: Type
 }
 
 impl Parse for TargetStruct {
