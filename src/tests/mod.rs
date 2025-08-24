@@ -1,8 +1,8 @@
 #[cfg(test)]
 pub mod deboa_tests {
     use crate::Deboa;
-    use http::StatusCode;
     use anyhow::Result;
+    use http::StatusCode;
     #[cfg(feature = "json")]
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;

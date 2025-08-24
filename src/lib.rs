@@ -34,15 +34,15 @@ pub struct Deboa {
 
 impl Deboa {
     pub fn new(base_url: &'static str) -> Self {
-        let default_headers: HashMap<HeaderName, &'static str> = HashMap::from([
-            (header::ACCEPT, "application/json"),
-            (header::CONTENT_TYPE, "application/json"),
+        let default_headers: HashMap<HeaderName, String> = HashMap::from([
+            (header::ACCEPT, "application/json".to_string()),
+            (header::CONTENT_TYPE, "application/json".to_string()),
         ]);
 
         Deboa {
             base_url,
             config: Some(DeboaConfig {
-                headers: Some(default_headers),
+                headers: default_headers,
             }),
             params: None,
             body: None,
@@ -181,12 +181,13 @@ impl Deboa {
         {
             let req_headers = builder.headers_mut().unwrap();
             if let Some(config) = &self.config {
-                if let Some(headers) = &config.headers {
-                    headers.iter().fold(req_headers, |acc, (key, value)| {
-                        acc.insert(key, HeaderValue::from_static(value));
+                config
+                    .headers
+                    .iter()
+                    .fold(req_headers, |acc, (key, value)| {
+                        acc.insert(key, HeaderValue::from_str(&value).unwrap());
                         acc
                     });
-                }
             }
         }
 
