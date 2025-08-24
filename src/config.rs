@@ -1,45 +1,42 @@
 use std::collections::HashMap;
 
 use http::HeaderName;
-use hyper::header;
 
 #[derive(Default)]
 pub struct DeboaConfig {
-    pub headers: Option<HashMap<HeaderName, &'static str>>,
+    pub headers: HashMap<HeaderName, String>,
 }
 
 impl DeboaConfig {
     pub fn add_header(&mut self, key: HeaderName, value: String) -> &mut Self {
-        self.headers.as_mut().unwrap().insert(key, value.leak());
+        self.headers.insert(key, value);
         self
     }
 
-    pub fn remove_header(&mut self, key: &'static str) {
-        self.headers.as_mut().unwrap().remove(key);
+    pub fn remove_header(&mut self, key: &str) {
+        self.headers.remove(key);
     }
 
-    pub fn has_header(&self, key: &'static str) -> bool {
-        self.headers.as_ref().unwrap().contains_key(key)
+    pub fn has_header(&self, header: &HeaderName) -> bool {
+        self.headers.contains_key(header)
     }
 
-    pub fn add_bearer_auth(&mut self, token: String) -> &mut Self {
-        let auth = format!("Bearer {token}");
-        if !self.has_header(header::AUTHORIZATION.as_str()) {
-          self.add_header(header::AUTHORIZATION, auth);
+    /// When adding the header of [`header::AUTHORIZATION`], add the type of authorization to the value itself. ie.: "Bearer {token_here}",.
+    pub fn edit_header(&mut self, header: HeaderName, value: String) -> &mut Self {
+        if !self.has_header(&header) {
+          self.add_header(header, value);
         }
+        else {
+          // We can safely unwrap here, as we have made sure that it exists by the previous if statement.
+          let header_value = self.get_mut_header(&header).unwrap();
+
+          *header_value = value;
+        }
+
         self
     }
 
-    pub fn add_basic_auth(&mut self, token: String) -> &mut Self {
-        let auth = format!("Basic {token}");
-        if !self.has_header(
-          header::AUTHORIZATION.as_str() 
-        ) {
-          self.add_header(
-            header::AUTHORIZATION,
-            auth
-          );
-        }
-        self
+    pub fn get_mut_header(&mut self, header: &HeaderName) -> Option<&mut String> {
+      self.headers.get_mut(header)
     }
 }
