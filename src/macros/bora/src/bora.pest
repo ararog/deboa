@@ -1,0 +1,11 @@
+lit = {
+  ANY* 
+  ~ ANY
+}
+
+operations = { get | post | put | delete | patch }
+   get = {  }
+   post = { }
+   put = { }
+   delete = { }
+   patch = { }

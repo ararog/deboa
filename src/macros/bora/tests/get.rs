@@ -1,7 +1,9 @@
+use deboa::Deboa;
+
 #[macro_use]
 extern crate bora;
 
-use deboa::Deboa;
+//use deboa::Deboa;
 
 mod inner {
 
@@ -13,7 +15,13 @@ mod inner {
         pub title: String
     }
 
-    #[bora(GET "/posts/1" Post)]
+    #[bora(
+      api(
+        get(name="get_by_id", path="/posts/1", target=Post),
+        get(name="query_by_id", path="/posts?<id:i32>", target=Post),
+        get(name="get_all", path="/posts", target=Post),
+      )
+    )]
     pub struct PostService;
 }
 
@@ -25,7 +33,7 @@ async fn main() {
 
     let post_service = PostService::new(deboa);
 
-    let post = post_service.get().await.unwrap();
+    let post = post_service.get_by_id().await.unwrap();
 
     println!("id...: {}", post.id);
     println!("title: {}", post.title);
