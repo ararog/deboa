@@ -4,8 +4,8 @@ extern crate quote;
 extern crate syn;
 
 use proc_macro::TokenStream;
-use proc_macro2::TokenTree;
 use proc_macro_error::proc_macro_error;
+use proc_macro2::TokenTree;
 use quote::quote;
 use syn::{Ident, LitStr, parse_macro_input};
 
@@ -74,7 +74,8 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                     let method = syn::parse_str::<syn::Ident>("get").unwrap();
                     let mut method_name = Ident::new("ident", proc_macro2::Span::call_site());
                     let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
-                    let mut target_type = Ident::new("ident", proc_macro2::Span::call_site());
+                    let mut target_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
+                    let mut api_params = proc_macro2::TokenStream::new();
 
                     fields.iter().for_each(|field| match field {
                         GetFieldEnum::name(name) => {
@@ -84,7 +85,34 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                             );
                         }
                         GetFieldEnum::path(path) => {
-                            api_path = path.value.clone();
+                            let path = &path.value;
+
+                            let raw_path = path.value();
+                            let params = regex::Regex::new(r"<(\w*:\w*)>")
+                                .unwrap()
+                                .captures(&raw_path)
+                                .map(|m| m.get(1).unwrap().as_str())
+                                .into_iter()
+                                .collect::<Vec<_>>();
+
+                            api_params = params.clone().into_iter().fold(
+                                proc_macro2::TokenStream::new(),
+                                |mut acc, param| {
+                                    let pair = param.split(':').collect::<Vec<_>>();
+                                    let param = syn::parse_str::<syn::Ident>(pair[0]).unwrap();
+                                    let param_type = syn::parse_str::<syn::Type>(pair[1]).unwrap();
+                                    acc.extend(quote! {
+                                        #param: #param_type,
+                                    });
+                                    acc
+                                },
+                            );
+
+                            let new_path = regex::Regex::new(r"<(\w*):\w*>")
+                                .unwrap()
+                                .replace_all(&raw_path, "{$1}");
+
+                            api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
                         }
                         GetFieldEnum::target(target) => {
                             target_type = target.value.clone();
@@ -92,12 +120,12 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                     });
 
                     acc.0.extend(quote! {
-                        async fn #method_name(&self) -> Result<#target_type, DeboaError>;
+                        async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError>;
                     });
 
                     acc.1.extend(quote! {
-                        async fn #method_name(&self) -> Result<#target_type, DeboaError> {
-                            self.api.#method(#api_path).await?.json::<#target_type>().await
+                        async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError> {
+                            self.api.#method(format!(#api_path).as_ref()).await?.json::<#target_type>().await
                         }
                     });
                 }
