@@ -68,7 +68,7 @@ impl Parse for GetStruct {
 pub enum GetFieldEnum {
     name(NameStruct),
     path(PathStruct),
-    target(Box<TargetStruct>),
+    res_body(Box<ResBodyStruct>),
 }
 
 impl Parse for GetFieldEnum {
@@ -79,9 +79,9 @@ impl Parse for GetFieldEnum {
             match ident.to_string().as_str() {
                 "name" => Ok(GetFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(GetFieldEnum::path(PathStruct::parse(input)?)),
-                "target" => Ok(GetFieldEnum::target(Box::new(TargetStruct::parse(input)?))),
+                "res_body" => Ok(GetFieldEnum::res_body(Box::new(ResBodyStruct::parse(input)?))),
                 _ => Err(input.error(format!(
-                    "expected one of name, path or target, found '{ident}'"
+                    "expected one of name, path or res_body, found '{ident}'"
                 ))),
             }
         } else {
@@ -118,14 +118,14 @@ impl Parse for PathStruct {
     }
 }
 
-pub struct TargetStruct {
+pub struct ResBodyStruct {
     _equal_token: Token![=],
     pub value: Type,
 }
 
-impl Parse for TargetStruct {
+impl Parse for ResBodyStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-        Ok(TargetStruct {
+        Ok(ResBodyStruct {
             _equal_token: input.parse()?,
             value: input.parse()?,
         })

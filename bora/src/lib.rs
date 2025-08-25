@@ -114,8 +114,8 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                             api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
                         }
-                        GetFieldEnum::target(target) => {
-                            target_type = target.value.clone();
+                        GetFieldEnum::res_body(res_body) => {
+                            target_type = res_body.value.clone();
                         }
                     });
 

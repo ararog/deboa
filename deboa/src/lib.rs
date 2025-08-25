@@ -370,7 +370,7 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-    ///   api.set_json(Post { id: 1, title: "title".to_string(), body: "body".to_string() }).post("/posts").await?;
+    ///   api.set_json(Post { id: 1, title: "title".to_string(), body: "body".to_string() })?.post("/posts").await?;
     ///   Ok(())
     /// }
     /// ```
@@ -411,7 +411,7 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-    ///   api.set_xml(Post { id: 1, title: "title".to_string(), body: "body".to_string() }).post("/posts").await?;
+    ///   api.set_xml(Post { id: 1, title: "title".to_string(), body: "body".to_string() })?.post("/posts").await?;
     ///   Ok(())
     /// }
     /// ```
