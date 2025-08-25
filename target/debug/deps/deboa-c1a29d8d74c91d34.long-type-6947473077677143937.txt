@@ -1,1 +1,0 @@
-std::result::Result<(hyper::client::conn::http1::SendRequest<_>, hyper::client::conn::http1::Connection<hyper_util::rt::TokioIo<std::result::Result<tokio::net::TcpStream, std::io::Error>>, _>), hyper::Error>
