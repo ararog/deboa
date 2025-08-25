@@ -129,8 +129,8 @@ impl DeboaResponse {
     ///
     #[cfg(feature = "xml")]
     pub async fn xml<T: for<'a> Deserialize<'a>>(&mut self) -> Result<T, DeboaError> {
-        let body = self.body.as_mut();
-        let xml = serde_xml_rs::from_reader(body.as_bytes());
+        let body: &[u8] = self.raw_body.as_ref();
+        let xml = serde_xml_rs::from_reader(body);
 
         match xml {
             Ok(deserialized_body) => {
