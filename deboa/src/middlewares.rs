@@ -12,15 +12,15 @@ pub trait DeboaMiddleware: Send + Sync + 'static {
     ///
     /// * `request` - The request that was sent.
     ///
-    fn on_request(&self, request: &Deboa){}
-    
+    fn on_request(&self, request: &Deboa) {}
+
     ///
     /// This method is called after the response is received.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `request` - The request that was sent.
     /// * `response` - The response that was received.
     ///
-    fn on_response(&self, request: &Deboa, response: &mut DeboaResponse){}
+    fn on_response(&self, request: &Deboa, response: &mut DeboaResponse) {}
 }
