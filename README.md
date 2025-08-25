@@ -20,7 +20,7 @@ With Deboa you can:
 
 ## Install
 
-deboa = { version = "0.0.5" }
+`deboa = { version = "0.0.5" }`
 
 ## Features
 
@@ -36,7 +36,7 @@ deboa = { version = "0.0.5" }
 
 ### Serialize request amd deserialize response using json
 
-```
+```rust
 use deboa::Deboa;
 
 let api = Deboa::new("https://jsonplaceholder.typicode.com");
@@ -48,7 +48,7 @@ println!("posts: {:#?}", posts);
 
 ### Serialize request amd deserialize response using xml
 
-```
+```rust
 use deboa::Deboa;
 
 let api = Deboa::new("https://jsonplaceholder.typicode.com");
@@ -60,7 +60,7 @@ println!("posts: {:#?}", posts);
 
 ### Adding headers
 
-```
+```rust
 use deboa::Deboa;
 use http::header;
 
@@ -73,7 +73,7 @@ println!("posts: {:#?}", posts);
 
 ### Adding bearer auth
 
-```
+```rust
 use deboa::Deboa;
 use http::header;
 
@@ -86,7 +86,7 @@ println!("posts: {:#?}", posts);
 
 ### Adding basic auth
 
-```
+```rust
 use deboa::Deboa;
 use http::header;
 
@@ -99,7 +99,7 @@ println!("posts: {:#?}", posts);
 
 ### Change request base url
 
-```
+```rust
 use deboa::Deboa;
 
 let api = Deboa::new("https://jsonplaceholder.typicode.com");
@@ -111,7 +111,7 @@ println!("posts: {:#?}", posts);
 
 ### Adding middleware
 
-```
+```rust
 use deboa::{Deboa, DeboaMiddleware};
 
 struct MyMiddleware;
