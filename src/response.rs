@@ -1,5 +1,4 @@
 use anyhow::Result;
-use bytes::Buf;
 use http::{HeaderMap, StatusCode};
 #[cfg(any(feature = "json", feature = "xml"))]
 use serde::Deserialize;
