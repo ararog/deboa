@@ -12,7 +12,7 @@ mod inner {
     #[derive(Deserialize, Debug)]
     pub struct Post {
         pub id: u32,
-        pub title: String
+        pub title: String,
     }
 
     #[bora(
