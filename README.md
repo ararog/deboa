@@ -7,18 +7,16 @@ A very simple and straightforward HTTP client.
 The goal is to provide a simple and easy to use HTTP, very
 similar to apisauce for nodejs/javascript.
 
-With Deboa you can:
+Deboa has amazing features:
 
-- Serialize request amd deserialize response using json
-- Serialize request amd deserialize response using xml
-- Add headers
-- Add bearer auth
-- Add basic auth
-- Change request base url
-- Change request retries
-- Change request timeout
-- Change connection timeout
-- Add middleware
+- built-in json, xml and msgpack support
+- easily add, remove and update headers
+- easility to add basic and bearer auth
+- set base url only once, change it when needed
+- request data only by specifying path
+- set retries and timeout
+- middleware support
+- bora macro to easily create api clients
 
 ## Install
 
@@ -33,6 +31,7 @@ deboa = { version = "0.0.5" }
 - compio-rt
 - json
 - xml
+- msgpack
 - http1
 - middlewares
 
