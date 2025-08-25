@@ -27,7 +27,7 @@ pub async fn get_connection(
     }
 
     let io = TokioIo::new(stream.unwrap());
-    
+
     #[cfg(feature = "http1")]
     let result = hyper::client::conn::http1::handshake(io).await;
     #[cfg(feature = "http1")]

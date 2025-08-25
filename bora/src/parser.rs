@@ -1,5 +1,7 @@
 use syn::{
-    parenthesized, parse::{Parse, ParseStream}, punctuated::Punctuated, Ident, LitStr, Token, Type
+    Ident, LitStr, Token, Type, parenthesized,
+    parse::{Parse, ParseStream},
+    punctuated::Punctuated,
 };
 pub struct BoraApi {
     pub operations: Punctuated<OperationEnum, Token![,]>,
@@ -118,7 +120,7 @@ impl Parse for PathStruct {
 
 pub struct TargetStruct {
     _equal_token: Token![=],
-    pub value: Type
+    pub value: Type,
 }
 
 impl Parse for TargetStruct {

@@ -8,7 +8,7 @@ use crate::DeboaError;
 pub struct DeboaResponse {
     pub status: StatusCode,
     pub headers: HeaderMap,
-    pub body: String,
+    pub raw_body: Vec<u8>,
 }
 
 impl DeboaResponse {
@@ -82,15 +82,20 @@ impl DeboaResponse {
     /// ```
     ///
     pub async fn json<T: for<'a> Deserialize<'a>>(&mut self) -> Result<T, DeboaError> {
-        let body = self.body.as_mut();
-        let json = serde_json::from_reader(body.as_bytes());
-        if let Err(err) = json {
-            return Err(DeboaError::DeserializationError {
-                message: err.to_string(),
-            });
-        }
+        let body = self.raw_body.as_ref();
 
-        Ok(json.unwrap())
+        let json = serde_json::from_slice(body);
+
+        match json {
+            Ok(deserialized_body) => {
+                Ok(deserialized_body)
+            },
+            Err(err) => {
+                return Err(DeboaError::DeserializationError {
+                    message: err.to_string(),
+                });
+            },
+        }
     }
 
     #[cfg(feature = "xml")]
@@ -125,14 +130,65 @@ impl DeboaResponse {
     #[cfg(feature = "xml")]
     pub async fn xml<T: for<'a> Deserialize<'a>>(&mut self) -> Result<T, DeboaError> {
         let body = self.body.as_mut();
-        let json = serde_xml_rs::from_reader(body.as_bytes());
-        if let Err(err) = json {
-            return Err(DeboaError::DeserializationError {
-                message: err.to_string(),
-            });
-        }
+        let xml = serde_xml_rs::from_reader(body.as_bytes());
 
-        Ok(json.unwrap())
+        match xml {
+            Ok(deserialized_body) => {
+                Ok(deserialized_body)
+            },
+            Err(err) => {
+                return Err(DeboaError::DeserializationError {
+                    message: err.to_string(),
+                });
+            },
+        }
+    }
+
+    #[cfg(feature = "msgpack")]
+    /// This method is called after the response is received.
+    ///
+    /// # Arguments
+    ///
+    /// * `T` - The type to be deserialized.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use deboa::{Deboa, DeboaError, RequestMethod};
+    /// use serde::{Serialize, Deserialize};
+    ///
+    /// #[derive(Serialize, Deserialize)]
+    /// struct Post {
+    ///     id: u32,
+    ///     title: String,
+    ///     body: String,
+    /// }
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut response = api.get("/posts").await?;
+    ///   let posts = response.msgpack::<Vec<Post>>().await?;
+    ///   Ok(())
+    /// }
+    /// ```
+    ///
+    #[cfg(feature = "msgpack")]
+    pub async fn msgpack<T: for<'a> Deserialize<'a>>(&mut self) -> Result<T, DeboaError> {
+        let body = self.raw_body.as_ref();
+
+        let rmp_deserialized = rmp_serde::from_slice::<T>(&body);
+
+        match rmp_deserialized {
+            Ok(deserialized_body) => {
+                Ok(deserialized_body)
+            },
+            Err(err) => {
+                return Err(DeboaError::DeserializationError {
+                    message: err.to_string(),
+                });
+            },
+        }
     }
 
     /// This method is called after the response is received.
@@ -152,6 +208,6 @@ impl DeboaResponse {
     /// ```
     ///
     pub async fn text(&mut self) -> Result<String, DeboaError> {
-        Ok(self.body.clone())
+        String::from_utf8(self.raw_body.clone()).map_err(|err| DeboaError::SerializationError { message: err.to_string() })
     }
 }

@@ -6,7 +6,7 @@ pub mod deboa_tests {
     use http::StatusCode;
     #[cfg(feature = "json")]
     use serde::{Deserialize, Serialize};
-    use std::{collections::HashMap};
+    use std::collections::HashMap;
 
     #[derive(Default, Serialize, Deserialize, Debug)]
     #[cfg(feature = "json")]
@@ -182,10 +182,14 @@ pub mod deboa_tests {
         let response = api.get("/posts").await;
 
         assert!(response.is_err());
-        assert_eq!(response, Err(DeboaError::ConnectionError {
-            host: "invalid-server.com".to_string(),
-            message: "failed to lookup address information: Name or service not known".to_string(),
-        }));
+        assert_eq!(
+            response,
+            Err(DeboaError::ConnectionError {
+                host: "invalid-server.com".to_string(),
+                message: "failed to lookup address information: Name or service not known"
+                    .to_string(),
+            })
+        );
 
         Ok(())
     }
