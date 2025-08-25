@@ -1,2 +1,0 @@
-cargo:rustc-check-cfg=cfg(io_uring_skip_arch_check)
-cargo:rustc-check-cfg=cfg(io_uring_use_own_sys)

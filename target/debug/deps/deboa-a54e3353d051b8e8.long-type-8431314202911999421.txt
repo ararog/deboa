@@ -1,3 +1,0 @@
-impl futures_lite::Future<Output = std::result::Result<cyper_core::HttpStream, std::io::Error>>
-impl futures_lite::Future<Output = std::result::Result<cyper_core::HttpStream, std::io::Error>>: hyper::rt::Read
-impl futures_lite::Future<Output = std::result::Result<cyper_core::HttpStream, std::io::Error>>: hyper::rt::Write

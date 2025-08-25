@@ -1,1 +1,0 @@
-(hyper::client::conn::http1::SendRequest<_>, hyper::client::conn::http1::Connection<impl futures_lite::Future<Output = std::result::Result<cyper_core::HttpStream, std::io::Error>>, _>)
