@@ -91,9 +91,9 @@ impl DeboaResponse {
                 Ok(deserialized_body)
             },
             Err(err) => {
-                return Err(DeboaError::DeserializationError {
+                Err(DeboaError::DeserializationError {
                     message: err.to_string(),
-                });
+                })
             },
         }
     }
@@ -137,9 +137,9 @@ impl DeboaResponse {
                 Ok(deserialized_body)
             },
             Err(err) => {
-                return Err(DeboaError::DeserializationError {
+                Err(DeboaError::DeserializationError {
                     message: err.to_string(),
-                });
+                })
             },
         }
     }
@@ -184,9 +184,9 @@ impl DeboaResponse {
                 Ok(deserialized_body)
             },
             Err(err) => {
-                return Err(DeboaError::DeserializationError {
+                Err(DeboaError::DeserializationError {
                     message: err.to_string(),
-                });
+                })
             },
         }
     }

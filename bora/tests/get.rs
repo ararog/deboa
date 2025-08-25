@@ -17,9 +17,9 @@ mod inner {
 
     #[bora(
       api(
-        get(name="get_by_id", path="/posts/<id:i32>", target=Post),
-        get(name="query_by_id", path="/posts?<id:i32>", target=Post),
-        get(name="get_all", path="/posts", target=Vec<Post>),
+        get(name="get_by_id", path="/posts/<id:i32>", res_body=Post),
+        get(name="query_by_id", path="/posts?<id:i32>", res_body=Post),
+        get(name="get_all", path="/posts", res_body=Vec<Post>),
       )
     )]
     pub struct PostService;
