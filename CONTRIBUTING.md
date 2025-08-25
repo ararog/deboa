@@ -134,25 +134,41 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/ararog
 <!-- You might want to create an issue template for enhancement suggestions that can be used as a guide and that defines the structure of the information to be included. If you do so, reference it here in the description. -->
 
 ### Your First Code Contribution
-<!-- TODO
-include Setup of env, IDE and typical getting started instructions?
 
--->
+Always set up your environment and IDE before contributing to the project. When you are ready to start contributing, please follow the steps below:
+
+- Fork repository
+- Clone forked repository
+- Create a new branch
+- Make your changes
+- Commit your changes
+- Push your changes
+- Open a pull request
+
+Please set project maintainer as the reviewer of your pull request.
 
 ### Improving The Documentation
-<!-- TODO
-Updating, improving and correcting the documentation
 
--->
+For every change in the code, please update the documentation. Please add examples and explainations to the documentation.
+If you are adding a new feature, please add a new section to the documentation. Also create a small example inside examples folder.
+
 
 ## Styleguides
-### Commit Messages
-<!-- TODO
 
--->
+### Commit Messages
+
+In project we use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/). Please use it when committing your changes.
+Limit title to 72 characters.
+
+### Rust
+
+In project we use [rustfmt](https://github.com/rust-lang/rustfmt) to format the code.
 
 ## Join The Project Team
-<!-- TODO -->
+
+In order to join the project team, please make your first contribution.
+
+Once your first contribution is merged, please send a mail to <rogerio.araujo@gmail.com> to join the project team.
 
 <!-- omit in toc -->
 ## Attribution
