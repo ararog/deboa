@@ -1,0 +1,12 @@
+/home/rogerio/Projetos/rust/deboa/target/debug/deps/compio_buf-a0627ff33f1c7b47.d: /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/lib.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/io_slice.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/buf_result.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/io_buf.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/io_vec_buf.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/slice.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/uninit.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/iter.rs
+
+/home/rogerio/Projetos/rust/deboa/target/debug/deps/libcompio_buf-a0627ff33f1c7b47.rmeta: /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/lib.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/io_slice.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/buf_result.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/io_buf.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/io_vec_buf.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/slice.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/uninit.rs /home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/iter.rs
+
+/home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/lib.rs:
+/home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/io_slice.rs:
+/home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/buf_result.rs:
+/home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/io_buf.rs:
+/home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/io_vec_buf.rs:
+/home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/slice.rs:
+/home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/uninit.rs:
+/home/rogerio/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/compio-buf-0.6.0/src/iter.rs:

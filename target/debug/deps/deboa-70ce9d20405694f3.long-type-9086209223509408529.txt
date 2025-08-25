@@ -1,0 +1,1 @@
+std::result::Result<(hyper::client::conn::http1::SendRequest<std::string::String>, hyper::client::conn::http1::Connection<hyper_util::rt::TokioIo<tokio::net::TcpStream>, std::string::String>), std::boxed::Box<(dyn std::error::Error + 'static)>>
