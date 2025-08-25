@@ -20,7 +20,9 @@ With Deboa you can:
 
 ## Install
 
-`deboa = { version = "0.0.5" }`
+```rust
+deboa = { version = "0.0.5" }
+```
 
 ## Features
 
