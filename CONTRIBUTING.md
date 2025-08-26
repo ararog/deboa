@@ -163,6 +163,8 @@ Limit title to 72 characters.
 ### Rust
 
 In project we use [rustfmt](https://github.com/rust-lang/rustfmt) to format the code.
+We also use [clippy](https://github.com/rust-lang/rust-clippy) to lint the code.
+And we use [samoyed](https://github.com/nutthead/samoyed) manage git hooks.
 
 ## Join The Project Team
 
