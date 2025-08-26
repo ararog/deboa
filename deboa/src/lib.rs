@@ -34,8 +34,8 @@ mod tests;
 
 pub struct Deboa {
     base_url: &'static str,
-    headers: Option<HashMap<HeaderName, &'static str>>,
-    params: Option<HashMap<&'static str, &'static str>>,
+    headers: Option<HashMap<HeaderName, String>>,
+    query_params: Option<HashMap<&'static str, &'static str>>,
     body: Option<String>,
     retries: u32,
     connection_timeout: u64,
@@ -49,7 +49,7 @@ impl Debug for Deboa {
         f.debug_struct("Deboa")
             .field("base_url", &self.base_url)
             .field("headers", &self.headers)
-            .field("params", &self.params)
+            .field("query_params", &self.query_params)
             .field("body", &self.body)
             .finish()
     }
@@ -75,15 +75,15 @@ impl Deboa {
     /// ```
     ///
     pub fn new(base_url: &'static str) -> Self {
-        let default_headers: HashMap<HeaderName, &'static str> = HashMap::from([
-            (header::ACCEPT, mime::APPLICATION_JSON.as_ref()),
-            (header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref()),
+        let default_headers: HashMap<HeaderName, String> = HashMap::from([
+            (header::ACCEPT, mime::APPLICATION_JSON.to_string()),
+            (header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string()),
         ]);
 
         Deboa {
             base_url,
             headers: Some(default_headers),
-            params: None,
+            query_params: None,
             body: None,
             retries: 0,
             connection_timeout: 0,
@@ -116,7 +116,7 @@ impl Deboa {
     /// ```
     ///
     pub fn add_header(&mut self, key: HeaderName, value: String) -> &mut Self {
-        self.headers.as_mut().unwrap().insert(key, value.leak());
+        self.headers.as_mut().unwrap().insert(key, value);
         self
     }
 
@@ -169,8 +169,26 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub fn has_header(&self, key: HeaderName) -> bool {
-        self.headers.as_ref().unwrap().contains_key(&key)
+    pub fn has_header(&self, key: &HeaderName) -> bool {
+        self.headers.as_ref().unwrap().contains_key(key)
+    }
+
+    /// When adding the header of [`header::AUTHORIZATION`], add the type of authorization to the value itself. ie.: "Bearer {token_here}",.
+    pub fn edit_header(&mut self, header: HeaderName, value: String) -> &mut Self {
+        if !self.has_header(&header) {
+            self.add_header(header, value);
+        } else {
+            // We can safely unwrap here, as we have made sure that it exists by the previous if statement.
+            let header_value = self.get_mut_header(&header).unwrap();
+
+            *header_value = value;
+        }
+
+        self
+    }
+
+    pub fn get_mut_header(&mut self, header: &HeaderName) -> Option<&mut String> {
+        self.headers.as_mut().unwrap().get_mut(header)
     }
 
     /// Allow add bearer auth at any time.
@@ -194,7 +212,7 @@ impl Deboa {
     ///
     pub fn add_bearer_auth(&mut self, token: String) -> &mut Self {
         let auth = format!("Bearer {token}");
-        if !self.has_header(header::AUTHORIZATION) {
+        if !self.has_header(&header::AUTHORIZATION) {
             self.add_header(header::AUTHORIZATION, auth);
         }
         self
@@ -222,7 +240,7 @@ impl Deboa {
     ///
     pub fn add_basic_auth(&mut self, username: String, password: String) -> &mut Self {
         let auth = format!("Basic {}", STANDARD.encode(format!("{username}:{password}")));
-        if !self.has_header(header::AUTHORIZATION) {
+        if !self.has_header(&header::AUTHORIZATION) {
             self.add_header(header::AUTHORIZATION, auth);
         }
         self
@@ -506,7 +524,7 @@ impl Deboa {
     /// ```
     ///
     pub fn set_query_params(&mut self, params: Option<HashMap<&'static str, &'static str>>) -> &mut Self {
-        self.params = params;
+        self.query_params = params;
         self
     }
 
@@ -776,9 +794,9 @@ impl Deboa {
     pub async fn any(&self, method: RequestMethod, path: &str) -> Result<DeboaResponse, DeboaError> {
         let mut url = Url::parse(format!("{}{}", self.base_url, path).as_str()).unwrap();
 
-        if self.params.is_some() && method == RequestMethod::GET {
+        if self.query_params.is_some() && method == RequestMethod::GET {
             let query = form_urlencoded::Serializer::new(String::new())
-                .extend_pairs(self.params.as_ref().unwrap())
+                .extend_pairs(self.query_params.as_ref().unwrap())
                 .finish();
             url.set_query(Some(&query));
         }
@@ -839,7 +857,7 @@ impl Deboa {
             let req_headers = builder.headers_mut().unwrap();
             if let Some(headers) = &self.headers {
                 headers.iter().fold(req_headers, |acc, (key, value)| {
-                    acc.insert(key, HeaderValue::from_static(value));
+                    acc.insert(key, HeaderValue::from_str(value).unwrap());
                     acc
                 });
             }
