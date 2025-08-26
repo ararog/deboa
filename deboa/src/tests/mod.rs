@@ -3,7 +3,7 @@ pub mod deboa_tests {
     use crate::DeboaError;
     #[cfg(feature = "middlewares")]
     use crate::{middlewares::DeboaMiddleware, response::DeboaResponse, Deboa};
-    use http::StatusCode;
+    use http::{header, StatusCode};
     #[cfg(feature = "json")]
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
@@ -440,5 +440,64 @@ pub mod deboa_tests {
     #[compio::test]
     async fn test_delete() {
         let _ = do_delete().await;
+    }
+
+    #[test]
+    fn test_base_url() {
+        let api = Deboa::new("https://jsonplaceholder.typicode.com");
+
+        assert_eq!(api.base_url, "https://jsonplaceholder.typicode.com");
+    }
+
+    #[test]
+    fn test_set_query_params() {
+        let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+
+        let query_map = HashMap::from([("id", "1")]);
+
+        api.set_query_params(Some(query_map.clone()));
+
+        assert_eq!(api.query_params, Some(query_map));
+    }
+
+    #[test]
+    fn test_set_headers() {
+        let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+
+        let headers = HashMap::from([(header::CONTENT_TYPE, "application/json".to_string())]);
+
+        api.headers = Some(headers);
+
+        assert_eq!(api.headers, Some(HashMap::from([(header::CONTENT_TYPE, "application/json".to_string())])));
+    }
+
+    #[test]
+    fn test_set_basic_auth() {
+        let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+
+        api.add_basic_auth("username".to_string(), "password".to_string());
+
+        assert_eq!(
+            api.get_mut_header(&header::AUTHORIZATION),
+            Some(&mut "Basic dXNlcm5hbWU6cGFzc3dvcmQ=".to_string())
+        );
+    }
+
+    #[test]
+    fn test_set_bearer_auth() {
+        let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+
+        api.add_bearer_auth("token".to_string());
+
+        assert_eq!(api.get_mut_header(&header::AUTHORIZATION), Some(&mut "Bearer token".to_string()));
+    }
+
+    #[test]
+    fn test_set_retries() {
+        let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+
+        api.set_retries(5);
+
+        assert_eq!(api.retries, 5);
     }
 }
