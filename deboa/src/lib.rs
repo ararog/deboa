@@ -553,7 +553,7 @@ impl Deboa {
     /// ```
     ///
     pub fn set_text(&mut self, text: String) -> &mut Self {
-        self.body = Some(text.as_bytes().to_vec().into());
+        self.body = Some(text.as_bytes().to_vec());
         self
     }
 
@@ -864,17 +864,15 @@ impl Deboa {
         let mut sender = {
             let (sender, conn) = runtimes::tokio::get_connection(&url).await?;
 
-            tokio::spawn(async move {
-                match conn.await {
-                    Ok(_) => (),
-                    Err(_err) => {
-                        // return Err(DeboaError::ConnectionError {
-                        //     host: url.to_string(),
-                        //     message: err.to_string(),
-                        // });
-                    }
-                };
-            });
+            match conn.await {
+                Ok(_) => (),
+                Err(err) => {
+                    return Err(DeboaError::ConnectionError {
+                        host: url.to_string(),
+                        message: err.to_string(),
+                    });
+                }
+            };
 
             sender
         };
@@ -949,11 +947,8 @@ impl Deboa {
             });
         }
 
-        let request = req.unwrap();
-
-        // We need sure that we do not reconstruct the request somewhere else in the code as it will lead to the headers deletion making a request invalid.
         let res = sender
-            .send_request(request)
+            .send_request(Request::new(http_body_util::Full::new(Bytes::from_owner(req.unwrap().into_body()))))
             .await;
 
         if let Err(err) = res {
