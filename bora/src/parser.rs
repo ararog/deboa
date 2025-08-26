@@ -75,6 +75,7 @@ pub enum GetFieldEnum {
     name(NameStruct),
     path(PathStruct),
     res_body(Box<ResBodyStruct>),
+    format(FormatStruct),
 }
 
 impl Parse for GetFieldEnum {
@@ -86,6 +87,7 @@ impl Parse for GetFieldEnum {
                 "name" => Ok(GetFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(GetFieldEnum::path(PathStruct::parse(input)?)),
                 "res_body" => Ok(GetFieldEnum::res_body(Box::new(ResBodyStruct::parse(input)?))),
+                "format" => Ok(GetFieldEnum::format(FormatStruct::parse(input)?)),
                 _ => Err(input.error(format!("expected one of name, path or res_body, found '{ident}'"))),
             }
         } else {
@@ -113,6 +115,7 @@ pub enum PostFieldEnum {
     name(NameStruct),
     path(PathStruct),
     req_body(Box<ReqBodyStruct>),
+    format(FormatStruct),
 }
 
 impl Parse for PostFieldEnum {
@@ -124,6 +127,7 @@ impl Parse for PostFieldEnum {
                 "name" => Ok(PostFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(PostFieldEnum::path(PathStruct::parse(input)?)),
                 "req_body" => Ok(PostFieldEnum::req_body(Box::new(ReqBodyStruct::parse(input)?))),
+                "format" => Ok(PostFieldEnum::format(FormatStruct::parse(input)?)),
                 _ => Err(input.error(format!("expected one of name, path or req_body, found '{ident}'"))),
             }
         } else {
@@ -151,6 +155,7 @@ pub enum PutFieldEnum {
     name(NameStruct),
     path(PathStruct),
     req_body(Box<ReqBodyStruct>),
+    format(FormatStruct),
 }
 
 impl Parse for PutFieldEnum {
@@ -162,6 +167,7 @@ impl Parse for PutFieldEnum {
                 "name" => Ok(PutFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(PutFieldEnum::path(PathStruct::parse(input)?)),
                 "req_body" => Ok(PutFieldEnum::req_body(Box::new(ReqBodyStruct::parse(input)?))),
+                "format" => Ok(PutFieldEnum::format(FormatStruct::parse(input)?)),
                 _ => Err(input.error(format!("expected one of name, path or req_body, found '{ident}'"))),
             }
         } else {
@@ -225,6 +231,7 @@ pub enum PatchFieldEnum {
     name(NameStruct),
     path(PathStruct),
     req_body(Box<ReqBodyStruct>),
+    format(FormatStruct),
 }
 
 impl Parse for PatchFieldEnum {
@@ -236,6 +243,7 @@ impl Parse for PatchFieldEnum {
                 "name" => Ok(PatchFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(PatchFieldEnum::path(PathStruct::parse(input)?)),
                 "req_body" => Ok(PatchFieldEnum::req_body(Box::new(ReqBodyStruct::parse(input)?))),
+                "format" => Ok(PatchFieldEnum::format(FormatStruct::parse(input)?)),
                 _ => Err(input.error(format!("expected one of name, path or req_body, found '{ident}'"))),
             }
         } else {
@@ -294,6 +302,20 @@ pub struct ResBodyStruct {
 impl Parse for ResBodyStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         Ok(ResBodyStruct {
+            _equal_token: input.parse()?,
+            value: input.parse()?,
+        })
+    }
+}
+
+pub struct FormatStruct {
+    _equal_token: Token![=],
+    pub value: LitStr,
+}
+
+impl Parse for FormatStruct {
+    fn parse(input: ParseStream) -> Result<Self, syn::Error> {
+        Ok(FormatStruct {
             _equal_token: input.parse()?,
             value: input.parse()?,
         })
