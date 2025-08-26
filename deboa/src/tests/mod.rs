@@ -186,8 +186,7 @@ pub mod deboa_tests {
             response,
             Err(DeboaError::ConnectionError {
                 host: "invalid-server.com".to_string(),
-                message: "failed to lookup address information: Name or service not known"
-                    .to_string(),
+                message: "failed to lookup address information: Name or service not known".to_string(),
             })
         );
 
@@ -242,13 +241,7 @@ pub mod deboa_tests {
         let comments = response.json::<Vec<Comment>>().await?;
 
         #[cfg(feature = "json")]
-        assert_eq!(
-            comments.len(),
-            1,
-            "Number of comments is {} and should be {}",
-            comments.len(),
-            1
-        );
+        assert_eq!(comments.len(), 1, "Number of comments is {} and should be {}", comments.len(), 1);
 
         Ok(())
     }

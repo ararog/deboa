@@ -11,9 +11,7 @@ use url::{Host, Url};
 
 use crate::DeboaError;
 
-pub async fn get_connection(
-    url: &Url,
-) -> Result<(SendRequest<String>, Connection<TokioIo<TcpStream>, String>), DeboaError> {
+pub async fn get_connection(url: &Url) -> Result<(SendRequest<String>, Connection<TokioIo<TcpStream>, String>), DeboaError> {
     let host = url.host().unwrap_or(Host::Domain("localhost"));
     let port = url.port().unwrap_or(80);
     let addr = format!("{host}:{port}");

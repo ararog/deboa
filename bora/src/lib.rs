@@ -11,14 +11,7 @@ use syn::{Ident, LitStr, parse_macro_input};
 
 use parser::BoraApi;
 
-use crate::parser::{
-    GetFieldEnum,
-    OperationEnum,
-    PostFieldEnum,
-    PutFieldEnum,
-    DeleteFieldEnum,
-    PatchFieldEnum,
-};
+use crate::parser::{DeleteFieldEnum, GetFieldEnum, OperationEnum, PatchFieldEnum, PostFieldEnum, PutFieldEnum};
 
 mod parser;
 
@@ -71,310 +64,274 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut trait_functions = proc_macro2::TokenStream::new();
     let mut trait_impl = proc_macro2::TokenStream::new();
 
-    root.operations
-        .iter()
-        .fold((&mut trait_functions, &mut trait_impl), |acc, op| {
-            match op {
-                OperationEnum::get(get) => {
-                    let fields = &get.fields;
+    root.operations.iter().fold((&mut trait_functions, &mut trait_impl), |acc, op| {
+        match op {
+            OperationEnum::get(get) => {
+                let fields = &get.fields;
 
-                    let method = syn::parse_str::<syn::Ident>("get").unwrap();
-                    let mut method_name = Ident::new("ident", proc_macro2::Span::call_site());
-                    let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
-                    let mut target_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
-                    let mut api_params = proc_macro2::TokenStream::new();
+                let method = syn::parse_str::<syn::Ident>("get").unwrap();
+                let mut method_name = Ident::new("ident", proc_macro2::Span::call_site());
+                let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
+                let mut target_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
+                let mut api_params = proc_macro2::TokenStream::new();
 
-                    fields.iter().for_each(|field| match field {
-                        GetFieldEnum::name(name) => {
-                            method_name = Ident::new(
-                                name.value.value().as_str(),
-                                proc_macro2::Span::call_site(),
-                            );
-                        }
-                        GetFieldEnum::path(path) => {
-                            let path = &path.value;
+                fields.iter().for_each(|field| match field {
+                    GetFieldEnum::name(name) => {
+                        method_name = Ident::new(name.value.value().as_str(), proc_macro2::Span::call_site());
+                    }
+                    GetFieldEnum::path(path) => {
+                        let path = &path.value;
 
-                            let raw_path = path.value();
-                            let params = regex::Regex::new(r"<(\w*:\w*)>")
-                                .unwrap()
-                                .captures(&raw_path)
-                                .map(|m| m.get(1).unwrap().as_str())
-                                .into_iter()
-                                .collect::<Vec<_>>();
+                        let raw_path = path.value();
+                        let params = regex::Regex::new(r"<(\w*:\w*)>")
+                            .unwrap()
+                            .captures(&raw_path)
+                            .map(|m| m.get(1).unwrap().as_str())
+                            .into_iter()
+                            .collect::<Vec<_>>();
 
-                            api_params = params.clone().into_iter().fold(
-                                proc_macro2::TokenStream::new(),
-                                |mut acc, param| {
-                                    let pair = param.split(':').collect::<Vec<_>>();
-                                    let param = syn::parse_str::<syn::Ident>(pair[0]).unwrap();
-                                    let param_type = syn::parse_str::<syn::Type>(pair[1]).unwrap();
-                                    acc.extend(quote! {
-                                        #param: #param_type,
-                                    });
-                                    acc
-                                },
-                            );
+                        api_params = params.clone().into_iter().fold(proc_macro2::TokenStream::new(), |mut acc, param| {
+                            let pair = param.split(':').collect::<Vec<_>>();
+                            let param = syn::parse_str::<syn::Ident>(pair[0]).unwrap();
+                            let param_type = syn::parse_str::<syn::Type>(pair[1]).unwrap();
+                            acc.extend(quote! {
+                                #param: #param_type,
+                            });
+                            acc
+                        });
 
-                            let new_path = regex::Regex::new(r"<(\w*):\w*>")
-                                .unwrap()
-                                .replace_all(&raw_path, "{$1}");
+                        let new_path = regex::Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
 
-                            api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
-                        }
-                        GetFieldEnum::res_body(res_body) => {
-                            target_type = res_body.value.clone();
-                        }
-                    });
+                        api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
+                    }
+                    GetFieldEnum::res_body(res_body) => {
+                        target_type = res_body.value.clone();
+                    }
+                });
 
-                    acc.0.extend(quote! {
-                        async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError>;
-                    });
+                acc.0.extend(quote! {
+                    async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError>;
+                });
 
-                    acc.1.extend(quote! {
-                        async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError> {
-                            self.api.#method(format!(#api_path).as_ref()).await?.json::<#target_type>().await
-                        }
-                    });
-                }
-                OperationEnum::post(post) => {  
-                    let fields = &post.fields;
-
-                    let method = syn::parse_str::<syn::Ident>("post").unwrap();
-                    let mut method_name = Ident::new("ident", proc_macro2::Span::call_site());
-                    let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
-                    let mut target_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
-                    let mut api_params = proc_macro2::TokenStream::new();
-
-                    fields.iter().for_each(|field| match field {
-                        PostFieldEnum::name(name) => {
-                            method_name = Ident::new(
-                                name.value.value().as_str(),
-                                proc_macro2::Span::call_site(),
-                            );
-                        }
-                        PostFieldEnum::path(path) => {
-                            let path = &path.value;
-
-                            let raw_path = path.value();
-                            let params = regex::Regex::new(r"<(\w*):\w*>")
-                                .unwrap()
-                                .captures(&raw_path)
-                                .map(|m| m.get(1).unwrap().as_str())
-                                .into_iter()
-                                .collect::<Vec<_>>();
-
-                            api_params = params.clone().into_iter().fold(
-                                proc_macro2::TokenStream::new(),
-                                |mut acc, param| {
-                                    let pair = param.split(':').collect::<Vec<_>>();
-                                    let param = syn::parse_str::<syn::Ident>(pair[0]).unwrap();
-                                    let param_type = syn::parse_str::<syn::Type>(pair[1]).unwrap();
-                                    acc.extend(quote! {
-                                        #param: #param_type,
-                                    });
-                                    acc
-                                },
-                            );
-
-                            let new_path = regex::Regex::new(r"<(\w*):\w*>")
-                                .unwrap()
-                                .replace_all(&raw_path, "{$1}");
-
-                            api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
-                        }
-                        PostFieldEnum::req_body(req_body) => {
-                            target_type = req_body.value.clone();
-                        }
-                    });
-
-                    acc.0.extend(quote! {
-                        async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError>;
-                    });
-
-                    acc.1.extend(quote! {
-                        async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError> {
-                            self.api.#method(format!(#api_path).as_ref()).await?.json::<#target_type>().await
-                        }
-                    });
-                }
-                OperationEnum::put(put) => {
-                    let fields = &put.fields;
-
-                    let method = syn::parse_str::<syn::Ident>("put").unwrap();
-                    let mut method_name = Ident::new("ident", proc_macro2::Span::call_site());
-                    let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
-                    let mut target_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
-                    let mut api_params = proc_macro2::TokenStream::new();
-
-                    fields.iter().for_each(|field| match field {
-                        PutFieldEnum::name(name) => {
-                            method_name = Ident::new(
-                                name.value.value().as_str(),
-                                proc_macro2::Span::call_site(),
-                            );
-                        }
-                        PutFieldEnum::path(path) => {
-                            let path = &path.value;
-
-                            let raw_path = path.value();
-                            let params = regex::Regex::new(r"<(\w*):\w*>")
-                                .unwrap()
-                                .captures(&raw_path)
-                                .map(|m| m.get(1).unwrap().as_str())
-                                .into_iter()
-                                .collect::<Vec<_>>();
-
-                            api_params = params.clone().into_iter().fold(
-                                proc_macro2::TokenStream::new(),
-                                |mut acc, param| {
-                                    let pair = param.split(':').collect::<Vec<_>>();
-                                    let param = syn::parse_str::<syn::Ident>(pair[0]).unwrap();
-                                    let param_type = syn::parse_str::<syn::Type>(pair[1]).unwrap();
-                                    acc.extend(quote! {
-                                        #param: #param_type,
-                                    });
-                                    acc
-                                },
-                            );
-
-                            let new_path = regex::Regex::new(r"<(\w*):\w*>")
-                                .unwrap()
-                                .replace_all(&raw_path, "{$1}");
-
-                            api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
-                        }
-                        PutFieldEnum::req_body(req_body) => {
-                            target_type = req_body.value.clone();
-                        }
-                    });
-
-                    acc.0.extend(quote! {
-                        async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError>;
-                    });
-
-                    acc.1.extend(quote! {
-                        async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError> {
-                            self.api.#method(format!(#api_path).as_ref()).await?.json::<#target_type>().await
-                        }
-                    });
-                }
-                OperationEnum::delete(delete) => {
-                    let fields = &delete.fields;
-
-                    let method = syn::parse_str::<syn::Ident>("delete").unwrap();
-                    let mut method_name = Ident::new("ident", proc_macro2::Span::call_site());
-                    let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
-                    let mut api_params = proc_macro2::TokenStream::new();
-
-                    fields.iter().for_each(|field| match field {  
-                        DeleteFieldEnum::name(name) => {
-                            method_name = Ident::new(name.value.value().as_str(), proc_macro2::Span::call_site()); 
-                        }
-                        DeleteFieldEnum::path(path) => {
-                            let path = &path.value;
-
-                            let raw_path = path.value();
-                            let params = regex::Regex::new(r"<(\w*):\w*>")
-                                .unwrap()
-                                .captures(&raw_path)
-                                .map(|m| m.get(1).unwrap().as_str())
-                                .into_iter()
-                                .collect::<Vec<_>>();
-
-                            api_params = params.clone().into_iter().fold(
-                                proc_macro2::TokenStream::new(),
-                                |mut acc, param| {
-                                    let pair = param.split(':').collect::<Vec<_>>();
-                                    let param = syn::parse_str::<syn::Ident>(pair[0]).unwrap();
-                                    let param_type = syn::parse_str::<syn::Type>(pair[1]).unwrap();
-                                    acc.extend(quote! {
-                                        #param: #param_type,
-                                    });
-                                    acc
-                                },
-                            );
-
-                            let new_path = regex::Regex::new(r"<(\w*):\w*>")
-                                .unwrap()
-                                .replace_all(&raw_path, "{$1}");
-
-                            api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
-                        }
-                    });
-
-                    acc.0.extend(quote! {
-                        async fn #method_name(&self, #api_params) -> Result<(), DeboaError>;
-                    });
-
-                    acc.1.extend(quote! {
-                        async fn #method_name(&self, #api_params) -> Result<(), DeboaError> {
-                            self.api.#method(format!(#api_path).as_ref()).await
-                        }
-                    });
-                }
-                OperationEnum::patch(patch) => {
-                    let fields = &patch.fields;
-
-                    let method = syn::parse_str::<syn::Ident>("patch").unwrap();
-                    let mut method_name = Ident::new("ident", proc_macro2::Span::call_site());
-                    let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
-                    let mut api_params = proc_macro2::TokenStream::new();
-                    let mut target_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
-                    fields.iter().for_each(|field| match field {
-                        PatchFieldEnum::name(name) => {
-                            method_name = Ident::new(name.value.value().as_str(), proc_macro2::Span::call_site());
-                        }
-
-                        PatchFieldEnum::path(path) => {
-                            let path = &path.value;
-                            
-                            let raw_path = path.value();
-                            let params = regex::Regex::new(r"<(\w*):\w*>")
-                                .unwrap()
-                                .captures(&raw_path)
-                                .map(|m| m.get(1).unwrap().as_str())
-                                .into_iter()
-                                .collect::<Vec<_>>();
-
-                            api_params = params.clone().into_iter().fold(
-                                proc_macro2::TokenStream::new(),
-                                |mut acc, param| {
-                                    let pair = param.split(':').collect::<Vec<_>>();
-                                    let param = syn::parse_str::<syn::Ident>(pair[0]).unwrap();
-                                    let param_type = syn::parse_str::<syn::Type>(pair[1]).unwrap();
-                                    acc.extend(quote! {
-                                        #param: #param_type,
-                                    });
-                                    acc
-                                },
-                            );
-
-                            let new_path = regex::Regex::new(r"<(\w*):\w*>")
-                                .unwrap()
-                                .replace_all(&raw_path, "{$1}");
-
-                            api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
-                        }
-
-                        PatchFieldEnum::req_body(req_body) => {
-                            target_type = req_body.value.clone();
-                        }
-                    });
-
-                    acc.0.extend(quote! {
-                        async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError>;
-                    });
-
-                    acc.1.extend(quote! {
-                        async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError> {
-                            self.api.#method(format!(#api_path).as_ref()).await?.json::<#target_type>().await
-                        }
-                    });
-                }
+                acc.1.extend(quote! {
+                    async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError> {
+                        self.api.#method(format!(#api_path).as_ref()).await?.json::<#target_type>().await
+                    }
+                });
             }
+            OperationEnum::post(post) => {
+                let fields = &post.fields;
 
-            acc
-        });
+                let method = syn::parse_str::<syn::Ident>("post").unwrap();
+                let mut method_name = Ident::new("ident", proc_macro2::Span::call_site());
+                let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
+                let mut target_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
+                let mut api_params = proc_macro2::TokenStream::new();
+
+                fields.iter().for_each(|field| match field {
+                    PostFieldEnum::name(name) => {
+                        method_name = Ident::new(name.value.value().as_str(), proc_macro2::Span::call_site());
+                    }
+                    PostFieldEnum::path(path) => {
+                        let path = &path.value;
+
+                        let raw_path = path.value();
+                        let params = regex::Regex::new(r"<(\w*):\w*>")
+                            .unwrap()
+                            .captures(&raw_path)
+                            .map(|m| m.get(1).unwrap().as_str())
+                            .into_iter()
+                            .collect::<Vec<_>>();
+
+                        api_params = params.clone().into_iter().fold(proc_macro2::TokenStream::new(), |mut acc, param| {
+                            let pair = param.split(':').collect::<Vec<_>>();
+                            let param = syn::parse_str::<syn::Ident>(pair[0]).unwrap();
+                            let param_type = syn::parse_str::<syn::Type>(pair[1]).unwrap();
+                            acc.extend(quote! {
+                                #param: #param_type,
+                            });
+                            acc
+                        });
+
+                        let new_path = regex::Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
+
+                        api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
+                    }
+                    PostFieldEnum::req_body(req_body) => {
+                        target_type = req_body.value.clone();
+                    }
+                });
+
+                acc.0.extend(quote! {
+                    async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError>;
+                });
+
+                acc.1.extend(quote! {
+                    async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError> {
+                        self.api.#method(format!(#api_path).as_ref()).await?.json::<#target_type>().await
+                    }
+                });
+            }
+            OperationEnum::put(put) => {
+                let fields = &put.fields;
+
+                let method = syn::parse_str::<syn::Ident>("put").unwrap();
+                let mut method_name = Ident::new("ident", proc_macro2::Span::call_site());
+                let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
+                let mut target_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
+                let mut api_params = proc_macro2::TokenStream::new();
+
+                fields.iter().for_each(|field| match field {
+                    PutFieldEnum::name(name) => {
+                        method_name = Ident::new(name.value.value().as_str(), proc_macro2::Span::call_site());
+                    }
+                    PutFieldEnum::path(path) => {
+                        let path = &path.value;
+
+                        let raw_path = path.value();
+                        let params = regex::Regex::new(r"<(\w*):\w*>")
+                            .unwrap()
+                            .captures(&raw_path)
+                            .map(|m| m.get(1).unwrap().as_str())
+                            .into_iter()
+                            .collect::<Vec<_>>();
+
+                        api_params = params.clone().into_iter().fold(proc_macro2::TokenStream::new(), |mut acc, param| {
+                            let pair = param.split(':').collect::<Vec<_>>();
+                            let param = syn::parse_str::<syn::Ident>(pair[0]).unwrap();
+                            let param_type = syn::parse_str::<syn::Type>(pair[1]).unwrap();
+                            acc.extend(quote! {
+                                #param: #param_type,
+                            });
+                            acc
+                        });
+
+                        let new_path = regex::Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
+
+                        api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
+                    }
+                    PutFieldEnum::req_body(req_body) => {
+                        target_type = req_body.value.clone();
+                    }
+                });
+
+                acc.0.extend(quote! {
+                    async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError>;
+                });
+
+                acc.1.extend(quote! {
+                    async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError> {
+                        self.api.#method(format!(#api_path).as_ref()).await?.json::<#target_type>().await
+                    }
+                });
+            }
+            OperationEnum::delete(delete) => {
+                let fields = &delete.fields;
+
+                let method = syn::parse_str::<syn::Ident>("delete").unwrap();
+                let mut method_name = Ident::new("ident", proc_macro2::Span::call_site());
+                let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
+                let mut api_params = proc_macro2::TokenStream::new();
+
+                fields.iter().for_each(|field| match field {
+                    DeleteFieldEnum::name(name) => {
+                        method_name = Ident::new(name.value.value().as_str(), proc_macro2::Span::call_site());
+                    }
+                    DeleteFieldEnum::path(path) => {
+                        let path = &path.value;
+
+                        let raw_path = path.value();
+                        let params = regex::Regex::new(r"<(\w*):\w*>")
+                            .unwrap()
+                            .captures(&raw_path)
+                            .map(|m| m.get(1).unwrap().as_str())
+                            .into_iter()
+                            .collect::<Vec<_>>();
+
+                        api_params = params.clone().into_iter().fold(proc_macro2::TokenStream::new(), |mut acc, param| {
+                            let pair = param.split(':').collect::<Vec<_>>();
+                            let param = syn::parse_str::<syn::Ident>(pair[0]).unwrap();
+                            let param_type = syn::parse_str::<syn::Type>(pair[1]).unwrap();
+                            acc.extend(quote! {
+                                #param: #param_type,
+                            });
+                            acc
+                        });
+
+                        let new_path = regex::Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
+
+                        api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
+                    }
+                });
+
+                acc.0.extend(quote! {
+                    async fn #method_name(&self, #api_params) -> Result<(), DeboaError>;
+                });
+
+                acc.1.extend(quote! {
+                    async fn #method_name(&self, #api_params) -> Result<(), DeboaError> {
+                        self.api.#method(format!(#api_path).as_ref()).await
+                    }
+                });
+            }
+            OperationEnum::patch(patch) => {
+                let fields = &patch.fields;
+
+                let method = syn::parse_str::<syn::Ident>("patch").unwrap();
+                let mut method_name = Ident::new("ident", proc_macro2::Span::call_site());
+                let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
+                let mut api_params = proc_macro2::TokenStream::new();
+                let mut target_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
+                fields.iter().for_each(|field| match field {
+                    PatchFieldEnum::name(name) => {
+                        method_name = Ident::new(name.value.value().as_str(), proc_macro2::Span::call_site());
+                    }
+
+                    PatchFieldEnum::path(path) => {
+                        let path = &path.value;
+
+                        let raw_path = path.value();
+                        let params = regex::Regex::new(r"<(\w*):\w*>")
+                            .unwrap()
+                            .captures(&raw_path)
+                            .map(|m| m.get(1).unwrap().as_str())
+                            .into_iter()
+                            .collect::<Vec<_>>();
+
+                        api_params = params.clone().into_iter().fold(proc_macro2::TokenStream::new(), |mut acc, param| {
+                            let pair = param.split(':').collect::<Vec<_>>();
+                            let param = syn::parse_str::<syn::Ident>(pair[0]).unwrap();
+                            let param_type = syn::parse_str::<syn::Type>(pair[1]).unwrap();
+                            acc.extend(quote! {
+                                #param: #param_type,
+                            });
+                            acc
+                        });
+
+                        let new_path = regex::Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
+
+                        api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
+                    }
+
+                    PatchFieldEnum::req_body(req_body) => {
+                        target_type = req_body.value.clone();
+                    }
+                });
+
+                acc.0.extend(quote! {
+                    async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError>;
+                });
+
+                acc.1.extend(quote! {
+                    async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError> {
+                        self.api.#method(format!(#api_path).as_ref()).await?.json::<#target_type>().await
+                    }
+                });
+            }
+        }
+
+        acc
+    });
 
     let ts = quote! {
         use deboa::{Deboa, DeboaError};
