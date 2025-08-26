@@ -13,12 +13,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use url::Url;
 
-pub async fn get_connection(
-    url: &Url,
-) -> Result<(
-    SendRequest<String>,
-    Connection<FuturesIo<SmolStream>, String>,
-)> {
+pub async fn get_connection(url: &Url) -> Result<(SendRequest<String>, Connection<FuturesIo<SmolStream>, String>)> {
     let host = url.host().expect("uri has no host");
     let io = {
         match url.scheme() {
@@ -58,11 +53,7 @@ pub enum SmolStream {
 }
 
 impl AsyncRead for SmolStream {
-    fn poll_read(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &mut [u8],
-    ) -> Poll<io::Result<usize>> {
+    fn poll_read(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut [u8]) -> Poll<io::Result<usize>> {
         match &mut *self {
             SmolStream::Plain(stream) => Pin::new(stream).poll_read(cx, buf),
             SmolStream::Tls(stream) => Pin::new(stream).poll_read(cx, buf),
@@ -71,11 +62,7 @@ impl AsyncRead for SmolStream {
 }
 
 impl AsyncWrite for SmolStream {
-    fn poll_write(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &[u8],
-    ) -> Poll<io::Result<usize>> {
+    fn poll_write(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8]) -> Poll<io::Result<usize>> {
         match &mut *self {
             SmolStream::Plain(stream) => Pin::new(stream).poll_write(cx, buf),
             SmolStream::Tls(stream) => Pin::new(stream).poll_write(cx, buf),

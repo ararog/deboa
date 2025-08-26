@@ -87,14 +87,8 @@ impl DeboaResponse {
         let json = serde_json::from_slice(body);
 
         match json {
-            Ok(deserialized_body) => {
-                Ok(deserialized_body)
-            },
-            Err(err) => {
-                Err(DeboaError::DeserializationError {
-                    message: err.to_string(),
-                })
-            },
+            Ok(deserialized_body) => Ok(deserialized_body),
+            Err(err) => Err(DeboaError::DeserializationError { message: err.to_string() }),
         }
     }
 
@@ -133,14 +127,8 @@ impl DeboaResponse {
         let xml = serde_xml_rs::from_reader(body);
 
         match xml {
-            Ok(deserialized_body) => {
-                Ok(deserialized_body)
-            },
-            Err(err) => {
-                Err(DeboaError::DeserializationError {
-                    message: err.to_string(),
-                })
-            },
+            Ok(deserialized_body) => Ok(deserialized_body),
+            Err(err) => Err(DeboaError::DeserializationError { message: err.to_string() }),
         }
     }
 
@@ -180,14 +168,8 @@ impl DeboaResponse {
         let rmp_deserialized = rmp_serde::from_slice::<T>(&body);
 
         match rmp_deserialized {
-            Ok(deserialized_body) => {
-                Ok(deserialized_body)
-            },
-            Err(err) => {
-                Err(DeboaError::DeserializationError {
-                    message: err.to_string(),
-                })
-            },
+            Ok(deserialized_body) => Ok(deserialized_body),
+            Err(err) => Err(DeboaError::DeserializationError { message: err.to_string() }),
         }
     }
 
