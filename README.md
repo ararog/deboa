@@ -1,6 +1,6 @@
 # deboa
 
-[![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg)](https://github.com/ararog/deboa/actions/workflows/rust.yml)
+[![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml)
 
 A very simple and straightforward HTTP client.
 
