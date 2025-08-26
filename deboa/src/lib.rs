@@ -221,10 +221,7 @@ impl Deboa {
     /// ```
     ///
     pub fn add_basic_auth(&mut self, username: String, password: String) -> &mut Self {
-        let auth = format!(
-            "Basic {}",
-            STANDARD.encode(format!("{username}:{password}"))
-        );
+        let auth = format!("Basic {}", STANDARD.encode(format!("{username}:{password}")));
         if !self.has_header(header::AUTHORIZATION) {
             self.add_header(header::AUTHORIZATION, auth);
         }
@@ -378,9 +375,7 @@ impl Deboa {
     pub fn set_json<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
         let result = serde_json::to_string(&data);
         if let Err(error) = result {
-            return Err(DeboaError::SerializationError {
-                message: error.to_string(),
-            });
+            return Err(DeboaError::SerializationError { message: error.to_string() });
         }
 
         self.body = Some(result.unwrap());
@@ -419,9 +414,7 @@ impl Deboa {
     pub fn set_xml<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
         let result = serde_xml_rs::to_string(&data);
         if let Err(error) = result {
-            return Err(DeboaError::SerializationError {
-                message: error.to_string(),
-            });
+            return Err(DeboaError::SerializationError { message: error.to_string() });
         }
 
         self.body = Some(result.unwrap());
@@ -460,9 +453,7 @@ impl Deboa {
     pub fn set_msgpack<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
         let result = rmp_serde::to_vec(&data);
         if let Err(error) = result {
-            return Err(DeboaError::SerializationError {
-                message: error.to_string(),
-            });
+            return Err(DeboaError::SerializationError { message: error.to_string() });
         }
 
         self.body = Some(result.unwrap());
@@ -514,10 +505,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub fn set_query_params(
-        &mut self,
-        params: Option<HashMap<&'static str, &'static str>>,
-    ) -> &mut Self {
+    pub fn set_query_params(&mut self, params: Option<HashMap<&'static str, &'static str>>) -> &mut Self {
         self.params = params;
         self
     }
@@ -785,11 +773,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn any(
-        &self,
-        method: RequestMethod,
-        path: &str,
-    ) -> Result<DeboaResponse, DeboaError> {
+    pub async fn any(&self, method: RequestMethod, path: &str) -> Result<DeboaResponse, DeboaError> {
         let mut url = Url::parse(format!("{}{}", self.base_url, path).as_str()).unwrap();
 
         if self.params.is_some() && method == RequestMethod::GET {
@@ -860,7 +844,7 @@ impl Deboa {
                 });
             }
         }
-        
+
         let req = match &self.body {
             Some(body) => builder.body(body.clone()),
             None => builder.body(String::new()),
@@ -894,16 +878,12 @@ impl Deboa {
         let result = res.collect().await;
 
         if let Err(err) = result {
-            return Err(DeboaError::DeserializationError {
-                message: err.to_string(),
-            });
+            return Err(DeboaError::DeserializationError { message: err.to_string() });
         }
 
         let mut response_body = result.unwrap().aggregate();
 
-        let raw_body = response_body
-            .copy_to_bytes(response_body.remaining())
-            .to_vec();
+        let raw_body = response_body.copy_to_bytes(response_body.remaining()).to_vec();
 
         #[cfg(feature = "middlewares")]
         let mut response = DeboaResponse {

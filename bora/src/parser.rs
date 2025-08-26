@@ -35,9 +35,7 @@ pub enum OperationEnum {
     patch(PatchStruct),
 }
 
-const METHODS: [&str; 9] = [
-    "get", "post", "put", "delete", "patch", "head", "options", "connect", "trace",
-];
+const METHODS: [&str; 9] = ["get", "post", "put", "delete", "patch", "head", "options", "connect", "trace"];
 
 impl Parse for OperationEnum {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
@@ -88,9 +86,7 @@ impl Parse for GetFieldEnum {
                 "name" => Ok(GetFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(GetFieldEnum::path(PathStruct::parse(input)?)),
                 "res_body" => Ok(GetFieldEnum::res_body(Box::new(ResBodyStruct::parse(input)?))),
-                _ => Err(input.error(format!(
-                    "expected one of name, path or res_body, found '{ident}'"
-                ))),
+                _ => Err(input.error(format!("expected one of name, path or res_body, found '{ident}'"))),
             }
         } else {
             Err(lookahead.error())
@@ -128,9 +124,7 @@ impl Parse for PostFieldEnum {
                 "name" => Ok(PostFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(PostFieldEnum::path(PathStruct::parse(input)?)),
                 "req_body" => Ok(PostFieldEnum::req_body(Box::new(ReqBodyStruct::parse(input)?))),
-                _ => Err(input.error(format!(
-                    "expected one of name, path or req_body, found '{ident}'"
-                ))),
+                _ => Err(input.error(format!("expected one of name, path or req_body, found '{ident}'"))),
             }
         } else {
             Err(lookahead.error())
@@ -168,9 +162,7 @@ impl Parse for PutFieldEnum {
                 "name" => Ok(PutFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(PutFieldEnum::path(PathStruct::parse(input)?)),
                 "req_body" => Ok(PutFieldEnum::req_body(Box::new(ReqBodyStruct::parse(input)?))),
-                _ => Err(input.error(format!(
-                    "expected one of name, path or req_body, found '{ident}'"
-                ))),
+                _ => Err(input.error(format!("expected one of name, path or req_body, found '{ident}'"))),
             }
         } else {
             Err(lookahead.error())
@@ -206,9 +198,7 @@ impl Parse for DeleteFieldEnum {
             match ident.to_string().as_str() {
                 "name" => Ok(DeleteFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(DeleteFieldEnum::path(PathStruct::parse(input)?)),
-                _ => Err(input.error(format!(
-                    "expected one of name, path or req_body, found '{ident}'"
-                ))),
+                _ => Err(input.error(format!("expected one of name, path or req_body, found '{ident}'"))),
             }
         } else {
             Err(lookahead.error())
@@ -246,9 +236,7 @@ impl Parse for PatchFieldEnum {
                 "name" => Ok(PatchFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(PatchFieldEnum::path(PathStruct::parse(input)?)),
                 "req_body" => Ok(PatchFieldEnum::req_body(Box::new(ReqBodyStruct::parse(input)?))),
-                _ => Err(input.error(format!(
-                    "expected one of name, path or req_body, found '{ident}'"
-                ))),
+                _ => Err(input.error(format!("expected one of name, path or req_body, found '{ident}'"))),
             }
         } else {
             Err(lookahead.error())

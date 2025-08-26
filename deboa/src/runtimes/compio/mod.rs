@@ -12,9 +12,7 @@ use hyper::client::conn::http2::{Connection, SendRequest};
 use hyper::Uri;
 use url::Url;
 
-pub async fn get_connection(
-    url: &Url,
-) -> Result<(SendRequest<String>, Connection<HttpStream, String>)> {
+pub async fn get_connection(url: &Url) -> Result<(SendRequest<String>, Connection<HttpStream, String>)> {
     let uri = Uri::from_str(url.as_str()).unwrap();
 
     let stream = HttpStream::connect(uri, TlsBackend::default()).await?;
