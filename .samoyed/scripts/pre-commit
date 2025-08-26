@@ -1,0 +1,63 @@
+#!/usr/bin/env sh
+#
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │                        SAMOYED HOOK ARCHITECTURE                            │
+# └─────────────────────────────────────────────────────────────────────────────┘
+#
+# This script represents the FALLBACK mechanism in Samoyed's two-tier lookup:
+#
+# ┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
+# │ Git Commit  │────▶│ .samoyed/_/      │────▶│ samoyed hook    │
+# └─────────────┘     │   pre-commit     │     │   subcommand    │
+#                     └──────────────────┘     └─────────────────┘
+#                                                        │
+#                      ┌─────────────────────────────────┼─────────────────────────────────┐
+#                      │                                 ▼                                 │
+#                      │  ┌─────────────────────────────────────────────────────────────┐  │
+#                      │  │              TWO-TIER LOOKUP SYSTEM                         │  │
+#                      │  └─────────────────────────────────────────────────────────────┘  │
+#                      │                                                                   │
+#                      │  1 PRIMARY: Check samoyed.toml                                    │
+#                      │     ┌─────────────────┐                                           │
+#                      │     │ samoyed.toml    │  ✓ Found: Execute command via shell       │
+#                      │     │ [hooks]         │  ✕ Not found: Continue to fallback        │
+#                      │     │ pre-commit = …  │                                           │
+#                      │     └─────────────────┘                                           │
+#                      │                                                                   │
+#                      │  2 FALLBACK: Execute this script file                             │
+#                      │     ┌─────────────────┐                                           │
+#                      │     │ .samoyed/       │  ✓ Found: Execute script file             │
+#                      │     │   scripts/      │  ✕ Not found: Exit silently (success)     │
+#                      │     │   pre-commit    │                                           │
+#                      │     └─────────────────┘                                           │
+#                      └───────────────────────────────────────────────────────────────────┘
+#
+# ⚡ WHEN IS THIS SCRIPT EXECUTED?
+# This script runs when:
+# - No command is defined for 'pre-commit' in samoyed.toml, OR
+# - You prefer using script files for complex multi-line logic
+#
+# 🎛 CONFIGURATION OPTIONS:
+# Option 1 - samoyed.toml (Recommended for simple commands):
+#   [hooks]
+#   pre-commit = "cargo fmt --check && cargo clippy -- -D warnings"
+#
+# Option 2 - This script file (For complex workflows):
+#   Customize the script below for advanced logic, conditionals, or multi-step processes
+#
+# 🖥️ ENVIRONMENT VARIABLES:
+# - SAMOYED=0  Skip all hook execution
+# - SAMOYED=1  Normal execution (default)
+# - SAMOYED=2  Debug mode with detailed tracing
+#
+# Example pre-commit hook
+# Add your formatting, linting, or other pre-commit checks here
+
+echo "Running pre-commit checks..."
+
+# Example: Run formatter (uncomment and customize as needed)
+# cargo fmt --check
+# npm run format:check
+# black --check .
+
+echo "Pre-commit checks passed!"
