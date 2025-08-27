@@ -715,7 +715,7 @@ dependencies = [
  "mime",
  "rmp-serde",
  "serde",
- "serde-xml-rs",
+ "serde-xml-rust",
  "serde_json",
  "smol",
  "smol-hyper",
@@ -1923,10 +1923,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde-xml-rs"
-version = "0.8.1"
+name = "serde-xml-rust"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53630160a98edebde0123eb4dfd0fce6adff091b2305db3154a9e920206eb510"
+checksum = "662b17c24bfc6e11d411126768b727fbca2f33b7c2b6e21cdbb7cc31541c60d4"
 dependencies = [
  "log",
  "serde",

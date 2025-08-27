@@ -32,6 +32,9 @@ pub mod response;
 mod runtimes;
 mod tests;
 
+#[allow(dead_code)]
+pub const APPLICATION_XML: &str = "application/xml";
+
 pub struct Deboa {
     base_url: &'static str,
     headers: Option<HashMap<HeaderName, String>>,
@@ -173,7 +176,27 @@ impl Deboa {
         self.headers.as_ref().unwrap().contains_key(key)
     }
 
-    /// When adding the header of [`header::AUTHORIZATION`], add the type of authorization to the value itself. ie.: "Bearer {token_here}",.
+    /// Allow edit header at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `header` - The header to edit.
+    /// * `value` - The new header value.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use deboa::{Deboa, DeboaError};
+    /// use http::header;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   api.edit_header(header::CONTENT_TYPE, "application/json".to_string());
+    ///   Ok(())
+    /// }
+    /// ```
+    ///
     pub fn edit_header(&mut self, header: HeaderName, value: String) -> &mut Self {
         if !self.has_header(&header) {
             self.add_header(header, value);
@@ -187,6 +210,30 @@ impl Deboa {
         self
     }
 
+    /// Allow get mutable header at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `header` - The header to get.
+    ///
+    /// # Returns
+    ///
+    /// * `Option<&mut String>` - The header value.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use deboa::{Deboa, DeboaError};
+    /// use http::header;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   api.get_mut_header(&header::CONTENT_TYPE);
+    ///   Ok(())
+    /// }
+    /// ```
+    ///
     pub fn get_mut_header(&mut self, header: &HeaderName) -> Option<&mut String> {
         self.headers.as_mut().unwrap().get_mut(header)
     }
@@ -391,6 +438,7 @@ impl Deboa {
     /// ```
     ///
     pub fn set_json<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
+        self.edit_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string());
         let result = serde_json::to_string(&data);
         if let Err(error) = result {
             return Err(DeboaError::SerializationError { message: error.to_string() });
@@ -413,6 +461,7 @@ impl Deboa {
     /// ```rust
     /// use deboa::{Deboa, DeboaError};
     /// use serde::Serialize;
+    /// use http::header;
     ///
     /// #[derive(Serialize)]
     /// struct Post {
@@ -430,7 +479,9 @@ impl Deboa {
     /// ```
     ///
     pub fn set_xml<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
-        let result = serde_xml_rs::to_string(&data);
+        self.edit_header(header::CONTENT_TYPE, APPLICATION_XML.to_string());
+        self.edit_header(header::ACCEPT, APPLICATION_XML.to_string());
+        let result = serde_xml_rust::to_string(&data);
         if let Err(error) = result {
             return Err(DeboaError::SerializationError { message: error.to_string() });
         }
@@ -914,7 +965,7 @@ impl Deboa {
         let response = DeboaResponse {
             status: status_code,
             headers,
-            body: body_text,
+            raw_body: body_text,
         };
 
         #[cfg(feature = "middlewares")]
