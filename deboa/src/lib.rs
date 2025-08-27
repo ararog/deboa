@@ -444,7 +444,7 @@ impl Deboa {
             return Err(DeboaError::SerializationError { message: error.to_string() });
         }
 
-        self.body = Some(result.unwrap().into());
+        self.body = Some(result.unwrap());
 
         Ok(self)
     }
@@ -553,7 +553,7 @@ impl Deboa {
     /// ```
     ///
     pub fn set_text(&mut self, text: String) -> &mut Self {
-        self.body = Some(text.as_bytes().to_vec().into());
+        self.body = Some(text.as_bytes().to_vec());
         self
     }
 
@@ -936,8 +936,8 @@ impl Deboa {
         }
 
         let req = match &self.body {
-            Some(body) => builder.body(Full::new(body.clone())),
-            None => builder.body(Full::new(Bytes::new())),
+            Some(body) => builder.body(Full::new(Bytes::from_owner(body.clone()))),
+            None => builder.body(Full::new(Bytes::from_owner(Vec::new()))),
         };
 
         if let Err(err) = req {
@@ -952,9 +952,7 @@ impl Deboa {
         let request = req.unwrap();
 
         // We need sure that we do not reconstruct the request somewhere else in the code as it will lead to the headers deletion making a request invalid.
-        let res = sender
-            .send_request(request)
-            .await;
+        let res = sender.send_request(request).await;
 
         if let Err(err) = res {
             return Err(DeboaError::RequestError {
