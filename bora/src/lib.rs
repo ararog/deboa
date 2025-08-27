@@ -7,7 +7,7 @@ use proc_macro::TokenStream;
 use proc_macro_error::proc_macro_error;
 use proc_macro2::TokenTree;
 use quote::quote;
-use syn::{Ident, LitStr, parse_macro_input};
+use syn::{Ident, LitStr, parse_macro_input, parse_str};
 
 use parser::BoraApi;
 
@@ -129,54 +129,35 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                 let method = syn::parse_str::<syn::Ident>("post").unwrap();
                 let mut method_name = Ident::new("ident", proc_macro2::Span::call_site());
                 let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
-                let mut target_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
-                let mut api_params = proc_macro2::TokenStream::new();
-                let mut req_format = LitStr::new("lit", proc_macro2::Span::call_site());
+                let mut req_body_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
+                let mut res_body_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
+                let mut req_format = Ident::new("ident", proc_macro2::Span::call_site());
 
                 fields.iter().for_each(|field| match field {
                     PostFieldEnum::name(name) => {
                         method_name = Ident::new(name.value.value().as_str(), proc_macro2::Span::call_site());
                     }
                     PostFieldEnum::path(path) => {
-                        let path = &path.value;
-
-                        let raw_path = path.value();
-                        let params = regex::Regex::new(r"<(\w*):\w*>")
-                            .unwrap()
-                            .captures(&raw_path)
-                            .map(|m| m.get(1).unwrap().as_str())
-                            .into_iter()
-                            .collect::<Vec<_>>();
-
-                        api_params = params.clone().into_iter().fold(proc_macro2::TokenStream::new(), |mut acc, param| {
-                            let pair = param.split(':').collect::<Vec<_>>();
-                            let param = syn::parse_str::<syn::Ident>(pair[0]).unwrap();
-                            let param_type = syn::parse_str::<syn::Type>(pair[1]).unwrap();
-                            acc.extend(quote! {
-                                #param: #param_type,
-                            });
-                            acc
-                        });
-
-                        let new_path = regex::Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
-
-                        api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
+                        api_path = path.value.clone();
                     }
                     PostFieldEnum::req_body(req_body) => {
-                        target_type = req_body.value.clone();
+                        req_body_type = req_body.value.clone();
+                    }
+                    PostFieldEnum::res_body(res_body) => {
+                        res_body_type = res_body.value.clone();
                     }
                     PostFieldEnum::format(format) => {
-                        req_format = format.value.clone();
+                        req_format = parse_str::<syn::Ident>(&format!("set_{}", format.value.value())).unwrap();
                     }
                 });
 
                 acc.0.extend(quote! {
-                    async fn #method_name(&self, #api_params) -> Result<(), DeboaError>;
+                    async fn #method_name(&mut self, body: #req_body_type) -> Result<DeboaResponse, DeboaError>;
                 });
 
                 acc.1.extend(quote! {
-                    async fn #method_name(&self, #api_params) -> Result<#target_type, DeboaError> {
-                        self.api.#method(format!(#api_path).as_ref()).await?.json::<#target_type>().await
+                    async fn #method_name(&mut self, body: #req_body_type) -> Result<DeboaResponse, DeboaError> {
+                        self.api.#req_format(body)?.#method(format!(#api_path).as_ref()).await
                     }
                 });
             }
@@ -187,7 +168,8 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                 let mut method_name = Ident::new("ident", proc_macro2::Span::call_site());
                 let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
                 let mut req_body_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
-                let mut req_format = LitStr::new("lit", proc_macro2::Span::call_site());
+                let mut res_body_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
+                let mut req_format = Ident::new("lit", proc_macro2::Span::call_site());
                 let mut api_params = proc_macro2::TokenStream::new();
 
                 fields.iter().for_each(|field| match field {
@@ -198,7 +180,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                         let path = &path.value;
 
                         let raw_path = path.value();
-                        let params = regex::Regex::new(r"<(\w*):\w*>")
+                        let params = regex::Regex::new(r"<(\w*:\w*)>")
                             .unwrap()
                             .captures(&raw_path)
                             .map(|m| m.get(1).unwrap().as_str())
@@ -219,21 +201,28 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                         api_path = LitStr::new(&new_path, proc_macro2::Span::call_site());
                     }
+
                     PutFieldEnum::req_body(req_body) => {
                         req_body_type = req_body.value.clone();
                     }
+
+                    PutFieldEnum::res_body(res_body) => {
+                        res_body_type = res_body.value.clone();
+                    }
+
                     PutFieldEnum::format(format) => {
-                        req_format = format.value.clone();
+                        req_format = parse_str::<syn::Ident>(&format!("set_{}", format.value.value())).unwrap();
                     }
                 });
 
                 acc.0.extend(quote! {
-                    async fn #method_name(&self, #api_params) -> Result<(), DeboaError>;
+                    async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<(), DeboaError>;
                 });
 
                 acc.1.extend(quote! {
-                    async fn #method_name(&self, #api_params) -> Result<(), DeboaError> {
-                        self.api.#method(format!(#api_path).as_ref()).await?.json::<#req_body_type>().await
+                    async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<(), DeboaError> {
+                        self.api.#req_format(body)?.#method(format!(#api_path).as_ref()).await?;
+                        Ok(())
                     }
                 });
             }
@@ -253,7 +242,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                         let path = &path.value;
 
                         let raw_path = path.value();
-                        let params = regex::Regex::new(r"<(\w*):\w*>")
+                        let params = regex::Regex::new(r"<(\w*:\w*)>")
                             .unwrap()
                             .captures(&raw_path)
                             .map(|m| m.get(1).unwrap().as_str())
@@ -282,7 +271,8 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                 acc.1.extend(quote! {
                     async fn #method_name(&self, #api_params) -> Result<(), DeboaError> {
-                        self.api.#method(format!(#api_path).as_ref()).await
+                        self.api.#method(format!(#api_path).as_ref()).await?;
+                        Ok(())
                     }
                 });
             }
@@ -294,7 +284,9 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                 let mut api_path = LitStr::new("lit", proc_macro2::Span::call_site());
                 let mut api_params = proc_macro2::TokenStream::new();
                 let mut req_body_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
-                let mut req_format = LitStr::new("lit", proc_macro2::Span::call_site());
+                let mut res_body_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
+                let mut req_format = Ident::new("lit", proc_macro2::Span::call_site());
+
                 fields.iter().for_each(|field| match field {
                     PatchFieldEnum::name(name) => {
                         method_name = Ident::new(name.value.value().as_str(), proc_macro2::Span::call_site());
@@ -304,7 +296,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                         let path = &path.value;
 
                         let raw_path = path.value();
-                        let params = regex::Regex::new(r"<(\w*):\w*>")
+                        let params = regex::Regex::new(r"<(\w*:\w*)>")
                             .unwrap()
                             .captures(&raw_path)
                             .map(|m| m.get(1).unwrap().as_str())
@@ -330,18 +322,23 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                         req_body_type = req_body.value.clone();
                     }
 
+                    PatchFieldEnum::res_body(res_body) => {
+                        res_body_type = res_body.value.clone();
+                    }
+
                     PatchFieldEnum::format(format) => {
-                        req_format = format.value.clone();
+                        req_format = parse_str::<syn::Ident>(&format!("set_{}", format.value.value())).unwrap();
                     }
                 });
 
                 acc.0.extend(quote! {
-                    async fn #method_name(&self, #api_params) -> Result<#req_body_type, DeboaError>;
+                    async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<(), DeboaError>;
                 });
 
                 acc.1.extend(quote! {
-                    async fn #method_name(&self, #api_params) -> Result<#req_body_type, DeboaError> {
-                        self.api.#method(format!(#api_path).as_ref()).await?.json::<#req_body_type>().await
+                    async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<(), DeboaError> {
+                        self.api.#req_format(body)?.#method(format!(#api_path).as_ref()).await?;
+                        Ok(())
                     }
                 });
             }
@@ -351,7 +348,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
     });
 
     let ts = quote! {
-        use deboa::{Deboa, DeboaError};
+        use deboa::{Deboa, DeboaError, DeboaResponse};
 
         pub struct #struct_name {
             api: Deboa
