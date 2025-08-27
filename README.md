@@ -16,7 +16,9 @@ Deboa has amazing features:
 - request data only by specifying path
 - set retries and timeout
 - middleware support
+- compression support (gzip, deflate, br)
 - bora macro to easily create api clients
+- cookies support  
 
 ## Install
 
