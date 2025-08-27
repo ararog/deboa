@@ -37,18 +37,14 @@ pub async fn get_connection(
 
     #[cfg(feature = "http1")]
     let result = hyper::client::conn::http1::handshake(io).await;
-    
+
     #[cfg(feature = "http1")]
     match result {
-        Ok(conn) => {
-            return Ok(conn);
-        },
-        Err(err) => {
-            return Err(DeboaError::ConnectionError {
-                host: host.to_string(),
-                message: err.to_string(),
-            });
-        },
+        Ok(conn) => Ok(conn),
+        Err(err) => Err(DeboaError::ConnectionError {
+            host: host.to_string(),
+            message: err.to_string(),
+        }),
     }
 
     #[cfg(feature = "http2")]

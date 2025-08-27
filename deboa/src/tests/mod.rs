@@ -292,13 +292,13 @@ pub mod deboa_tests {
         };
 
         api.add_header(header::CONTENT_TYPE, "application/json".to_string());
-        
+
         #[cfg(feature = "json")]
         let response = api.set_json(data)?.post("/posts").await?;
 
         #[cfg(not(feature = "json"))]
         let response = api.post("/posts").await?;
-        
+
         assert_eq!(response.status, StatusCode::CREATED);
 
         Ok(())
