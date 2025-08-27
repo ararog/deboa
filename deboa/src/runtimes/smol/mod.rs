@@ -13,7 +13,12 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use url::Url;
 
-pub async fn get_connection(url: &Url) -> Result<(SendRequest<String>, Connection<FuturesIo<SmolStream>, String>)> {
+pub async fn get_connection(
+    url: &Url,
+) -> Result<(
+    SendRequest<http_body_util::Full<bytes::Bytes>>,
+    Connection<FuturesIo<SmolStream>, http_body_util::Full<bytes::Bytes>>,
+)> {
     let host = url.host().expect("uri has no host");
     let io = {
         match url.scheme() {
