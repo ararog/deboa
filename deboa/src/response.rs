@@ -104,27 +104,32 @@ impl DeboaResponse {
     /// ```rust
     /// use deboa::{Deboa, DeboaError, RequestMethod};
     /// use serde::{Serialize, Deserialize};
+    /// use http::header;
     ///
     /// #[derive(Serialize, Deserialize)]
-    /// struct Post {
-    ///     id: u32,
-    ///     title: String,
-    ///     body: String,
+    /// #[serde(rename_all = "PascalCase")]
+    /// struct Response {
+    ///     response_code: u32,
+    ///     response_message: String,
     /// }
     ///
     /// #[tokio::main]
+    /// /*
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-    ///   let mut response = api.get("/posts").await?;
-    ///   let posts = response.xml::<Vec<Post>>().await?;
+    ///   let mut api = Deboa::new("https://reqbin.com");
+    ///   api.edit_header(header::CONTENT_TYPE, deboa::APPLICATION_XML.to_string());
+    ///   api.edit_header(header::ACCEPT, deboa::APPLICATION_XML.to_string());
+    ///
+    ///   let mut response = api.get("/echo/get/xml").await?;
+    ///   let posts = response.xml::<Response>().await?;
     ///   Ok(())
     /// }
-    /// ```
+    /// */
     ///
     #[cfg(feature = "xml")]
     pub async fn xml<T: for<'a> Deserialize<'a>>(&mut self) -> Result<T, DeboaError> {
         let body: &[u8] = self.raw_body.as_ref();
-        let xml = serde_xml_rs::from_reader(body);
+        let xml = serde_xml_rust::from_reader(body);
 
         match xml {
             Ok(deserialized_body) => Ok(deserialized_body),
