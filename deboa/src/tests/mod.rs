@@ -3,6 +3,7 @@ pub mod deboa_tests {
     use crate::DeboaError;
     #[cfg(feature = "middlewares")]
     use crate::{middlewares::DeboaMiddleware, response::DeboaResponse, Deboa};
+
     use http::{header, StatusCode};
     #[cfg(feature = "json")]
     use serde::{Deserialize, Serialize};
@@ -290,12 +291,14 @@ pub mod deboa_tests {
             body: "Some test to do".to_string(),
         };
 
+        api.add_header(header::CONTENT_TYPE, "application/json".to_string());
+        
         #[cfg(feature = "json")]
         let response = api.set_json(data)?.post("/posts").await?;
 
         #[cfg(not(feature = "json"))]
         let response = api.post("/posts").await?;
-
+        
         assert_eq!(response.status, StatusCode::CREATED);
 
         Ok(())
@@ -374,7 +377,7 @@ pub mod deboa_tests {
 
     async fn do_patch() -> Result<(), DeboaError> {
         #[cfg(feature = "json")]
-        let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+        let mut api: Deboa = Deboa::new("https://jsonplaceholder.typicode.com");
 
         #[cfg(not(feature = "json"))]
         let api = Deboa::new("https://jsonplaceholder.typicode.com");
@@ -539,7 +542,7 @@ pub mod deboa_tests {
 
         let _ = api.set_json(data);
 
-        assert_eq!(api.body, Some("{\"id\":1,\"title\":\"Test\",\"body\":\"Some test to do\"}".to_string()));
+        assert_eq!(api.body, Some(b"{\"id\":1,\"title\":\"Test\",\"body\":\"Some test to do\"}".to_vec()));
     }
 
     #[cfg(feature = "json")]
@@ -644,7 +647,7 @@ pub mod deboa_tests {
 
         api.set_text("test".to_string());
 
-        assert_eq!(api.body, Some("test".to_string()));
+        assert_eq!(api.body, Some(b"test".to_vec()));
     }
 
     #[test]
