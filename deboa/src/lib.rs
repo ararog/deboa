@@ -9,9 +9,9 @@
 compile_error!("Only one runtime feature can be enabled at a time.");
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use bytes::Buf;
+use bytes::{Buf, Bytes};
 use http::{header, HeaderName, HeaderValue};
-use http_body_util::BodyExt;
+use http_body_util::{BodyExt, Full};
 use hyper::Request;
 #[cfg(any(feature = "json", feature = "xml"))]
 use serde::Serialize;
@@ -39,7 +39,7 @@ pub struct Deboa {
     base_url: &'static str,
     headers: Option<HashMap<HeaderName, String>>,
     query_params: Option<HashMap<&'static str, &'static str>>,
-    body: Option<String>,
+    body: Option<Vec<u8>>,
     retries: u32,
     connection_timeout: u64,
     request_timeout: u64,
@@ -439,12 +439,12 @@ impl Deboa {
     ///
     pub fn set_json<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
         self.edit_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string());
-        let result = serde_json::to_string(&data);
+        let result = serde_json::to_vec(&data);
         if let Err(error) = result {
             return Err(DeboaError::SerializationError { message: error.to_string() });
         }
 
-        self.body = Some(result.unwrap());
+        self.body = Some(result.unwrap().into());
 
         Ok(self)
     }
@@ -481,12 +481,15 @@ impl Deboa {
     pub fn set_xml<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
         self.edit_header(header::CONTENT_TYPE, APPLICATION_XML.to_string());
         self.edit_header(header::ACCEPT, APPLICATION_XML.to_string());
-        let result = serde_xml_rust::to_string(&data);
+        let mut ser_xml_buf = Vec::new();
+
+        let result = serde_xml_rust::to_writer(&mut ser_xml_buf, &data);
+
         if let Err(error) = result {
             return Err(DeboaError::SerializationError { message: error.to_string() });
         }
 
-        self.body = Some(result.unwrap());
+        self.body = Some(ser_xml_buf.into());
 
         Ok(self)
     }
@@ -525,7 +528,7 @@ impl Deboa {
             return Err(DeboaError::SerializationError { message: error.to_string() });
         }
 
-        self.body = Some(result.unwrap());
+        self.body = Some(result.unwrap().into());
 
         Ok(self)
     }
@@ -550,7 +553,7 @@ impl Deboa {
     /// ```
     ///
     pub fn set_text(&mut self, text: String) -> &mut Self {
-        self.body = Some(text);
+        self.body = Some(text.as_bytes().to_vec().into());
         self
     }
 
@@ -861,10 +864,16 @@ impl Deboa {
         let mut sender = {
             let (sender, conn) = runtimes::tokio::get_connection(&url).await?;
 
-            tokio::task::spawn(async move {
-                if let Err(err) = conn.await {
-                    println!("Connection failed: {err:?}");
-                }
+            tokio::spawn(async move {
+                match conn.await {
+                    Ok(_) => (),
+                    Err(_err) => {
+                        // return Err(DeboaError::ConnectionError {
+                        //     host: url.to_string(),
+                        //     message: err.to_string(),
+                        // });
+                    }
+                };
             });
 
             sender
@@ -872,28 +881,40 @@ impl Deboa {
 
         #[cfg(feature = "smol-rt")]
         let mut sender = {
-            let (sender, conn) = runtimes::smol::get_connection(&url).await?;
+            let (sender, conn) = runtimes::smol::get_connection(&url).await.map_err(|err| DeboaError::ConnectionError {
+                host: url.to_string(),
+                message: err.to_string(),
+            })?;
 
-            smol::spawn(async move {
-                if let Err(err) = conn.await {
-                    println!("Connection failed: {err:?}");
+            match conn.await {
+                Ok(_) => (),
+                Err(err) => {
+                    return Err(DeboaError::ConnectionError {
+                        host: url.to_string(),
+                        message: err.to_string(),
+                    });
                 }
-            })
-            .detach();
+            };
 
             sender
         };
 
         #[cfg(feature = "compio-rt")]
         let mut sender = {
-            let (sender, conn) = runtimes::compio::get_connection(&url).await?;
+            let (sender, conn) = runtimes::compio::get_connection(&url).await.map_err(|err| DeboaError::ConnectionError {
+                host: url.to_string(),
+                message: err.to_string(),
+            })?;
 
-            compio::runtime::spawn(async move {
-                if let Err(err) = conn.await {
-                    println!("Connection failed: {err:?}");
+            match conn.await {
+                Ok(_) => (),
+                Err(err) => {
+                    return Err(DeboaError::ConnectionError {
+                        host: url.to_string(),
+                        message: err.to_string(),
+                    });
                 }
-            })
-            .detach();
+            };
 
             sender
         };
@@ -915,8 +936,8 @@ impl Deboa {
         }
 
         let req = match &self.body {
-            Some(body) => builder.body(body.clone()),
-            None => builder.body(String::new()),
+            Some(body) => builder.body(Full::new(Bytes::from_owner(body.clone()))),
+            None => builder.body(Full::new(Bytes::from_owner(Vec::new()))),
         };
 
         if let Err(err) = req {
@@ -928,7 +949,12 @@ impl Deboa {
             });
         }
 
-        let res = sender.send_request(req.unwrap()).await;
+        let request = req.unwrap();
+
+        // We need sure that we do not reconstruct the request somewhere else in the code as it will lead to the headers deletion making a request invalid.
+        let res = sender
+            .send_request(request)
+            .await;
 
         if let Err(err) = res {
             return Err(DeboaError::RequestError {
