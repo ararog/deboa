@@ -164,7 +164,7 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-    ///   api.has_header(header::CONTENT_TYPE);
+    ///   api.has_header(&header::CONTENT_TYPE);
     ///   Ok(())
     /// }
     /// ```
