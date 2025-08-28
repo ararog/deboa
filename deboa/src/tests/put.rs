@@ -1,5 +1,5 @@
 #[cfg(feature = "json")]
-use crate::tests::types::Post;
+use crate::tests::types::{sample_post, JSONPLACEHOLDER};
 use crate::Deboa;
 #[cfg(test)]
 use crate::DeboaError;
@@ -16,17 +16,13 @@ use smol_macros::test;
 
 async fn do_put() -> Result<(), DeboaError> {
     #[cfg(feature = "json")]
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
     #[cfg(not(feature = "json"))]
-    let api = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    let api = Deboa::new(JSONPLACEHOLDER)?;
 
     #[cfg(feature = "json")]
-    let post = Post {
-        id: 1,
-        title: "Test".to_string(),
-        body: "Some test to do".to_string(),
-    };
+    let post = sample_post();
 
     #[cfg(feature = "json")]
     let response = api.set_json(post)?.put("/posts/1").await?;

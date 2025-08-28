@@ -16,7 +16,7 @@ async fn do_post() -> Result<(), DeboaError> {
 
     let http_mock = server.mock(|when, then| {
         when.method(POST).path("/posts");
-        then.status(201).body("ping");
+        then.status(StatusCode::CREATED.into()).body("ping");
     });
 
     let server_address = *server.address();

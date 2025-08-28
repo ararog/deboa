@@ -1,5 +1,5 @@
 #[cfg(feature = "json")]
-use crate::tests::types::Post;
+use crate::tests::types::{sample_post, JSONPLACEHOLDER};
 use crate::{Deboa, DeboaError};
 use http::StatusCode;
 
@@ -14,17 +14,13 @@ use smol_macros::test;
 
 async fn do_patch() -> Result<(), DeboaError> {
     #[cfg(feature = "json")]
-    let mut api: Deboa = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    let mut api: Deboa = Deboa::new(JSONPLACEHOLDER)?;
 
     #[cfg(not(feature = "json"))]
-    let api = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    let api = Deboa::new(JSONPLACEHOLDER)?;
 
     #[cfg(feature = "json")]
-    let data = Post {
-        id: 1,
-        title: "Test".to_string(),
-        body: "Some test to do".to_string(),
-    };
+    let data = sample_post();
 
     #[cfg(feature = "json")]
     let response = api.set_json(data)?.patch("/posts/1").await?;
