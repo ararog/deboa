@@ -141,9 +141,9 @@ async fn test_response_json() -> Result<(), DeboaError> {
     let ip = server_address.ip();
     let port = server_address.port();
 
-    let api = Deboa::new(&format!("http://{ip}:{port}")).unwrap();
+    let api = Deboa::new(&format!("http://{ip}:{port}"));
 
-    let response = api.get("/posts/1").await?.json::<Post>().await?;
+    let response = api?.get("posts/1").await?.json::<Post>().await?;
 
     http_mock.assert();
 
@@ -196,11 +196,11 @@ async fn test_xml_response() -> Result<(), DeboaError> {
     let ip = server_address.ip();
     let port = server_address.port();
 
-    let mut api = Deboa::new(&format!("http://{ip}:{port}").to_string()).unwrap();
+    let mut api = Deboa::new(&format!("http://{ip}:{port}"));
     api.edit_header(header::CONTENT_TYPE, crate::APPLICATION_XML.to_string());
     api.edit_header(header::ACCEPT, crate::APPLICATION_XML.to_string());
 
-    let response = api.get("/posts/1").await?.xml::<Post>().await?;
+    let response = api?.get("/posts/1").await?.xml::<Post>().await?;
 
     http_mock.assert();
 
