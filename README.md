@@ -2,23 +2,25 @@
 
 [![crates.io](https://img.shields.io/crates/v/deboa?style=flat-square)](https://crates.io/crates/deboa) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) [![Documentation](https://docs.rs/deboa/badge.svg)](https://docs.rs/deboa/latest/deboa)
 
-A very simple and straightforward HTTP client.
+## Description
 
-The goal is to provide a simple and easy to use HTTP, very
-similar to apisauce for nodejs/javascript.
+**deboa** is a straightforward, developer-centric HTTP client library for Rust. It offers a rich array of modern features—from flexible authentication and serialization formats to runtime compatibility and middleware support—while maintaining simplicity and ease of use. It’s especially well-suited for Rust projects that require a lightweight, efficient HTTP client without sacrificing control or extensibility.
 
-Deboa has amazing features:
+## Features
 
 - built-in json, xml and msgpack support
 - easily add, remove and update headers
-- easility to add basic and bearer auth
+- helpers to add basic and bearer auth
 - set base url only once, change it when needed
 - request data only by specifying path
 - set retries and timeout
 - middleware support
 - compression support (gzip, deflate, br)
 - bora macro to easily create api clients
-- cookies support  
+- cookies support
+- comprehensive error handling
+- runtime compatibility (tokio, smol, compio)
+- http1 support (http2 coming soon) 
 
 ## Install
 
@@ -26,15 +28,25 @@ Deboa has amazing features:
 deboa = { version = "0.0.5" }
 ```
 
-## Features
+### Runtime Features
 
 - tokio-rt (default)
 - smol-rt
 - compio-rt
+
+### Serialization Features
+
 - json
 - xml
 - msgpack
+
+### Http Features
+
 - http1
+- http2 (coming soon)
+
+### Middleware Features
+
 - middlewares
 
 ## Usage
