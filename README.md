@@ -1,6 +1,6 @@
 # deboa
 
-[![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml)
+![crates.io](https://img.shields.io/crates/v/deboa?style=flat-square) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) [![Documentation](https://docs.rs/deboa/badge.svg)][docs]
 
 A very simple and straightforward HTTP client.
 
