@@ -5,6 +5,7 @@ use crate::DeboaError;
 use crate::tests::types::Post;
 use http::header;
 use std::collections::HashMap;
+use url::Url;
 
 use httpmock::prelude::*;
 
@@ -15,14 +16,14 @@ use smol_macros::test;
 
 #[test]
 fn test_base_url() {
-    let api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let api = Deboa::new("https://jsonplaceholder.typicode.com").unwrap();
 
-    assert_eq!(api.base_url, "https://jsonplaceholder.typicode.com");
+    assert_eq!(api.base_url, Url::parse("https://jsonplaceholder.typicode.com").unwrap());
 }
 
 #[test]
 fn test_set_query_params() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com").unwrap();
 
     let query_map = HashMap::from([("id", "1")]);
 
@@ -33,7 +34,7 @@ fn test_set_query_params() {
 
 #[test]
 fn test_set_headers() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com").unwrap();
 
     let headers = HashMap::from([(header::CONTENT_TYPE, "application/json".to_string())]);
 
@@ -44,7 +45,7 @@ fn test_set_headers() {
 
 #[test]
 fn test_set_basic_auth() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com").unwrap();
 
     api.add_basic_auth("username".to_string(), "password".to_string());
 
@@ -56,7 +57,7 @@ fn test_set_basic_auth() {
 
 #[test]
 fn test_set_bearer_auth() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com").unwrap();
 
     api.add_bearer_auth("token".to_string());
 
@@ -65,7 +66,7 @@ fn test_set_bearer_auth() {
 
 #[test]
 fn test_set_retries() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com").unwrap();
 
     api.set_retries(5);
 
@@ -74,7 +75,7 @@ fn test_set_retries() {
 
 #[test]
 fn test_set_connection_timeout() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com").unwrap();
 
     api.set_connection_timeout(5);
 
@@ -82,18 +83,20 @@ fn test_set_connection_timeout() {
 }
 
 #[test]
-fn test_set_request_timeout() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+fn test_set_request_timeout() -> Result<(), DeboaError> {
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     api.set_request_timeout(5);
 
     assert_eq!(api.request_timeout, 5);
+
+    Ok(())
 }
 
 #[cfg(feature = "json")]
 #[test]
-fn test_set_json() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+fn test_set_json() -> Result<(), DeboaError> {
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     let data = Post {
         id: 1,
@@ -104,6 +107,8 @@ fn test_set_json() {
     let _ = api.set_json(data);
 
     assert_eq!(api.body, Some(b"{\"id\":1,\"title\":\"Test\",\"body\":\"Some test to do\"}".to_vec()));
+
+    Ok(())
 }
 
 #[cfg(feature = "json")]
@@ -136,7 +141,7 @@ async fn test_response_json() -> Result<(), DeboaError> {
     let ip = server_address.ip();
     let port = server_address.port();
 
-    let api = Deboa::new(format!("http://{ip}:{port}").to_string());
+    let api = Deboa::new(&format!("http://{ip}:{port}")).unwrap();
 
     let response = api.get("/posts/1").await?.json::<Post>().await?;
 
@@ -150,7 +155,7 @@ async fn test_response_json() -> Result<(), DeboaError> {
 #[cfg(all(feature = "xml", feature = "tokio-rt"))]
 #[tokio::test]
 async fn test_set_xml() -> Result<(), DeboaError> {
-    let mut api = Deboa::new("https://reqbin.com".to_string());
+    let mut api = Deboa::new("https://reqbin.com")?;
 
     let data = Post {
         id: 1,
@@ -191,7 +196,7 @@ async fn test_xml_response() -> Result<(), DeboaError> {
     let ip = server_address.ip();
     let port = server_address.port();
 
-    let mut api = Deboa::new(format!("http://{ip}:{port}").to_string());
+    let mut api = Deboa::new(&format!("http://{ip}:{port}").to_string()).unwrap();
     api.edit_header(header::CONTENT_TYPE, crate::APPLICATION_XML.to_string());
     api.edit_header(header::ACCEPT, crate::APPLICATION_XML.to_string());
 
@@ -205,8 +210,8 @@ async fn test_xml_response() -> Result<(), DeboaError> {
 
 #[cfg(feature = "msgpack")]
 #[test]
-fn test_set_msgpack() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+fn test_set_msgpack() -> Result<(), DeboaError> {
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     let data = Post {
         id: 1,
@@ -217,49 +222,61 @@ fn test_set_msgpack() {
     let _ = api.set_msgpack(data);
 
     assert_eq!(api.body, Some("{\"id\":1,\"title\":\"Test\",\"body\":\"Some test to do\"}".to_string()));
+
+    Ok(())
 }
 
 #[test]
-fn test_edit_header() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+fn test_edit_header() -> Result<(), DeboaError> {
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     api.edit_header(header::CONTENT_TYPE, "application/json".to_string());
 
     assert_eq!(api.get_mut_header(&header::CONTENT_TYPE), Some(&mut "application/json".to_string()));
+
+    Ok(())
 }
 
 #[test]
-fn test_add_header() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+fn test_add_header() -> Result<(), DeboaError> {
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     api.add_header(header::CONTENT_TYPE, "application/json".to_string());
 
     assert_eq!(api.get_mut_header(&header::CONTENT_TYPE), Some(&mut "application/json".to_string()));
+
+    Ok(())
 }
 
 #[test]
-fn test_remove_header() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+fn test_remove_header() -> Result<(), DeboaError> {
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     api.remove_header(header::CONTENT_TYPE);
 
     assert_eq!(api.get_mut_header(&header::CONTENT_TYPE), None);
+
+    Ok(())
 }
 
 #[test]
-fn test_set_body() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+fn test_set_body() -> Result<(), DeboaError> {
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     api.set_text("test".to_string());
 
     assert_eq!(api.body, Some(b"test".to_vec()));
+
+    Ok(())
 }
 
 #[test]
-fn test_get_mut_header() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+fn test_get_mut_header() -> Result<(), DeboaError> {
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     api.add_header(header::CONTENT_TYPE, "application/json".to_string());
 
     assert_eq!(api.get_mut_header(&header::CONTENT_TYPE), Some(&mut "application/json".to_string()));
+
+    Ok(())
 }

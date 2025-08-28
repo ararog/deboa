@@ -12,7 +12,7 @@ pub struct Post {
 async fn main() -> Result<(), DeboaError> {
     use deboa::Deboa;
 
-    let api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let api = Deboa::new("https://jsonplaceholder.typicode.com").unwrap();
 
     let posts: Vec<Post> = api.get("/posts").await?.json::<Vec<Post>>().await?;
 

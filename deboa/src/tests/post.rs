@@ -24,7 +24,7 @@ async fn do_post() -> Result<(), DeboaError> {
     let ip = server_address.ip();
     let port = server_address.port();
 
-    let mut api = Deboa::new(format!("http://{ip}:{port}").to_string());
+    let mut api = Deboa::new(&format!("http://{ip}:{port}"))?;
 
     let data = "ping".to_string();
     let response = api.set_text(data).post("/posts").await?;
@@ -46,12 +46,14 @@ async fn test_post() -> Result<(), DeboaError> {
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_post() {
-    let _ = do_post().await;
+async fn test_post() -> Result<(), DeboaError> {
+    do_post().await?;
+    Ok(())
 }
 
 #[cfg(feature = "compio-rt")]
 #[compio::test]
-async fn test_post() {
-    let _ = do_post().await;
+async fn test_post() -> Result<(), DeboaError> {
+    do_post().await?;
+    Ok(())
 }
