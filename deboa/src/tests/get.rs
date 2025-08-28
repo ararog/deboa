@@ -17,7 +17,7 @@ use smol_macros::test;
 //
 
 async fn do_get() -> Result<(), DeboaError> {
-    let api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     let response = api.get("/posts").await?;
 
@@ -56,7 +56,7 @@ async fn test_get() {
 //
 
 async fn do_get_not_found() -> Result<(), DeboaError> {
-    let api = Deboa::new("https://jsonplaceholder.typicode.com/dsdsd".to_string());
+    let api = Deboa::new("https://jsonplaceholder.typicode.com/dsdsd")?;
 
     let response = api.get("/posts").await?;
 
@@ -95,7 +95,7 @@ async fn test_get_not_found() {
 //
 
 async fn do_get_invalid_server() -> Result<(), DeboaError> {
-    let api = Deboa::new("https://invalid-server.com".to_string());
+    let api = Deboa::new("https://invalid-server.com")?;
 
     let response = api.get("/posts").await;
 
@@ -135,7 +135,7 @@ async fn test_get_invalid_server() {
 //
 
 async fn do_get_by_query() -> Result<(), DeboaError> {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     let query_map = HashMap::from([("id", "1")]);
 
@@ -173,12 +173,12 @@ async fn test_get_by_query() -> Result<(), DeboaError> {
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_get_by_query() {
-    let _ = do_get_by_query().await;
+async fn test_get_by_query() -> Result<(), DeboaError> {
+    do_get_by_query().await
 }
 
 #[cfg(feature = "compio-rt")]
 #[compio::test]
-async fn test_get_by_query() {
-    let _ = do_get_by_query().await;
+async fn test_get_by_query() -> Result<(), DeboaError> {
+    do_get_by_query().await
 }

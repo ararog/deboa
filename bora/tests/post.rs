@@ -1,4 +1,4 @@
-use deboa::Deboa;
+use deboa::{Deboa, DeboaError};
 
 #[macro_use]
 extern crate bora;
@@ -25,10 +25,10 @@ mod inner {
 }
 
 #[tokio::test]
-async fn test_get_by_id() {
+async fn test_get_by_id() -> Result<(), DeboaError> {
     use inner::{PostService, Service};
 
-    let deboa = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let deboa = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     let mut post_service = PostService::new(deboa);
 
@@ -39,6 +39,6 @@ async fn test_get_by_id() {
             body: "body".to_string(),
             user_id: 1,
         })
-        .await
-        .unwrap();
+        .await?;
+    Ok(())
 }

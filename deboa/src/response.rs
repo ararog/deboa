@@ -21,7 +21,7 @@ impl DeboaResponse {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let mut response = api.get("/posts").await?;
     ///   let status = response.status();
     ///   Ok(())
@@ -41,7 +41,7 @@ impl DeboaResponse {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let mut response = api.get("/posts").await?;
     ///   let headers = response.headers();
     ///   Ok(())
@@ -74,7 +74,7 @@ impl DeboaResponse {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let mut response = api.get("/posts").await?;
     ///   let posts = response.json::<Vec<Post>>().await?;
     ///   Ok(())
@@ -116,7 +116,7 @@ impl DeboaResponse {
     /// #[tokio::main]
     /// /*
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://reqbin.com".to_string());
+    ///   let mut api = Deboa::new("https://reqbin.com");
     ///   api.edit_header(header::CONTENT_TYPE, deboa::APPLICATION_XML.to_string());
     ///   api.edit_header(header::ACCEPT, deboa::APPLICATION_XML.to_string());
     ///
@@ -159,7 +159,7 @@ impl DeboaResponse {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let mut response = api.get("/posts").await?;
     ///   let posts = response.msgpack::<Vec<Post>>().await?;
     ///   Ok(())
@@ -187,7 +187,7 @@ impl DeboaResponse {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
     ///   let mut response = api.get("/posts").await?;
     ///   let text = response.text().await?;
     ///   Ok(())
