@@ -1,6 +1,6 @@
-use crate::Deboa;
 #[cfg(test)]
 use crate::DeboaError;
+use crate::{tests::types::JSONPLACEHOLDER, Deboa};
 use http::StatusCode;
 
 #[cfg(feature = "smol-rt")]
@@ -13,7 +13,7 @@ use smol_macros::test;
 //
 
 async fn do_delete() -> Result<(), DeboaError> {
-    let api = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    let api = Deboa::new(JSONPLACEHOLDER)?;
 
     let response = api.delete("/posts/1").await?;
 

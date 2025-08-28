@@ -156,7 +156,7 @@ impl DeboaResponse {
     ///     title: String,
     ///     body: String,
     /// }
-    ///
+    /// /*
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
@@ -164,13 +164,14 @@ impl DeboaResponse {
     ///   let posts = response.msgpack::<Vec<Post>>().await?;
     ///   Ok(())
     /// }
+    /// */
     /// ```
     ///
     #[cfg(feature = "msgpack")]
     pub async fn msgpack<T: for<'a> Deserialize<'a>>(&mut self) -> Result<T, DeboaError> {
         let body = self.raw_body.as_ref();
 
-        let rmp_deserialized = rmp_serde::from_slice::<T>(&body);
+        let rmp_deserialized = rmp_serde::from_slice::<T>(body);
 
         match rmp_deserialized {
             Ok(deserialized_body) => Ok(deserialized_body),

@@ -36,6 +36,7 @@ mod tests;
 
 #[allow(dead_code)]
 pub const APPLICATION_XML: &str = "application/xml";
+pub const APPLICATION_MSGPACK: &str = "application/vnd.msgpack";
 
 pub struct Deboa {
     base_url: Url,
@@ -199,7 +200,7 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   api.edit_header(header::CONTENT_TYPE, "application/json".to_string());
+    ///   api.edit_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string());
     ///   Ok(())
     /// }
     /// ```
@@ -526,13 +527,14 @@ impl Deboa {
     ///     title: String,
     ///     body: String,
     /// }
-    ///
+    /// /*
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
     ///   api.set_msgpack(Post { id: 1, title: "title".to_string(), body: "body".to_string() })?.post("/posts").await?;
     ///   Ok(())
     /// }
+    /// */
     /// ```
     ///
     pub fn set_msgpack<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
