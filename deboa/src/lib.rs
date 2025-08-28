@@ -859,7 +859,13 @@ impl Deboa {
     /// ```
     ///
     pub async fn any(&self, method: RequestMethod, path: &str) -> Result<DeboaResponse, DeboaError> {
-        let mut url = Url::parse(format!("{}{}", self.base_url, path).as_str()).unwrap();
+        let url = self.base_url.join(path);
+
+        if let Err(e) = url {
+            return Err(DeboaError::UrlParseError { message: e.to_string() });
+        }
+
+        let mut url = url.unwrap();
 
         if self.query_params.is_some() && method == RequestMethod::GET {
             let query = form_urlencoded::Serializer::new(String::new())
@@ -991,6 +997,15 @@ impl Deboa {
 
         let raw_body = response_body.copy_to_bytes(response_body.remaining()).to_vec();
 
+        if !status_code.is_success() {
+            return Err(DeboaError::RequestError {
+                host: url.host().unwrap().to_string(),
+                path: url.path().to_string(),
+                method: method.to_string(),
+                message: format!("Request failed with status code: {status_code}"),
+            });
+        }
+
         #[cfg(feature = "middlewares")]
         let mut response = DeboaResponse {
             status: status_code,
@@ -1002,7 +1017,7 @@ impl Deboa {
         let response = DeboaResponse {
             status: status_code,
             headers,
-            raw_body: body_text,
+            raw_body,
         };
 
         #[cfg(feature = "middlewares")]
