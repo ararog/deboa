@@ -30,13 +30,15 @@ pub mod middlewares;
 pub mod request;
 pub mod response;
 mod runtimes;
+
+#[cfg(test)]
 mod tests;
 
 #[allow(dead_code)]
 pub const APPLICATION_XML: &str = "application/xml";
 
 pub struct Deboa {
-    base_url: &'static str,
+    base_url: String,
     headers: Option<HashMap<HeaderName, String>>,
     query_params: Option<HashMap<&'static str, &'static str>>,
     body: Option<Vec<u8>>,
@@ -72,12 +74,12 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   Ok(())
     /// }
     /// ```
     ///
-    pub fn new(base_url: &'static str) -> Self {
+    pub fn new(base_url: String) -> Self {
         let default_headers: HashMap<HeaderName, String> = HashMap::from([
             (header::ACCEPT, mime::APPLICATION_JSON.to_string()),
             (header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string()),
@@ -112,7 +114,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.add_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref().to_string());
     ///   Ok(())
     /// }
@@ -137,7 +139,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.remove_header(header::CONTENT_TYPE);
     ///   Ok(())
     /// }
@@ -166,7 +168,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.has_header(&header::CONTENT_TYPE);
     ///   Ok(())
     /// }
@@ -191,7 +193,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.edit_header(header::CONTENT_TYPE, "application/json".to_string());
     ///   Ok(())
     /// }
@@ -228,7 +230,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.get_mut_header(&header::CONTENT_TYPE);
     ///   Ok(())
     /// }
@@ -251,7 +253,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.add_bearer_auth("token".to_string());
     ///   Ok(())
     /// }
@@ -279,7 +281,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.add_basic_auth("username".to_string(), "password".to_string());
     ///   Ok(())
     /// }
@@ -306,13 +308,13 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.set_base_url("https://jsonplaceholder.typicode.com").get("/posts").await?;
     ///   Ok(())
     /// }
     /// ```
     ///
-    pub fn set_base_url(&mut self, base_url: &'static str) -> &mut Self {
+    pub fn set_base_url(&mut self, base_url: String) -> &mut Self {
         self.base_url = base_url;
         self
     }
@@ -326,15 +328,15 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   let base_url = api.base_url();
     ///   println!("Base URL: {}", base_url);
     ///   Ok(())
     /// }
     /// ```
     ///
-    pub fn base_url(&self) -> &'static str {
-        self.base_url
+    pub fn base_url(&self) -> String {
+        self.base_url.clone()
     }
 
     /// Allow change request retries at any time.
@@ -350,7 +352,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.set_retries(3).get("/posts").await?;
     ///   Ok(())
     /// }
@@ -374,7 +376,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.set_connection_timeout(5).get("/posts").await?;
     ///   Ok(())
     /// }
@@ -398,7 +400,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.set_request_timeout(5).get("/posts").await?;
     ///   Ok(())
     /// }
@@ -431,7 +433,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.set_json(Post { id: 1, title: "title".to_string(), body: "body".to_string() })?.post("/posts").await?;
     ///   Ok(())
     /// }
@@ -472,7 +474,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.set_xml(Post { id: 1, title: "title".to_string(), body: "body".to_string() })?.post("/posts").await?;
     ///   Ok(())
     /// }
@@ -489,7 +491,7 @@ impl Deboa {
             return Err(DeboaError::SerializationError { message: error.to_string() });
         }
 
-        self.body = Some(ser_xml_buf.into());
+        self.body = Some(ser_xml_buf);
 
         Ok(self)
     }
@@ -516,7 +518,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.set_msgpack(Post { id: 1, title: "title".to_string(), body: "body".to_string() })?.post("/posts").await?;
     ///   Ok(())
     /// }
@@ -528,7 +530,7 @@ impl Deboa {
             return Err(DeboaError::SerializationError { message: error.to_string() });
         }
 
-        self.body = Some(result.unwrap().into());
+        self.body = Some(result.unwrap());
 
         Ok(self)
     }
@@ -546,7 +548,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.set_text("text".to_string()).post("/posts").await?;
     ///   Ok(())
     /// }
@@ -571,7 +573,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.set_query_params(Some(HashMap::from([("id", "1")])));
     ///   Ok(())
     /// }
@@ -608,7 +610,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   api.add_middleware(TestMonitor);
     ///   Ok(())
     /// }
@@ -631,7 +633,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   let response = api.get("/posts").await?;
     ///   Ok(())
     /// }
@@ -654,7 +656,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   let response = api.post("/posts").await?;
     ///   Ok(())
     /// }
@@ -677,7 +679,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   let response = api.put("/posts/1").await?;
     ///   Ok(())
     /// }
@@ -700,7 +702,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   let response = api.patch("/posts/1").await?;
     ///   Ok(())
     /// }
@@ -723,7 +725,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   let response = api.delete("/posts/1").await?;
     ///   Ok(())
     /// }
@@ -746,7 +748,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   let response = api.head("/posts").await?;
     ///   Ok(())
     /// }
@@ -769,7 +771,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   let response = api.options("/posts").await?;
     ///   Ok(())
     /// }
@@ -792,7 +794,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   let response = api.trace("/posts").await?;
     ///   Ok(())
     /// }
@@ -815,7 +817,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   let response = api.connect("/posts").await?;
     ///   Ok(())
     /// }
@@ -839,7 +841,7 @@ impl Deboa {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
     ///   let response = api.any(RequestMethod::GET, "/posts").await?;
     ///   Ok(())
     /// }
