@@ -309,7 +309,7 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
-    ///   api.set_base_url("https://jsonplaceholder.typicode.com").get("/posts").await?;
+    ///   api.set_base_url("https://jsonplaceholder.typicode.com".to_string()).get("/posts").await?;
     ///   Ok(())
     /// }
     /// ```
