@@ -10,7 +10,7 @@ license = "GPL-3.0-or-later"
 keywords = ["http", "networking", "client", "fetch", "rest-client"]
 
 [features]
-default = ["http1", "middlewares", "json", "tokio-rt"]
+default = ["http1", "middlewares", "xml", "tokio-rt"]
 middlewares = []
 http1 = []
 http2 = []
@@ -68,6 +68,7 @@ criterion = { version = "0.7.1", git = "https://github.com/ararog/criterion.rs.g
   "async_tokio",
   "async_compio",
 ] }
+httpmock = "0.7.0"
 smol = "2.0.2"
 tokio = { version = "1", features = ["full"] }
 
