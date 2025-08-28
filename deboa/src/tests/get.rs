@@ -56,16 +56,19 @@ async fn test_get() {
 //
 
 async fn do_get_not_found() -> Result<(), DeboaError> {
-    let api = Deboa::new("https://jsonplaceholder.typicode.com/dsdsd")?;
+    let api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
-    let response = api.get("/posts").await?;
+    let response = api.get("asasa/posts/1ddd").await;
 
+    assert!(response.is_err());
     assert_eq!(
-        response.status,
-        StatusCode::NOT_FOUND,
-        "Status code is {} and should be {}",
-        response.status.as_u16(),
-        StatusCode::NOT_FOUND.as_u16()
+        response,
+        Err(DeboaError::RequestError {
+            host: "jsonplaceholder.typicode.com".to_string(),
+            path: "/asasa/posts/1ddd".to_string(),
+            method: "GET".to_string(),
+            message: "Request failed with status code: 404 Not Found".to_string()
+        })
     );
 
     Ok(())
