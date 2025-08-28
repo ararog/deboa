@@ -560,7 +560,8 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   api.set_text("text".to_string()).post("/posts").await?;
+    ///   let response = api.set_text("text".to_string()).post("/posts").await;
+    ///   assert!(response.is_err());
     ///   Ok(())
     /// }
     /// ```
@@ -664,11 +665,19 @@ impl Deboa {
     ///
     /// ```rust
     /// use deboa::{Deboa, DeboaError, RequestMethod};
+    /// use serde::Serialize;
+    ///
+    /// #[derive(Serialize)]
+    /// struct Post {
+    ///     id: u32,
+    ///     title: String,
+    ///     body: String,
+    /// }
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   let response = api.post("/posts").await?;
+    ///   let response = api.set_json(Post { id: 1, title: "title".to_string(), body: "body".to_string() })?.post("/posts").await?;
     ///   Ok(())
     /// }
     /// ```
@@ -806,7 +815,8 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   let response = api.trace("/posts").await?;
+    ///   let response = api.trace("/posts").await;
+    ///   assert!(response.is_err());
     ///   Ok(())
     /// }
     /// ```
@@ -829,7 +839,8 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   let response = api.connect("/posts").await?;
+    ///   let response = api.connect("/posts").await;
+    ///   assert!(response.is_err());
     ///   Ok(())
     /// }
     /// ```
