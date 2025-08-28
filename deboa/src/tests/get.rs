@@ -1,8 +1,8 @@
 #[cfg(feature = "json")]
 use crate::tests::types::Comment;
-use crate::Deboa;
 #[cfg(test)]
 use crate::DeboaError;
+use crate::{tests::types::JSONPLACEHOLDER, Deboa};
 
 use http::StatusCode;
 use std::collections::HashMap;
@@ -17,7 +17,7 @@ use smol_macros::test;
 //
 
 async fn do_get() -> Result<(), DeboaError> {
-    let api = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    let api = Deboa::new(JSONPLACEHOLDER)?;
 
     let response = api.get("/posts").await?;
 
@@ -56,7 +56,7 @@ async fn test_get() {
 //
 
 async fn do_get_not_found() -> Result<(), DeboaError> {
-    let api = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    let api = Deboa::new(JSONPLACEHOLDER)?;
 
     let response = api.get("asasa/posts/1ddd").await;
 
@@ -138,7 +138,7 @@ async fn test_get_invalid_server() {
 //
 
 async fn do_get_by_query() -> Result<(), DeboaError> {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
     let query_map = HashMap::from([("id", "1")]);
 
