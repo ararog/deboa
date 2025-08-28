@@ -13,7 +13,7 @@ mod inner {
 async fn test_delete_by_id() {
     use inner::{PostService, Service};
 
-    let deboa = Deboa::new("https://jsonplaceholder.typicode.com");
+    let deboa = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
 
     let post_service = PostService::new(deboa);
 
