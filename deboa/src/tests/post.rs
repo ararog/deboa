@@ -27,7 +27,7 @@ async fn do_post() -> Result<(), DeboaError> {
     let mut api = Deboa::new(&format!("http://{ip}:{port}"))?;
 
     let data = "ping".to_string();
-    let response = api.set_text(data).post("/posts").await?;
+    let response = api.set_text(data).post("posts").await?;
 
     http_mock.assert();
 
