@@ -18,4 +18,7 @@ pub enum DeboaError {
 
     #[error("Failed to deserialize data: {message}")]
     DeserializationError { message: String },
+
+    #[error("Failed to parse url: {message}")]
+    UrlParseError { message: String },
 }

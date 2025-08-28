@@ -16,10 +16,10 @@ use smol_macros::test;
 
 async fn do_put() -> Result<(), DeboaError> {
     #[cfg(feature = "json")]
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     #[cfg(not(feature = "json"))]
-    let api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     #[cfg(feature = "json")]
     let post = Post {
@@ -48,12 +48,14 @@ async fn test_put() -> Result<(), DeboaError> {
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_put() {
-    let _ = do_put().await;
+async fn test_put() -> Result<(), DeboaError> {
+    do_put().await?;
+    Ok(())
 }
 
 #[cfg(feature = "compio-rt")]
 #[compio::test]
-async fn test_put() {
-    let _ = do_put().await;
+async fn test_put() -> Result<(), DeboaError> {
+    do_put().await?;
+    Ok(())
 }

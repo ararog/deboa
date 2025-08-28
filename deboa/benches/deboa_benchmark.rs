@@ -10,7 +10,7 @@ use criterion::async_executor::SmolExecutor;
 use criterion::async_executor::CompioExecutor;
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use deboa::Deboa;
+use deboa::{Deboa, DeboaError};
 #[cfg(any(feature = "json", feature = "xml"))]
 use serde::Serialize;
 
@@ -22,13 +22,14 @@ struct Post {
     body: String,
 }
 
-async fn get_async() {
-    let api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+async fn get_async() -> Result<(), DeboaError> {
+    let api = Deboa::new("https://jsonplaceholder.typicode.com")?;
     let _ = api.get("/posts").await;
+    Ok(())
 }
 
-async fn post_async() {
-    let mut api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+async fn post_async() -> Result<(), DeboaError> {
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
     #[cfg(feature = "json")]
     let _ = api
         .set_json(Post {
@@ -53,6 +54,7 @@ async fn post_async() {
 
     #[cfg(not(any(feature = "json", feature = "xml")))]
     let _ = api.set_text("Some test to do").post("/posts").await;
+    Ok(())
 }
 
 fn deboa(c: &mut Criterion) {

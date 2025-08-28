@@ -13,7 +13,7 @@ use smol_macros::test;
 //
 
 async fn do_delete() -> Result<(), DeboaError> {
-    let api = Deboa::new("https://jsonplaceholder.typicode.com".to_string());
+    let api = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     let response = api.delete("/posts/1").await?;
 
@@ -31,12 +31,12 @@ async fn test_delete() -> Result<(), DeboaError> {
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_delete() {
-    let _ = do_delete().await;
+async fn test_delete() -> Result<(), DeboaError> {
+    do_delete().await
 }
 
 #[cfg(feature = "compio-rt")]
 #[compio::test]
-async fn test_delete() {
+async fn test_delete() -> Result<(), DeboaError> {
     let _ = do_delete().await;
 }
