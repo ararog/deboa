@@ -6,4 +6,4 @@ members = [
     "deboa",
     "bora",
     "examples/simple"
-]
+, "examples/middleware"]
