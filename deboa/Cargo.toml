@@ -10,7 +10,7 @@ license = "GPL-3.0-or-later"
 keywords = ["http", "networking", "client", "fetch", "rest-client"]
 
 [features]
-default = ["http1", "middlewares", "json", "xml", "msgpack", "tokio-rt"]
+default = ["http1", "middlewares", "json", "tokio-rt"]
 middlewares = []
 http1 = []
 http2 = []
