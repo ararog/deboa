@@ -61,34 +61,34 @@ fn deboa(c: &mut Criterion) {
     c.bench_function("deboa_get", move |b| {
         #[cfg(feature = "tokio-rt")]
         b.to_async(Runtime::new().unwrap()).iter(|| async {
-            get_async().await;
+            let _ = get_async().await;
         });
 
         #[cfg(feature = "smol-rt")]
         b.to_async(SmolExecutor).iter(|| async {
-            get_async().await;
+            let _ = get_async().await;
         });
 
         #[cfg(feature = "compio-rt")]
         b.to_async(CompioExecutor).iter(|| async {
-            get_async().await;
+            let _ = get_async().await;
         });
     });
 
     c.bench_function("deboa_post", move |b| {
         #[cfg(feature = "tokio-rt")]
         b.to_async(Runtime::new().unwrap()).iter(|| async {
-            post_async().await;
+            let _ = post_async().await;
         });
 
         #[cfg(feature = "smol-rt")]
         b.to_async(SmolExecutor).iter(|| async {
-            post_async().await;
+            let _ = post_async().await;
         });
 
         #[cfg(feature = "compio-rt")]
         b.to_async(CompioExecutor).iter(|| async {
-            post_async().await;
+            let _ = post_async().await;
         });
     });
 }

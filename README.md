@@ -25,7 +25,7 @@
 ## Install
 
 ```rust
-deboa = { version = "0.0.5", features = ["http1",  "json", "tokio-rt"] }
+deboa = { version = "0.0.5", features = ["http1", "middlewares",  "json", "tokio-rt"] }
 ```
 
 ## Crate features
@@ -33,12 +33,12 @@ deboa = { version = "0.0.5", features = ["http1",  "json", "tokio-rt"] }
 - tokio-rt (default)
 - smol-rt
 - compio-rt
-- json
+- json (default)
 - xml
 - msgpack
-- http1
+- http1 (default)
 - http2 (coming soon)
-- middlewares
+- middlewares (default)
 
 ## Usage
 
