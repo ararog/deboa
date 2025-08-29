@@ -967,12 +967,8 @@ impl Deboa {
             }
         }
 
-        let req = match &self.body {
-            Some(body) => builder.body(Full::new(Bytes::from_owner(body.clone()))),
-            None => builder.body(Full::new(Bytes::from_owner(Vec::new()))),
-        };
-
-        if let Err(err) = req {
+        let body = self.prepare_request_body();
+        if let Err(err) = body {
             return Err(DeboaError::RequestError {
                 host: url.host().unwrap().to_string(),
                 path: url.path().to_string(),
@@ -981,7 +977,9 @@ impl Deboa {
             });
         }
 
-        let request = req.unwrap();
+        let body = body.unwrap();
+
+        let request = builder.body(Full::new(body)).unwrap();
 
         // We need sure that we do not reconstruct the request somewhere else in the code as it will lead to the headers deletion making a request invalid.
         let res = sender.send_request(request).await;
@@ -1039,5 +1037,51 @@ impl Deboa {
         }
 
         Ok(response)
+    }
+
+    fn prepare_request_body(&self) -> Result<Bytes, DeboaError> {
+        let body = match &self.body {
+            Some(body) => Bytes::from_owner(body.clone()),
+            None => Bytes::from_owner(Vec::new()),
+        };
+
+        #[cfg(all(feature = "compression", feature = "brotli"))]
+        {
+            use std::io::Write;
+
+            let compressed_body = Vec::new();
+
+            let mut writer = brotli::CompressorWriter::new(compressed_body, body.len(), 11, 22);
+            let _ = writer.write_all(body.as_ref());
+
+            Ok(Bytes::from_owner(writer.into_inner()))
+        }
+
+        #[cfg(all(feature = "compression", feature = "deflate"))]
+        {
+            use std::io::Write;
+
+            let compressed_body = Vec::new();
+
+            let mut writer = flate2::write::DeflateEncoder::new(compressed_body, flate2::Compression::default());
+            let _ = writer.write_all(body.as_ref());
+
+            Ok(Bytes::from_owner(writer.get_ref().to_vec()))
+        }
+
+        #[cfg(all(feature = "compression", feature = "gzip"))]
+        {
+            use std::io::Write;
+
+            let compressed_body = Vec::new();
+
+            let mut writer = flate2::write::GzEncoder::new(compressed_body, flate2::Compression::default());
+            let _ = writer.write_all(body.as_ref());
+
+            Ok(Bytes::from_owner(writer.get_ref().to_vec()))
+        }
+
+        #[cfg(not(feature = "compression"))]
+        Ok(body)
     }
 }

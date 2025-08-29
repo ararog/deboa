@@ -14,24 +14,38 @@ default = ["http1", "middlewares", "json", "tokio-rt"]
 middlewares = []
 http1 = []
 http2 = []
+# serializarion
 json = ["dep:serde_json", "dep:serde"]
-xml = [ "dep:serde-xml-rust", "dep:serde"]
+xml = ["dep:serde-xml-rust", "dep:serde"]
 msgpack = ["dep:rmp-serde", "dep:serde"]
+# compression
+compression = ["brotli"]
+brotli = ["dep:brotli"]
+deflate = ["dep:flate2"]
+gzip = ["dep:flate2"]
+# runtime
 tokio-rt = ["dep:tokio"]
 smol-rt = [
-    "dep:smol",
-    "dep:smol-hyper",
-    "dep:async-native-tls",
-    "dep:smol-macros",
-    "dep:macro_rules_attribute",
-    "dep:anyhow",
+  "dep:smol",
+  "dep:smol-hyper",
+  "dep:async-native-tls",
+  "dep:smol-macros",
+  "dep:macro_rules_attribute",
+  "dep:anyhow",
 ]
-compio-rt = ["dep:compio", "dep:cyper-core", "dep:async-native-tls", "dep:anyhow"]
+compio-rt = [
+  "dep:compio",
+  "dep:cyper-core",
+  "dep:async-native-tls",
+  "dep:anyhow",
+]
 
 [dependencies]
 anyhow = { version = "1.0.99", optional = true }
 async-native-tls = { version = "0.5.0", optional = true }
 base64 = "0.22.1"
+flate2 = { version = "1.1.2", optional = true }
+brotli = { version = "8.0.2", optional = true }
 bytes = { version = "1.2", optional = false }
 compio = { version = "0.15.0", optional = true, features = ["macros"] }
 cyper-core = { version = "0.4.0", optional = true, features = ["client"] }
