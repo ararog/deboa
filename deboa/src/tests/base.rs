@@ -2,7 +2,11 @@
 use crate::Deboa;
 use crate::DeboaError;
 
-use crate::tests::types::{sample_post, Post, JSONPLACEHOLDER, JSON_POST, RAW_POST, XML_POST};
+#[cfg(feature = "msgpack")]
+use crate::tests::types::MSGPACK_POST;
+#[cfg(feature = "xml")]
+use crate::tests::types::XML_POST;
+use crate::tests::types::{sample_post, Post, JSONPLACEHOLDER, JSON_POST};
 use http::header;
 use std::collections::HashMap;
 use url::Url;
