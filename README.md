@@ -25,33 +25,24 @@
 ## Install
 
 ```rust
-deboa = { version = "0.0.5" }
+deboa = { version = "0.0.5", features = ["http1",  "json", "tokio-rt"] }
 ```
 
-### Runtime Features
+## Crate features
 
 - tokio-rt (default)
 - smol-rt
 - compio-rt
-
-### Serialization Features
-
 - json
 - xml
 - msgpack
-
-### Http Features
-
 - http1
 - http2 (coming soon)
-
-### Middleware Features
-
 - middlewares
 
 ## Usage
 
-### Serialize request amd deserialize response using json
+### Serialize request and deserialize response using json
 
 ```rust
 use deboa::Deboa;
@@ -63,7 +54,7 @@ let posts: Vec<Post> = api.get("/posts").await?.json::<Vec<Post>>().await?;
 println!("posts: {:#?}", posts);
 ```
 
-### Serialize request amd deserialize response using xml
+### Serialize request and deserialize response using xml
 
 ```rust
 use deboa::Deboa;
