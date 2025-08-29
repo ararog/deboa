@@ -4,19 +4,16 @@ extern crate quote;
 extern crate syn;
 
 use proc_macro::TokenStream;
-use proc_macro_error::proc_macro_error;
 use proc_macro2::TokenTree;
 use quote::quote;
 use syn::{Ident, LitStr, parse_macro_input, parse_str};
 
 use parser::BoraApi;
 
-use crate::parser::{DeleteFieldEnum, GetFieldEnum, OperationEnum, PatchFieldEnum, PostFieldEnum, PutFieldEnum};
+use crate::bora::parser::{DeleteFieldEnum, GetFieldEnum, OperationEnum, PatchFieldEnum, PostFieldEnum, PutFieldEnum};
 
 mod parser;
 
-#[proc_macro_error]
-#[proc_macro_attribute]
 pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
     let item = proc_macro2::TokenStream::from(item);
     let attr = proc_macro2::TokenStream::from(attr);
