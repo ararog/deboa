@@ -1,9 +1,9 @@
 [package]
-name = "bora"
+name = "deboa-macros"
 edition = "2024"
 version = "0.1.0"
 authors = ["Rogerio Pacheco <rogerio.araujo@gmail.com>"]
-description = "a procedural macro to generate deboa requests"
+description = "macros for deboa"
 license = "MIT"
 repository = "https://github.com/ararog/deboa"
 readme = "README.md"

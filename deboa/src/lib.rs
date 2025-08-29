@@ -8,6 +8,13 @@
 ))]
 compile_error!("Only one runtime feature can be enabled at a time.");
 
+#[cfg(any(
+    all(feature = "deflate", feature = "brotli"),
+    all(feature = "deflate", feature = "gzip"),
+    all(feature = "brotli", feature = "gzip")
+))]
+compile_error!("Only one compression feature can be enabled at a time.");
+
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use bytes::{Buf, Bytes};
 use http::{header, HeaderName, HeaderValue};
@@ -420,6 +427,28 @@ impl Deboa {
     ///
     pub fn set_request_timeout(&mut self, timeout: u64) -> &mut Self {
         self.request_timeout = timeout;
+        self
+    }
+
+    #[cfg(feature = "compression")]
+    pub fn add_compression(&mut self) -> &mut Self {
+        #[cfg(feature = "brotli")]
+        {
+            req_headers.insert(header::CONTENT_ENCODING, "br".to_string());
+            req_headers.insert(header::ACCEPT_ENCODING, "br".to_string());
+        }
+
+        #[cfg(feature = "deflate")]
+        {
+            req_headers.insert(header::CONTENT_ENCODING, "deflate".to_string());
+            req_headers.insert(header::ACCEPT_ENCODING, "deflate".to_string());
+        }
+
+        #[cfg(feature = "gzip")]
+        {
+            req_headers.insert(header::CONTENT_ENCODING, "gzip".to_string());
+            req_headers.insert(header::ACCEPT_ENCODING, "gzip".to_string());
+        }
         self
     }
 
@@ -979,7 +1008,17 @@ impl Deboa {
 
         let body = body.unwrap();
 
-        let request = builder.body(Full::new(body)).unwrap();
+        let request = builder.body(Full::new(body));
+        if let Err(err) = request {
+            return Err(DeboaError::RequestError {
+                host: url.host().unwrap().to_string(),
+                path: url.path().to_string(),
+                method: method.to_string(),
+                message: err.to_string(),
+            });
+        }
+
+        let request = request.unwrap();
 
         // We need sure that we do not reconstruct the request somewhere else in the code as it will lead to the headers deletion making a request invalid.
         let res = sender.send_request(request).await;

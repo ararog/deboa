@@ -1,7 +1,7 @@
 use deboa::{Deboa, DeboaError};
 
 #[macro_use]
-extern crate bora;
+extern crate deboa_macros;
 
 mod inner {
 
