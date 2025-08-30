@@ -10,7 +10,7 @@ use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
 use url::{Host, Url};
 
-use crate::DeboaError;
+use crate::errors::DeboaError;
 
 pub async fn get_connection(
     url: &Url,
@@ -27,7 +27,7 @@ pub async fn get_connection(
 
     let stream = TcpStream::connect(addr).await;
     if let Err(err) = stream {
-        return Err(DeboaError::ConnectionError {
+        return Err(DeboaError::Connection {
             host: host.to_string(),
             message: err.to_string(),
         });
@@ -41,7 +41,7 @@ pub async fn get_connection(
     #[cfg(feature = "http1")]
     match result {
         Ok(conn) => Ok(conn),
-        Err(err) => Err(DeboaError::ConnectionError {
+        Err(err) => Err(DeboaError::Connection {
             host: host.to_string(),
             message: err.to_string(),
         }),
@@ -51,7 +51,7 @@ pub async fn get_connection(
     let result = hyper::client::conn::http2::handshake(io).await;
     #[cfg(feature = "http2")]
     if let Err(err) = result {
-        return Err(DeboaError::ConnectionError {
+        return Err(DeboaError::Connection {
             host: host.to_string(),
             message: err.to_string(),
         });

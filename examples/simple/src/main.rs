@@ -1,4 +1,5 @@
-use deboa::DeboaError;
+use deboa::errors::DeboaError;
+use deboa_extras::serialization::json::JsonResponse;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Post {
@@ -14,7 +15,7 @@ async fn main() -> Result<(), DeboaError> {
 
     let api = Deboa::new("https://jsonplaceholder.typicode.com").unwrap();
 
-    let posts: Vec<Post> = api.get("/posts").await?.json::<Vec<Post>>().await?;
+    let posts: Vec<Post> = api.get("/posts").await?.json::<Vec<Post>>()?;
 
     println!("posts: {posts:#?}");
 

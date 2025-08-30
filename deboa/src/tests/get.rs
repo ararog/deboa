@@ -1,7 +1,6 @@
-#[cfg(feature = "json")]
-use crate::tests::types::Comment;
 #[cfg(test)]
-use crate::DeboaError;
+use crate::errors::DeboaError;
+use crate::response::DeboaResponse;
 use crate::{tests::types::JSONPLACEHOLDER, Deboa};
 
 use http::StatusCode;
@@ -19,13 +18,13 @@ use smol_macros::test;
 async fn do_get() -> Result<(), DeboaError> {
     let api = Deboa::new(JSONPLACEHOLDER)?;
 
-    let response = api.get("/posts").await?;
+    let response: DeboaResponse = api.get("/posts").await?;
 
     assert_eq!(
-        response.status,
+        response.status(),
         StatusCode::OK,
         "Status code is {} and should be {}",
-        response.status.as_u16(),
+        response.status().as_u16(),
         StatusCode::OK.as_u16()
     );
 
@@ -58,12 +57,12 @@ async fn test_get() {
 async fn do_get_not_found() -> Result<(), DeboaError> {
     let api = Deboa::new(JSONPLACEHOLDER)?;
 
-    let response = api.get("asasa/posts/1ddd").await;
+    let response: Result<DeboaResponse, DeboaError> = api.get("asasa/posts/1ddd").await;
 
     assert!(response.is_err());
     assert_eq!(
         response,
-        Err(DeboaError::RequestError {
+        Err(DeboaError::Request {
             host: "jsonplaceholder.typicode.com".to_string(),
             path: "/asasa/posts/1ddd".to_string(),
             method: "GET".to_string(),
@@ -100,12 +99,12 @@ async fn test_get_not_found() {
 async fn do_get_invalid_server() -> Result<(), DeboaError> {
     let api = Deboa::new("https://invalid-server.com")?;
 
-    let response = api.get("/posts").await;
+    let response: Result<DeboaResponse, DeboaError> = api.get("/posts").await;
 
     assert!(response.is_err());
     assert_eq!(
         response,
-        Err(DeboaError::ConnectionError {
+        Err(DeboaError::Connection {
             host: "invalid-server.com".to_string(),
             message: "failed to lookup address information: Name or service not known".to_string(),
         })
@@ -142,27 +141,21 @@ async fn do_get_by_query() -> Result<(), DeboaError> {
 
     let query_map = HashMap::from([("id", "1")]);
 
-    api.set_query_params(Some(query_map));
+    api.set_query_params(query_map);
 
-    #[cfg(feature = "json")]
-    let mut response = api.get("/comments").await?;
-
-    #[cfg(not(feature = "json"))]
-    let response = api.get("/comments").await?;
+    let response: DeboaResponse = api.get("/comments").await?;
 
     assert_eq!(
-        response.status,
+        response.status(),
         StatusCode::OK,
         "Status code is {} and should be {}",
-        response.status.as_u16(),
+        response.status().as_u16(),
         StatusCode::OK.as_u16()
     );
 
-    #[cfg(feature = "json")]
-    let comments = response.json::<Vec<Comment>>().await?;
+    let comments = response.text();
 
-    #[cfg(feature = "json")]
-    assert_eq!(comments.len(), 1, "Number of comments is {} and should be {}", comments.len(), 1);
+    assert!(comments.is_ok());
 
     Ok(())
 }

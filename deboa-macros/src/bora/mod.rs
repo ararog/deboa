@@ -1,7 +1,4 @@
 extern crate proc_macro;
-extern crate proc_macro2;
-extern crate quote;
-extern crate syn;
 
 use proc_macro::TokenStream;
 use proc_macro2::TokenTree;
@@ -116,7 +113,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                 acc.1.extend(quote! {
                     async fn #method_name(&self, #api_params) -> Result<#res_body_type, DeboaError> {
-                        self.api.#method(format!(#api_path).as_ref()).await?.json::<#res_body_type>().await
+                        self.api.#method(format!(#api_path).as_ref()).await?.json::<#res_body_type>()
                     }
                 });
             }
@@ -345,7 +342,8 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
     });
 
     let ts = quote! {
-        use deboa::{Deboa, DeboaError, DeboaResponse};
+        use deboa::{Deboa, errors::DeboaError, response::DeboaResponse};
+        use deboa_extras::serialization::json::{JsonRequest, JsonResponse};
 
         pub struct #struct_name {
             api: Deboa

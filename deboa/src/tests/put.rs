@@ -1,8 +1,6 @@
-#[cfg(feature = "json")]
-use crate::tests::types::{sample_post, JSONPLACEHOLDER};
-use crate::Deboa;
 #[cfg(test)]
-use crate::DeboaError;
+use crate::errors::DeboaError;
+use crate::{tests::types::JSONPLACEHOLDER, Deboa};
 use http::StatusCode;
 
 #[cfg(feature = "smol-rt")]
@@ -15,20 +13,9 @@ use smol_macros::test;
 //
 
 async fn do_put() -> Result<(), DeboaError> {
-    #[cfg(feature = "json")]
     let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
-    #[cfg(not(feature = "json"))]
-    let api = Deboa::new(JSONPLACEHOLDER)?;
-
-    #[cfg(feature = "json")]
-    let post = sample_post();
-
-    #[cfg(feature = "json")]
-    let response = api.set_json(post)?.put("/posts/1").await?;
-
-    #[cfg(not(feature = "json"))]
-    let response = api.put("/posts/1").await?;
+    let response = api.set_text("".to_string()).put("/posts/1").await?;
 
     assert_eq!(response.status, StatusCode::OK);
 
