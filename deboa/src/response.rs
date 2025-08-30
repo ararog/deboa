@@ -26,8 +26,8 @@ impl DeboaResponse {
         self.body = body;
     }
 
-    pub fn raw_body(&self) -> Vec<u8> {
-        self.body.clone()
+    pub fn body(&self) -> &Vec<u8> {
+        &self.body
     }
 
     pub fn text(&self) -> Result<String, DeboaError> {

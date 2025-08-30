@@ -26,8 +26,8 @@ pub enum DeboaError {
     UrlParse { message: String },
 
     #[error("Failed to compress data: {message}")]
-    Compression { message: String },
+    Compress { message: String },
 
     #[error("Failed to decompress data: {message}")]
-    Decompression { message: String },
+    Decompress { message: String },
 }

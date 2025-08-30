@@ -17,7 +17,7 @@ fn test_set_json() -> Result<(), DeboaError> {
 
     let _ = api.set_json(data);
 
-    assert_eq!(*api.raw_body(), JSON_POST.to_vec());
+    assert_eq!(*api.body(), JSON_POST.to_vec());
 
     Ok(())
 }
