@@ -156,7 +156,7 @@ fn test_set_body() -> Result<(), DeboaError> {
 
     api.set_text("test".to_string());
 
-    assert_eq!(api.body, Some(b"test".to_vec()));
+    assert_eq!(api.body, b"test".to_vec());
 
     Ok(())
 }

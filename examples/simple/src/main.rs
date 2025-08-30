@@ -1,5 +1,5 @@
 use deboa::errors::DeboaError;
-use deboa_extras::serialization::json::JsonResponse;
+use deboa_extras::http::json::JsonResponse;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Post {

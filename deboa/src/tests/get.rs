@@ -62,10 +62,8 @@ async fn do_get_not_found() -> Result<(), DeboaError> {
     assert!(response.is_err());
     assert_eq!(
         response,
-        Err(DeboaError::Request {
-            host: "jsonplaceholder.typicode.com".to_string(),
-            path: "/asasa/posts/1ddd".to_string(),
-            method: "GET".to_string(),
+        Err(DeboaError::Response {
+            status_code: 404,
             message: "Request failed with status code: 404 Not Found".to_string()
         })
     );
