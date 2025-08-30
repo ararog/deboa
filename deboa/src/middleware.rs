@@ -1,5 +1,5 @@
 #![allow(unused_variables)]
-use crate::{Deboa, DeboaResponse};
+use crate::{response::DeboaResponse, Deboa};
 
 /// DeboaMiddleware
 ///
@@ -23,4 +23,14 @@ pub trait DeboaMiddleware: Send + Sync + 'static {
     /// * `response` - The response that was received.
     ///
     fn on_response(&self, request: &Deboa, response: &mut DeboaResponse) {}
+}
+
+impl<T: DeboaMiddleware> DeboaMiddleware for Box<T> {
+    fn on_request(&self, request: &Deboa) {
+        self.as_ref().on_request(request);
+    }
+
+    fn on_response(&self, request: &Deboa, response: &mut DeboaResponse) {
+        self.as_ref().on_response(request, response);
+    }
 }

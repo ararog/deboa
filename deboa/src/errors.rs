@@ -3,10 +3,10 @@ use thiserror::Error;
 #[derive(Debug, Error, PartialEq)]
 pub enum DeboaError {
     #[error("Could not connect to {host}: {message}")]
-    ConnectionError { host: String, message: String },
+    Connection { host: String, message: String },
 
     #[error("Failed to send request: {method} {host}/{path}: {message}")]
-    RequestError {
+    Request {
         host: String,
         path: String,
         method: String,
@@ -14,11 +14,11 @@ pub enum DeboaError {
     },
 
     #[error("Failed to serialize data: {message}")]
-    SerializationError { message: String },
+    Serialization { message: String },
 
     #[error("Failed to deserialize data: {message}")]
-    DeserializationError { message: String },
+    Deserialization { message: String },
 
     #[error("Failed to parse url: {message}")]
-    UrlParseError { message: String },
+    UrlParse { message: String },
 }

@@ -1,17 +1,11 @@
+use crate::errors::DeboaError;
 #[cfg(feature = "middlewares")]
 use crate::Deboa;
-use crate::DeboaError;
 
-#[cfg(feature = "msgpack")]
-use crate::tests::types::MSGPACK_POST;
-#[cfg(feature = "xml")]
-use crate::tests::types::XML_POST;
-use crate::tests::types::{sample_post, Post, JSONPLACEHOLDER, JSON_POST};
+use crate::tests::types::JSONPLACEHOLDER;
 use http::header;
 use std::collections::HashMap;
 use url::Url;
-
-use httpmock::prelude::*;
 
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
@@ -42,7 +36,7 @@ fn test_set_query_params() -> Result<(), DeboaError> {
 
     let query_map = HashMap::from([("id", "1")]);
 
-    api.set_query_params(Some(query_map.clone()));
+    api.set_query_params(query_map.clone());
 
     assert_eq!(api.query_params, Some(query_map));
 
@@ -120,146 +114,6 @@ fn test_set_request_timeout() -> Result<(), DeboaError> {
 
     assert_eq!(api.request_timeout, 5);
 
-    Ok(())
-}
-
-#[cfg(feature = "json")]
-#[test]
-fn test_set_json() -> Result<(), DeboaError> {
-    let mut api = Deboa::new(JSONPLACEHOLDER)?;
-
-    let data = sample_post();
-
-    let _ = api.set_json(data);
-
-    assert_eq!(api.body, Some(JSON_POST.to_vec()));
-
-    Ok(())
-}
-
-#[cfg(feature = "json")]
-#[tokio::test]
-async fn test_response_json() -> Result<(), DeboaError> {
-    use crate::tests::types::sample_post;
-
-    let server = MockServer::start();
-
-    let data = sample_post();
-
-    let http_mock = server.mock(|when, then| {
-        when.method(GET).path("/posts/1");
-        then.status(200)
-            .header(header::CONTENT_TYPE.as_str(), mime::APPLICATION_JSON.to_string())
-            .body(JSON_POST);
-    });
-
-    let server_address = *server.address();
-
-    let ip = server_address.ip();
-    let port = server_address.port();
-
-    let api = Deboa::new(&format!("http://{ip}:{port}"));
-
-    let response = api?.get("posts/1").await?.json::<Post>().await?;
-
-    http_mock.assert();
-
-    assert_eq!(response, data);
-
-    Ok(())
-}
-
-#[cfg(all(feature = "xml", feature = "tokio-rt"))]
-#[tokio::test]
-async fn test_set_xml() -> Result<(), DeboaError> {
-    use crate::tests::types::{sample_post, XML_POST};
-
-    let mut api = Deboa::new("https://reqbin.com")?;
-
-    let data = sample_post();
-
-    let _ = api.set_xml(data)?;
-
-    assert_eq!(api.body, Some(XML_POST.to_vec()));
-
-    Ok(())
-}
-
-#[cfg(all(feature = "xml", feature = "tokio-rt"))]
-#[tokio::test]
-async fn test_xml_response() -> Result<(), DeboaError> {
-    let server = MockServer::start();
-
-    let data = sample_post();
-
-    let http_mock = server.mock(|when, then| {
-        when.method(GET).path("/posts/1");
-        then.status(200)
-            .header(header::CONTENT_TYPE.as_str(), crate::APPLICATION_XML)
-            .body(XML_POST);
-    });
-
-    let server_address = *server.address();
-
-    let ip = server_address.ip();
-    let port = server_address.port();
-
-    let mut api = Deboa::new(&format!("http://{ip}:{port}"))?;
-    api.edit_header(header::CONTENT_TYPE, crate::APPLICATION_XML.to_string());
-    api.edit_header(header::ACCEPT, crate::APPLICATION_XML.to_string());
-
-    let response = api.get("/posts/1").await?.xml::<Post>().await?;
-
-    http_mock.assert();
-
-    assert_eq!(response, data);
-    Ok(())
-}
-
-#[cfg(feature = "msgpack")]
-#[test]
-fn test_set_msgpack() -> Result<(), DeboaError> {
-    use crate::tests::types::RAW_POST;
-
-    let mut api = Deboa::new(JSONPLACEHOLDER)?;
-
-    let data = sample_post();
-
-    let _ = api.set_msgpack(data);
-
-    assert_eq!(api.body, Some(RAW_POST.to_vec()));
-
-    Ok(())
-}
-
-#[cfg(feature = "msgpack")]
-#[tokio::test]
-async fn test_msgpack_response() -> Result<(), DeboaError> {
-    let server = MockServer::start();
-
-    let data = sample_post();
-
-    let http_mock = server.mock(|when, then| {
-        when.method(GET).path("/posts/1");
-        then.status(200)
-            .header(header::CONTENT_TYPE.as_str(), crate::APPLICATION_MSGPACK)
-            .body(RAW_POST);
-    });
-
-    let server_address = *server.address();
-
-    let ip = server_address.ip();
-    let port = server_address.port();
-
-    let mut api = Deboa::new(&format!("http://{ip}:{port}"))?;
-    api.edit_header(header::CONTENT_TYPE, crate::APPLICATION_MSGPACK.to_string());
-    api.edit_header(header::ACCEPT, crate::APPLICATION_MSGPACK.to_string());
-
-    let response = api.get("/posts/1").await?.msgpack::<Post>().await?;
-
-    http_mock.assert();
-
-    assert_eq!(response, data);
     Ok(())
 }
 

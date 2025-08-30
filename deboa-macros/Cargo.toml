@@ -14,7 +14,8 @@ exclude = [".travis.yml"]
 proc-macro = true
 
 [dependencies]
-deboa = { path = "../deboa", features = ["json", "tokio-rt", "http1"] }
+deboa = { path = "../deboa", features = ["tokio-rt", "http1"] }
+deboa-extras = { path = "../deboa-extras", features = ["json"] }
 proc-macro2 = "1.0.101"
 tokio = { version = "1.47.1", features = ["full"] }
 serde = "1.0.219"

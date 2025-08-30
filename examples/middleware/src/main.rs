@@ -1,4 +1,4 @@
-use deboa::DeboaError;
+use deboa::{errors::DeboaError, response::DeboaResponse};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Post {
@@ -9,13 +9,13 @@ pub struct Post {
 
 struct TestMonitor;
 
-impl deboa::DeboaMiddleware for TestMonitor {
+impl deboa::middleware::DeboaMiddleware for TestMonitor {
     fn on_request(&self, request: &deboa::Deboa) {
         println!("Request: {:?}", request.base_url());
     }
 
-    fn on_response(&self, _request: &deboa::Deboa, response: &mut deboa::DeboaResponse) {
-        println!("Response: {:?}", response.status);
+    fn on_response(&self, _request: &deboa::Deboa, response: &mut DeboaResponse) {
+        println!("Response: {:?}", response.status());
     }
 }
 
@@ -24,11 +24,9 @@ async fn main() -> Result<(), DeboaError> {
     use deboa::Deboa;
 
     let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    api.add_middleware(TestMonitor);
+    api.add_middleware(Box::new(TestMonitor));
 
-    let posts: Post = api.get("/posts/1").await?.json::<Post>().await?;
-
-    println!("posts: {posts:#?}");
+    let _ = api.get("/posts/1").await;
 
     Ok(())
 }
