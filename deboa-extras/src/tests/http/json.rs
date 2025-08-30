@@ -1,4 +1,4 @@
-use crate::serialization::json::{JsonRequest, JsonResponse};
+use crate::http::json::{JsonRequest, JsonResponse};
 use deboa::Deboa;
 use deboa::errors::DeboaError;
 
@@ -17,7 +17,7 @@ fn test_set_json() -> Result<(), DeboaError> {
 
     let _ = api.set_json(data);
 
-    assert_eq!(api.raw_body(), Some(JSON_POST.to_vec()));
+    assert_eq!(*api.raw_body(), JSON_POST.to_vec());
 
     Ok(())
 }

@@ -17,7 +17,7 @@ impl JsonRequest for Deboa {
     ///
     /// ```rust
     /// use deboa::{Deboa, errors::DeboaError};
-    /// use deboa_extras::serialization::json::JsonRequest;
+    /// use deboa_extras::http::json::JsonRequest;
     /// use serde::Serialize;
     ///
     /// #[derive(Serialize)]

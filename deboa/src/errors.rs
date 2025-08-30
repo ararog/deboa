@@ -13,6 +13,9 @@ pub enum DeboaError {
         message: String,
     },
 
+    #[error("Failed to receive response: {status_code}: {message}")]
+    Response { status_code: u16, message: String },
+
     #[error("Failed to serialize data: {message}")]
     Serialization { message: String },
 
@@ -21,4 +24,10 @@ pub enum DeboaError {
 
     #[error("Failed to parse url: {message}")]
     UrlParse { message: String },
+
+    #[error("Failed to compress data: {message}")]
+    Compression { message: String },
+
+    #[error("Failed to decompress data: {message}")]
+    Decompression { message: String },
 }
