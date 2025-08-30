@@ -29,7 +29,7 @@ async fn test_get_by_id() -> Result<(), DeboaError> {
 
     let deboa = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
-    let post_service = PostService::new(deboa);
+    let mut post_service = PostService::new(deboa);
 
     let post = post_service.get_by_id(1).await?;
 
@@ -46,7 +46,7 @@ async fn test_get_all() -> Result<(), DeboaError> {
 
     let deboa = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
-    let post_service = PostService::new(deboa);
+    let mut post_service = PostService::new(deboa);
 
     let posts = post_service.get_all().await?;
 

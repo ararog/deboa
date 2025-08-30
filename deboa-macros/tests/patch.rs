@@ -27,7 +27,7 @@ mod inner {
 async fn test_patch_by_id() -> Result<(), DeboaError> {
     use inner::{PostService, Service};
 
-    let deboa = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    let deboa = Deboa::new("https://jsonplaceholder.typicode.com").unwrap();
 
     let mut post_service = PostService::new(deboa);
 

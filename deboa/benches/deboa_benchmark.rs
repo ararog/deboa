@@ -13,7 +13,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use deboa::{errors::DeboaError, Deboa};
 
 async fn get_async() -> Result<(), DeboaError> {
-    let api = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
     let _ = api.get("/posts").await;
     Ok(())
 }

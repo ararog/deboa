@@ -5,10 +5,16 @@ use deboa::{errors::DeboaError, io::Compress, io::Decompress, response::DeboaRes
 use flate2::{read::GzDecoder, write::GzEncoder};
 
 pub trait GzipCompress: Compress {
+    fn register_encoding(&mut self) -> &mut Self;
     fn compress(&self) -> Result<Bytes, DeboaError>;
 }
 
 impl GzipCompress for Vec<u8> {
+    fn register_encoding(&mut self) -> &mut Self {
+        self.edit_header(header::ACCEPT_ENCODING, "gzip".to_string());
+        self
+    }
+
     fn compress(&self) -> Result<Bytes, DeboaError> {
         let mut writer = GzEncoder::new(Vec::new(), flate2::Compression::default());
         let result = writer.write_all(self);
