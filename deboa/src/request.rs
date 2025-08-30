@@ -529,7 +529,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn get(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
+    pub async fn get(&mut self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(http::Method::GET, path).await
     }
 
@@ -553,7 +553,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn post(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
+    pub async fn post(&mut self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(http::Method::POST, path).await
     }
 
@@ -576,7 +576,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn put(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
+    pub async fn put(&mut self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(http::Method::PUT, path).await
     }
 
@@ -599,7 +599,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn patch(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
+    pub async fn patch(&mut self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(http::Method::PATCH, path).await
     }
 
@@ -622,7 +622,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn delete(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
+    pub async fn delete(&mut self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(http::Method::DELETE, path).await
     }
 
@@ -645,7 +645,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn head(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
+    pub async fn head(&mut self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(http::Method::HEAD, path).await
     }
 
@@ -668,7 +668,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn options(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
+    pub async fn options(&mut self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(http::Method::OPTIONS, path).await
     }
 
@@ -692,7 +692,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn trace(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
+    pub async fn trace(&mut self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(http::Method::TRACE, path).await
     }
 
@@ -716,7 +716,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn connect(&self, path: &str) -> Result<DeboaResponse, DeboaError> {
+    pub async fn connect(&mut self, path: &str) -> Result<DeboaResponse, DeboaError> {
         self.any(http::Method::CONNECT, path).await
     }
 
@@ -740,7 +740,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub async fn any(&self, method: http::Method, path: &str) -> Result<DeboaResponse, DeboaError> {
+    pub async fn any(&mut self, method: http::Method, path: &str) -> Result<DeboaResponse, DeboaError> {
         let url = self.base_url.join(path);
 
         if let Err(e) = url {
@@ -821,6 +821,8 @@ impl Deboa {
         };
 
         let authority = url.authority();
+
+        let _ = self.register_encoding();
 
         let mut builder = Request::builder()
             .uri(url.as_str())

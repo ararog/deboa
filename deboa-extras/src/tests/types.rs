@@ -7,7 +7,14 @@ pub const MSGPACK_POST: [u8; 23] = [
 ];
 #[cfg(feature = "xml")]
 pub const XML_POST: &[u8; 108] = b"<?xml version=\"1.0\" encoding=\"UTF-8\"?><Post><id>1</id><title>Test</title><body>Some test to do</body></Post>";
+
+#[cfg(feature = "json")]
 pub const JSON_POST: &[u8; 48] = b"{\"id\":1,\"title\":\"Test\",\"body\":\"Some test to do\"}";
+
+#[cfg(feature = "brotli")]
+pub const COMPRESSED: &[u8; 15] = &[11, 5, 128, 108, 111, 114, 101, 109, 32, 105, 112, 115, 117, 109, 3];
+
+pub const DECOMPRESSED: &[u8; 11] = b"lorem ipsum";
 
 pub fn sample_post() -> Post {
     Post {

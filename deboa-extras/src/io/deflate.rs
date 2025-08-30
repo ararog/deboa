@@ -5,10 +5,16 @@ use deboa::{errors::DeboaError, io::Compress, io::Decompress, response::DeboaRes
 use flate2::{read::DeflateDecoder, write::DeflateEncoder};
 
 pub trait DeflateCompress: Compress {
+    fn register_encoding(&mut self) -> &mut Self;
     fn compress_body(&self) -> Result<Bytes, DeboaError>;
 }
 
 impl DeflateCompress for Vec<u8> {
+    fn register_encoding(&mut self) -> &mut Self {
+        self.edit_header(header::ACCEPT_ENCODING, "deflate".to_string());
+        self
+    }
+
     fn compress_body(&self) -> Result<Bytes, DeboaError> {
         let mut writer = DeflateEncoder::new(Vec::new(), flate2::Compression::default());
         let result = writer.write_all(self);
