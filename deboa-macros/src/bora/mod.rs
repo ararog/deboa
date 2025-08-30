@@ -343,7 +343,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let ts = quote! {
         use deboa::{Deboa, errors::DeboaError, response::DeboaResponse};
-        use deboa_extras::serialization::json::{JsonRequest, JsonResponse};
+        use deboa_extras::http::json::{JsonRequest, JsonResponse};
 
         pub struct #struct_name {
             api: Deboa

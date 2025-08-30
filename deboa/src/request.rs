@@ -2,10 +2,14 @@
 
 use std::collections::HashMap;
 
-use bytes::{Buf, Bytes};
+use bytes::Buf;
 use http_body_util::{BodyExt, Full};
 
-use crate::{compression::Compression, middleware::DeboaMiddleware, runtimes, Deboa};
+use crate::{
+    io::{Compress, Decompress},
+    middleware::DeboaMiddleware,
+    runtimes, Deboa,
+};
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use http::{header, HeaderName, HeaderValue, Request};
@@ -49,7 +53,7 @@ impl Deboa {
             base_url: base_url.unwrap(),
             headers: Some(default_headers),
             query_params: None,
-            body: None,
+            body: Vec::new(),
             retries: 0,
             connection_timeout: 0,
             request_timeout: 0,
@@ -397,7 +401,7 @@ impl Deboa {
     /// ```
     ///
     pub fn set_text(&mut self, text: String) -> &mut Self {
-        self.body = Some(text.as_bytes().to_vec());
+        self.body = text.as_bytes().to_vec();
         self
     }
 
@@ -447,7 +451,7 @@ impl Deboa {
     /// ```
     ///
     pub fn set_body(&mut self, body: Vec<u8>) -> &mut Self {
-        self.body = Some(body);
+        self.body = body;
         self
     }
 
@@ -467,8 +471,8 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub fn raw_body(&self) -> Option<Vec<u8>> {
-        self.body.clone()
+    pub fn raw_body(&self) -> &Vec<u8> {
+        &self.body
     }
 
     /// Allow add middleware at any time.
@@ -832,12 +836,7 @@ impl Deboa {
             }
         }
 
-        let body = match &self.body {
-            Some(body) => Bytes::from_owner(body.clone()),
-            None => Bytes::from_owner(Vec::new()),
-        };
-
-        let body = body.compress();
+        let body = self.compress_body();
 
         if let Err(err) = body {
             return Err(DeboaError::Request {
@@ -863,9 +862,9 @@ impl Deboa {
         let request = request.unwrap();
 
         // We need sure that we do not reconstruct the request somewhere else in the code as it will lead to the headers deletion making a request invalid.
-        let res = sender.send_request(request).await;
+        let response = sender.send_request(request).await;
 
-        if let Err(err) = res {
+        if let Err(err) = response {
             return Err(DeboaError::Request {
                 host: url.host().unwrap().to_string(),
                 path: url.path().to_string(),
@@ -874,15 +873,18 @@ impl Deboa {
             });
         }
 
-        let res = res.unwrap();
+        let response = response.unwrap();
 
-        let status_code = res.status();
-        let headers = res.headers().clone();
+        let status_code = response.status();
+        let headers = response.headers().clone();
 
-        let result = res.collect().await;
+        let result = response.collect().await;
 
         if let Err(err) = result {
-            return Err(DeboaError::Deserialization { message: err.to_string() });
+            return Err(DeboaError::Response {
+                status_code: status_code.as_u16(),
+                message: err.to_string(),
+            });
         }
 
         let mut response_body = result.unwrap().aggregate();
@@ -890,10 +892,8 @@ impl Deboa {
         let raw_body = response_body.copy_to_bytes(response_body.remaining()).to_vec();
 
         if !status_code.is_success() {
-            return Err(DeboaError::Request {
-                host: url.host().unwrap().to_string(),
-                path: url.path().to_string(),
-                method: method.to_string(),
+            return Err(DeboaError::Response {
+                status_code: status_code.as_u16(),
                 message: format!("Request failed with status code: {status_code}"),
             });
         }
@@ -902,11 +902,13 @@ impl Deboa {
         let mut response = DeboaResponse::new(status_code, headers, raw_body);
 
         #[cfg(not(feature = "middlewares"))]
-        let response = DeboaResponse {
+        let mut response = DeboaResponse {
             status: status_code,
             headers,
             raw_body,
         };
+
+        let _ = response.decompress_body();
 
         #[cfg(feature = "middlewares")]
         self.middlewares.iter().for_each(|middleware| middleware.on_response(self, &mut response));

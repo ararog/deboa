@@ -15,8 +15,8 @@ use url::Url;
 
 use crate::middleware::DeboaMiddleware;
 
-pub mod compression;
 pub mod errors;
+pub mod io;
 pub mod middleware;
 pub mod request;
 pub mod response;
@@ -32,7 +32,7 @@ pub struct Deboa {
     base_url: Url,
     headers: Option<HashMap<HeaderName, String>>,
     query_params: Option<HashMap<&'static str, &'static str>>,
-    body: Option<Vec<u8>>,
+    body: Vec<u8>,
     retries: u32,
     connection_timeout: u64,
     request_timeout: u64,

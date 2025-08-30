@@ -10,17 +10,7 @@ use criterion::async_executor::SmolExecutor;
 use criterion::async_executor::CompioExecutor;
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use deboa::{Deboa, DeboaError};
-#[cfg(any(feature = "json", feature = "xml"))]
-use serde::Serialize;
-
-#[derive(Serialize)]
-#[cfg(any(feature = "json", feature = "xml"))]
-struct Post {
-    id: u64,
-    title: String,
-    body: String,
-}
+use deboa::{errors::DeboaError, Deboa};
 
 async fn get_async() -> Result<(), DeboaError> {
     let api = Deboa::new("https://jsonplaceholder.typicode.com")?;
@@ -30,30 +20,7 @@ async fn get_async() -> Result<(), DeboaError> {
 
 async fn post_async() -> Result<(), DeboaError> {
     let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    #[cfg(feature = "json")]
-    let _ = api
-        .set_json(Post {
-            id: 1,
-            title: "Test".to_string(),
-            body: "Some test to do".to_string(),
-        })
-        .unwrap()
-        .post("/posts")
-        .await;
-
-    #[cfg(feature = "xml")]
-    let _ = api
-        .set_xml(Post {
-            id: 1,
-            title: "Test".to_string(),
-            body: "Some test to do".to_string(),
-        })
-        .unwrap()
-        .post("/posts")
-        .await;
-
-    #[cfg(not(any(feature = "json", feature = "xml")))]
-    let _ = api.set_text("Some test to do").post("/posts").await;
+    let _ = api.set_text("Some test to do".to_owned()).post("/posts").await;
     Ok(())
 }
 
