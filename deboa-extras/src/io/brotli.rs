@@ -1,7 +1,7 @@
-use bytes::Bytes;
-use std::io::Write;
+use bytes::{Buf, Bytes};
+use std::io::{Read, Write};
 
-use brotli::CompressorWriter;
+use brotli::{CompressorReader, CompressorWriter};
 use deboa::{
     Deboa,
     errors::DeboaError,
@@ -9,29 +9,46 @@ use deboa::{
     response::DeboaResponse,
 };
 
-pub trait BrotliCompression: Compress {
-    fn compress(&self) -> Result<Bytes, DeboaError>;
+pub trait BrotliCompress: Compress {
+    fn compress_body(&self) -> Result<Bytes, DeboaError>;
 }
 
-impl BrotliCompression for Deboa {
-    fn compress(&self) -> Result<Bytes, DeboaError> {
-        let mut writer = CompressorWriter::new(Vec::new(), self.raw_body().len(), 11, 22);
-        let result = writer.write_all(self.raw_body());
+impl BrotliCompress for Deboa {
+    fn compress_body(&self) -> Result<Bytes, DeboaError> {
+        let mut writer = CompressorWriter::new(Vec::new(), 0, 11, 22);
+        let result = writer.write_all(self.body().as_ref());
 
         if let Err(e) = result {
-            return Err(DeboaError::Compression { message: e.to_string() });
+            return Err(DeboaError::Compress { message: e.to_string() });
+        }
+
+        let result = writer.flush();
+
+        if let Err(e) = result {
+            return Err(DeboaError::Compress { message: e.to_string() });
         }
 
         Ok(Bytes::from(writer.into_inner()))
     }
 }
 
-pub trait BrotliDecompression: Decompress {
-    fn decompress(&self) -> Result<Bytes, DeboaError>;
+pub trait BrotliDecompress: Decompress {
+    fn decompress_body(&mut self) -> Result<(), DeboaError>;
 }
 
-impl BrotliDecompression for DeboaResponse {
-    fn decompress(&self) -> Result<Bytes, DeboaError> {
-        Ok(Bytes::new())
+impl BrotliDecompress for DeboaResponse {
+    fn decompress_body(&mut self) -> Result<(), DeboaError> {
+        let binding = self.body();
+        let mut reader = CompressorReader::new(binding.reader(), 0, 11, 22);
+        let mut buffer = Vec::new();
+        let result = reader.read_to_end(&mut buffer);
+
+        if let Err(e) = result {
+            return Err(DeboaError::Decompress { message: e.to_string() });
+        }
+
+        self.set_body(buffer);
+
+        Ok(())
     }
 }

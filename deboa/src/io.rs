@@ -31,13 +31,13 @@ pub trait Decompress: Send + Sync + 'static {
     ///
     /// # Returns
     ///
-    /// * `Result<Bytes, DeboaError>` - The decompressed body of the response.
+    /// * `Result<(), DeboaError>` - The decompressed body of the response.
     ///
-    fn decompress_body(&self) -> Result<Bytes, DeboaError>;
+    fn decompress_body(&mut self) -> Result<(), DeboaError>;
 }
 
 impl Decompress for DeboaResponse {
-    fn decompress_body(&self) -> Result<Bytes, DeboaError> {
-        Ok(Bytes::copy_from_slice(&self.raw_body()))
+    fn decompress_body(&mut self) -> Result<(), DeboaError> {
+        Ok(())
     }
 }
