@@ -16,7 +16,7 @@ use smol_macros::test;
 //
 
 async fn do_get() -> Result<(), DeboaError> {
-    let api = Deboa::new(JSONPLACEHOLDER)?;
+    let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
     let response: DeboaResponse = api.get("/posts").await?;
 
@@ -55,7 +55,7 @@ async fn test_get() {
 //
 
 async fn do_get_not_found() -> Result<(), DeboaError> {
-    let api = Deboa::new(JSONPLACEHOLDER)?;
+    let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
     let response: Result<DeboaResponse, DeboaError> = api.get("asasa/posts/1ddd").await;
 
@@ -95,7 +95,7 @@ async fn test_get_not_found() {
 //
 
 async fn do_get_invalid_server() -> Result<(), DeboaError> {
-    let api = Deboa::new("https://invalid-server.com")?;
+    let mut api = Deboa::new("https://invalid-server.com")?;
 
     let response: Result<DeboaResponse, DeboaError> = api.get("/posts").await;
 

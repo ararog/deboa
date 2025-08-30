@@ -13,7 +13,7 @@ use smol_macros::test;
 //
 
 async fn do_delete() -> Result<(), DeboaError> {
-    let api = Deboa::new(JSONPLACEHOLDER)?;
+    let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
     let response = api.delete("/posts/1").await?;
 

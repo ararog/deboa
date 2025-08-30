@@ -108,11 +108,11 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                 });
 
                 acc.0.extend(quote! {
-                    async fn #method_name(&self, #api_params) -> Result<#res_body_type, DeboaError>;
+                    async fn #method_name(&mut self, #api_params) -> Result<#res_body_type, DeboaError>;
                 });
 
                 acc.1.extend(quote! {
-                    async fn #method_name(&self, #api_params) -> Result<#res_body_type, DeboaError> {
+                    async fn #method_name(&mut self, #api_params) -> Result<#res_body_type, DeboaError> {
                         self.api.#method(format!(#api_path).as_ref()).await?.json::<#res_body_type>()
                     }
                 });
@@ -260,11 +260,11 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                 });
 
                 acc.0.extend(quote! {
-                    async fn #method_name(&self, #api_params) -> Result<(), DeboaError>;
+                    async fn #method_name(&mut self, #api_params) -> Result<(), DeboaError>;
                 });
 
                 acc.1.extend(quote! {
-                    async fn #method_name(&self, #api_params) -> Result<(), DeboaError> {
+                    async fn #method_name(&mut self, #api_params) -> Result<(), DeboaError> {
                         self.api.#method(format!(#api_path).as_ref()).await?;
                         Ok(())
                     }

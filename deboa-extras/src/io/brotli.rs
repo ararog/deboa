@@ -1,7 +1,8 @@
 use bytes::{Buf, Bytes};
+use http::header;
 use std::io::{Read, Write};
 
-use brotli::{CompressorReader, CompressorWriter};
+use brotli::{CompressorWriter, Decompressor};
 use deboa::{
     Deboa,
     errors::DeboaError,
@@ -10,10 +11,16 @@ use deboa::{
 };
 
 pub trait BrotliCompress: Compress {
+    fn register_encoding(&mut self) -> &mut Self;
     fn compress_body(&self) -> Result<Bytes, DeboaError>;
 }
 
 impl BrotliCompress for Deboa {
+    fn register_encoding(&mut self) -> &mut Self {
+        self.edit_header(header::ACCEPT_ENCODING, "br".to_string());
+        self
+    }
+
     fn compress_body(&self) -> Result<Bytes, DeboaError> {
         let mut writer = CompressorWriter::new(Vec::new(), 0, 11, 22);
         let result = writer.write_all(self.body().as_ref());
@@ -39,7 +46,7 @@ pub trait BrotliDecompress: Decompress {
 impl BrotliDecompress for DeboaResponse {
     fn decompress_body(&mut self) -> Result<(), DeboaError> {
         let binding = self.body();
-        let mut reader = CompressorReader::new(binding.reader(), 0, 11, 22);
+        let mut reader = Decompressor::new(binding.reader(), 0);
         let mut buffer = Vec::new();
         let result = reader.read_to_end(&mut buffer);
 
