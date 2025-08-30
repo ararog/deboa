@@ -471,7 +471,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub fn raw_body(&self) -> &Vec<u8> {
+    pub fn body(&self) -> &Vec<u8> {
         &self.body
     }
 
@@ -836,18 +836,7 @@ impl Deboa {
             }
         }
 
-        let body = self.compress_body();
-
-        if let Err(err) = body {
-            return Err(DeboaError::Request {
-                host: url.host().unwrap().to_string(),
-                path: url.path().to_string(),
-                method: method.to_string(),
-                message: err.to_string(),
-            });
-        }
-
-        let body = body.unwrap();
+        let body = self.compress_body()?;
 
         let request = builder.body(Full::new(body));
         if let Err(err) = request {
@@ -908,7 +897,7 @@ impl Deboa {
             raw_body,
         };
 
-        let _ = response.decompress_body();
+        response.decompress_body()?;
 
         #[cfg(feature = "middlewares")]
         self.middlewares.iter().for_each(|middleware| middleware.on_response(self, &mut response));
