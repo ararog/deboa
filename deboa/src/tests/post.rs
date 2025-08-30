@@ -1,4 +1,5 @@
-use crate::{Deboa, DeboaError};
+use crate::errors::DeboaError;
+use crate::Deboa;
 use http::StatusCode;
 
 use httpmock::{Method::POST, MockServer};
@@ -31,8 +32,8 @@ async fn do_post() -> Result<(), DeboaError> {
 
     http_mock.assert();
 
-    assert_eq!(response.status, StatusCode::CREATED);
-    assert_eq!(response.raw_body, b"ping");
+    assert_eq!(response.status(), StatusCode::CREATED);
+    assert_eq!(response.raw_body(), b"ping");
 
     Ok(())
 }

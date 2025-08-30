@@ -1,5 +1,5 @@
 #[cfg(test)]
-use crate::DeboaError;
+use crate::errors::DeboaError;
 use crate::{tests::types::JSONPLACEHOLDER, Deboa};
 use http::StatusCode;
 
@@ -17,7 +17,7 @@ async fn do_delete() -> Result<(), DeboaError> {
 
     let response = api.delete("/posts/1").await?;
 
-    assert_eq!(response.status, StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
 
     Ok(())
 }

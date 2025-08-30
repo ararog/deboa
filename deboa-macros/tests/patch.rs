@@ -1,4 +1,4 @@
-use deboa::{Deboa, DeboaError};
+use deboa::{Deboa, errors::DeboaError};
 
 #[macro_use]
 extern crate deboa_macros;
