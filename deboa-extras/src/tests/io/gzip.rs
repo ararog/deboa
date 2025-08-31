@@ -1,4 +1,40 @@
-#[test]
-fn test_gzip() -> Result<(), DeboaError> {
+use std::io::Write;
+
+use deboa::{Deboa, errors::DeboaError};
+use flate2::write::GzEncoder;
+use http::{StatusCode, header};
+use httpmock::MockServer;
+
+use crate::{
+    io::gzip::GzipDecompressor,
+    tests::types::{DECOMPRESSED, GZIP_COMPRESSED},
+};
+
+#[tokio::test]
+async fn test_gzip() -> Result<(), DeboaError> {
+    let server = MockServer::start();
+
+    let http_mock = server.mock(|when, then| {
+        when.method(http::Method::GET.as_str()).path("/sometext");
+        then.status(StatusCode::OK.into())
+            .header(header::CONTENT_ENCODING.as_str(), "gzip")
+            .body(GZIP_COMPRESSED);
+    });
+
+    let server_address = *server.address();
+
+    let ip = server_address.ip();
+    let port = server_address.port();
+
+    let mut api: Deboa = Deboa::new(&format!("http://{ip}:{port}"))?;
+    let body = DECOMPRESSED;
+    api.set_body(body.to_vec());
+    api.accept_encoding(vec![Box::new(GzipDecompressor)]);
+
+    //let response = api.get("/sometext").await?;
+
+    //http_mock.assert();
+
+    //assert_eq!(response.body(), body);
     Ok(())
 }

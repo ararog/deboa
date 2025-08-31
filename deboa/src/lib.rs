@@ -13,6 +13,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use url::Url;
 
+use crate::io::Decompressor;
 use crate::middleware::DeboaMiddleware;
 
 pub mod errors;
@@ -37,6 +38,7 @@ pub struct Deboa {
     connection_timeout: u64,
     request_timeout: u64,
     middlewares: Vec<Box<dyn DeboaMiddleware>>,
+    encodings: Option<HashMap<String, Box<dyn Decompressor>>>,
 }
 
 impl Debug for Deboa {

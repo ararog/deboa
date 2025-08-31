@@ -24,7 +24,7 @@ json = ["dep:serde_json", "dep:serde"]
 xml = ["dep:serde-xml-rust", "dep:serde"]
 msgpack = ["dep:rmp-serde", "dep:serde"]
 # compression
-compression = ["brotli"]
+compression = ["gzip"]
 brotli = ["dep:brotli"]
 deflate = ["dep:flate2"]
 gzip = ["dep:flate2"]

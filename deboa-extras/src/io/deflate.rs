@@ -1,23 +1,30 @@
 use std::io::{Read, Write};
 
-use bytes::Bytes;
-use deboa::{errors::DeboaError, io::Compress, io::Decompress, response::DeboaResponse};
+use bytes::{Buf, Bytes};
+use deboa::{
+    Deboa,
+    errors::DeboaError,
+    io::{Compressor, Decompressor},
+    response::DeboaResponse,
+};
 use flate2::{read::DeflateDecoder, write::DeflateEncoder};
 
-pub trait DeflateCompress: Compress {
-    fn register_encoding(&mut self) -> &mut Self;
-    fn compress_body(&self) -> Result<Bytes, DeboaError>;
-}
+pub struct DeflateCompressor;
 
-impl DeflateCompress for Vec<u8> {
-    fn register_encoding(&mut self) -> &mut Self {
-        self.edit_header(header::ACCEPT_ENCODING, "deflate".to_string());
-        self
+impl Compressor for DeflateCompressor {
+    fn name(&self) -> String {
+        "deflate".to_string()
     }
 
-    fn compress_body(&self) -> Result<Bytes, DeboaError> {
+    fn compress_body(&self, request: &Deboa) -> Result<Bytes, DeboaError> {
         let mut writer = DeflateEncoder::new(Vec::new(), flate2::Compression::default());
-        let result = writer.write_all(self);
+        let result = writer.write_all(request.body().as_ref());
+
+        if let Err(e) = result {
+            return Err(DeboaError::Compress { message: e.to_string() });
+        }
+
+        let result = writer.flush();
 
         if let Err(e) = result {
             return Err(DeboaError::Compress { message: e.to_string() });
@@ -27,13 +34,16 @@ impl DeflateCompress for Vec<u8> {
     }
 }
 
-pub trait DeflateDecompress: Decompress {
-    fn decompress_body(&mut self) -> Result<(), DeboaError>;
-}
+#[derive(PartialEq)]
+pub struct DeflateDecompressor;
 
-impl DeflateDecompress for DeboaResponse {
-    fn decompress_body(&mut self) -> Result<(), DeboaError> {
-        let binding = self.raw_body();
+impl Decompressor for DeflateDecompressor {
+    fn name(&self) -> String {
+        "deflate".to_string()
+    }
+
+    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<(), DeboaError> {
+        let binding = response.body();
         let mut reader = DeflateDecoder::new(binding.reader());
         let mut buffer = Vec::new();
         let result = reader.read_to_end(&mut buffer);
@@ -42,7 +52,7 @@ impl DeflateDecompress for DeboaResponse {
             return Err(DeboaError::Decompress { message: e.to_string() });
         }
 
-        self.set_body(buffer);
+        response.set_body(buffer);
 
         Ok(())
     }
