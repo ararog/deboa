@@ -2,14 +2,10 @@
 
 use std::collections::HashMap;
 
-use bytes::Buf;
+use bytes::{Buf, Bytes};
 use http_body_util::{BodyExt, Full};
 
-use crate::{
-    io::{Compress, Decompress},
-    middleware::DeboaMiddleware,
-    runtimes, Deboa,
-};
+use crate::{io::Decompressor, middleware::DeboaMiddleware, runtimes, Deboa};
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use http::{header, HeaderName, HeaderValue, Request};
@@ -58,6 +54,7 @@ impl Deboa {
             connection_timeout: 0,
             request_timeout: 0,
             middlewares: Vec::new(),
+            encodings: None,
         })
     }
 
@@ -510,6 +507,17 @@ impl Deboa {
         self
     }
 
+    pub fn accept_encoding(&mut self, decompressors: Vec<Box<dyn Decompressor>>) -> &mut Self {
+        let mut encodings = HashMap::new();
+        for decompressor in decompressors {
+            encodings.insert(decompressor.name(), decompressor);
+        }
+        let accept_encoding = encodings.keys().map(|key| key.to_string()).collect::<Vec<_>>().join(", ");
+        self.edit_header(header::ACCEPT_ENCODING, accept_encoding);
+        self.encodings = Some(encodings);
+        self
+    }
+
     /// Allow make a GET request.
     ///
     /// # Arguments
@@ -822,8 +830,6 @@ impl Deboa {
 
         let authority = url.authority();
 
-        let _ = self.register_encoding();
-
         let mut builder = Request::builder()
             .uri(url.as_str())
             .method(method.to_string().as_str())
@@ -838,9 +844,7 @@ impl Deboa {
             }
         }
 
-        let body = self.compress_body()?;
-
-        let request = builder.body(Full::new(body));
+        let request = builder.body(Full::new(Bytes::from(self.body.clone())));
         if let Err(err) = request {
             return Err(DeboaError::Request {
                 host: url.host().unwrap().to_string(),
@@ -899,7 +903,16 @@ impl Deboa {
             raw_body,
         };
 
-        response.decompress_body()?;
+        if let Some(encodings) = &self.encodings {
+            let response_headers = response.headers();
+            let content_encoding = response_headers.get(header::CONTENT_ENCODING);
+            if let Some(content_encoding) = content_encoding {
+                let decompressor = encodings.get(content_encoding.to_str().unwrap());
+                if let Some(decompressor) = decompressor {
+                    decompressor.decompress_body(&mut response)?;
+                }
+            }
+        }
 
         #[cfg(feature = "middlewares")]
         self.middlewares.iter().for_each(|middleware| middleware.on_response(self, &mut response));

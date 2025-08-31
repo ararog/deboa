@@ -1,12 +1,24 @@
+use std::fmt::Debug;
+
 use http::{HeaderMap, StatusCode};
 
 use crate::errors::DeboaError;
 
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq)]
 pub struct DeboaResponse {
     pub(crate) status: StatusCode,
     headers: HeaderMap,
     body: Vec<u8>,
+}
+
+impl Debug for DeboaResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DeboaResponse")
+            .field("status", &self.status)
+            .field("headers", &self.headers)
+            .field("body", &self.body)
+            .finish()
+    }
 }
 
 impl DeboaResponse {
