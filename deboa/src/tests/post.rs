@@ -35,7 +35,7 @@ async fn do_post() -> Result<(), DeboaError> {
     http_mock.assert();
 
     assert_eq!(response.status(), StatusCode::CREATED);
-    assert_eq!(response.body(), b"ping");
+    assert_eq!(response.raw_body(), b"ping");
 
     Ok(())
 }

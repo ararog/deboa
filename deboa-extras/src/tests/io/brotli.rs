@@ -34,7 +34,7 @@ async fn test_brotli_decompress() -> Result<(), DeboaError> {
 
     http_mock.assert();
 
-    assert_eq!(response.body(), DECOMPRESSED);
+    assert_eq!(response.raw_body(), DECOMPRESSED);
 
     Ok(())
 }

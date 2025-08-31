@@ -56,7 +56,7 @@ pub trait JsonResponse {
 
 impl JsonResponse for DeboaResponse {
     fn json<T: for<'a> Deserialize<'a>>(&mut self) -> Result<T, DeboaError> {
-        let binding = self.body();
+        let binding = self.raw_body();
         let body = binding.as_ref();
 
         let json = serde_json::from_slice(body);
