@@ -1,21 +1,15 @@
 use bytes::Bytes;
-use http::header;
 
 use crate::{errors::DeboaError, response::DeboaResponse, Deboa};
 
-pub trait Compress: Send + Sync + 'static {
-    /// This method register the encoding of encoding of response.
-    ///
-    /// # Arguments
-    ///
-    /// * `request` - The request that was sent.
+pub trait Compressor: Send + Sync + 'static {
+    /// This method returns the name of encoding for this compressor.
     ///
     /// # Returns
     ///
-    /// * `&mut Self` - The request with the encoding registered.
+    /// * `String` - The name of the encoding.
     ///
-    fn register_encoding(&mut self) -> &mut Self;
-
+    fn name(&self) -> String;
     /// This method compress the body of the request.
     ///
     /// # Arguments
@@ -26,21 +20,27 @@ pub trait Compress: Send + Sync + 'static {
     ///
     /// * `Result<Bytes, DeboaError>` - The compressed body of the request.
     ///
-    fn compress_body(&self) -> Result<Bytes, DeboaError>;
+    fn compress_body(&self, request: &Deboa) -> Result<Bytes, DeboaError>;
 }
 
-impl Compress for Deboa {
-    fn register_encoding(&mut self) -> &mut Self {
-        self.edit_header(header::ACCEPT_ENCODING, "identity".to_string());
-        self
+impl<T: Compressor> Compressor for Box<T> {
+    fn name(&self) -> String {
+        self.as_ref().name()
     }
 
-    fn compress_body(&self) -> Result<Bytes, DeboaError> {
-        Ok(Bytes::copy_from_slice(&self.body))
+    fn compress_body(&self, request: &Deboa) -> Result<Bytes, DeboaError> {
+        self.as_ref().compress_body(request)
     }
 }
 
-pub trait Decompress: Send + Sync + 'static {
+pub trait Decompressor: Send + Sync + 'static {
+    /// This method register the encoding of the response.
+    ///
+    /// # Arguments
+    ///
+    /// * `response` - The response that was received.
+    ///
+    fn name(&self) -> String;
     /// This method decompress the body of the response.
     ///
     /// # Arguments
@@ -51,11 +51,15 @@ pub trait Decompress: Send + Sync + 'static {
     ///
     /// * `Result<(), DeboaError>` - The decompressed body of the response.
     ///
-    fn decompress_body(&mut self) -> Result<(), DeboaError>;
+    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<(), DeboaError>;
 }
 
-impl Decompress for DeboaResponse {
-    fn decompress_body(&mut self) -> Result<(), DeboaError> {
-        Ok(())
+impl<T: Decompressor> Decompressor for Box<T> {
+    fn name(&self) -> String {
+        self.as_ref().name()
+    }
+
+    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<(), DeboaError> {
+        self.as_ref().decompress_body(response)
     }
 }

@@ -12,7 +12,15 @@ pub const XML_POST: &[u8; 108] = b"<?xml version=\"1.0\" encoding=\"UTF-8\"?><Po
 pub const JSON_POST: &[u8; 48] = b"{\"id\":1,\"title\":\"Test\",\"body\":\"Some test to do\"}";
 
 #[cfg(feature = "brotli")]
-pub const COMPRESSED: &[u8; 15] = &[11, 5, 128, 108, 111, 114, 101, 109, 32, 105, 112, 115, 117, 109, 3];
+pub const BROTLI_COMPRESSED: &[u8; 15] = &[11, 5, 128, 108, 111, 114, 101, 109, 32, 105, 112, 115, 117, 109, 3];
+
+#[cfg(feature = "deflate")]
+pub const DEFLATE_COMPRESSED: &[u8; 17] = &[202, 201, 47, 74, 205, 85, 200, 44, 40, 46, 205, 5, 0, 0, 0, 255, 255];
+
+#[cfg(feature = "gzip")]
+pub const GZIP_COMPRESSED: &[u8; 27] = &[
+    31, 139, 8, 0, 0, 0, 0, 0, 4, 255, 202, 201, 47, 74, 205, 85, 200, 44, 40, 46, 205, 5, 0, 0, 0, 255, 255,
+];
 
 pub const DECOMPRESSED: &[u8; 11] = b"lorem ipsum";
 

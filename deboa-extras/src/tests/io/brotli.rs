@@ -1,30 +1,38 @@
-use deboa::{Deboa, errors::DeboaError, response::DeboaResponse};
+use deboa::{Deboa, errors::DeboaError};
+use http::header;
+use httpmock::MockServer;
 
 use crate::{
-    io::brotli::{BrotliCompress, BrotliDecompress},
-    tests::types::{COMPRESSED, DECOMPRESSED},
+    io::brotli::BrotliDecompressor,
+    tests::types::{BROTLI_COMPRESSED, DECOMPRESSED},
 };
 
 #[tokio::test]
-async fn test_brotli_compress() -> Result<(), DeboaError> {
-    let mut api: Deboa = Deboa::new("http://localhost:8080")?;
+async fn test_brotli_decompress() -> Result<(), DeboaError> {
+    let server = MockServer::start();
+
+    let http_mock = server.mock(|when, then| {
+        use http::StatusCode;
+
+        when.method(http::Method::GET.as_str()).path("/sometext");
+        then.status(StatusCode::OK.into())
+            .header(header::CONTENT_ENCODING.as_str(), "br")
+            .body(BROTLI_COMPRESSED);
+    });
+
+    let server_address = *server.address();
+
+    let ip = server_address.ip();
+    let port = server_address.port();
+
+    let mut api: Deboa = Deboa::new(&format!("http://{ip}:{port}"))?;
     let body = b"lorem ipsum";
     api.set_body(body.to_vec());
+    api.accept_encoding(vec![Box::new(BrotliDecompressor)]);
 
-    let compressed = api.compress_body()?;
+    let response = api.get("/sometext").await?;
 
-    println!("compressed: {:?}", compressed.to_vec());
-
-    assert_eq!(compressed.to_vec(), COMPRESSED.to_vec());
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_brotli_decompress() -> Result<(), DeboaError> {
-    let mut response = DeboaResponse::new(http::StatusCode::OK, http::HeaderMap::new(), COMPRESSED.to_vec());
-
-    response.decompress_body()?;
+    http_mock.assert();
 
     assert_eq!(response.body(), DECOMPRESSED);
 
