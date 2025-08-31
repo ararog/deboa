@@ -19,19 +19,19 @@ impl Compressor for GzipCompressor {
 
     fn compress_body(&self, request: &Deboa) -> Result<Bytes, DeboaError> {
         let mut writer = GzEncoder::new(Vec::new(), flate2::Compression::default());
-        let result = writer.write_all(request.body().as_ref());
+        let result = writer.write_all(request.raw_body().as_ref());
 
         if let Err(e) = result {
             return Err(DeboaError::Compress { message: e.to_string() });
         }
 
-        let result = writer.flush();
+        let result = writer.finish();
 
         if let Err(e) = result {
             return Err(DeboaError::Compress { message: e.to_string() });
         }
 
-        Ok(Bytes::from(writer.get_ref().to_vec()))
+        Ok(Bytes::from(result.unwrap()))
     }
 }
 
@@ -44,7 +44,7 @@ impl Decompressor for GzipDecompressor {
     }
 
     fn decompress_body(&self, response: &mut DeboaResponse) -> Result<(), DeboaError> {
-        let binding = response.body();
+        let binding = response.raw_body();
         let mut reader = GzDecoder::new(binding.reader());
         let mut buffer = Vec::new();
         let result = reader.read_to_end(&mut buffer);
@@ -53,7 +53,7 @@ impl Decompressor for GzipDecompressor {
             return Err(DeboaError::Decompress { message: e.to_string() });
         }
 
-        response.set_body(buffer);
+        response.set_raw_body(buffer);
 
         Ok(())
     }

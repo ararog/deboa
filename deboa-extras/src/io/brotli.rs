@@ -19,7 +19,7 @@ impl Compressor for BrotliCompressor {
 
     fn compress_body(&self, request: &Deboa) -> Result<Bytes, DeboaError> {
         let mut writer = CompressorWriter::new(Vec::new(), 0, 11, 22);
-        let result = writer.write_all(request.body().as_ref());
+        let result = writer.write_all(request.raw_body().as_ref());
 
         if let Err(e) = result {
             return Err(DeboaError::Compress { message: e.to_string() });
@@ -44,7 +44,7 @@ impl Decompressor for BrotliDecompressor {
     }
 
     fn decompress_body(&self, response: &mut DeboaResponse) -> Result<(), DeboaError> {
-        let binding = response.body();
+        let binding = response.raw_body();
         let mut reader = brotli::Decompressor::new(binding.reader(), 0);
         let mut buffer = Vec::new();
         let result = reader.read_to_end(&mut buffer);
@@ -53,7 +53,7 @@ impl Decompressor for BrotliDecompressor {
             return Err(DeboaError::Decompress { message: e.to_string() });
         }
 
-        response.set_body(buffer);
+        response.set_raw_body(buffer);
 
         Ok(())
     }

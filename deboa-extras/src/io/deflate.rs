@@ -18,7 +18,7 @@ impl Compressor for DeflateCompressor {
 
     fn compress_body(&self, request: &Deboa) -> Result<Bytes, DeboaError> {
         let mut writer = DeflateEncoder::new(Vec::new(), flate2::Compression::default());
-        let result = writer.write_all(request.body().as_ref());
+        let result = writer.write_all(request.raw_body().as_ref());
 
         if let Err(e) = result {
             return Err(DeboaError::Compress { message: e.to_string() });
@@ -43,7 +43,7 @@ impl Decompressor for DeflateDecompressor {
     }
 
     fn decompress_body(&self, response: &mut DeboaResponse) -> Result<(), DeboaError> {
-        let binding = response.body();
+        let binding = response.raw_body();
         let mut reader = DeflateDecoder::new(binding.reader());
         let mut buffer = Vec::new();
         let result = reader.read_to_end(&mut buffer);
@@ -52,7 +52,7 @@ impl Decompressor for DeflateDecompressor {
             return Err(DeboaError::Decompress { message: e.to_string() });
         }
 
-        response.set_body(buffer);
+        response.set_raw_body(buffer);
 
         Ok(())
     }
