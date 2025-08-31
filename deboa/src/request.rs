@@ -468,7 +468,7 @@ impl Deboa {
     /// }
     /// ```
     ///
-    pub fn body(&self) -> &Vec<u8> {
+    pub fn raw_body(&self) -> &Vec<u8> {
         &self.body
     }
 
@@ -507,6 +507,25 @@ impl Deboa {
         self
     }
 
+    /// Allow set accept encoding at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `decompressors` - The decompressors to be set.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use deboa::{Deboa, errors::DeboaError, io::Decompressor};
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    ///   api.accept_encoding(vec![]);
+    ///   Ok(())
+    /// }
+    /// ```
+    ///
     pub fn accept_encoding(&mut self, decompressors: Vec<Box<dyn Decompressor>>) -> &mut Self {
         let mut encodings = HashMap::new();
         for decompressor in decompressors {

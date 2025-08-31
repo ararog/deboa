@@ -30,4 +30,7 @@ pub enum DeboaError {
 
     #[error("Failed to decompress data: {message}")]
     Decompress { message: String },
+
+    #[error("Failed to write file: {message}")]
+    Io { message: String },
 }

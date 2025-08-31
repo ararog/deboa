@@ -33,7 +33,7 @@ async fn test_deflate_decompress() -> Result<(), DeboaError> {
 
     http_mock.assert();
 
-    assert_eq!(response.body(), DECOMPRESSED);
+    assert_eq!(response.raw_body(), DECOMPRESSED);
 
     Ok(())
 }
