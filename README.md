@@ -8,14 +8,14 @@
 
 ## Features
 
-- built-in json, xml and msgpack support
 - easily add, remove and update headers
 - helpers to add basic and bearer auth
 - set base url only once, change it when needed
 - request data only by specifying path
 - set retries and timeout
-- middleware support
-- compression support (gzip, deflate, br)
+- pluggable middleware
+- pluggable compression (gzip, deflate, br)
+- pluggable serialization (json, xml, msgpack)
 - bora macro to easily create api clients
 - cookies support
 - comprehensive error handling
