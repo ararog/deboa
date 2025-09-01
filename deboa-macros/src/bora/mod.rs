@@ -3,7 +3,7 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 use proc_macro2::TokenTree;
 use quote::{format_ident, quote};
-use syn::{Ident, LitStr, parse_macro_input, parse_str};
+use syn::{Ident, LitStr, parse_macro_input};
 
 use parser::BoraApi;
 use titlecase::Titlecase;
@@ -110,7 +110,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                         GetFieldEnum::format(format) => {
                             let format_value = format.value.value();
                             format_name = format_ident!("{}", format_value);
-                            format_module = format_ident!("{}Response", format_value.titlecase());
+                            format_module = format_ident!("{}Body", format_value.titlecase());
                         }
                     });
 
@@ -126,7 +126,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     acc.2.extend(quote! {
                         async fn #method_name(&mut self, #api_params) -> Result<#res_body_type, DeboaError> {
-                            self.api.#method(format!(#api_path).as_ref()).await?.json::<#res_body_type>()
+                            self.api.#method(format!(#api_path).as_ref()).await?.body_as::<#format_module, #res_body_type>(#format_module)
                         }
                     });
                 }
@@ -140,7 +140,6 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                     let mut res_body_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
                     let mut format_name = Ident::new("ident", proc_macro2::Span::call_site());
                     let mut format_module = Ident::new("ident", proc_macro2::Span::call_site());
-                    let mut set_body = Ident::new("ident", proc_macro2::Span::call_site());
 
                     fields.iter().for_each(|field| match field {
                         PostFieldEnum::name(name) => {
@@ -159,8 +158,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                             let format_value = format.value.value();
                             let title_format_value = format_value.titlecase();
                             format_name = format_ident!("{}", format_value);
-                            format_module = format_ident!("{}Request", title_format_value);
-                            set_body = parse_str::<syn::Ident>(&format!("set_{format_name}")).unwrap();
+                            format_module = format_ident!("{}Body", title_format_value);
                         }
                     });
 
@@ -176,7 +174,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     acc.2.extend(quote! {
                         async fn #method_name(&mut self, body: #req_body_type) -> Result<DeboaResponse, DeboaError> {
-                            self.api.#set_body(body)?.#method(format!(#api_path).as_ref()).await
+                            self.api.set_body_as::<#format_module, #req_body_type>(#format_module, body)?.#method(format!(#api_path).as_ref()).await
                         }
                     });
                 }
@@ -191,7 +189,6 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                     let mut api_params = proc_macro2::TokenStream::new();
                     let mut format_name = Ident::new("ident", proc_macro2::Span::call_site());
                     let mut format_module = Ident::new("ident", proc_macro2::Span::call_site());
-                    let mut set_body = Ident::new("ident", proc_macro2::Span::call_site());
 
                     fields.iter().for_each(|field| match field {
                         PutFieldEnum::name(name) => {
@@ -235,8 +232,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                             let format_value = format.value.value();
                             let title_format_value = format_value.titlecase();
                             format_name = format_ident!("{}", format_value);
-                            format_module = format_ident!("{}Request", title_format_value);
-                            set_body = parse_str::<syn::Ident>(&format!("set_{format_name}")).unwrap();
+                            format_module = format_ident!("{}Body", title_format_value);
                         }
                     });
 
@@ -252,7 +248,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     acc.2.extend(quote! {
                         async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<(), DeboaError> {
-                            self.api.#set_body(body)?.#method(format!(#api_path).as_ref()).await?;
+                            self.api.set_body_as::<#format_module, #req_body_type>(#format_module, body)?.#method(format!(#api_path).as_ref()).await?;
                             Ok(())
                         }
                     });
@@ -320,7 +316,6 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                     let mut res_body_type = syn::Type::Verbatim(proc_macro2::TokenStream::new());
                     let mut format_name = Ident::new("ident", proc_macro2::Span::call_site());
                     let mut format_module = Ident::new("ident", proc_macro2::Span::call_site());
-                    let mut set_body = Ident::new("ident", proc_macro2::Span::call_site());
 
                     fields.iter().for_each(|field| match field {
                         PatchFieldEnum::name(name) => {
@@ -365,8 +360,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                             let format_value = format.value.value();
                             let title_format_value = format_value.titlecase();
                             format_name = format_ident!("{}", format_value);
-                            format_module = format_ident!("{}Request", title_format_value);
-                            set_body = parse_str::<syn::Ident>(&format!("set_{format_name}")).unwrap();
+                            format_module = format_ident!("{}Body", title_format_value);
                         }
                     });
 
@@ -382,7 +376,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     acc.2.extend(quote! {
                         async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<(), DeboaError> {
-                            self.api.#set_body(body)?.#method(format!(#api_path).as_ref()).await?;
+                            self.api.set_body_as::<#format_module, #req_body_type>(#format_module, body)?.#method(format!(#api_path).as_ref()).await?;
                             Ok(())
                         }
                     });

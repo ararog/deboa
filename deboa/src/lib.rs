@@ -8,7 +8,6 @@
 ))]
 compile_error!("Only one runtime feature can be enabled at a time.");
 
-use http::HeaderName;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use url::Url;
@@ -17,6 +16,7 @@ use crate::io::Decompressor;
 use crate::middleware::DeboaMiddleware;
 
 pub mod errors;
+pub mod http;
 pub mod io;
 pub mod middleware;
 pub mod request;
@@ -31,7 +31,7 @@ pub const APPLICATION_MSGPACK: &str = "application/vnd.msgpack";
 
 pub struct Deboa {
     base_url: Url,
-    headers: Option<HashMap<HeaderName, String>>,
+    headers: Option<HashMap<::http::HeaderName, String>>,
     query_params: Option<HashMap<&'static str, &'static str>>,
     body: Vec<u8>,
     retries: u32,
