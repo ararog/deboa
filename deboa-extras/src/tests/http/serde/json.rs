@@ -1,4 +1,4 @@
-use crate::http::json::{JsonRequest, JsonResponse};
+use crate::http::serde::json::{JsonRequest, JsonResponse};
 use deboa::Deboa;
 use deboa::errors::DeboaError;
 
