@@ -25,7 +25,7 @@ async fn test_gzip() -> Result<(), DeboaError> {
 
     let mut api: Deboa = Deboa::new(&format!("http://{ip}:{port}"))?;
     let body = DECOMPRESSED;
-    api.set_body(body.to_vec());
+    api.set_raw_body(body.to_vec());
     api.accept_encoding(vec![Box::new(GzipDecompressor)]);
 
     let response = api.get("/sometext").await?;

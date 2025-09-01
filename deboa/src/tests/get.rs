@@ -104,7 +104,10 @@ async fn do_get_invalid_server() -> Result<(), DeboaError> {
         response,
         Err(DeboaError::Connection {
             host: "invalid-server.com".to_string(),
+            #[cfg(target_os = "linux")]
             message: "failed to lookup address information: Name or service not known".to_string(),
+            #[cfg(target_os = "macos")]
+            message: "failed to lookup address information: nodename nor servname provided, or not known".to_string(),
         })
     );
 

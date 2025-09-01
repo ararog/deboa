@@ -1,12 +1,12 @@
-use deboa::{Deboa, errors::DeboaError, response::DeboaResponse};
+use deboa::{
+    errors::DeboaError,
+    http::serde::{RequestBody, ResponseBody},
+};
 use serde::{Deserialize, Serialize};
 
-pub trait JsonRequest {
-    fn set_json<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError>;
-}
+pub struct JsonBody;
 
-impl JsonRequest for Deboa {
-    #[cfg(feature = "json")]
+impl RequestBody for JsonBody {
     /// Allow set json body at any time.
     ///
     /// # Arguments
@@ -17,7 +17,7 @@ impl JsonRequest for Deboa {
     ///
     /// ```rust
     /// use deboa::{Deboa, errors::DeboaError};
-    /// use deboa_extras::http::serde::json::JsonRequest;
+    /// use deboa_extras::http::serde::json::JsonBody;
     /// use serde::Serialize;
     ///
     /// #[derive(Serialize)]
@@ -35,28 +35,19 @@ impl JsonRequest for Deboa {
     /// }
     /// ```
     ///
-    fn set_json<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
-        use http::header;
-
-        self.edit_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string());
+    fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>, DeboaError> {
         let result = serde_json::to_vec(&data);
         if let Err(error) = result {
             return Err(DeboaError::Serialization { message: error.to_string() });
         }
 
-        self.set_body(result.unwrap());
-
-        Ok(self)
+        Ok(result.unwrap())
     }
 }
 
-pub trait JsonResponse {
-    fn json<T: for<'a> Deserialize<'a>>(&mut self) -> Result<T, DeboaError>;
-}
-
-impl JsonResponse for DeboaResponse {
-    fn json<T: for<'a> Deserialize<'a>>(&mut self) -> Result<T, DeboaError> {
-        let binding = self.raw_body();
+impl ResponseBody for JsonBody {
+    fn deserialize<T: for<'a> Deserialize<'a>>(&self, body: Vec<u8>) -> Result<T, DeboaError> {
+        let binding = body;
         let body = binding.as_ref();
 
         let json = serde_json::from_slice(body);

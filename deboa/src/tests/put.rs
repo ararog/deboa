@@ -17,7 +17,7 @@ async fn do_put() -> Result<(), DeboaError> {
 
     let response = api.set_text("".to_string()).put("/posts/1").await?;
 
-    assert_eq!(response.status, StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
 
     Ok(())
 }
