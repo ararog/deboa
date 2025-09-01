@@ -1,4 +1,4 @@
-use crate::http::serde::json::{JsonRequest, JsonResponse};
+use crate::http::serde::json::JsonBody;
 use deboa::Deboa;
 use deboa::errors::DeboaError;
 
@@ -15,7 +15,7 @@ fn test_set_json() -> Result<(), DeboaError> {
 
     let data = sample_post();
 
-    let _ = api.set_json(data);
+    let _ = api.set_body_as(JsonBody, data);
 
     assert_eq!(*api.raw_body(), JSON_POST.to_vec());
 
@@ -45,7 +45,7 @@ async fn test_response_json() -> Result<(), DeboaError> {
 
     let api = Deboa::new(&format!("http://{ip}:{port}"));
 
-    let response = api?.get("posts/1").await?.json::<Post>()?;
+    let response = api?.get("posts/1").await?.body_as::<JsonBody, Post>(JsonBody)?;
 
     http_mock.assert();
 

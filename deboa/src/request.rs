@@ -4,8 +4,9 @@ use std::collections::HashMap;
 
 use bytes::{Buf, Bytes};
 use http_body_util::{BodyExt, Full};
+use serde::Serialize;
 
-use crate::{io::Decompressor, middleware::DeboaMiddleware, runtimes, Deboa};
+use crate::{http::serde::RequestBody, io::Decompressor, middleware::DeboaMiddleware, runtimes, Deboa};
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use http::{header, HeaderName, HeaderValue, Request};
@@ -441,13 +442,13 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   let response = api.set_body(b"body".to_vec()).post("/posts").await;
+    ///   let response = api.set_raw_body(b"body".to_vec()).post("/posts").await;
     ///   assert!(response.is_err());
     ///   Ok(())
     /// }
     /// ```
     ///
-    pub fn set_body(&mut self, body: Vec<u8>) -> &mut Self {
+    pub fn set_raw_body(&mut self, body: Vec<u8>) -> &mut Self {
         self.body = body;
         self
     }
@@ -462,7 +463,7 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   let response = api.set_body(b"body".to_vec()).post("/posts").await;
+    ///   let response = api.set_raw_body(b"body".to_vec()).post("/posts").await;
     ///   assert!(response.is_err());
     ///   Ok(())
     /// }
@@ -470,6 +471,32 @@ impl Deboa {
     ///
     pub fn raw_body(&self) -> &Vec<u8> {
         &self.body
+    }
+
+    /// Allow set body at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `body_type` - The body type to be set.
+    /// * `body` - The body to be set.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use deboa::{Deboa, errors::DeboaError};
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    ///   //let response = api.set_body_as(JsonBody, Post { id: 1, title: "title".to_string(), body: "body".to_string() }).post("/posts").await;
+    ///   //assert!(response.is_err());
+    ///   Ok(())
+    /// }
+    /// ```
+    ///
+    pub fn set_body_as<T: RequestBody, B: Serialize>(&mut self, body_type: T, body: B) -> Result<&mut Self, DeboaError> {
+        self.body = body_type.serialize(body)?;
+        Ok(self)
     }
 
     /// Allow add middleware at any time.

@@ -1,14 +1,14 @@
 use std::fmt::Debug;
 use std::fs::write;
 
-use http::{HeaderMap, StatusCode};
+use serde::Deserialize;
 
-use crate::errors::DeboaError;
+use crate::{errors::DeboaError, http::serde::ResponseBody};
 
 #[derive(PartialEq)]
 pub struct DeboaResponse {
-    pub(crate) status: StatusCode,
-    headers: HeaderMap,
+    status: http::StatusCode,
+    headers: http::HeaderMap,
     body: Vec<u8>,
 }
 
@@ -40,7 +40,7 @@ impl DeboaResponse {
     /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), Vec::new());
     /// ```
     ///
-    pub fn new(status: StatusCode, headers: HeaderMap, body: Vec<u8>) -> Self {
+    pub fn new(status: http::StatusCode, headers: http::HeaderMap, body: Vec<u8>) -> Self {
         Self { status, headers, body }
     }
 
@@ -56,7 +56,7 @@ impl DeboaResponse {
     /// assert_eq!(response.status(), StatusCode::OK);
     /// ```
     ///
-    pub fn status(&self) -> StatusCode {
+    pub fn status(&self) -> http::StatusCode {
         self.status
     }
 
@@ -72,7 +72,7 @@ impl DeboaResponse {
     /// assert_eq!(response.headers(), HeaderMap::new());
     /// ```
     ///
-    pub fn headers(&self) -> HeaderMap {
+    pub fn headers(&self) -> http::HeaderMap {
         self.headers.clone()
     }
 
@@ -94,6 +94,23 @@ impl DeboaResponse {
     ///
     pub fn set_raw_body(&mut self, body: Vec<u8>) {
         self.body = body;
+    }
+
+    /// Allow get body at any time.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use deboa::response::DeboaResponse;
+    /// use http::{HeaderMap, StatusCode};
+    ///
+    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), b"Hello, world!".to_vec());
+    /// //assert_eq!(response.body(), Ok(String::from_utf8_lossy("Hello, world!".as_bytes()).to_string()));
+    /// ```
+    ///
+    pub fn body_as<T: ResponseBody, B: for<'a> Deserialize<'a>>(&self, body_type: T) -> Result<B, DeboaError> {
+        let result = body_type.deserialize::<B>(self.body.clone())?;
+        Ok(result)
     }
 
     /// Allow get raw body at any time.

@@ -1,8 +1,6 @@
-pub trait MsgpackRequest {
-    fn set_msgpack<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError>;
-}
+pub struct MsgPackBody;
 
-impl MsgpackRequest for Deboa {
+impl RequestBody for MsgPackBody {
     /// Allow set msgpack body at any time.
     ///
     /// # Arguments
@@ -31,7 +29,7 @@ impl MsgpackRequest for Deboa {
     /// */
     /// ```
     ///
-    fn set_msgpack<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
+    fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>, DeboaError> {
         let result = rmp_serde::to_vec(&data);
         if let Err(error) = result {
             return Err(DeboaError::SerializationError { message: error.to_string() });
@@ -40,5 +38,19 @@ impl MsgpackRequest for Deboa {
         self.body = Some(result.unwrap());
 
         Ok(self)
+    }
+}
+
+impl ResponseBody for MsgPackBody {
+    fn deserialize<T: Deserialize<'_>>(&self, body: Vec<u8>) -> Result<T, DeboaError> {
+        let binding = body;
+        let body = binding.as_ref();
+
+        let json = serde_json::from_slice(body);
+
+        match json {
+            Ok(deserialized_body) => Ok(deserialized_body),
+            Err(err) => Err(DeboaError::Deserialization { message: err.to_string() }),
+        }
     }
 }

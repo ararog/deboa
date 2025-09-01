@@ -1,8 +1,6 @@
-pub trait XmlRequest {
-    fn set_xml<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError>;
-}
+pub struct XmlBody;
 
-impl XmlRequest for Deboa {
+impl RequestBody for XmlBody {
     #[cfg(feature = "xml")]
     /// Allow set xml body at any time.
     ///
@@ -32,9 +30,7 @@ impl XmlRequest for Deboa {
     /// }
     /// ```
     ///
-    fn set_xml<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
-        self.edit_header(header::CONTENT_TYPE, APPLICATION_XML.to_string());
-        self.edit_header(header::ACCEPT, APPLICATION_XML.to_string());
+    fn serialize<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
         let mut ser_xml_buf = Vec::new();
 
         let result = serde_xml_rust::to_writer(&mut ser_xml_buf, &data);
@@ -46,5 +42,19 @@ impl XmlRequest for Deboa {
         self.body = Some(ser_xml_buf);
 
         Ok(self)
+    }
+}
+
+impl ResponseBody for XmlBody {
+    fn deserialize<T: Deserialize<'_>>(&self, body: Vec<u8>) -> Result<T, DeboaError> {
+        let binding = body;
+        let body = binding.as_ref();
+
+        let json = serde_json::from_slice(body);
+
+        match json {
+            Ok(deserialized_body) => Ok(deserialized_body),
+            Err(err) => Err(DeboaError::Deserialization { message: err.to_string() }),
+        }
     }
 }
