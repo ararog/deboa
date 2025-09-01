@@ -5,7 +5,7 @@ extern crate deboa_macros;
 
 mod inner {
 
-    #[bora(api(delete(name = "deletePost", path = "/posts/<id:i32>"),))]
+    #[bora(api(delete(name = "deletePost", path = "/posts/<id:i32>")))]
     pub struct PostService;
 }
 

@@ -13,6 +13,12 @@ exclude = [".travis.yml"]
 [lib]
 proc-macro = true
 
+[features]
+default = ["json"]
+json = ["deboa-extras/json"]
+xml = ["deboa-extras/xml"]
+msgpack = ["deboa-extras/msgpack"]
+
 [dependencies]
 deboa = { path = "../deboa", features = ["tokio-rt", "http1"] }
 deboa-extras = { path = "../deboa-extras", features = ["json"] }
@@ -25,3 +31,4 @@ serde_tokenstream = "0.2.2"
 maplit = "1.0.2"
 proc-macro-error = "1.0.4"
 regex = "1.11.2"
+titlecase = "3.6.0"

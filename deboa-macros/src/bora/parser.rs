@@ -64,9 +64,29 @@ impl Parse for GetStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let content;
         parenthesized!(content in input);
-        Ok(GetStruct {
+        let get = GetStruct {
             fields: content.parse_terminated(GetFieldEnum::parse, Token![,])?,
-        })
+        };
+
+        let mut fields = get.fields.iter();
+        let required_fields = vec!["name", "path", "res_body", "format"];
+        let missing_fields = required_fields
+            .into_iter()
+            .filter(|field| {
+                !fields.any(|f| match f {
+                    GetFieldEnum::name(_) => *field == "name",
+                    GetFieldEnum::path(_) => *field == "path",
+                    GetFieldEnum::res_body(_) => *field == "res_body",
+                    GetFieldEnum::format(_) => *field == "format",
+                })
+            })
+            .collect::<Vec<_>>();
+
+        if !missing_fields.is_empty() {
+            return Err(input.error(format!("expected one of {missing_fields:?}")));
+        }
+
+        Ok(get)
     }
 }
 
@@ -319,11 +339,35 @@ pub struct FormatStruct {
     pub value: LitStr,
 }
 
+fn avaliable_formats() -> Vec<String> {
+    let mut valid_formats = Vec::<String>::with_capacity(3);
+
+    #[cfg(feature = "json")]
+    valid_formats.push("json".to_string());
+    #[cfg(feature = "xml")]
+    valid_formats.push("xml".to_string());
+    #[cfg(feature = "msgpack")]
+    valid_formats.push("msgpack".to_string());
+
+    valid_formats
+}
+
+fn is_valid_format(format: &String) -> bool {
+    avaliable_formats().contains(format)
+}
+
 impl Parse for FormatStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-        Ok(FormatStruct {
+        let format = FormatStruct {
             _equal_token: input.parse()?,
             value: input.parse()?,
-        })
+        };
+
+        let format_name = format.value.value();
+        if !is_valid_format(&format_name) {
+            return Err(input.error(format!("expected one of {}, found '{format_name}'", avaliable_formats().join(", "))));
+        }
+
+        Ok(format)
     }
 }
