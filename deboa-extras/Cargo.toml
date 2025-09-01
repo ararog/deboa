@@ -18,8 +18,9 @@ tokio = "1.47.1"
 httpmock = "0.7.0"
 
 [features]
-default = ["json", "compression"]
-# serializarion
+default = ["serialization", "compression"]
+# serialization
+serialization = ["json"]
 json = ["dep:serde_json", "dep:serde"]
 xml = ["dep:serde-xml-rust", "dep:serde"]
 msgpack = ["dep:rmp-serde", "dep:serde"]

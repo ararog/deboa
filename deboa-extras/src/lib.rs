@@ -5,10 +5,9 @@
 ))]
 compile_error!("Only one compression feature can be enabled at a time.");
 
+pub mod http;
 #[cfg(feature = "compression")]
 pub mod io;
-
-pub mod http;
 
 #[cfg(test)]
 mod tests;
