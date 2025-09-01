@@ -1,58 +1,29 @@
+use std::io::Cursor;
+
+use deboa::errors::DeboaError;
+use deboa::http::serde::{RequestBody, ResponseBody};
+use serde::{Deserialize, Serialize};
 pub struct XmlBody;
 
 impl RequestBody for XmlBody {
-    #[cfg(feature = "xml")]
-    /// Allow set xml body at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `data` - The data to be serialized, it must be a struct that implements Serialize.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use deboa::{Deboa, DeboaError};
-    /// use serde::Serialize;
-    /// use http::header;
-    ///
-    /// #[derive(Serialize)]
-    /// struct Post {
-    ///     id: u32,
-    ///     title: String,
-    ///     body: String,
-    /// }
-    ///
-    /// #[tokio::main]
-    /// async fn main() -> Result<(), DeboaError> {
-    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   api.set_xml(Post { id: 1, title: "title".to_string(), body: "body".to_string() })?.post("/posts").await?;
-    ///   Ok(())
-    /// }
-    /// ```
-    ///
-    fn serialize<T: Serialize>(&mut self, data: T) -> Result<&mut Self, DeboaError> {
+    fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>, DeboaError> {
         let mut ser_xml_buf = Vec::new();
 
         let result = serde_xml_rust::to_writer(&mut ser_xml_buf, &data);
 
         if let Err(error) = result {
-            return Err(DeboaError::SerializationError { message: error.to_string() });
+            return Err(DeboaError::Serialization { message: error.to_string() });
         }
 
-        self.body = Some(ser_xml_buf);
-
-        Ok(self)
+        Ok(ser_xml_buf)
     }
 }
 
 impl ResponseBody for XmlBody {
-    fn deserialize<T: Deserialize<'_>>(&self, body: Vec<u8>) -> Result<T, DeboaError> {
-        let binding = body;
-        let body = binding.as_ref();
+    fn deserialize<T: for<'a> Deserialize<'a>>(&self, body: Vec<u8>) -> Result<T, DeboaError> {
+        let xml = serde_xml_rust::from_reader(Cursor::new(body));
 
-        let json = serde_json::from_slice(body);
-
-        match json {
+        match xml {
             Ok(deserialized_body) => Ok(deserialized_body),
             Err(err) => Err(DeboaError::Deserialization { message: err.to_string() }),
         }
