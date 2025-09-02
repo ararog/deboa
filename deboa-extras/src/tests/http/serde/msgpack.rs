@@ -1,12 +1,13 @@
+use crate::http::serde::msgpack::MsgPackBody;
 use crate::tests::types::format_address;
 use deboa::{Deboa, errors::DeboaError};
-use http::header;
-use httpmock::{Method::GET, MockServer};
 
-use crate::{
-    http::serde::msgpack::MsgPackBody,
-    tests::types::{JSONPLACEHOLDER, MSGPACK_POST, Post, sample_post},
-};
+use http::header;
+
+use httpmock::{Method::GET, MockServer};
+use mime_typed::Msgpack;
+
+use crate::tests::types::{JSONPLACEHOLDER, MSGPACK_POST, Post, sample_post};
 
 #[test]
 fn test_set_msgpack() -> Result<(), DeboaError> {
@@ -30,13 +31,13 @@ async fn test_msgpack_response() -> Result<(), DeboaError> {
     let http_mock = server.mock(|when, then| {
         when.method(GET).path("/posts/1");
         then.status(200)
-            .header(header::CONTENT_TYPE.as_str(), "application/msgpack")
+            .header(http::header::CONTENT_TYPE.as_str(), Msgpack.to_string().as_str())
             .body(MSGPACK_POST);
     });
 
     let mut api = Deboa::new(&format_address(&server))?;
-    api.edit_header(header::CONTENT_TYPE, "application/msgpack".to_string());
-    api.edit_header(header::ACCEPT, "application/msgpack".to_string());
+    api.edit_header(header::CONTENT_TYPE, Msgpack.to_string().as_str());
+    api.edit_header(header::ACCEPT, Msgpack.to_string().as_str());
 
     let response: Post = api.get("/posts/1").await?.body_as(MsgPackBody)?;
 

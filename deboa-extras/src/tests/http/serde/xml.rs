@@ -1,7 +1,9 @@
 use crate::tests::types::format_address;
 use deboa::{Deboa, errors::DeboaError};
+
 use http::header;
 use httpmock::{Method::GET, MockServer};
+use mime_typed::Xml;
 
 use crate::{
     http::serde::xml::XmlBody,
@@ -31,12 +33,14 @@ async fn test_xml_response() -> Result<(), DeboaError> {
 
     let http_mock = server.mock(|when, then| {
         when.method(GET).path("/posts/1");
-        then.status(200).header(header::CONTENT_TYPE.as_str(), "application/xml").body(XML_POST);
+        then.status(200)
+            .header(header::CONTENT_TYPE.as_str(), Xml.to_string().as_str())
+            .body(XML_POST);
     });
 
     let mut api = Deboa::new(&format_address(&server))?;
-    api.edit_header(header::CONTENT_TYPE, "application/xml".to_string());
-    api.edit_header(header::ACCEPT, "application/xml".to_string());
+    api.edit_header(header::CONTENT_TYPE, Xml.to_string().as_str());
+    api.edit_header(header::ACCEPT, Xml.to_string().as_str());
 
     let response: Post = api.get("/posts/1").await?.body_as(XmlBody)?;
 
