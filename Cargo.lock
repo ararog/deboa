@@ -906,6 +906,7 @@ dependencies = [
  "http 1.3.1",
  "httpmock",
  "mime",
+ "mime_typed",
  "rmp-serde",
  "serde",
  "serde-xml-rust",
@@ -1746,6 +1747,12 @@ name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+
+[[package]]
+name = "mime_typed"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0496b9f94b94f3ff411b45eecb188cac129f615cdcb08f852f3d7f9261e8826e"
 
 [[package]]
 name = "miniz_oxide"

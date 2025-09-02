@@ -1,12 +1,20 @@
 use deboa::{
+    Deboa,
     errors::DeboaError,
     http::serde::{RequestBody, ResponseBody},
 };
+use http::header;
+use mime_typed::Json;
 use serde::{Deserialize, Serialize};
 
 pub struct JsonBody;
 
 impl RequestBody for JsonBody {
+    fn register_content_type(&self, deboa: &mut Deboa) {
+        deboa.edit_header(header::CONTENT_TYPE, Json.to_string());
+        deboa.edit_header(header::ACCEPT, Json.to_string());
+    }
+
     fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>, DeboaError> {
         let result = serde_json::to_vec(&data);
         if let Err(error) = result {

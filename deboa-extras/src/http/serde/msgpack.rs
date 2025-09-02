@@ -2,11 +2,17 @@ use deboa::{
     errors::DeboaError,
     http::serde::{RequestBody, ResponseBody},
 };
+use mime_typed::msgpack::MSGPACK;
 use serde::{Deserialize, Serialize};
 
 pub struct MsgPackBody;
 
 impl RequestBody for MsgPackBody {
+    fn register_content_type(&self, deboa: &mut Deboa) {
+        deboa.edit_header(header::CONTENT_TYPE, MSGPACK.to_string());
+        deboa.edit_header(header::ACCEPT, MSGPACK.to_string());
+    }
+
     fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>, DeboaError> {
         let result = rmp_serde::to_vec(&data);
         if let Err(error) = result {

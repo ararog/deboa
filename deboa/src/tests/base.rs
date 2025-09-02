@@ -34,7 +34,7 @@ fn test_invalid_url() -> Result<(), DeboaError> {
 fn test_set_query_params() -> Result<(), DeboaError> {
     let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
-    let query_map = HashMap::from([("id", "1")]);
+    let query_map = HashMap::from([("id".to_string(), "1".to_string())]);
 
     api.set_query_params(query_map.clone());
 

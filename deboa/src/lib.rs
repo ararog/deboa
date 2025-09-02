@@ -25,19 +25,15 @@ mod runtimes;
 #[cfg(test)]
 mod tests;
 
-#[allow(dead_code)]
-pub const APPLICATION_XML: &str = "application/xml";
-pub const APPLICATION_MSGPACK: &str = "application/vnd.msgpack";
-
 pub struct Deboa {
     base_url: Url,
     headers: Option<HashMap<::http::HeaderName, String>>,
-    query_params: Option<HashMap<&'static str, &'static str>>,
+    query_params: Option<HashMap<String, String>>,
     body: Vec<u8>,
     retries: u32,
     connection_timeout: u64,
     request_timeout: u64,
-    middlewares: Vec<Box<dyn DeboaMiddleware>>,
+    middlewares: Option<Vec<Box<dyn DeboaMiddleware>>>,
     encodings: Option<HashMap<String, Box<dyn Decompressor>>>,
 }
 

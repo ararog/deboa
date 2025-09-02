@@ -140,7 +140,7 @@ async fn test_get_invalid_server() {
 async fn do_get_by_query() -> Result<(), DeboaError> {
     let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
-    let query_map = HashMap::from([("id", "1")]);
+    let query_map = HashMap::from([("id".to_string(), "1".to_string())]);
 
     api.set_query_params(query_map);
 

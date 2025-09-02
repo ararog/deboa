@@ -33,9 +33,6 @@ deboa = { version = "0.0.5", features = ["http1", "middlewares",  "json", "tokio
 - tokio-rt (default)
 - smol-rt
 - compio-rt
-- json (default)
-- xml
-- msgpack
 - http1 (default)
 - http2 (coming soon)
 - middlewares (default)
@@ -46,10 +43,11 @@ deboa = { version = "0.0.5", features = ["http1", "middlewares",  "json", "tokio
 
 ```rust
 use deboa::Deboa;
+use deboa_extras::http::serde::json::JsonBody;
 
 let api = Deboa::new("https://jsonplaceholder.typicode.com");
 
-let posts: Vec<Post> = api.get("/posts").await?.json::<Vec<Post>>().await?;
+let posts: Vec<Post> = api.get("/posts").await?.body_as(JsonBody)?;
 
 println!("posts: {:#?}", posts);
 ```
@@ -58,10 +56,11 @@ println!("posts: {:#?}", posts);
 
 ```rust
 use deboa::Deboa;
+use deboa_extras::http::serde::xml::XmlBody;
 
-let api = Deboa::new("https://jsonplaceholder.typicode.com");
+let api = Deboa::new("https://xmlplaceholder.fake.com");
 
-let posts: Vec<Post> = api.get("/posts").await?.xml::<Vec<Post>>().await?;
+let posts: Vec<Post> = api.get("/posts").await?.body_as(XmlBody).await?;
 
 println!("posts: {:#?}", posts);
 ```
@@ -71,10 +70,11 @@ println!("posts: {:#?}", posts);
 ```rust
 use deboa::Deboa;
 use http::header;
+use deboa_extras::http::serde::json::JsonBody;
 
 let api = Deboa::new("https://jsonplaceholder.typicode.com");
 api.add_header(header::CONTENT_TYPE, "application/json");
-let posts: Vec<Post> = api.get("/posts").await?.json::<Vec<Post>>().await?;
+let posts: Vec<Post> = api.get("/posts").await?.body_as(JsonBody).await?;
 
 println!("posts: {:#?}", posts);
 ```
@@ -87,7 +87,7 @@ use http::header;
 
 let api = Deboa::new("https://jsonplaceholder.typicode.com");
 api.add_bearer_auth("token");
-let posts: Vec<Post> = api.get("/posts").await?.json::<Vec<Post>>().await?;
+let posts: Vec<Post> = api.get("/posts").await?.body_as(JsonBody).await?;
 
 println!("posts: {:#?}", posts);
 ```
@@ -97,10 +97,11 @@ println!("posts: {:#?}", posts);
 ```rust
 use deboa::Deboa;
 use http::header;
+use deboa_extras::http::serde::json::JsonBody;
 
 let api = Deboa::new("https://jsonplaceholder.typicode.com");
 api.add_basic_auth("username", "password");
-let posts: Vec<Post> = api.get("/posts").await?.json::<Vec<Post>>().await?;
+let posts: Vec<Post> = api.get("/posts").await?.body_as(JsonBody).await?;
 
 println!("posts: {:#?}", posts);
 ```
@@ -109,10 +110,11 @@ println!("posts: {:#?}", posts);
 
 ```rust
 use deboa::Deboa;
+use deboa_extras::http::serde::json::JsonBody;
 
 let api = Deboa::new("https://jsonplaceholder.typicode.com");
 api.set_base_url("https://jsonplaceholder.typicode.com");
-let posts: Vec<Post> = api.get("/posts").await?.json::<Vec<Post>>().await?;
+let posts: Vec<Post> = api.get("/posts").await?.body_as(JsonBody).await?;
 
 println!("posts: {:#?}", posts);
 ```
@@ -136,9 +138,9 @@ impl DeboaMiddleware for MyMiddleware {
 
 let api = Deboa::new("https://jsonplaceholder.typicode.com");
 api.add_middleware(MyMiddleware);
-let posts: Vec<Post> = api.get("/posts").await?.json::<Vec<Post>>().await?;
+let post: Post = api.get("/posts/1").await?.body_as(JsonBody).await?;
 
-println!("posts: {:#?}", posts);
+println!("post: {:#?}", post);
 ```
 
 ## License
