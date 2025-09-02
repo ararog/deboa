@@ -124,9 +124,31 @@ impl Parse for PostStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let content;
         parenthesized!(content in input);
-        Ok(PostStruct {
+
+        let post = PostStruct {
             fields: content.parse_terminated(PostFieldEnum::parse, Token![,])?,
-        })
+        };
+
+        let mut fields = post.fields.iter();
+        let required_fields = vec!["name", "path", "req_body", "format"];
+        let missing_fields = required_fields
+            .into_iter()
+            .filter(|field| {
+                !fields.any(|f| match f {
+                    PostFieldEnum::name(_) => *field == "name",
+                    PostFieldEnum::path(_) => *field == "path",
+                    PostFieldEnum::res_body(_) => *field == "res_body",
+                    PostFieldEnum::format(_) => *field == "format",
+                    PostFieldEnum::req_body(_) => *field == "req_body",
+                })
+            })
+            .collect::<Vec<_>>();
+
+        if !missing_fields.is_empty() {
+            return Err(input.error(format!("expected one of {missing_fields:?}")));
+        }
+
+        Ok(post)
     }
 }
 
@@ -166,9 +188,31 @@ impl Parse for PutStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let content;
         parenthesized!(content in input);
-        Ok(PutStruct {
+
+        let put = PutStruct {
             fields: content.parse_terminated(PutFieldEnum::parse, Token![,])?,
-        })
+        };
+
+        let mut fields = put.fields.iter();
+        let required_fields = vec!["name", "path", "req_body", "format"];
+        let missing_fields = required_fields
+            .into_iter()
+            .filter(|field| {
+                !fields.any(|f| match f {
+                    PutFieldEnum::name(_) => *field == "name",
+                    PutFieldEnum::path(_) => *field == "path",
+                    PutFieldEnum::res_body(_) => *field == "res_body",
+                    PutFieldEnum::format(_) => *field == "format",
+                    PutFieldEnum::req_body(_) => *field == "req_body",
+                })
+            })
+            .collect::<Vec<_>>();
+
+        if !missing_fields.is_empty() {
+            return Err(input.error(format!("expected one of {missing_fields:?}")));
+        }
+
+        Ok(put)
     }
 }
 
@@ -244,9 +288,31 @@ impl Parse for PatchStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let content;
         parenthesized!(content in input);
-        Ok(PatchStruct {
+
+        let patch = PatchStruct {
             fields: content.parse_terminated(PatchFieldEnum::parse, Token![,])?,
-        })
+        };
+
+        let mut fields = patch.fields.iter();
+        let required_fields = vec!["name", "path", "req_body", "format"];
+        let missing_fields = required_fields
+            .into_iter()
+            .filter(|field| {
+                !fields.any(|f| match f {
+                    PatchFieldEnum::name(_) => *field == "name",
+                    PatchFieldEnum::path(_) => *field == "path",
+                    PatchFieldEnum::res_body(_) => *field == "res_body",
+                    PatchFieldEnum::format(_) => *field == "format",
+                    PatchFieldEnum::req_body(_) => *field == "req_body",
+                })
+            })
+            .collect::<Vec<_>>();
+
+        if !missing_fields.is_empty() {
+            return Err(input.error(format!("expected one of {missing_fields:?}")));
+        }
+
+        Ok(patch)
     }
 }
 
