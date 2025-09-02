@@ -1,3 +1,4 @@
+use crate::tests::types::format_address;
 use deboa::{Deboa, errors::DeboaError};
 use http::header;
 use httpmock::{Method::GET, MockServer};
@@ -33,16 +34,11 @@ async fn test_msgpack_response() -> Result<(), DeboaError> {
             .body(MSGPACK_POST);
     });
 
-    let server_address = *server.address();
-
-    let ip = server_address.ip();
-    let port = server_address.port();
-
-    let mut api = Deboa::new(&format!("http://{ip}:{port}"))?;
+    let mut api = Deboa::new(&format_address(&server))?;
     api.edit_header(header::CONTENT_TYPE, "application/msgpack".to_string());
     api.edit_header(header::ACCEPT, "application/msgpack".to_string());
 
-    let response = api.get("/posts/1").await?.body_as::<MsgPackBody, Post>(MsgPackBody)?;
+    let response: Post = api.get("/posts/1").await?.body_as(MsgPackBody)?;
 
     http_mock.assert();
 

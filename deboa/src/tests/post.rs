@@ -1,5 +1,5 @@
-use crate::errors::DeboaError;
 use crate::Deboa;
+use crate::{errors::DeboaError, tests::types::format_address};
 use http::{header, StatusCode};
 
 use httpmock::{Method::POST, MockServer};
@@ -22,12 +22,7 @@ async fn do_post() -> Result<(), DeboaError> {
             .body("ping");
     });
 
-    let server_address = *server.address();
-
-    let ip = server_address.ip();
-    let port = server_address.port();
-
-    let mut api = Deboa::new(&format!("http://{ip}:{port}"))?;
+    let mut api = Deboa::new(&format_address(&server))?;
 
     let data = "ping".to_string();
     let response = api.set_text(data).post("/posts").await?;

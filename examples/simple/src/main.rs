@@ -15,7 +15,7 @@ async fn main() -> Result<(), DeboaError> {
 
     let mut api = Deboa::new("https://jsonplaceholder.typicode.com").unwrap();
 
-    let posts: Vec<Post> = api.get("/posts").await?.body_as(JsonBody)?;
+    let posts: Vec<Post> = api.get("/posts/1").await?.body_as(JsonBody)?;
 
     println!("posts: {posts:#?}");
 

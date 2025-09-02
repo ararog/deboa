@@ -1,3 +1,4 @@
+use crate::tests::types::format_address;
 use deboa::{Deboa, errors::DeboaError};
 use http::header;
 use httpmock::{Method::GET, MockServer};
@@ -33,16 +34,11 @@ async fn test_xml_response() -> Result<(), DeboaError> {
         then.status(200).header(header::CONTENT_TYPE.as_str(), "application/xml").body(XML_POST);
     });
 
-    let server_address = *server.address();
-
-    let ip = server_address.ip();
-    let port = server_address.port();
-
-    let mut api = Deboa::new(&format!("http://{ip}:{port}"))?;
+    let mut api = Deboa::new(&format_address(&server))?;
     api.edit_header(header::CONTENT_TYPE, "application/xml".to_string());
     api.edit_header(header::ACCEPT, "application/xml".to_string());
 
-    let response = api.get("/posts/1").await?.body_as::<XmlBody, Post>(XmlBody)?;
+    let response: Post = api.get("/posts/1").await?.body_as(XmlBody)?;
 
     http_mock.assert();
 
