@@ -63,7 +63,7 @@ fn test_set_headers() -> Result<(), DeboaError> {
 fn test_set_basic_auth() -> Result<(), DeboaError> {
     let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
-    api.add_basic_auth("username".to_string(), "password".to_string());
+    api.add_basic_auth("username", "password");
 
     assert_eq!(
         api.get_mut_header(&header::AUTHORIZATION),
@@ -77,7 +77,7 @@ fn test_set_basic_auth() -> Result<(), DeboaError> {
 fn test_set_bearer_auth() -> Result<(), DeboaError> {
     let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
-    api.add_bearer_auth("token".to_string());
+    api.add_bearer_auth("token");
 
     assert_eq!(api.get_mut_header(&header::AUTHORIZATION), Some(&mut "Bearer token".to_string()));
 
@@ -121,7 +121,7 @@ fn test_set_request_timeout() -> Result<(), DeboaError> {
 fn test_edit_header() -> Result<(), DeboaError> {
     let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
-    api.edit_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string());
+    api.edit_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
 
     assert_eq!(api.get_mut_header(&header::CONTENT_TYPE), Some(&mut mime::APPLICATION_JSON.to_string()));
 
@@ -132,7 +132,7 @@ fn test_edit_header() -> Result<(), DeboaError> {
 fn test_add_header() -> Result<(), DeboaError> {
     let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
-    api.add_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string());
+    api.add_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
 
     assert_eq!(api.get_mut_header(&header::CONTENT_TYPE), Some(&mut mime::APPLICATION_JSON.to_string()));
 
@@ -156,7 +156,7 @@ fn test_set_body() -> Result<(), DeboaError> {
 
     api.set_text("test".to_string());
 
-    assert_eq!(api.body, b"test".to_vec());
+    assert_eq!(api.body, b"test".to_vec().into());
 
     Ok(())
 }
@@ -165,7 +165,7 @@ fn test_set_body() -> Result<(), DeboaError> {
 fn test_get_mut_header() -> Result<(), DeboaError> {
     let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
-    api.add_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string());
+    api.add_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
 
     assert_eq!(api.get_mut_header(&header::CONTENT_TYPE), Some(&mut mime::APPLICATION_JSON.to_string()));
 

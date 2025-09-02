@@ -53,7 +53,7 @@ impl Decompressor for GzipDecompressor {
             return Err(DeboaError::Decompress { message: e.to_string() });
         }
 
-        response.set_raw_body(buffer);
+        response.set_raw_body(&buffer);
 
         Ok(())
     }

@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use std::fs::write;
+use std::{fmt::Debug, sync::Arc};
 
 use serde::Deserialize;
 
@@ -8,8 +8,8 @@ use crate::{errors::DeboaError, http::serde::ResponseBody};
 #[derive(PartialEq)]
 pub struct DeboaResponse {
     status: http::StatusCode,
-    headers: http::HeaderMap,
-    body: Vec<u8>,
+    headers: Arc<http::HeaderMap>,
+    body: Arc<Vec<u8>>,
 }
 
 impl Debug for DeboaResponse {
@@ -37,11 +37,15 @@ impl DeboaResponse {
     /// use deboa::response::DeboaResponse;
     /// use http::{HeaderMap, StatusCode};
     ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), Vec::new());
+    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), &Vec::new());
     /// ```
     ///
-    pub fn new(status: http::StatusCode, headers: http::HeaderMap, body: Vec<u8>) -> Self {
-        Self { status, headers, body }
+    pub fn new(status: http::StatusCode, headers: http::HeaderMap, body: &[u8]) -> Self {
+        Self {
+            status,
+            headers: headers.into(),
+            body: body.to_vec().into(),
+        }
     }
 
     /// Allow get status code at any time.
@@ -52,7 +56,7 @@ impl DeboaResponse {
     /// use deboa::response::DeboaResponse;
     /// use http::{HeaderMap, StatusCode};
     ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), Vec::new());
+    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), &Vec::new());
     /// assert_eq!(response.status(), StatusCode::OK);
     /// ```
     ///
@@ -68,12 +72,12 @@ impl DeboaResponse {
     /// use deboa::response::DeboaResponse;
     /// use http::{HeaderMap, StatusCode};
     ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), Vec::new());
-    /// assert_eq!(response.headers(), HeaderMap::new());
+    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), &Vec::new());
+    /// assert_eq!(*response.headers(), HeaderMap::new());
     /// ```
     ///
-    pub fn headers(&self) -> http::HeaderMap {
-        self.headers.clone()
+    pub fn headers(&self) -> &http::HeaderMap {
+        &self.headers
     }
 
     /// Allow set raw body at any time.
@@ -88,12 +92,12 @@ impl DeboaResponse {
     /// use deboa::response::DeboaResponse;
     /// use http::{HeaderMap, StatusCode};
     ///
-    /// let mut response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), Vec::new());
-    /// response.set_raw_body(Vec::new());
+    /// let mut response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), &Vec::new());
+    /// response.set_raw_body(&Vec::new());
     /// ```
     ///
-    pub fn set_raw_body(&mut self, body: Vec<u8>) {
-        self.body = body;
+    pub fn set_raw_body(&mut self, body: &[u8]) {
+        self.body = body.to_vec().into();
     }
 
     /// Allow get body at any time.
@@ -104,12 +108,12 @@ impl DeboaResponse {
     /// use deboa::response::DeboaResponse;
     /// use http::{HeaderMap, StatusCode};
     ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), b"Hello, world!".to_vec());
-    /// //assert_eq!(response.body(), Ok(String::from_utf8_lossy("Hello, world!".as_bytes()).to_string()));
+    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), b"Hello, world!");
+    /// //assert_eq!(response.body(), Ok(String::from_utf8_lossy("Hello, world!").to_string()));
     /// ```
     ///
     pub fn body_as<T: ResponseBody, B: for<'a> Deserialize<'a>>(&self, body_type: T) -> Result<B, DeboaError> {
-        let result = body_type.deserialize::<B>(self.body.clone())?;
+        let result = body_type.deserialize::<B>(self.body.to_vec())?;
         Ok(result)
     }
 
@@ -121,11 +125,11 @@ impl DeboaResponse {
     /// use deboa::response::DeboaResponse;
     /// use http::{HeaderMap, StatusCode};
     ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), b"Hello, world!".to_vec());
+    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), b"Hello, world!");
     /// assert_eq!(response.raw_body(), &b"Hello, world!".to_vec());
     /// ```
     ///
-    pub fn raw_body(&self) -> &Vec<u8> {
+    pub fn raw_body(&self) -> &[u8] {
         &self.body
     }
 
@@ -137,8 +141,8 @@ impl DeboaResponse {
     /// use deboa::response::DeboaResponse;
     /// use http::{HeaderMap, StatusCode};
     ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), b"Hello, world!".to_vec());
-    /// assert_eq!(response.text(), Ok(String::from_utf8_lossy("Hello, world!".as_bytes()).to_string()));
+    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), b"Hello, world!");
+    /// assert_eq!(response.text(), Ok(String::from_utf8_lossy(b"Hello, world!").to_string()));
     /// ```
     ///
     pub fn text(&self) -> Result<String, DeboaError> {
@@ -157,12 +161,12 @@ impl DeboaResponse {
     /// use deboa::response::DeboaResponse;
     /// use http::{HeaderMap, StatusCode};
     ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), b"Hello, world!".to_vec());
+    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), b"Hello, world!");
     /// response.to_file("test.txt").unwrap();
     /// ```
     ///
     pub fn to_file(&self, path: &str) -> Result<(), DeboaError> {
-        let result = write(path, &self.body);
+        let result = write(path, &*self.body);
         if let Err(e) = result {
             return Err(DeboaError::Io { message: e.to_string() });
         }
