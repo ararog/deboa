@@ -13,6 +13,39 @@ use crate::bora::parser::{DeleteFieldEnum, GetFieldEnum, OperationEnum, PatchFie
 
 mod parser;
 
+fn trait_function(method_name: &Ident, api_params: &TS2, req_body_type: &Type, res_body_type: &Type) -> TS2 {
+    quote! {
+        async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type, DeboaError>;
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn impl_function(
+    deboa_method: &Ident,
+    format_module: &Ident,
+    api_path: &LitStr,
+    method_name: &Ident,
+    api_params: &TS2,
+    req_body_type: &Type,
+    res_body_type: &Type,
+    unit_type: &Type,
+) -> TS2 {
+    if res_body_type.eq(unit_type) {
+        quote! {
+            async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type, DeboaError> {
+                self.api.set_body_as(#format_module, body)?.#deboa_method(format!(#api_path).as_ref()).await?;
+                Ok(())
+            }
+        }
+    } else {
+        quote! {
+            async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type, DeboaError> {
+                self.api.set_body_as(#format_module, body)?.#deboa_method(format!(#api_path).as_ref()).await?.body_as(#format_module)
+            }
+        }
+    }
+}
+
 pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
     let item = TS2::from(item);
     let attr = TS2::from(attr);
@@ -60,6 +93,10 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut imports = TS2::new();
     let mut trait_functions = TS2::new();
     let mut trait_impl = TS2::new();
+    let unit_type = Type::Tuple(TypeTuple {
+        paren_token: Paren::default(),
+        elems: Punctuated::new(),
+    });
 
     root.operations
         .iter()
@@ -138,10 +175,8 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                     let mut method_name = Ident::new("ident", Span::call_site());
                     let mut api_path = LitStr::new("lit", Span::call_site());
                     let mut req_body_type = Type::Verbatim(TS2::new());
-                    let mut res_body_type = Type::Tuple(TypeTuple {
-                        paren_token: Paren::default(),
-                        elems: Punctuated::new(),
-                    });
+                    let mut res_body_type = &unit_type;
+                    let mut api_params = TS2::new();
                     let mut format_name = Ident::new("ident", Span::call_site());
                     let mut format_module = Ident::new("ident", Span::call_site());
 
@@ -150,13 +185,35 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                             method_name = Ident::new(name.value.value().as_str(), Span::call_site());
                         }
                         PostFieldEnum::path(path) => {
-                            api_path = path.value.clone();
+                            let path = &path.value;
+
+                            let raw_path = path.value();
+                            let params = Regex::new(r"<(\w*:\w*)>")
+                                .unwrap()
+                                .captures(&raw_path)
+                                .map(|m| m.get(1).unwrap().as_str())
+                                .into_iter()
+                                .collect::<Vec<_>>();
+
+                            api_params = params.clone().into_iter().fold(TS2::new(), |mut acc, param| {
+                                let pair = param.split(':').collect::<Vec<_>>();
+                                let param = parse_str::<syn::Ident>(pair[0]).unwrap();
+                                let param_type = parse_str::<Type>(pair[1]).unwrap();
+                                acc.extend(quote! {
+                                    #param: #param_type,
+                                });
+                                acc
+                            });
+
+                            let new_path = Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
+
+                            api_path = LitStr::new(&new_path, Span::call_site());
                         }
                         PostFieldEnum::req_body(req_body) => {
                             req_body_type = req_body.value.clone();
                         }
                         PostFieldEnum::res_body(res_body) => {
-                            res_body_type = res_body.value.clone();
+                            res_body_type = &res_body.value;
                         }
                         PostFieldEnum::format(format) => {
                             let format_value = format.value.value();
@@ -172,15 +229,20 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                         });
                     }
 
-                    acc.1.extend(quote! {
-                        async fn #method_name(&mut self, body: #req_body_type) -> Result<#res_body_type, DeboaError>;
-                    });
+                    acc.1.extend(trait_function(&method_name, &api_params, &req_body_type, res_body_type));
 
-                    acc.2.extend(quote! {
-                        async fn #method_name(&mut self, body: #req_body_type) -> Result<#res_body_type, DeboaError> {
-                            self.api.set_body_as(#format_module, body)?.#method(format!(#api_path).as_ref()).await
-                        }
-                    });
+                    if res_body_type.eq(&unit_type) {
+                        acc.2.extend(impl_function(
+                            &method,
+                            &format_module,
+                            &api_path,
+                            &method_name,
+                            &api_params,
+                            &req_body_type,
+                            res_body_type,
+                            &unit_type,
+                        ));
+                    }
                 }
                 OperationEnum::put(put) => {
                     let fields = &put.fields;
@@ -189,10 +251,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                     let mut method_name = Ident::new("ident", Span::call_site());
                     let mut api_path = LitStr::new("lit", Span::call_site());
                     let mut req_body_type = Type::Verbatim(TS2::new());
-                    let mut res_body_type = Type::Tuple(TypeTuple {
-                        paren_token: Paren::default(),
-                        elems: Punctuated::new(),
-                    });
+                    let mut res_body_type = &unit_type;
                     let mut api_params = TS2::new();
                     let mut format_name = Ident::new("ident", Span::call_site());
                     let mut format_module = Ident::new("ident", Span::call_site());
@@ -232,7 +291,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                         }
 
                         PutFieldEnum::res_body(res_body) => {
-                            res_body_type = res_body.value.clone();
+                            res_body_type = &res_body.value;
                         }
 
                         PutFieldEnum::format(format) => {
@@ -249,16 +308,96 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                         });
                     }
 
-                    acc.1.extend(quote! {
-                        async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type, DeboaError>;
-                    });
+                    acc.1.extend(trait_function(&method_name, &api_params, &req_body_type, res_body_type));
 
-                    acc.2.extend(quote! {
-                        async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type, DeboaError> {
-                            self.api.set_body_as(#format_module, body)?.#method(format!(#api_path).as_ref()).await?;
-                            Ok(())
+                    acc.2.extend(impl_function(
+                        &method,
+                        &format_module,
+                        &api_path,
+                        &method_name,
+                        &api_params,
+                        &req_body_type,
+                        res_body_type,
+                        &unit_type,
+                    ));
+                }
+                OperationEnum::patch(patch) => {
+                    let fields = &patch.fields;
+
+                    let method = parse_str::<syn::Ident>("patch").unwrap();
+                    let mut method_name = Ident::new("ident", Span::call_site());
+                    let mut api_path = LitStr::new("lit", Span::call_site());
+                    let mut api_params = TS2::new();
+                    let mut req_body_type = Type::Verbatim(TS2::new());
+                    let mut res_body_type = &unit_type;
+                    let mut format_name = Ident::new("ident", Span::call_site());
+                    let mut format_module = Ident::new("ident", Span::call_site());
+
+                    fields.iter().for_each(|field| match field {
+                        PatchFieldEnum::name(name) => {
+                            method_name = Ident::new(name.value.value().as_str(), Span::call_site());
+                        }
+
+                        PatchFieldEnum::path(path) => {
+                            let path = &path.value;
+
+                            let raw_path = path.value();
+                            let params = Regex::new(r"<(\w*:\w*)>")
+                                .unwrap()
+                                .captures(&raw_path)
+                                .map(|m| m.get(1).unwrap().as_str())
+                                .into_iter()
+                                .collect::<Vec<_>>();
+
+                            api_params = params.clone().into_iter().fold(TS2::new(), |mut acc, param| {
+                                let pair = param.split(':').collect::<Vec<_>>();
+                                let param = parse_str::<syn::Ident>(pair[0]).unwrap();
+                                let param_type = parse_str::<Type>(pair[1]).unwrap();
+                                acc.extend(quote! {
+                                    #param: #param_type,
+                                });
+                                acc
+                            });
+
+                            let new_path = Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
+
+                            api_path = LitStr::new(&new_path, Span::call_site());
+                        }
+
+                        PatchFieldEnum::req_body(req_body) => {
+                            req_body_type = req_body.value.clone();
+                        }
+
+                        PatchFieldEnum::res_body(res_body) => {
+                            res_body_type = &res_body.value;
+                        }
+
+                        PatchFieldEnum::format(format) => {
+                            let format_value = format.value.value();
+                            let title_format_value = format_value.titlecase();
+                            format_name = format_ident!("{}", format_value);
+                            format_module = format_ident!("{}Body", title_format_value);
                         }
                     });
+
+                    if acc.0.is_empty() {
+                        acc.0.extend(quote! {
+                            use deboa_extras::http::serde::#format_name::{#format_module};
+                        });
+                    }
+
+                    acc.1.extend(trait_function(&method_name, &api_params, &req_body_type, res_body_type));
+
+                    acc.2.extend(impl_function(
+                        &method,
+                        &format_module,
+                        &api_path,
+                        &method_name,
+                        &api_params,
+                        &req_body_type,
+                        res_body_type,
+                        &unit_type,
+                    ));
                 }
                 OperationEnum::delete(delete) => {
                     let fields = &delete.fields;
@@ -312,92 +451,13 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                         }
                     });
                 }
-                OperationEnum::patch(patch) => {
-                    let fields = &patch.fields;
-
-                    let method = parse_str::<syn::Ident>("patch").unwrap();
-                    let mut method_name = Ident::new("ident", Span::call_site());
-                    let mut api_path = LitStr::new("lit", Span::call_site());
-                    let mut api_params = TS2::new();
-                    let mut req_body_type = Type::Verbatim(TS2::new());
-                    let mut res_body_type = Type::Tuple(TypeTuple {
-                        paren_token: Paren::default(),
-                        elems: Punctuated::new(),
-                    });
-                    let mut format_name = Ident::new("ident", Span::call_site());
-                    let mut format_module = Ident::new("ident", Span::call_site());
-
-                    fields.iter().for_each(|field| match field {
-                        PatchFieldEnum::name(name) => {
-                            method_name = Ident::new(name.value.value().as_str(), Span::call_site());
-                        }
-
-                        PatchFieldEnum::path(path) => {
-                            let path = &path.value;
-
-                            let raw_path = path.value();
-                            let params = Regex::new(r"<(\w*:\w*)>")
-                                .unwrap()
-                                .captures(&raw_path)
-                                .map(|m| m.get(1).unwrap().as_str())
-                                .into_iter()
-                                .collect::<Vec<_>>();
-
-                            api_params = params.clone().into_iter().fold(TS2::new(), |mut acc, param| {
-                                let pair = param.split(':').collect::<Vec<_>>();
-                                let param = parse_str::<syn::Ident>(pair[0]).unwrap();
-                                let param_type = parse_str::<Type>(pair[1]).unwrap();
-                                acc.extend(quote! {
-                                    #param: #param_type,
-                                });
-                                acc
-                            });
-
-                            let new_path = Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
-
-                            api_path = LitStr::new(&new_path, Span::call_site());
-                        }
-
-                        PatchFieldEnum::req_body(req_body) => {
-                            req_body_type = req_body.value.clone();
-                        }
-
-                        PatchFieldEnum::res_body(res_body) => {
-                            res_body_type = res_body.value.clone();
-                        }
-
-                        PatchFieldEnum::format(format) => {
-                            let format_value = format.value.value();
-                            let title_format_value = format_value.titlecase();
-                            format_name = format_ident!("{}", format_value);
-                            format_module = format_ident!("{}Body", title_format_value);
-                        }
-                    });
-
-                    if acc.0.is_empty() {
-                        acc.0.extend(quote! {
-                            use deboa_extras::http::serde::#format_name::{#format_module};
-                        });
-                    }
-
-                    acc.1.extend(quote! {
-                        async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type, DeboaError>;
-                    });
-
-                    acc.2.extend(quote! {
-                        async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type, DeboaError> {
-                            self.api.set_body_as(#format_module, body)?.#method(format!(#api_path).as_ref()).await?;
-                            Ok(())
-                        }
-                    });
-                }
             }
 
             acc
         });
 
     let ts = quote! {
-        use deboa::{Deboa, errors::DeboaError, response::DeboaResponse};
+        use deboa::{response::DeboaResponse};
         #imports
 
         pub struct #struct_name {
