@@ -126,7 +126,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     acc.2.extend(quote! {
                         async fn #method_name(&mut self, #api_params) -> Result<#res_body_type, DeboaError> {
-                            self.api.#method(format!(#api_path).as_ref()).await?.body_as::<#format_module, #res_body_type>(#format_module)
+                            self.api.#method(format!(#api_path).as_ref()).await?.body_as(#format_module)
                         }
                     });
                 }
@@ -174,7 +174,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     acc.2.extend(quote! {
                         async fn #method_name(&mut self, body: #req_body_type) -> Result<DeboaResponse, DeboaError> {
-                            self.api.set_body_as::<#format_module, #req_body_type>(#format_module, body)?.#method(format!(#api_path).as_ref()).await
+                            self.api.set_body_as(#format_module, body)?.#method(format!(#api_path).as_ref()).await
                         }
                     });
                 }
@@ -248,7 +248,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     acc.2.extend(quote! {
                         async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<(), DeboaError> {
-                            self.api.set_body_as::<#format_module, #req_body_type>(#format_module, body)?.#method(format!(#api_path).as_ref()).await?;
+                            self.api.set_body_as(#format_module, body)?.#method(format!(#api_path).as_ref()).await?;
                             Ok(())
                         }
                     });
@@ -376,7 +376,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     acc.2.extend(quote! {
                         async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<(), DeboaError> {
-                            self.api.set_body_as::<#format_module, #req_body_type>(#format_module, body)?.#method(format!(#api_path).as_ref()).await?;
+                            self.api.set_body_as(#format_module, body)?.#method(format!(#api_path).as_ref()).await?;
                             Ok(())
                         }
                     });

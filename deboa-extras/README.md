@@ -43,8 +43,8 @@ let data = Post {
     user_id: 1,
 };
 
-let posts = api.set_body_as(JsonBody, data)?.get("posts/1").await?;
+let response = api.set_body_as(JsonBody, data)?.post("posts/1").await?;
 
-println!("{:?}", posts);
+println!("Response Status Code: {}", response.status());
 ```
 
