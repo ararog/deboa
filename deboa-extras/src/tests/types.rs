@@ -1,3 +1,4 @@
+use httpmock::MockServer;
 use serde::{Deserialize, Serialize};
 
 pub const JSONPLACEHOLDER: &str = "https://jsonplaceholder.typicode.com";
@@ -60,4 +61,13 @@ pub struct Comment {
 pub struct Response {
     pub response_code: i32,
     pub response_message: String,
+}
+
+pub fn format_address(server: &MockServer) -> String {
+    let server_address = *server.address();
+
+    let ip = server_address.ip();
+    let port = server_address.port();
+
+    format!("http://{ip}:{port}")
 }

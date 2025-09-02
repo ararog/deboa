@@ -25,6 +25,8 @@ fn test_set_json() -> Result<(), DeboaError> {
 #[cfg(feature = "json")]
 #[tokio::test]
 async fn test_response_json() -> Result<(), DeboaError> {
+    use crate::tests::types::format_address;
+
     let server = MockServer::start();
 
     let data = sample_post();
@@ -38,14 +40,9 @@ async fn test_response_json() -> Result<(), DeboaError> {
             .body(JSON_POST);
     });
 
-    let server_address = *server.address();
+    let mut api = Deboa::new(&format_address(&server))?;
 
-    let ip = server_address.ip();
-    let port = server_address.port();
-
-    let api = Deboa::new(&format!("http://{ip}:{port}"));
-
-    let response = api?.get("posts/1").await?.body_as::<JsonBody, Post>(JsonBody)?;
+    let response: Post = api.get("posts/1").await?.body_as(JsonBody)?;
 
     http_mock.assert();
 

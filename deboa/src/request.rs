@@ -36,11 +36,6 @@ impl Deboa {
     /// ```
     ///
     pub fn new(base_url: &str) -> Result<Self, DeboaError> {
-        let default_headers: HashMap<HeaderName, String> = HashMap::from([
-            (header::ACCEPT, mime::APPLICATION_JSON.to_string()),
-            (header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string()),
-        ]);
-
         let base_url = Url::parse(base_url);
         if let Err(e) = base_url {
             return Err(DeboaError::UrlParse { message: e.to_string() });
@@ -48,13 +43,13 @@ impl Deboa {
 
         Ok(Deboa {
             base_url: base_url.unwrap(),
-            headers: Some(default_headers),
+            headers: None,
             query_params: None,
             body: Vec::new(),
             retries: 0,
             connection_timeout: 0,
             request_timeout: 0,
-            middlewares: Vec::new(),
+            middlewares: None,
             encodings: None,
         })
     }
@@ -82,7 +77,12 @@ impl Deboa {
     /// ```
     ///
     pub fn add_header(&mut self, key: HeaderName, value: String) -> &mut Self {
-        self.headers.as_mut().unwrap().insert(key, value);
+        if self.headers.is_none() {
+            self.headers = Some(HashMap::from([(key, value)]));
+        } else {
+            self.headers.as_mut().unwrap().insert(key, value);
+        }
+
         self
     }
 
@@ -107,7 +107,9 @@ impl Deboa {
     /// ```
     ///
     pub fn remove_header(&mut self, key: HeaderName) -> &mut Self {
-        self.headers.as_mut().unwrap().remove(&key);
+        if let Some(headers) = &mut self.headers {
+            headers.remove(&key);
+        }
         self
     }
 
@@ -136,7 +138,11 @@ impl Deboa {
     /// ```
     ///
     pub fn has_header(&self, key: &HeaderName) -> bool {
-        self.headers.as_ref().unwrap().contains_key(key)
+        if let Some(headers) = &self.headers {
+            headers.contains_key(key)
+        } else {
+            false
+        }
     }
 
     /// Allow edit header at any time.
@@ -198,7 +204,11 @@ impl Deboa {
     /// ```
     ///
     pub fn get_mut_header(&mut self, header: &HeaderName) -> Option<&mut String> {
-        self.headers.as_mut().unwrap().get_mut(header)
+        if let Some(headers) = &mut self.headers {
+            headers.get_mut(header)
+        } else {
+            None
+        }
     }
 
     /// Allow add bearer auth at any time.
@@ -393,7 +403,7 @@ impl Deboa {
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
     ///   let response = api.set_text("text".to_string()).post("/posts").await;
-    ///   assert!(response.is_err());
+    ///   assert!(response.is_ok());
     ///   Ok(())
     /// }
     /// ```
@@ -418,12 +428,12 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   api.set_query_params(HashMap::from([("id", "1")]));
+    ///   api.set_query_params(HashMap::from([(String::from("id"), String::from("1"))]));
     ///   Ok(())
     /// }
     /// ```
     ///
-    pub fn set_query_params(&mut self, params: HashMap<&'static str, &'static str>) -> &mut Self {
+    pub fn set_query_params(&mut self, params: HashMap<String, String>) -> &mut Self {
         self.query_params = Some(params);
         self
     }
@@ -443,7 +453,7 @@ impl Deboa {
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
     ///   let response = api.set_raw_body(b"body".to_vec()).post("/posts").await;
-    ///   assert!(response.is_err());
+    ///   assert!(response.is_ok());
     ///   Ok(())
     /// }
     /// ```
@@ -464,7 +474,7 @@ impl Deboa {
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
     ///   let response = api.set_raw_body(b"body".to_vec()).post("/posts").await;
-    ///   assert!(response.is_err());
+    ///   assert!(response.is_ok());
     ///   Ok(())
     /// }
     /// ```
@@ -495,6 +505,7 @@ impl Deboa {
     /// ```
     ///
     pub fn set_body_as<T: RequestBody, B: Serialize>(&mut self, body_type: T, body: B) -> Result<&mut Self, DeboaError> {
+        body_type.register_content_type(self);
         self.body = body_type.serialize(body)?;
         Ok(self)
     }
@@ -530,7 +541,11 @@ impl Deboa {
     /// }
     ///
     pub fn add_middleware(&mut self, middleware: Box<dyn DeboaMiddleware>) -> &mut Self {
-        self.middlewares.push(middleware);
+        if let Some(middlewares) = &mut self.middlewares {
+            middlewares.push(middleware);
+        } else {
+            self.middlewares = Some(vec![middleware]);
+        }
         self
     }
 
@@ -602,7 +617,7 @@ impl Deboa {
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
     ///   let response = api.set_text("text".to_string()).post("/posts").await;
-    ///   assert!(response.is_err());
+    ///   assert!(response.is_ok());
     ///   Ok(())
     /// }
     /// ```
@@ -811,9 +826,11 @@ impl Deboa {
         }
 
         #[cfg(feature = "middlewares")]
-        self.middlewares.iter().for_each(|middleware| {
-            middleware.on_request(self);
-        });
+        if let Some(middlewares) = &self.middlewares {
+            middlewares.iter().for_each(|middleware| {
+                middleware.on_request(self);
+            });
+        }
 
         #[cfg(feature = "tokio-rt")]
         let mut sender = {
@@ -961,7 +978,9 @@ impl Deboa {
         }
 
         #[cfg(feature = "middlewares")]
-        self.middlewares.iter().for_each(|middleware| middleware.on_response(self, &mut response));
+        if let Some(middlewares) = &self.middlewares {
+            middlewares.iter().for_each(|middleware| middleware.on_response(self, &mut response));
+        }
 
         Ok(response)
     }

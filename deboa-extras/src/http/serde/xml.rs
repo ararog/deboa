@@ -2,10 +2,16 @@ use std::io::Cursor;
 
 use deboa::errors::DeboaError;
 use deboa::http::serde::{RequestBody, ResponseBody};
+use mime_typed::xml::XML;
 use serde::{Deserialize, Serialize};
 pub struct XmlBody;
 
 impl RequestBody for XmlBody {
+    fn register_content_type(&self, deboa: &mut Deboa) {
+        deboa.edit_header(header::CONTENT_TYPE, XML.to_string());
+        deboa.edit_header(header::ACCEPT, XML.to_string());
+    }
+
     fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>, DeboaError> {
         let mut ser_xml_buf = Vec::new();
 
