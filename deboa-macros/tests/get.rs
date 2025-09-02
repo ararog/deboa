@@ -1,32 +1,25 @@
 use deboa::{Deboa, errors::DeboaError};
+use deboa_macros::bora;
 
-#[macro_use]
-extern crate deboa_macros;
+use serde::Deserialize;
 
-mod inner {
+#[derive(Deserialize, Debug)]
+pub struct Post {
+    pub id: u32,
+    pub title: String,
+}
 
-    use serde::Deserialize;
-
-    #[derive(Deserialize, Debug)]
-    pub struct Post {
-        pub id: u32,
-        pub title: String,
-    }
-
-    #[bora(
+#[bora(
       api(
         get(name="get_by_id", path="/posts/<id:i32>", res_body=Post, format="json"),
         get(name="query_by_id", path="/posts?<id:i32>", res_body=Post, format="json"),
         get(name="get_all", path="/posts", res_body=Vec<Post>, format="json"),
       )
     )]
-    pub struct PostService;
-}
+pub struct PostService;
 
 #[tokio::test]
 async fn test_get_by_id() -> Result<(), DeboaError> {
-    use inner::{PostService, Service};
-
     let deboa = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     let mut post_service = PostService::new(deboa);
@@ -42,8 +35,6 @@ async fn test_get_by_id() -> Result<(), DeboaError> {
 
 #[tokio::test]
 async fn test_get_all() -> Result<(), DeboaError> {
-    use inner::{PostService, Service};
-
     let deboa = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     let mut post_service = PostService::new(deboa);
