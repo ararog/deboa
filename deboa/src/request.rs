@@ -1,6 +1,6 @@
 #![allow(clippy::upper_case_acronyms)]
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use bytes::{Buf, Bytes};
 use http_body_util::{BodyExt, Full};
@@ -45,7 +45,7 @@ impl Deboa {
             base_url: base_url.unwrap(),
             headers: None,
             query_params: None,
-            body: Vec::new(),
+            body: Vec::new().into(),
             retries: 0,
             connection_timeout: 0,
             request_timeout: 0,
@@ -71,16 +71,16 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   api.add_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref().to_string());
+    ///   api.add_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
     ///   Ok(())
     /// }
     /// ```
     ///
-    pub fn add_header(&mut self, key: HeaderName, value: String) -> &mut Self {
+    pub fn add_header(&mut self, key: HeaderName, value: &str) -> &mut Self {
         if self.headers.is_none() {
-            self.headers = Some(HashMap::from([(key, value)]));
+            self.headers = Some(HashMap::from([(key, value.to_string())]));
         } else {
-            self.headers.as_mut().unwrap().insert(key, value);
+            self.headers.as_mut().unwrap().insert(key, value.to_string());
         }
 
         self
@@ -161,19 +161,19 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   api.edit_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string());
+    ///   api.edit_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
     ///   Ok(())
     /// }
     /// ```
     ///
-    pub fn edit_header(&mut self, header: HeaderName, value: String) -> &mut Self {
+    pub fn edit_header(&mut self, header: HeaderName, value: &str) -> &mut Self {
         if !self.has_header(&header) {
             self.add_header(header, value);
         } else {
             // We can safely unwrap here, as we have made sure that it exists by the previous if statement.
             let header_value = self.get_mut_header(&header).unwrap();
 
-            *header_value = value;
+            *header_value = value.to_string();
         }
 
         self
@@ -225,15 +225,15 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   api.add_bearer_auth("token".to_string());
+    ///   api.add_bearer_auth("token");
     ///   Ok(())
     /// }
     /// ```
     ///
-    pub fn add_bearer_auth(&mut self, token: String) -> &mut Self {
+    pub fn add_bearer_auth(&mut self, token: &str) -> &mut Self {
         let auth = format!("Bearer {token}");
         if !self.has_header(&header::AUTHORIZATION) {
-            self.add_header(header::AUTHORIZATION, auth);
+            self.add_header(header::AUTHORIZATION, &auth);
         }
         self
     }
@@ -253,15 +253,15 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   api.add_basic_auth("username".to_string(), "password".to_string());
+    ///   api.add_basic_auth("username", "password");
     ///   Ok(())
     /// }
     /// ```
     ///
-    pub fn add_basic_auth(&mut self, username: String, password: String) -> &mut Self {
+    pub fn add_basic_auth(&mut self, username: &str, password: &str) -> &mut Self {
         let auth = format!("Basic {}", STANDARD.encode(format!("{username}:{password}")));
         if !self.has_header(&header::AUTHORIZATION) {
-            self.add_header(header::AUTHORIZATION, auth);
+            self.add_header(header::AUTHORIZATION, &auth);
         }
         self
     }
@@ -409,7 +409,7 @@ impl Deboa {
     /// ```
     ///
     pub fn set_text(&mut self, text: String) -> &mut Self {
-        self.body = text.as_bytes().to_vec();
+        self.body = text.as_bytes().to_vec().into();
         self
     }
 
@@ -452,14 +452,14 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   let response = api.set_raw_body(b"body".to_vec()).post("/posts").await;
+    ///   let response = api.set_raw_body(b"body").post("/posts").await;
     ///   assert!(response.is_ok());
     ///   Ok(())
     /// }
     /// ```
     ///
-    pub fn set_raw_body(&mut self, body: Vec<u8>) -> &mut Self {
-        self.body = body;
+    pub fn set_raw_body(&mut self, body: &[u8]) -> &mut Self {
+        self.body = body.to_vec().into();
         self
     }
 
@@ -473,7 +473,7 @@ impl Deboa {
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
     ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
-    ///   let response = api.set_raw_body(b"body".to_vec()).post("/posts").await;
+    ///   let response = api.set_raw_body(b"body").post("/posts").await;
     ///   assert!(response.is_ok());
     ///   Ok(())
     /// }
@@ -506,7 +506,7 @@ impl Deboa {
     ///
     pub fn set_body_as<T: RequestBody, B: Serialize>(&mut self, body_type: T, body: B) -> Result<&mut Self, DeboaError> {
         body_type.register_content_type(self);
-        self.body = body_type.serialize(body)?;
+        self.body = body_type.serialize(body)?.into();
         Ok(self)
     }
 
@@ -574,7 +574,7 @@ impl Deboa {
             encodings.insert(decompressor.name(), decompressor);
         }
         let accept_encoding = encodings.keys().map(|key| key.to_string()).collect::<Vec<_>>().join(", ");
-        self.edit_header(header::ACCEPT_ENCODING, accept_encoding);
+        self.edit_header(header::ACCEPT_ENCODING, &accept_encoding);
         self.encodings = Some(encodings);
         self
     }
@@ -907,7 +907,8 @@ impl Deboa {
             }
         }
 
-        let request = builder.body(Full::new(Bytes::from(self.body.clone())));
+        let body = Arc::clone(&self.body);
+        let request = builder.body(Full::new(Bytes::from(body.as_ref().to_vec())));
         if let Err(err) = request {
             return Err(DeboaError::Request {
                 host: url.host().unwrap().to_string(),
@@ -957,7 +958,7 @@ impl Deboa {
         }
 
         #[cfg(feature = "middlewares")]
-        let mut response = DeboaResponse::new(status_code, headers, raw_body);
+        let mut response = DeboaResponse::new(status_code, headers, &raw_body);
 
         #[cfg(not(feature = "middlewares"))]
         let mut response = DeboaResponse {

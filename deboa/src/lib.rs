@@ -10,6 +10,7 @@ compile_error!("Only one runtime feature can be enabled at a time.");
 
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::sync::Arc;
 use url::Url;
 
 use crate::io::Decompressor;
@@ -29,7 +30,7 @@ pub struct Deboa {
     base_url: Url,
     headers: Option<HashMap<::http::HeaderName, String>>,
     query_params: Option<HashMap<String, String>>,
-    body: Vec<u8>,
+    body: Arc<Vec<u8>>,
     retries: u32,
     connection_timeout: u64,
     request_timeout: u64,
