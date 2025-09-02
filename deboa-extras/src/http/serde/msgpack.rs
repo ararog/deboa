@@ -1,16 +1,18 @@
 use deboa::{
+    Deboa,
     errors::DeboaError,
     http::serde::{RequestBody, ResponseBody},
 };
-use mime_typed::msgpack::MSGPACK;
+use http::header;
+use mime_typed::Msgpack;
 use serde::{Deserialize, Serialize};
 
 pub struct MsgPackBody;
 
 impl RequestBody for MsgPackBody {
     fn register_content_type(&self, deboa: &mut Deboa) {
-        deboa.edit_header(header::CONTENT_TYPE, MSGPACK.to_string());
-        deboa.edit_header(header::ACCEPT, MSGPACK.to_string());
+        deboa.edit_header(header::CONTENT_TYPE, Msgpack.to_string().as_str());
+        deboa.edit_header(header::ACCEPT, Msgpack.to_string().as_str());
     }
 
     fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>, DeboaError> {

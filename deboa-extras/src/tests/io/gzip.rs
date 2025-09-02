@@ -32,6 +32,6 @@ async fn test_gzip() -> Result<(), DeboaError> {
 
     http_mock.assert();
 
-    assert_eq!(response.raw_body().as_ref(), body);
+    assert_eq!(response.raw_body(), body);
     Ok(())
 }

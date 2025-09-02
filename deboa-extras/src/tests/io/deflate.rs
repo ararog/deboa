@@ -26,7 +26,7 @@ async fn test_deflate_decompress() -> Result<(), DeboaError> {
 
     let mut api: Deboa = Deboa::new(&format!("http://{ip}:{port}"))?;
     let body = DECOMPRESSED;
-    api.set_body(body.as_ref());
+    api.set_raw_body(body);
     api.accept_encoding(vec![Box::new(DeflateDecompressor)]);
 
     let response = api.get("/sometext").await?;

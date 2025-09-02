@@ -4,16 +4,16 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-deboa = { path = "../deboa" }
+deboa = { path = "../deboa", features = ["http1", "tokio-rt"], optional = true }
 rmp-serde = { version = "1.3.0", optional = true }
 serde = { version = "1.0.217", features = ["derive"], optional = true }
 serde-xml-rust = { version = "0.6.0", optional = true }
 serde_json = { version = "1.0.138", optional = true }
 brotli = { version = "8.0.2", optional = true }
 flate2 = { version = "1.1.2", optional = true }
-bytes = "1.10.1"
-http = "1.3.1"
-mime = "0.3.17"
+bytes = { version = "1.10.1", optional = true }
+http = { version = "1.3.1", optional = true }
+mime = { version = "0.3.17", optional = true }
 tokio = "1.47.1"
 httpmock = "0.7.0"
 mime_typed = "0.1.7"
@@ -21,15 +21,17 @@ mime_typed = "0.1.7"
 [features]
 default = ["serialization", "compression"]
 # serialization
+serialization_all = ["json", "xml", "msgpack"]
 serialization = ["json"]
-json = ["dep:serde_json", "dep:serde"]
-xml = ["dep:serde-xml-rust", "dep:serde"]
-msgpack = ["dep:rmp-serde", "dep:serde"]
+json = ["dep:serde_json", "dep:serde", "dep:http", "dep:mime", "dep:deboa"]
+xml = ["dep:serde-xml-rust", "dep:serde", "dep:http", "dep:mime", "dep:deboa"]
+msgpack = ["dep:rmp-serde", "dep:serde", "dep:http", "dep:mime", "dep:deboa"]
 # compression
+compression_all = ["gzip", "brotli", "deflate"]
 compression = ["gzip"]
-brotli = ["dep:brotli"]
-deflate = ["dep:flate2"]
-gzip = ["dep:flate2"]
+brotli = ["dep:brotli", "dep:bytes", "dep:deboa"]
+deflate = ["dep:flate2", "dep:bytes", "dep:deboa"]
+gzip = ["dep:flate2", "dep:bytes", "dep:deboa"]
 
 [dev-dependencies]
 httpmock = "0.7.0"
