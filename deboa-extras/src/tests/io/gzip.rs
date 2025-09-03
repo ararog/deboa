@@ -4,7 +4,7 @@ use httpmock::MockServer;
 
 use crate::{
     io::gzip::GzipDecompressor,
-    tests::types::{DECOMPRESSED, GZIP_COMPRESSED},
+    tests::types::{DECOMPRESSED, GZIP_COMPRESSED, format_address},
 };
 
 #[tokio::test]
@@ -18,12 +18,8 @@ async fn test_gzip() -> Result<(), DeboaError> {
             .body(GZIP_COMPRESSED);
     });
 
-    let server_address = *server.address();
+    let mut api = Deboa::new(&format_address(&server))?;
 
-    let ip = server_address.ip();
-    let port = server_address.port();
-
-    let mut api: Deboa = Deboa::new(&format!("http://{ip}:{port}"))?;
     let body = DECOMPRESSED;
     api.set_raw_body(body.as_ref());
     api.accept_encoding(vec![Box::new(GzipDecompressor)]);

@@ -1,45 +1,58 @@
 #![deny(warnings)]
 #![warn(rust_2018_idioms)]
 
-use bytes::Bytes;
-#[cfg(feature = "http1")]
-use hyper::client::conn::http1::{Connection, SendRequest};
+use hyper::client::conn::http1::handshake;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
 use url::{Host, Url};
 
-use crate::errors::DeboaError;
+use crate::{
+    errors::DeboaError,
+    http::io::{DeboaConnection, HttpConnection},
+};
 
-pub async fn get_connection(
-    url: &Url,
-) -> Result<
-    (
-        SendRequest<http_body_util::Full<Bytes>>,
-        Connection<TokioIo<TcpStream>, http_body_util::Full<Bytes>>,
-    ),
-    DeboaError,
-> {
-    let host = url.host().unwrap_or(Host::Domain("localhost"));
-    let port = url.port().unwrap_or(80);
-    let addr = format!("{host}:{port}");
+pub struct Http1Connection;
 
-    let stream = TcpStream::connect(addr).await;
-    if let Err(err) = stream {
-        return Err(DeboaError::Connection {
-            host: host.to_string(),
-            message: err.to_string(),
+#[async_trait::async_trait]
+impl HttpConnection for Http1Connection {
+    async fn connect(url: Url) -> Result<DeboaConnection, DeboaError> {
+        let host = url.host().unwrap_or(Host::Domain("localhost"));
+        let port = url.port().unwrap_or(80);
+        let addr = format!("{host}:{port}");
+
+        let stream = TcpStream::connect(addr).await;
+        if let Err(err) = stream {
+            return Err(DeboaError::Connection {
+                host: host.to_string(),
+                message: err.to_string(),
+            });
+        }
+
+        let io = TokioIo::new(stream.unwrap());
+
+        let result = handshake(io).await;
+
+        if let Err(err) = result {
+            return Err(DeboaError::Connection {
+                host: host.to_string(),
+                message: err.to_string(),
+            });
+        }
+
+        let (sender, conn) = result.unwrap();
+
+        tokio::spawn(async move {
+            match conn.await {
+                Ok(_) => (),
+                Err(_err) => {
+                    // return Err(DeboaError::ConnectionError {
+                    //     host: url.to_string(),
+                    //     message: err.to_string(),
+                    // });
+                }
+            };
         });
-    }
 
-    let io = TokioIo::new(stream.unwrap());
-
-    let result = hyper::client::conn::http1::handshake(io).await;
-
-    match result {
-        Ok(conn) => Ok(conn),
-        Err(err) => Err(DeboaError::Connection {
-            host: host.to_string(),
-            message: err.to_string(),
-        }),
+        Ok(DeboaConnection::new(url, sender))
     }
 }
