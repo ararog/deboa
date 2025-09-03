@@ -4,7 +4,7 @@ use httpmock::MockServer;
 
 use crate::{
     io::brotli::BrotliDecompressor,
-    tests::types::{BROTLI_COMPRESSED, DECOMPRESSED},
+    tests::types::{BROTLI_COMPRESSED, DECOMPRESSED, format_address},
 };
 
 #[tokio::test]

@@ -1,5 +1,4 @@
 use crate::http::serde::msgpack::MsgPackBody;
-use crate::tests::types::format_address;
 use deboa::{Deboa, errors::DeboaError};
 
 use http::header;
@@ -7,7 +6,7 @@ use http::header;
 use httpmock::{Method::GET, MockServer};
 use mime_typed::Msgpack;
 
-use crate::tests::types::{JSONPLACEHOLDER, MSGPACK_POST, Post, sample_post};
+use crate::tests::types::{JSONPLACEHOLDER, MSGPACK_POST, Post, format_address, sample_post};
 
 #[test]
 fn test_set_msgpack() -> Result<(), DeboaError> {
