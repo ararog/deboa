@@ -7,12 +7,22 @@ use http_body_util::{BodyExt, Full};
 use hyper::client::conn::http1::SendRequest;
 use url::Url;
 
-pub struct DeboaConnection {
+#[async_trait::async_trait]
+pub trait HttpConnection: Send + Sync + 'static {
+    async fn connect(url: Url) -> Result<BaseHttpConnection, DeboaError>;
+}
+
+pub struct HttpConnectionPool {
+    #[allow(dead_code)]
+    connections: HashMap<Url, BaseHttpConnection>,
+}
+
+pub struct BaseHttpConnection {
     url: Url,
     sender: SendRequest<Full<Bytes>>,
 }
 
-impl DeboaConnection {
+impl BaseHttpConnection {
     pub fn new(url: Url, sender: SendRequest<Full<Bytes>>) -> Self {
         Self { url, sender }
     }
@@ -93,7 +103,6 @@ impl DeboaConnection {
             });
         }
 
-        #[cfg(feature = "middlewares")]
         let mut response = DeboaResponse::new(status_code, headers, &raw_body);
 
         if let Some(encodings) = &encodings {
@@ -109,9 +118,4 @@ impl DeboaConnection {
 
         Ok(response)
     }
-}
-
-#[async_trait::async_trait]
-pub trait HttpConnection: Send + Sync + 'static {
-    async fn connect(url: Url) -> Result<DeboaConnection, DeboaError>;
 }
