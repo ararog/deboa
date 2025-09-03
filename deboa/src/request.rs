@@ -50,7 +50,7 @@ impl Deboa {
             connection_timeout: 0,
             request_timeout: 0,
             middlewares: None,
-            encodings: None
+            encodings: None,
         })
     }
 
@@ -918,7 +918,7 @@ impl Deboa {
             };
 
             sender
-        };        
+        };
 
         // We need sure that we do not reconstruct the request somewhere else in the code as it will lead to the headers deletion making a request invalid.
         let response = sender.send_request(request).await;

@@ -34,7 +34,7 @@ pub async fn get_connection(
     let io = TokioIo::new(stream.unwrap());
 
     let result = hyper::client::conn::http2::handshake(TokioExecutor::new(), io).await;
-    
+
     match result {
         Ok(conn) => Ok(conn),
         Err(err) => Err(DeboaError::Connection {
