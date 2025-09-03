@@ -1,4 +1,3 @@
-use crate::tests::types::format_address;
 use deboa::{Deboa, errors::DeboaError};
 
 use http::header;
@@ -7,7 +6,7 @@ use mime_typed::Xml;
 
 use crate::{
     http::serde::xml::XmlBody,
-    tests::types::{Post, XML_POST, sample_post},
+    tests::types::{Post, XML_POST, format_address, sample_post},
 };
 
 #[tokio::test]
