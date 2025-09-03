@@ -13,6 +13,30 @@ use crate::bora::parser::{DeleteFieldEnum, GetFieldEnum, OperationEnum, PatchFie
 
 mod parser;
 
+fn extract_params_from_path(path: &LitStr) -> (TS2, LitStr) {
+    let raw_path = path.value();
+    let params = Regex::new(r"<(\w*:\w*)>")
+        .unwrap()
+        .captures(&raw_path)
+        .map(|m| m.get(1).unwrap().as_str())
+        .into_iter()
+        .collect::<Vec<_>>();
+
+    let api_params = params.clone().into_iter().fold(TS2::new(), |mut acc, param| {
+        let pair = param.split(':').collect::<Vec<_>>();
+        let param = parse_str::<syn::Ident>(pair[0]).unwrap();
+        let param_type = parse_str::<Type>(pair[1]).unwrap();
+        acc.extend(quote! {
+            #param: #param_type,
+        });
+        acc
+    });
+
+    let new_path = Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
+
+    (api_params, LitStr::new(&new_path, Span::call_site()))
+}
+
 fn trait_function(method_name: &Ident, api_params: &TS2, req_body_type: &Type, res_body_type: &Type) -> TS2 {
     quote! {
         async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type, DeboaError>;
@@ -118,29 +142,10 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                             method_name = Ident::new(name.value.value().as_str(), Span::call_site());
                         }
                         GetFieldEnum::path(path) => {
-                            let path = &path.value;
+                            let path_info = extract_params_from_path(&path.value);
 
-                            let raw_path = path.value();
-                            let params = Regex::new(r"<(\w*:\w*)>")
-                                .unwrap()
-                                .captures(&raw_path)
-                                .map(|m| m.get(1).unwrap().as_str())
-                                .into_iter()
-                                .collect::<Vec<_>>();
-
-                            api_params = params.clone().into_iter().fold(TS2::new(), |mut acc, param| {
-                                let pair = param.split(':').collect::<Vec<_>>();
-                                let param = parse_str::<syn::Ident>(pair[0]).unwrap();
-                                let param_type = parse_str::<Type>(pair[1]).unwrap();
-                                acc.extend(quote! {
-                                    #param: #param_type,
-                                });
-                                acc
-                            });
-
-                            let new_path = Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
-
-                            api_path = LitStr::new(&new_path, Span::call_site());
+                            api_path = path_info.1;
+                            api_params = path_info.0;
                         }
                         GetFieldEnum::res_body(res_body) => {
                             res_body_type = res_body.value.clone();
@@ -185,29 +190,10 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                             method_name = Ident::new(name.value.value().as_str(), Span::call_site());
                         }
                         PostFieldEnum::path(path) => {
-                            let path = &path.value;
+                            let path_info = extract_params_from_path(&path.value);
 
-                            let raw_path = path.value();
-                            let params = Regex::new(r"<(\w*:\w*)>")
-                                .unwrap()
-                                .captures(&raw_path)
-                                .map(|m| m.get(1).unwrap().as_str())
-                                .into_iter()
-                                .collect::<Vec<_>>();
-
-                            api_params = params.clone().into_iter().fold(TS2::new(), |mut acc, param| {
-                                let pair = param.split(':').collect::<Vec<_>>();
-                                let param = parse_str::<syn::Ident>(pair[0]).unwrap();
-                                let param_type = parse_str::<Type>(pair[1]).unwrap();
-                                acc.extend(quote! {
-                                    #param: #param_type,
-                                });
-                                acc
-                            });
-
-                            let new_path = Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
-
-                            api_path = LitStr::new(&new_path, Span::call_site());
+                            api_path = path_info.1;
+                            api_params = path_info.0;
                         }
                         PostFieldEnum::req_body(req_body) => {
                             req_body_type = req_body.value.clone();
@@ -261,29 +247,10 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                             method_name = Ident::new(name.value.value().as_str(), Span::call_site());
                         }
                         PutFieldEnum::path(path) => {
-                            let path = &path.value;
+                            let path_info = extract_params_from_path(&path.value);
 
-                            let raw_path = path.value();
-                            let params = Regex::new(r"<(\w*:\w*)>")
-                                .unwrap()
-                                .captures(&raw_path)
-                                .map(|m| m.get(1).unwrap().as_str())
-                                .into_iter()
-                                .collect::<Vec<_>>();
-
-                            api_params = params.clone().into_iter().fold(TS2::new(), |mut acc, param| {
-                                let pair = param.split(':').collect::<Vec<_>>();
-                                let param = parse_str::<syn::Ident>(pair[0]).unwrap();
-                                let param_type = parse_str::<Type>(pair[1]).unwrap();
-                                acc.extend(quote! {
-                                    #param: #param_type,
-                                });
-                                acc
-                            });
-
-                            let new_path = Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
-
-                            api_path = LitStr::new(&new_path, Span::call_site());
+                            api_path = path_info.1;
+                            api_params = path_info.0;
                         }
 
                         PutFieldEnum::req_body(req_body) => {
@@ -339,29 +306,10 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                         }
 
                         PatchFieldEnum::path(path) => {
-                            let path = &path.value;
+                            let path_info = extract_params_from_path(&path.value);
 
-                            let raw_path = path.value();
-                            let params = Regex::new(r"<(\w*:\w*)>")
-                                .unwrap()
-                                .captures(&raw_path)
-                                .map(|m| m.get(1).unwrap().as_str())
-                                .into_iter()
-                                .collect::<Vec<_>>();
-
-                            api_params = params.clone().into_iter().fold(TS2::new(), |mut acc, param| {
-                                let pair = param.split(':').collect::<Vec<_>>();
-                                let param = parse_str::<syn::Ident>(pair[0]).unwrap();
-                                let param_type = parse_str::<Type>(pair[1]).unwrap();
-                                acc.extend(quote! {
-                                    #param: #param_type,
-                                });
-                                acc
-                            });
-
-                            let new_path = Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
-
-                            api_path = LitStr::new(&new_path, Span::call_site());
+                            api_path = path_info.1;
+                            api_params = path_info.0;
                         }
 
                         PatchFieldEnum::req_body(req_body) => {
@@ -412,29 +360,10 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                             method_name = Ident::new(name.value.value().as_str(), Span::call_site());
                         }
                         DeleteFieldEnum::path(path) => {
-                            let path = &path.value;
+                            let path_info = extract_params_from_path(&path.value);
 
-                            let raw_path = path.value();
-                            let params = Regex::new(r"<(\w*:\w*)>")
-                                .unwrap()
-                                .captures(&raw_path)
-                                .map(|m| m.get(1).unwrap().as_str())
-                                .into_iter()
-                                .collect::<Vec<_>>();
-
-                            api_params = params.clone().into_iter().fold(TS2::new(), |mut acc, param| {
-                                let pair = param.split(':').collect::<Vec<_>>();
-                                let param = parse_str::<syn::Ident>(pair[0]).unwrap();
-                                let param_type = parse_str::<Type>(pair[1]).unwrap();
-                                acc.extend(quote! {
-                                    #param: #param_type,
-                                });
-                                acc
-                            });
-
-                            let new_path = Regex::new(r"<(\w*):\w*>").unwrap().replace_all(&raw_path, "{$1}");
-
-                            api_path = LitStr::new(&new_path, Span::call_site());
+                            api_path = path_info.1;
+                            api_params = path_info.0;
                         }
                     });
 
