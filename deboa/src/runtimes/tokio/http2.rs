@@ -2,7 +2,7 @@
 #![warn(rust_2018_idioms)]
 
 use bytes::Bytes;
-use hyper::client::conn::http2::{Connection, SendRequest};
+use hyper::client::conn::http2::{handshake, Connection, SendRequest};
 use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
@@ -33,7 +33,7 @@ pub async fn get_connection(
 
     let io = TokioIo::new(stream.unwrap());
 
-    let result = hyper::client::conn::http2::handshake(TokioExecutor::new(), io).await;
+    let result = handshake(TokioExecutor::new(), io).await;
 
     match result {
         Ok(conn) => Ok(conn),

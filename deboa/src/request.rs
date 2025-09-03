@@ -2,14 +2,18 @@
 
 use std::{collections::HashMap, sync::Arc};
 
-use bytes::{Buf, Bytes};
-use http_body_util::{BodyExt, Full};
 use serde::Serialize;
 
-use crate::{http::serde::RequestBody, io::Decompressor, middleware::DeboaMiddleware, runtimes, Deboa};
+use crate::{
+    http::{io::HttpConnection, serde::RequestBody},
+    io::Decompressor,
+    middleware::DeboaMiddleware,
+    runtimes::tokio::http1::Http1Connection,
+    Deboa,
+};
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use http::{header, HeaderName, HeaderValue, Request};
+use http::{header, HeaderName};
 use url::{form_urlencoded, Url};
 
 use crate::errors::DeboaError;
@@ -51,6 +55,7 @@ impl Deboa {
             request_timeout: 0,
             middlewares: None,
             encodings: None,
+            connection: None,
         })
     }
 
@@ -832,35 +837,11 @@ impl Deboa {
             });
         }
 
-        let authority = url.authority();
-
-        let mut builder = Request::builder()
-            .uri(url.as_str())
-            .method(method.to_string().as_str())
-            .header(hyper::header::HOST, authority);
-        {
-            let req_headers = builder.headers_mut().unwrap();
-            if let Some(headers) = &self.headers {
-                headers.iter().fold(req_headers, |acc, (key, value)| {
-                    acc.insert(key, HeaderValue::from_str(value).unwrap());
-                    acc
-                });
-            }
+        if self.connection.is_none() {
+            self.connection = Some(Http1Connection::connect(url).await?);
         }
 
-        let body = Arc::clone(&self.body);
-        let request = builder.body(Full::new(Bytes::from(body.as_ref().to_vec())));
-        if let Err(err) = request {
-            return Err(DeboaError::Request {
-                host: url.host().unwrap().to_string(),
-                path: url.path().to_string(),
-                method: method.to_string(),
-                message: err.to_string(),
-            });
-        }
-
-        let request = request.unwrap();
-
+        /*
         #[cfg(feature = "tokio-rt")]
         let mut sender = {
             let (sender, conn) = runtimes::tokio::http1::get_connection(&url).await?;
@@ -919,64 +900,17 @@ impl Deboa {
 
             sender
         };
+        */
+
+        let body = Arc::clone(&self.body);
 
         // We need sure that we do not reconstruct the request somewhere else in the code as it will lead to the headers deletion making a request invalid.
-        let response = sender.send_request(request).await;
-
-        if let Err(err) = response {
-            return Err(DeboaError::Request {
-                host: url.host().unwrap().to_string(),
-                path: url.path().to_string(),
-                method: method.to_string(),
-                message: err.to_string(),
-            });
-        }
-
-        let response = response.unwrap();
-
-        let status_code = response.status();
-        let headers = response.headers().clone();
-
-        let result = response.collect().await;
-
-        if let Err(err) = result {
-            return Err(DeboaError::Response {
-                status_code: status_code.as_u16(),
-                message: err.to_string(),
-            });
-        }
-
-        let mut response_body = result.unwrap().aggregate();
-
-        let raw_body = response_body.copy_to_bytes(response_body.remaining()).to_vec();
-
-        if !status_code.is_success() {
-            return Err(DeboaError::Response {
-                status_code: status_code.as_u16(),
-                message: format!("Request failed with status code: {status_code}"),
-            });
-        }
-
-        #[cfg(feature = "middlewares")]
-        let mut response = DeboaResponse::new(status_code, headers, &raw_body);
-
-        #[cfg(not(feature = "middlewares"))]
-        let mut response = DeboaResponse {
-            status: status_code,
-            headers,
-            raw_body,
-        };
-
-        if let Some(encodings) = &self.encodings {
-            let response_headers = response.headers();
-            let content_encoding = response_headers.get(header::CONTENT_ENCODING);
-            if let Some(content_encoding) = content_encoding {
-                let decompressor = encodings.get(content_encoding.to_str().unwrap());
-                if let Some(decompressor) = decompressor {
-                    decompressor.decompress_body(&mut response)?;
-                }
-            }
-        }
+        let mut response = self
+            .connection
+            .as_mut()
+            .unwrap()
+            .send_request(method, self.headers.as_ref(), self.encodings.as_ref(), body.to_vec())
+            .await?;
 
         #[cfg(feature = "middlewares")]
         if let Some(middlewares) = &self.middlewares {
