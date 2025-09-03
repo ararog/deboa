@@ -8,9 +8,13 @@ use crate::{
     http::{io::HttpConnection, serde::RequestBody},
     io::Decompressor,
     middleware::DeboaMiddleware,
-    runtimes::tokio::http1::Http1Connection,
     Deboa,
 };
+
+#[cfg(feature = "httpone")]
+use crate::runtimes::tokio::http1::Http1Connection;
+#[cfg(feature = "httptwo")]
+use crate::runtimes::tokio::http2::Http2Connection;
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use http::{header, HeaderName};
@@ -830,15 +834,20 @@ impl Deboa {
             url.set_query(Some(&query));
         }
 
-        #[cfg(feature = "middlewares")]
         if let Some(middlewares) = &self.middlewares {
             middlewares.iter().for_each(|middleware| {
                 middleware.on_request(self);
             });
         }
 
+        #[cfg(feature = "httpone")]
         if self.connection.is_none() {
-            self.connection = Some(Http1Connection::connect(url).await?);
+            self.connection = Some(Http1Connection::connect(url.clone()).await?);
+        }
+
+        #[cfg(feature = "httptwo")]
+        if self.connection.is_none() {
+            self.connection = Some(Http2Connection::connect(url).await?);
         }
 
         /*
@@ -893,7 +902,6 @@ impl Deboa {
             .send_request(method, self.headers.as_ref(), self.encodings.as_ref(), body.to_vec())
             .await?;
 
-        #[cfg(feature = "middlewares")]
         if let Some(middlewares) = &self.middlewares {
             middlewares.iter().for_each(|middleware| middleware.on_response(self, &mut response));
         }

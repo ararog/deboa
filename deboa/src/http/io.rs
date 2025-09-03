@@ -9,6 +9,16 @@ use url::Url;
 
 #[async_trait::async_trait]
 pub trait HttpConnection: Send + Sync + 'static {
+    /// Connects to the specified URL.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - The URL to connect to.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the connection or an error.
+    ///
     async fn connect(url: Url) -> Result<BaseHttpConnection, DeboaError>;
 }
 
@@ -17,24 +27,77 @@ pub struct HttpConnectionPool {
     connections: HashMap<Url, BaseHttpConnection>,
 }
 
+#[cfg(feature = "httpone")]
+pub struct BaseHttpConnection {
+    url: Url,
+    sender: SendRequest<Full<Bytes>>,
+}
+
+#[cfg(feature = "httptwo")]
 pub struct BaseHttpConnection {
     url: Url,
     sender: SendRequest<Full<Bytes>>,
 }
 
 impl BaseHttpConnection {
+    /// Creates a new `BaseHttpConnection` instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - The URL for the connection.
+    /// * `sender` - The sender for the connection.
+    ///
+    /// # Returns
+    ///
+    /// A new `BaseHttpConnection` instance.
+    ///
+    #[cfg(feature = "httpone")]
     pub fn new(url: Url, sender: SendRequest<Full<Bytes>>) -> Self {
         Self { url, sender }
     }
 
+    #[cfg(feature = "httptwo")]
+    pub fn new(url: Url, sender: SendRequest<Full<Bytes>>) -> Self {
+        Self { url, sender }
+    }
+
+    /// Sets the URL for the connection.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - The URL for the connection.
+    ///
+    /// # Returns
+    ///
+    /// A new `BaseHttpConnection` instance.
+    ///
     pub fn set_url(&mut self, url: Url) {
         self.url = url;
     }
 
+    /// Gets the URL for the connection.
+    ///
+    /// # Returns
+    ///
+    /// The URL for the connection.
+    ///
     pub fn get_url(&self) -> &Url {
         &self.url
     }
 
+    /// Sends a request using the connection.
+    ///
+    /// # Arguments
+    ///
+    /// * `method` - The HTTP method for the request.
+    /// * `headers` - The headers for the request.
+    /// * `encodings` - The encodings for the request.
+    /// * `body` - The body for the request.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the response or an error.
+    ///
     pub async fn send_request(
         &mut self,
         method: http::Method,
