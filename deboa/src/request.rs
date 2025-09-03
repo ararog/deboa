@@ -50,7 +50,7 @@ impl Deboa {
             connection_timeout: 0,
             request_timeout: 0,
             middlewares: None,
-            encodings: None,
+            encodings: None
         })
     }
 
@@ -832,9 +832,38 @@ impl Deboa {
             });
         }
 
+        let authority = url.authority();
+
+        let mut builder = Request::builder()
+            .uri(url.as_str())
+            .method(method.to_string().as_str())
+            .header(hyper::header::HOST, authority);
+        {
+            let req_headers = builder.headers_mut().unwrap();
+            if let Some(headers) = &self.headers {
+                headers.iter().fold(req_headers, |acc, (key, value)| {
+                    acc.insert(key, HeaderValue::from_str(value).unwrap());
+                    acc
+                });
+            }
+        }
+
+        let body = Arc::clone(&self.body);
+        let request = builder.body(Full::new(Bytes::from(body.as_ref().to_vec())));
+        if let Err(err) = request {
+            return Err(DeboaError::Request {
+                host: url.host().unwrap().to_string(),
+                path: url.path().to_string(),
+                method: method.to_string(),
+                message: err.to_string(),
+            });
+        }
+
+        let request = request.unwrap();
+
         #[cfg(feature = "tokio-rt")]
         let mut sender = {
-            let (sender, conn) = runtimes::tokio::get_connection(&url).await?;
+            let (sender, conn) = runtimes::tokio::http1::get_connection(&url).await?;
 
             tokio::spawn(async move {
                 match conn.await {
@@ -889,36 +918,7 @@ impl Deboa {
             };
 
             sender
-        };
-
-        let authority = url.authority();
-
-        let mut builder = Request::builder()
-            .uri(url.as_str())
-            .method(method.to_string().as_str())
-            .header(hyper::header::HOST, authority);
-        {
-            let req_headers = builder.headers_mut().unwrap();
-            if let Some(headers) = &self.headers {
-                headers.iter().fold(req_headers, |acc, (key, value)| {
-                    acc.insert(key, HeaderValue::from_str(value).unwrap());
-                    acc
-                });
-            }
-        }
-
-        let body = Arc::clone(&self.body);
-        let request = builder.body(Full::new(Bytes::from(body.as_ref().to_vec())));
-        if let Err(err) = request {
-            return Err(DeboaError::Request {
-                host: url.host().unwrap().to_string(),
-                path: url.path().to_string(),
-                method: method.to_string(),
-                message: err.to_string(),
-            });
-        }
-
-        let request = request.unwrap();
+        };        
 
         // We need sure that we do not reconstruct the request somewhere else in the code as it will lead to the headers deletion making a request invalid.
         let response = sender.send_request(request).await;
