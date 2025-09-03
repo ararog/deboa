@@ -63,12 +63,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "862ed96ca487e809f1c8e5a8447f6ee2cf102f846893800b20cebdf541fc6bbd"
 
 [[package]]
-name = "anyhow"
-version = "1.0.99"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0674a1ddeecb70197781e945de4b3b8ffb61fa939a5597bcf48503737663100"
-
-[[package]]
 name = "arrayvec"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -870,7 +864,6 @@ dependencies = [
 name = "deboa"
 version = "0.0.5"
 dependencies = [
- "anyhow",
  "async-native-tls",
  "base64 0.22.1",
  "bytes",
@@ -897,7 +890,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-extras"
-version = "0.1.0"
+version = "0.0.5"
 dependencies = [
  "brotli",
  "bytes",
@@ -916,7 +909,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-macros"
-version = "0.1.0"
+version = "0.0.5"
 dependencies = [
  "deboa",
  "deboa-extras",
