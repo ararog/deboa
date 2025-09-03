@@ -5,7 +5,7 @@ use httpmock::MockServer;
 
 use crate::{
     io::deflate::DeflateDecompressor,
-    tests::types::{DECOMPRESSED, DEFLATE_COMPRESSED},
+    tests::types::{DECOMPRESSED, DEFLATE_COMPRESSED, format_address},
 };
 
 #[tokio::test]
