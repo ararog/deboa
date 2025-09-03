@@ -13,7 +13,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 use url::Url;
 
-use crate::http::io::DeboaConnection;
+use crate::http::io::BaseHttpConnection;
 use crate::io::Decompressor;
 use crate::middleware::DeboaMiddleware;
 
@@ -37,7 +37,7 @@ pub struct Deboa {
     request_timeout: u64,
     middlewares: Option<Vec<Box<dyn DeboaMiddleware>>>,
     encodings: Option<HashMap<String, Box<dyn Decompressor>>>,
-    connection: Option<DeboaConnection>,
+    connection: Option<BaseHttpConnection>,
 }
 
 impl Debug for Deboa {
