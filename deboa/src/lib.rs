@@ -35,7 +35,7 @@ pub struct Deboa {
     connection_timeout: u64,
     request_timeout: u64,
     middlewares: Option<Vec<Box<dyn DeboaMiddleware>>>,
-    encodings: Option<HashMap<String, Box<dyn Decompressor>>>
+    encodings: Option<HashMap<String, Box<dyn Decompressor>>>,
 }
 
 impl Debug for Deboa {
