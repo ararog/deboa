@@ -8,14 +8,14 @@ use url::{Host, Url};
 
 use crate::{
     errors::DeboaError,
-    http::io::{DeboaConnection, HttpConnection},
+    http::io::{BaseHttpConnection, HttpConnection},
 };
 
 pub struct Http1Connection;
 
 #[async_trait::async_trait]
 impl HttpConnection for Http1Connection {
-    async fn connect(url: Url) -> Result<DeboaConnection, DeboaError> {
+    async fn connect(url: Url) -> Result<BaseHttpConnection, DeboaError> {
         let host = url.host().unwrap_or(Host::Domain("localhost"));
         let port = url.port().unwrap_or(80);
         let addr = format!("{host}:{port}");
@@ -53,6 +53,6 @@ impl HttpConnection for Http1Connection {
             };
         });
 
-        Ok(DeboaConnection::new(url, sender))
+        Ok(BaseHttpConnection::new(url, sender))
     }
 }

@@ -842,25 +842,6 @@ impl Deboa {
         }
 
         /*
-        #[cfg(feature = "tokio-rt")]
-        let mut sender = {
-            let (sender, conn) = runtimes::tokio::http1::get_connection(&url).await?;
-
-            tokio::spawn(async move {
-                match conn.await {
-                    Ok(_) => (),
-                    Err(_err) => {
-                        // return Err(DeboaError::ConnectionError {
-                        //     host: url.to_string(),
-                        //     message: err.to_string(),
-                        // });
-                    }
-                };
-            });
-
-            sender
-        };
-
         #[cfg(feature = "smol-rt")]
         let mut sender = {
             let (sender, conn) = runtimes::smol::get_connection(&url).await.map_err(|err| DeboaError::ConnectionError {
