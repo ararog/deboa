@@ -2,18 +2,22 @@
 
 use std::{collections::HashMap, sync::Arc};
 
+use bytes::{Buf, Bytes};
+use http_body_util::{BodyExt, Full};
+use hyper::Request;
 use serde::Serialize;
 
 use crate::client::serde::RequestBody;
-use crate::{client::io::http::HttpConnection, fs::io::Decompressor, middleware::DeboaMiddleware, Deboa};
+use crate::HttpVersion;
+use crate::{fs::io::Decompressor, middleware::DeboaMiddleware, Deboa};
 
 #[cfg(feature = "http1")]
-use crate::runtimes::tokio::http1::Http1Connection;
+use crate::runtimes::tokio::http1::Http1ConnectionPool;
 #[cfg(feature = "http2")]
-use crate::runtimes::tokio::http2::Http2Connection;
+use crate::runtimes::tokio::http2::Http2ConnectionPool;
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use http::{header, HeaderName};
+use http::{header, HeaderName, HeaderValue};
 use url::{form_urlencoded, Url};
 
 use crate::errors::DeboaError;
@@ -54,8 +58,36 @@ impl Deboa {
             request_timeout: 0,
             middlewares: None,
             encodings: None,
-            connection: None,
+            protocol: HttpVersion::Http1,
+            #[cfg(feature = "http1")]
+            http1_pool: Http1ConnectionPool::new(),
+            #[cfg(feature = "http2")]
+            http2_pool: Http2ConnectionPool::new(),
         })
+    }
+
+    /// Allow change protocol at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `protocol` - The protocol to be used.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use deboa::{Deboa, HttpVersion, errors::DeboaError};
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DeboaError> {
+    ///   let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    ///   api.set_protocol(HttpVersion::Http2);
+    ///   Ok(())
+    /// }
+    /// ```
+    ///
+    pub fn set_protocol(&mut self, protocol: HttpVersion) -> &mut Self {
+        self.protocol = protocol;
+        self
     }
 
     /// Allow add header at any time.
@@ -835,25 +867,78 @@ impl Deboa {
             });
         }
 
-        #[cfg(feature = "http1")]
-        if self.connection.is_none() {
-            self.connection = Some(Http1Connection::connect(url.clone()).await?);
-        }
+        let authority = url.authority();
 
-        #[cfg(feature = "http2")]
-        if self.connection.is_none() {
-            self.connection = Some(Http2Connection::connect(url).await?);
+        let mut builder = Request::builder()
+            .uri(url.as_str())
+            .method(method.to_string().as_str())
+            .header(hyper::header::HOST, authority);
+        {
+            let req_headers = builder.headers_mut().unwrap();
+            if let Some(headers) = &self.headers {
+                headers.iter().fold(req_headers, |acc, (key, value)| {
+                    acc.insert(key, HeaderValue::from_str(value).unwrap());
+                    acc
+                });
+            }
         }
 
         let body = Arc::clone(&self.body);
 
+        let request = builder.body(Full::new(Bytes::from(body.to_vec())));
+        if let Err(err) = request {
+            return Err(DeboaError::Request {
+                host: url.host().unwrap().to_string(),
+                path: url.path().to_string(),
+                method: method.to_string(),
+                message: err.to_string(),
+            });
+        }
+
         // We need sure that we do not reconstruct the request somewhere else in the code as it will lead to the headers deletion making a request invalid.
-        let mut response = self
-            .connection
-            .as_mut()
-            .unwrap()
-            .send_request(method, self.headers.as_ref(), self.encodings.as_ref(), body.to_vec())
-            .await?;
+        let response = if self.protocol == HttpVersion::Http1 {
+            let conn = self.http1_pool.create_connection(&url).await?;
+            conn.send_request(request.unwrap()).await
+        } else {
+            let conn = self.http2_pool.create_connection(&url).await?;
+            conn.send_request(request.unwrap()).await
+        };
+
+        let response = response.unwrap();
+        let status_code = response.status();
+        let headers = response.headers().clone();
+
+        let result = response.collect().await;
+        if let Err(err) = result {
+            return Err(DeboaError::Response {
+                status_code: status_code.as_u16(),
+                message: err.to_string(),
+            });
+        }
+
+        let mut response_body = result.unwrap().aggregate();
+
+        let raw_body = response_body.copy_to_bytes(response_body.remaining()).to_vec();
+
+        if !status_code.is_success() {
+            return Err(DeboaError::Response {
+                status_code: status_code.as_u16(),
+                message: format!("Request failed with status code: {status_code}"),
+            });
+        }
+
+        let mut response = DeboaResponse::new(status_code, headers, &raw_body);
+
+        if let Some(encodings) = &self.encodings {
+            let response_headers = response.headers();
+            let content_encoding = response_headers.get(header::CONTENT_ENCODING);
+            if let Some(content_encoding) = content_encoding {
+                let decompressor = encodings.get(content_encoding.to_str().unwrap());
+                if let Some(decompressor) = decompressor {
+                    decompressor.decompress_body(&mut response)?;
+                }
+            }
+        }
 
         if let Some(middlewares) = &self.middlewares {
             middlewares.iter().for_each(|middleware| middleware.on_response(self, &mut response));
