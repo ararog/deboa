@@ -8,8 +8,8 @@ use tokio::net::TcpStream;
 use url::{Host, Url};
 
 use crate::{
+    client::io::http::{BaseHttpConnection, HttpConnection},
     errors::DeboaError,
-    http::io::{BaseHttpConnection, HttpConnection},
 };
 
 pub struct Http2Connection;

@@ -3,7 +3,7 @@ use std::{fmt::Debug, sync::Arc};
 
 use serde::Deserialize;
 
-use crate::{errors::DeboaError, http::serde::ResponseBody};
+use crate::{client::serde::ResponseBody, errors::DeboaError};
 
 #[derive(PartialEq)]
 pub struct DeboaResponse {

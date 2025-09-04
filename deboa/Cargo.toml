@@ -10,29 +10,14 @@ license = "GPL-3.0-or-later"
 keywords = ["http", "networking", "client", "fetch", "rest-client"]
 
 [features]
-default = ["middlewares", "tokio-rt"]
-middlewares = []
+default = ["tokio-rt"]
 
 # runtimes
-tokio-rt = ["httpone", "dep:tokio"]
-smol-rt = [
-  "httpone",
-  "dep:smol",
-  "dep:smol-hyper",
-  "dep:async-native-tls",
-  "dep:smol-macros",
-  "dep:macro_rules_attribute"
-]
-compio-rt = [
-  "httpone",
-  "dep:compio",
-  "dep:cyper-core",
-  "dep:async-native-tls",
-]
+tokio-rt = ["http1", "dep:tokio"]
 
 # protocols
-httpone = []
-httptwo = []
+http1 = []
+http2 = []
 
 [dependencies]
 async-native-tls = { version = "0.5.0", optional = true }

@@ -1,7 +1,7 @@
 use deboa::{
     Deboa,
+    client::serde::{RequestBody, ResponseBody},
     errors::DeboaError,
-    http::serde::{RequestBody, ResponseBody},
 };
 use http::header;
 use mime_typed::Msgpack;

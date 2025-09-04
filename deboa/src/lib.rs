@@ -1,25 +1,18 @@
 #![deny(warnings)]
 #![warn(rust_2018_idioms)]
 
-#[cfg(any(
-    all(feature = "tokio-rt", feature = "smol-rt"),
-    all(feature = "tokio-rt", feature = "compio-rt"),
-    all(feature = "smol-rt", feature = "compio-rt")
-))]
-compile_error!("Only one runtime feature can be enabled at a time.");
-
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::Arc;
 use url::Url;
 
-use crate::http::io::BaseHttpConnection;
-use crate::io::Decompressor;
+use crate::client::io::http::BaseHttpConnection;
+use crate::fs::io::Decompressor;
 use crate::middleware::DeboaMiddleware;
 
+pub mod client;
 pub mod errors;
-pub mod http;
-pub mod io;
+pub mod fs;
 pub mod middleware;
 pub mod request;
 pub mod response;

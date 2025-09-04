@@ -3,11 +3,6 @@ use crate::errors::DeboaError;
 use crate::{tests::types::JSONPLACEHOLDER, Deboa};
 use http::StatusCode;
 
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
-
 //
 // DELETE
 //
@@ -27,16 +22,4 @@ async fn do_delete() -> Result<(), DeboaError> {
 async fn test_delete() -> Result<(), DeboaError> {
     do_delete().await?;
     Ok(())
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_delete() -> Result<(), DeboaError> {
-    do_delete().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_delete() -> Result<(), DeboaError> {
-    let _ = do_delete().await;
 }
