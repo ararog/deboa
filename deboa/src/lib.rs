@@ -6,9 +6,10 @@ use std::fmt::Debug;
 use std::sync::Arc;
 use url::Url;
 
-use crate::client::io::http::BaseHttpConnection;
 use crate::fs::io::Decompressor;
 use crate::middleware::DeboaMiddleware;
+use crate::runtimes::tokio::http1::Http1ConnectionPool;
+use crate::runtimes::tokio::http2::Http2ConnectionPool;
 
 pub mod client;
 pub mod errors;
@@ -20,6 +21,12 @@ mod runtimes;
 #[cfg(test)]
 mod tests;
 
+#[derive(PartialEq)]
+pub enum HttpVersion {
+    Http1,
+    Http2,
+}
+
 pub struct Deboa {
     base_url: Url,
     headers: Option<HashMap<::http::HeaderName, String>>,
@@ -30,7 +37,11 @@ pub struct Deboa {
     request_timeout: u64,
     middlewares: Option<Vec<Box<dyn DeboaMiddleware>>>,
     encodings: Option<HashMap<String, Box<dyn Decompressor>>>,
-    connection: Option<BaseHttpConnection>,
+    protocol: HttpVersion,
+    #[cfg(feature = "http1")]
+    http1_pool: Http1ConnectionPool,
+    #[cfg(feature = "http2")]
+    http2_pool: Http2ConnectionPool,
 }
 
 impl Debug for Deboa {
