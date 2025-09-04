@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use deboa::http::serde::{RequestBody, ResponseBody};
+use deboa::client::serde::{RequestBody, ResponseBody};
 use deboa::{Deboa, errors::DeboaError};
 use http::header;
 use mime_typed::Xml;

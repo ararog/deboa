@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{errors::DeboaError, io::Decompressor, response::DeboaResponse};
+use crate::{errors::DeboaError, fs::io::Decompressor, response::DeboaResponse};
 use bytes::{Buf, Bytes};
 use http::{header, HeaderName, HeaderValue, Request};
 use http_body_util::{BodyExt, Full};
@@ -27,13 +27,6 @@ pub struct HttpConnectionPool {
     connections: HashMap<Url, BaseHttpConnection>,
 }
 
-#[cfg(feature = "httpone")]
-pub struct BaseHttpConnection {
-    url: Url,
-    sender: SendRequest<Full<Bytes>>,
-}
-
-#[cfg(feature = "httptwo")]
 pub struct BaseHttpConnection {
     url: Url,
     sender: SendRequest<Full<Bytes>>,
@@ -51,12 +44,6 @@ impl BaseHttpConnection {
     ///
     /// A new `BaseHttpConnection` instance.
     ///
-    #[cfg(feature = "httpone")]
-    pub fn new(url: Url, sender: SendRequest<Full<Bytes>>) -> Self {
-        Self { url, sender }
-    }
-
-    #[cfg(feature = "httptwo")]
     pub fn new(url: Url, sender: SendRequest<Full<Bytes>>) -> Self {
         Self { url, sender }
     }
@@ -133,6 +120,7 @@ impl BaseHttpConnection {
 
         let response = self.sender.send_request(request.unwrap()).await;
         if let Err(err) = response {
+            println!("Error: {err}");
             return Err(DeboaError::Request {
                 host: self.url.host().unwrap().to_string(),
                 path: self.url.path().to_string(),
