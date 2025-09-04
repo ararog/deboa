@@ -1,4 +1,4 @@
-#[cfg(feature = "httpone")]
+#[cfg(feature = "http1")]
 pub mod http1;
-#[cfg(feature = "httptwo")]
+#[cfg(feature = "http2")]
 pub mod http2;

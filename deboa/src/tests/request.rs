@@ -1,16 +1,10 @@
 use crate::errors::DeboaError;
-#[cfg(feature = "middlewares")]
 use crate::Deboa;
 
 use crate::tests::types::JSONPLACEHOLDER;
 use http::header;
 use std::collections::HashMap;
 use url::Url;
-
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
 
 #[test]
 fn test_base_url() -> Result<(), DeboaError> {

@@ -6,11 +6,6 @@ use crate::{tests::types::JSONPLACEHOLDER, Deboa};
 use http::StatusCode;
 use std::collections::HashMap;
 
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
-
 //
 // GET
 //
@@ -36,18 +31,6 @@ async fn do_get() -> Result<(), DeboaError> {
 async fn test_get() -> Result<(), DeboaError> {
     do_get().await?;
     Ok(())
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_get() {
-    let _ = do_get().await;
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_get() {
-    let _ = do_get().await;
 }
 
 //
@@ -76,18 +59,6 @@ async fn do_get_not_found() -> Result<(), DeboaError> {
 async fn test_get_not_found() -> Result<(), DeboaError> {
     do_get_not_found().await?;
     Ok(())
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_get_not_found() {
-    let _ = do_get_not_found().await;
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_get_not_found() {
-    let _ = do_get_not_found().await;
 }
 
 //
@@ -119,18 +90,6 @@ async fn do_get_invalid_server() -> Result<(), DeboaError> {
 async fn test_get_invalid_server() -> Result<(), DeboaError> {
     do_get_invalid_server().await?;
     Ok(())
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_get_invalid_server() {
-    let _ = do_get_invalid_server().await;
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_get_invalid_server() {
-    let _ = do_get_invalid_server().await;
 }
 
 //
@@ -166,16 +125,4 @@ async fn do_get_by_query() -> Result<(), DeboaError> {
 async fn test_get_by_query() -> Result<(), DeboaError> {
     do_get_by_query().await?;
     Ok(())
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_get_by_query() -> Result<(), DeboaError> {
-    do_get_by_query().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_get_by_query() -> Result<(), DeboaError> {
-    do_get_by_query().await
 }

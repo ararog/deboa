@@ -4,16 +4,12 @@ use std::{collections::HashMap, sync::Arc};
 
 use serde::Serialize;
 
-use crate::{
-    http::{io::HttpConnection, serde::RequestBody},
-    io::Decompressor,
-    middleware::DeboaMiddleware,
-    Deboa,
-};
+use crate::client::serde::RequestBody;
+use crate::{client::io::http::HttpConnection, fs::io::Decompressor, middleware::DeboaMiddleware, Deboa};
 
-#[cfg(feature = "httpone")]
+#[cfg(feature = "http1")]
 use crate::runtimes::tokio::http1::Http1Connection;
-#[cfg(feature = "httptwo")]
+#[cfg(feature = "http2")]
 use crate::runtimes::tokio::http2::Http2Connection;
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
@@ -21,7 +17,6 @@ use http::{header, HeaderName};
 use url::{form_urlencoded, Url};
 
 use crate::errors::DeboaError;
-#[cfg(feature = "middlewares")]
 use crate::response::DeboaResponse;
 
 impl Deboa {
@@ -567,7 +562,7 @@ impl Deboa {
     /// # Examples
     ///
     /// ```rust
-    /// use deboa::{Deboa, errors::DeboaError, io::Decompressor};
+    /// use deboa::{Deboa, errors::DeboaError, fs::io::Decompressor};
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DeboaError> {
@@ -840,57 +835,15 @@ impl Deboa {
             });
         }
 
-        #[cfg(feature = "httpone")]
+        #[cfg(feature = "http1")]
         if self.connection.is_none() {
             self.connection = Some(Http1Connection::connect(url.clone()).await?);
         }
 
-        #[cfg(feature = "httptwo")]
+        #[cfg(feature = "http2")]
         if self.connection.is_none() {
             self.connection = Some(Http2Connection::connect(url).await?);
         }
-
-        /*
-        #[cfg(feature = "smol-rt")]
-        let mut sender = {
-            let (sender, conn) = runtimes::smol::get_connection(&url).await.map_err(|err| DeboaError::ConnectionError {
-                host: url.to_string(),
-                message: err.to_string(),
-            })?;
-
-            match conn.await {
-                Ok(_) => (),
-                Err(err) => {
-                    return Err(DeboaError::ConnectionError {
-                        host: url.to_string(),
-                        message: err.to_string(),
-                    });
-                }
-            };
-
-            sender
-        };
-
-        #[cfg(feature = "compio-rt")]
-        let mut sender = {
-            let (sender, conn) = runtimes::compio::get_connection(&url).await.map_err(|err| DeboaError::ConnectionError {
-                host: url.to_string(),
-                message: err.to_string(),
-            })?;
-
-            match conn.await {
-                Ok(_) => (),
-                Err(err) => {
-                    return Err(DeboaError::ConnectionError {
-                        host: url.to_string(),
-                        message: err.to_string(),
-                    });
-                }
-            };
-
-            sender
-        };
-        */
 
         let body = Arc::clone(&self.body);
 
