@@ -1,21 +1,22 @@
 #![deny(warnings)]
 #![warn(rust_2018_idioms)]
 
-use hyper::client::conn::http1::handshake;
+use hyper::client::conn::http2::handshake;
+use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
 use url::{Host, Url};
 
 use crate::{
-    client::io::http::{BaseHttpConnection, HttpConnection},
+    client::conn::http2::{BaseHttp2Connection, Http2Connection},
     errors::DeboaError,
 };
 
-pub struct Http1Connection;
+pub struct DeboaHttp2Connection;
 
 #[async_trait::async_trait]
-impl HttpConnection for Http1Connection {
-    async fn connect(url: Url) -> Result<BaseHttpConnection, DeboaError> {
+impl Http2Connection for DeboaHttp2Connection {
+    async fn connect(url: Url) -> Result<BaseHttp2Connection, DeboaError> {
         let host = url.host().unwrap_or(Host::Domain("localhost"));
         let port = url.port().unwrap_or(80);
         let addr = format!("{host}:{port}");
@@ -30,7 +31,7 @@ impl HttpConnection for Http1Connection {
 
         let io = TokioIo::new(stream.unwrap());
 
-        let result = handshake(io).await;
+        let result = handshake(TokioExecutor::new(), io).await;
 
         if let Err(err) = result {
             return Err(DeboaError::Connection {
@@ -53,6 +54,6 @@ impl HttpConnection for Http1Connection {
             };
         });
 
-        Ok(BaseHttpConnection::new(url, sender))
+        Ok(BaseHttp2Connection::new(url, sender))
     }
 }

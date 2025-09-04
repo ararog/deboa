@@ -13,7 +13,7 @@ keywords = ["http", "networking", "client", "fetch", "rest-client"]
 default = ["tokio-rt"]
 
 # runtimes
-tokio-rt = ["http1", "dep:tokio"]
+tokio-rt = ["http1", "http2", "dep:tokio"]
 
 # protocols
 http1 = []
