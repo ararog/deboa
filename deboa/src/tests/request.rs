@@ -1,16 +1,10 @@
 use crate::errors::DeboaError;
-#[cfg(feature = "middlewares")]
 use crate::Deboa;
 
 use crate::tests::types::JSONPLACEHOLDER;
 use http::header;
 use std::collections::HashMap;
 use url::Url;
-
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
 
 #[test]
 fn test_base_url() -> Result<(), DeboaError> {
@@ -151,12 +145,23 @@ fn test_remove_header() -> Result<(), DeboaError> {
 }
 
 #[test]
-fn test_set_body() -> Result<(), DeboaError> {
+fn test_set_text_body() -> Result<(), DeboaError> {
     let mut api = Deboa::new(JSONPLACEHOLDER)?;
 
     api.set_text("test".to_string());
 
     assert_eq!(api.body, b"test".to_vec().into());
+
+    Ok(())
+}
+
+#[test]
+fn test_raw_body() -> Result<(), DeboaError> {
+    let mut api = Deboa::new(JSONPLACEHOLDER)?;
+
+    api.set_raw_body(b"test");
+
+    assert_eq!(api.raw_body(), b"test");
 
     Ok(())
 }

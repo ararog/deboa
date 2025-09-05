@@ -5,7 +5,7 @@ use httpmock::MockServer;
 
 use crate::{
     io::deflate::DeflateDecompressor,
-    tests::types::{DECOMPRESSED, DEFLATE_COMPRESSED},
+    tests::types::{DECOMPRESSED, DEFLATE_COMPRESSED, format_address},
 };
 
 #[tokio::test]
@@ -19,14 +19,10 @@ async fn test_deflate_decompress() -> Result<(), DeboaError> {
             .body(DEFLATE_COMPRESSED);
     });
 
-    let server_address = *server.address();
+    let mut api = Deboa::new(&format_address(&server))?;
 
-    let ip = server_address.ip();
-    let port = server_address.port();
-
-    let mut api: Deboa = Deboa::new(&format!("http://{ip}:{port}"))?;
     let body = DECOMPRESSED;
-    api.set_body(body.as_ref());
+    api.set_raw_body(body);
     api.accept_encoding(vec![Box::new(DeflateDecompressor)]);
 
     let response = api.get("/sometext").await?;

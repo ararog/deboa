@@ -4,7 +4,7 @@ use bytes::{Buf, Bytes};
 use deboa::{
     Deboa,
     errors::DeboaError,
-    io::{Compressor, Decompressor},
+    fs::io::{Compressor, Decompressor},
     response::DeboaResponse,
 };
 use flate2::{read::GzDecoder, write::GzEncoder};

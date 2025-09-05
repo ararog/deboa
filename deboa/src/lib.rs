@@ -1,30 +1,31 @@
 #![deny(warnings)]
 #![warn(rust_2018_idioms)]
 
-#[cfg(any(
-    all(feature = "tokio-rt", feature = "smol-rt"),
-    all(feature = "tokio-rt", feature = "compio-rt"),
-    all(feature = "smol-rt", feature = "compio-rt")
-))]
-compile_error!("Only one runtime feature can be enabled at a time.");
-
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::Arc;
 use url::Url;
 
-use crate::io::Decompressor;
+use crate::fs::io::Decompressor;
 use crate::middleware::DeboaMiddleware;
+use crate::runtimes::tokio::http1::Http1ConnectionPool;
+use crate::runtimes::tokio::http2::Http2ConnectionPool;
 
+pub mod client;
 pub mod errors;
-pub mod http;
-pub mod io;
+pub mod fs;
 pub mod middleware;
 pub mod request;
 pub mod response;
 mod runtimes;
 #[cfg(test)]
 mod tests;
+
+#[derive(PartialEq)]
+pub enum HttpVersion {
+    Http1,
+    Http2,
+}
 
 pub struct Deboa {
     base_url: Url,
@@ -36,6 +37,11 @@ pub struct Deboa {
     request_timeout: u64,
     middlewares: Option<Vec<Box<dyn DeboaMiddleware>>>,
     encodings: Option<HashMap<String, Box<dyn Decompressor>>>,
+    protocol: HttpVersion,
+    #[cfg(feature = "http1")]
+    http1_pool: Http1ConnectionPool,
+    #[cfg(feature = "http2")]
+    http2_pool: Http2ConnectionPool,
 }
 
 impl Debug for Deboa {

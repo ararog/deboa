@@ -1,22 +1,15 @@
 use deboa::{Deboa, errors::DeboaError};
+use deboa_macros::bora;
 
-#[macro_use]
-extern crate deboa_macros;
-
-mod inner {
-
-    #[bora(api(delete(name = "deletePost", path = "/posts/<id:i32>")))]
-    pub struct PostService;
-}
+#[bora(api(delete(name = "delete_post", path = "/posts/<id:i32>")))]
+pub struct PostService;
 
 #[tokio::test]
 async fn test_delete_by_id() -> Result<(), DeboaError> {
-    use inner::{PostService, Service};
-
     let deboa = Deboa::new("https://jsonplaceholder.typicode.com")?;
 
     let mut post_service = PostService::new(deboa);
 
-    post_service.deletePost(1).await?;
+    post_service.delete_post(1).await?;
     Ok(())
 }

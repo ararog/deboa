@@ -4,7 +4,7 @@ use deboa::errors::DeboaError;
 
 use http::header;
 
-use crate::tests::types::{JSON_POST, JSONPLACEHOLDER, Post, sample_post};
+use crate::tests::types::{JSON_POST, JSONPLACEHOLDER, Post, format_address, sample_post};
 
 use httpmock::MockServer;
 
@@ -25,8 +25,6 @@ fn test_set_json() -> Result<(), DeboaError> {
 #[cfg(feature = "json")]
 #[tokio::test]
 async fn test_response_json() -> Result<(), DeboaError> {
-    use crate::tests::types::format_address;
-
     let server = MockServer::start();
 
     let data = sample_post();

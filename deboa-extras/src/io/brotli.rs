@@ -5,7 +5,7 @@ use brotli::CompressorWriter;
 use deboa::{
     Deboa,
     errors::DeboaError,
-    io::{Compressor, Decompressor},
+    fs::io::{Compressor, Decompressor},
     response::DeboaResponse,
 };
 

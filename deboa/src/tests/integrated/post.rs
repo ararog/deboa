@@ -1,12 +1,7 @@
 use crate::Deboa;
 use crate::{errors::DeboaError, tests::types::format_address};
 use http::{header, StatusCode};
-
 use httpmock::{Method::POST, MockServer};
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
 
 //
 // POST
@@ -37,20 +32,6 @@ async fn do_post() -> Result<(), DeboaError> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_post() -> Result<(), DeboaError> {
-    do_post().await?;
-    Ok(())
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_post() -> Result<(), DeboaError> {
-    do_post().await?;
-    Ok(())
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
 async fn test_post() -> Result<(), DeboaError> {
     do_post().await?;
     Ok(())
