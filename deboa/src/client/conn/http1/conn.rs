@@ -84,7 +84,6 @@ impl BaseHttp1Connection {
         let response = self.sender.send_request(request).await;
 
         if let Err(err) = response {
-            println!("Error: {err}");
             return Err(DeboaError::Request {
                 host: self.url.host().unwrap().to_string(),
                 path: self.url.path().to_string(),
