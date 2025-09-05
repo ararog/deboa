@@ -46,7 +46,7 @@ async fn do_get_not_found() -> Result<(), DeboaError> {
     assert_eq!(
         response,
         Err(DeboaError::Response {
-            status_code: 404,
+            status_code: StatusCode::NOT_FOUND,
             message: "Request failed with status code: 404 Not Found".to_string()
         })
     );
