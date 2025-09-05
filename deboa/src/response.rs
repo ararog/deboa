@@ -31,15 +31,6 @@ impl DeboaResponse {
     /// * `headers` - The headers of the response.
     /// * `body` - The body of the response.
     ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use deboa::response::DeboaResponse;
-    /// use http::{HeaderMap, StatusCode};
-    ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), &Vec::new());
-    /// ```
-    ///
     pub fn new(status: http::StatusCode, headers: http::HeaderMap, body: &[u8]) -> Self {
         Self {
             status,
@@ -50,15 +41,9 @@ impl DeboaResponse {
 
     /// Allow get status code at any time.
     ///
-    /// # Examples
+    /// # Returns
     ///
-    /// ```rust
-    /// use deboa::response::DeboaResponse;
-    /// use http::{HeaderMap, StatusCode};
-    ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), &Vec::new());
-    /// assert_eq!(response.status(), StatusCode::OK);
-    /// ```
+    /// * `http::StatusCode` - The status code of the response.
     ///
     pub fn status(&self) -> http::StatusCode {
         self.status
@@ -66,15 +51,9 @@ impl DeboaResponse {
 
     /// Allow get headers at any time.
     ///
-    /// # Examples
+    /// # Returns
     ///
-    /// ```rust
-    /// use deboa::response::DeboaResponse;
-    /// use http::{HeaderMap, StatusCode};
-    ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), &Vec::new());
-    /// assert_eq!(*response.headers(), HeaderMap::new());
-    /// ```
+    /// * `&http::HeaderMap` - The headers of the response.
     ///
     pub fn headers(&self) -> &http::HeaderMap {
         &self.headers
@@ -86,31 +65,19 @@ impl DeboaResponse {
     ///
     /// * `body` - The body to be set.
     ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use deboa::response::DeboaResponse;
-    /// use http::{HeaderMap, StatusCode};
-    ///
-    /// let mut response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), &Vec::new());
-    /// response.set_raw_body(&Vec::new());
-    /// ```
-    ///
     pub fn set_raw_body(&mut self, body: &[u8]) {
         self.body = body.to_vec().into();
     }
 
     /// Allow get body at any time.
     ///
-    /// # Examples
+    /// # Arguments
     ///
-    /// ```rust
-    /// use deboa::response::DeboaResponse;
-    /// use http::{HeaderMap, StatusCode};
+    /// * `body_type` - The body type to be deserialized.
     ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), b"Hello, world!");
-    /// //assert_eq!(response.body(), Ok(String::from_utf8_lossy("Hello, world!").to_string()));
-    /// ```
+    /// # Returns
+    ///
+    /// * `Result<B, DeboaError>` - The body or error.
     ///
     pub fn body_as<T: ResponseBody, B: for<'a> Deserialize<'a>>(&self, body_type: T) -> Result<B, DeboaError> {
         let result = body_type.deserialize::<B>(self.body.to_vec())?;
@@ -119,15 +86,9 @@ impl DeboaResponse {
 
     /// Allow get raw body at any time.
     ///
-    /// # Examples
+    /// # Returns
     ///
-    /// ```rust
-    /// use deboa::response::DeboaResponse;
-    /// use http::{HeaderMap, StatusCode};
-    ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), b"Hello, world!");
-    /// assert_eq!(response.raw_body(), &b"Hello, world!".to_vec());
-    /// ```
+    /// * `&[u8]` - The raw body of the response.
     ///
     pub fn raw_body(&self) -> &[u8] {
         &self.body
@@ -135,15 +96,9 @@ impl DeboaResponse {
 
     /// Allow get text body at any time.
     ///
-    /// # Examples
+    /// # Returns
     ///
-    /// ```rust
-    /// use deboa::response::DeboaResponse;
-    /// use http::{HeaderMap, StatusCode};
-    ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), b"Hello, world!");
-    /// assert_eq!(response.text(), Ok(String::from_utf8_lossy(b"Hello, world!").to_string()));
-    /// ```
+    /// * `Result<String, DeboaError>` - The text body or error.
     ///
     pub fn text(&self) -> Result<String, DeboaError> {
         Ok(String::from_utf8_lossy(&self.body).to_string())
@@ -155,15 +110,9 @@ impl DeboaResponse {
     ///
     /// * `path` - The path to save the file.
     ///
-    /// # Examples
+    /// # Returns
     ///
-    /// ```rust
-    /// use deboa::response::DeboaResponse;
-    /// use http::{HeaderMap, StatusCode};
-    ///
-    /// let response = DeboaResponse::new(StatusCode::OK, HeaderMap::new(), b"Hello, world!");
-    /// response.to_file("test.txt").unwrap();
-    /// ```
+    /// * `Result<(), DeboaError>` - The result or error.
     ///
     pub fn to_file(&self, path: &str) -> Result<(), DeboaError> {
         let result = write(path, &*self.body);

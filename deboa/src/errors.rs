@@ -1,3 +1,4 @@
+use http::StatusCode;
 use thiserror::Error;
 
 #[derive(Debug, Error, PartialEq)]
@@ -14,7 +15,7 @@ pub enum DeboaError {
     },
 
     #[error("Failed to receive response: {status_code}: {message}")]
-    Response { status_code: u16, message: String },
+    Response { status_code: StatusCode, message: String },
 
     #[error("Failed to serialize data: {message}")]
     Serialization { message: String },
