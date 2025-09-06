@@ -21,7 +21,7 @@ mod runtimes;
 #[cfg(test)]
 mod tests;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum HttpVersion {
     Http1,
     Http2,
@@ -51,6 +51,10 @@ impl Debug for Deboa {
             .field("headers", &self.headers)
             .field("query_params", &self.query_params)
             .field("body", &self.body)
+            .field("retries", &self.retries)
+            .field("connection_timeout", &self.connection_timeout)
+            .field("request_timeout", &self.request_timeout)
+            .field("protocol", &self.protocol)
             .finish()
     }
 }
