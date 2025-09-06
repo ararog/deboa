@@ -17,6 +17,9 @@ pub enum DeboaError {
     #[error("Failed to receive response: {status_code}: {message}")]
     Response { status_code: StatusCode, message: String },
 
+    #[error("Failed to process response: {message}")]
+    ProcessResponse { message: String },
+
     #[error("Failed to serialize data: {message}")]
     Serialization { message: String },
 
