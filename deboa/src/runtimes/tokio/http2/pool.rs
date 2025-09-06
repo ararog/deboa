@@ -2,14 +2,13 @@ use std::collections::HashMap;
 use url::Url;
 
 use crate::{
-    client::conn::http2::{BaseHttp2Connection, Http2Connection},
+    client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http2Request},
     errors::DeboaError,
-    runtimes::tokio::http2::DeboaHttp2Connection,
 };
 
 pub struct Http2ConnectionPool {
     #[allow(dead_code)]
-    connections: HashMap<Url, BaseHttp2Connection>,
+    connections: HashMap<Url, BaseHttpConnection<Http2Request>>,
 }
 
 impl Http2ConnectionPool {
@@ -17,8 +16,8 @@ impl Http2ConnectionPool {
         Self { connections: HashMap::new() }
     }
 
-    pub async fn create_connection(&mut self, url: &Url) -> Result<&mut BaseHttp2Connection, DeboaError> {
-        let connection = DeboaHttp2Connection::connect(url.clone()).await?;
+    pub async fn create_connection(&mut self, url: &Url) -> Result<&mut BaseHttpConnection<Http2Request>, DeboaError> {
+        let connection = BaseHttpConnection::<Http2Request>::connect(url.clone()).await?;
         if self.connections.contains_key(url) {
             return Ok(self.connections.get_mut(url).unwrap());
         }
