@@ -7,6 +7,7 @@ use http_body_util::{BodyExt, Full};
 use hyper::Request;
 use serde::Serialize;
 
+use crate::client::conn::http::DeboaHttpConnection;
 use crate::client::serde::RequestBody;
 use crate::HttpVersion;
 use crate::{fs::io::Decompressor, middleware::DeboaMiddleware, Deboa};
@@ -491,7 +492,6 @@ impl Deboa {
             });
         }
 
-        // We need sure that we do not reconstruct the request somewhere else in the code as it will lead to the headers deletion making a request invalid.
         let response = if self.protocol == HttpVersion::Http1 {
             let conn = self.http1_pool.create_connection(&url).await?;
             conn.send_request(request.unwrap()).await
