@@ -1,21 +1,26 @@
 #![deny(warnings)]
 #![warn(rust_2018_idioms)]
 
-use hyper::client::conn::http1::handshake;
+use bytes::Bytes;
+use http::{Response, StatusCode};
+use http_body_util::Full;
+use hyper::{body::Incoming, client::conn::http1::handshake, Request};
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
 use url::{Host, Url};
 
 use crate::{
-    client::conn::http1::{BaseHttp1Connection, Http1Connection},
+    client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http1Request},
     errors::DeboaError,
 };
 
-pub struct DeboaHttp1Connection;
-
 #[async_trait::async_trait]
-impl Http1Connection for DeboaHttp1Connection {
-    async fn connect(url: Url) -> Result<BaseHttp1Connection, DeboaError> {
+impl DeboaHttpConnection<Http1Request> for BaseHttpConnection<Http1Request> {
+    fn url(&self) -> &Url {
+        &self.url
+    }
+
+    async fn connect(url: Url) -> Result<BaseHttpConnection<Http1Request>, DeboaError> {
         let host = url.host().unwrap_or(Host::Domain("localhost"));
         let port = url.port().unwrap_or(80);
         let addr = format!("{host}:{port}");
@@ -44,15 +49,22 @@ impl Http1Connection for DeboaHttp1Connection {
         tokio::spawn(async move {
             match conn.await {
                 Ok(_) => (),
-                Err(_err) => {
-                    // return Err(DeboaError::ConnectionError {
-                    //     host: url.to_string(),
-                    //     message: err.to_string(),
-                    // });
-                }
+                Err(_err) => {}
             };
         });
 
-        Ok(BaseHttp1Connection::new(url, sender))
+        Ok(BaseHttpConnection::<Http1Request> { url, sender })
+    }
+
+    async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>, DeboaError> {
+        let result = self.sender.send_request(request).await;
+        if let Err(err) = result {
+            return Err(DeboaError::Response {
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+                message: err.to_string(),
+            });
+        }
+
+        Ok(result.unwrap())
     }
 }
