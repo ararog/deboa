@@ -16,7 +16,7 @@ pub type Http2Request = hyper::client::conn::http2::SendRequest<Full<Bytes>>;
 
 #[async_trait::async_trait]
 pub trait DeboaHttpConnection<T> {
-    /// Allow create a new connection.
+    /// Create a new connection.
     ///
     /// # Arguments
     ///
@@ -28,7 +28,7 @@ pub trait DeboaHttpConnection<T> {
     ///
     async fn connect(url: Url) -> Result<BaseHttpConnection<T>, DeboaError>;
 
-    /// Allow get connection url.
+    /// Get connection url.
     ///
     /// # Returns
     ///
@@ -36,7 +36,7 @@ pub trait DeboaHttpConnection<T> {
     ///
     fn url(&self) -> &Url;
 
-    /// Allow send a request.
+    /// Send a request.
     ///
     /// # Arguments
     ///
@@ -48,6 +48,18 @@ pub trait DeboaHttpConnection<T> {
     ///
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>, DeboaError>;
 
+    /// Process a response.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - The url to connect.
+    /// * `method` - The method to use.
+    /// * `response` - The response to process.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Response<Incoming>, DeboaError>` - The response or error.
+    ///
     fn process_response(
         &mut self,
         url: Url,
