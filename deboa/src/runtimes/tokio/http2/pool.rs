@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 use url::Url;
 
 use crate::{
@@ -8,7 +8,7 @@ use crate::{
 
 pub struct Http2ConnectionPool {
     #[allow(dead_code)]
-    connections: HashMap<Url, BaseHttpConnection<Http2Request>>,
+    connections: HashMap<String, BaseHttpConnection<Http2Request>>,
 }
 
 impl Http2ConnectionPool {
@@ -17,12 +17,14 @@ impl Http2ConnectionPool {
     }
 
     pub async fn create_connection(&mut self, url: &Url) -> Result<&mut BaseHttpConnection<Http2Request>, DeboaError> {
-        let connection = BaseHttpConnection::<Http2Request>::connect(url.clone()).await?;
-        if self.connections.contains_key(url) {
-            return Ok(self.connections.get_mut(url).unwrap());
+        let host = Cow::from(url.host().unwrap().to_string());
+        if self.connections.contains_key(&host.to_string()) {
+            return Ok(self.connections.get_mut(&host.to_string()).unwrap());
         }
 
-        self.connections.insert(url.clone(), connection);
-        Ok(self.connections.get_mut(url).unwrap())
+        let connection = BaseHttpConnection::<Http2Request>::connect(url.clone()).await?;
+
+        self.connections.insert(host.to_string(), connection);
+        Ok(self.connections.get_mut(&host.to_string()).unwrap())
     }
 }

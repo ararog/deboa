@@ -494,13 +494,12 @@ impl Deboa {
 
         let response = if self.protocol == HttpVersion::Http1 {
             let conn = self.http1_pool.create_connection(&url).await?;
-            conn.send_request(request.unwrap()).await
+            conn.send_request(request.unwrap()).await?
         } else {
             let conn = self.http2_pool.create_connection(&url).await?;
-            conn.send_request(request.unwrap()).await
+            conn.send_request(request.unwrap()).await?
         };
 
-        let response = response.unwrap();
         let status_code = response.status();
         let headers = response.headers().clone();
 
