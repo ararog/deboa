@@ -2,9 +2,9 @@
 #![warn(rust_2018_idioms)]
 
 use bytes::Bytes;
-use http::{Response, StatusCode};
+use http::StatusCode;
 use http_body_util::Full;
-use hyper::{body::Incoming, client::conn::http1::handshake, Request};
+use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
 use url::{Host, Url};
@@ -65,6 +65,14 @@ impl DeboaHttpConnection<Http1Request> for BaseHttpConnection<Http1Request> {
             });
         }
 
-        Ok(result.unwrap())
+        let response = result.unwrap();
+        if !response.status().is_success() || response.status() == StatusCode::TOO_MANY_REQUESTS {
+            return Err(DeboaError::Response {
+                status_code: response.status(),
+                message: response.status().to_string(),
+            });
+        }
+
+        Ok(response)
     }
 }

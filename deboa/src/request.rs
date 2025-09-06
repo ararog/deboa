@@ -506,22 +506,12 @@ impl Deboa {
 
         let result = response.collect().await;
         if let Err(err) = result {
-            return Err(DeboaError::Response {
-                status_code,
-                message: err.to_string(),
-            });
+            return Err(DeboaError::ProcessResponse { message: err.to_string() });
         }
 
         let mut response_body = result.unwrap().aggregate();
 
         let raw_body = response_body.copy_to_bytes(response_body.remaining()).to_vec();
-
-        if !status_code.is_success() {
-            return Err(DeboaError::Response {
-                status_code,
-                message: format!("Request failed with status code: {status_code}"),
-            });
-        }
 
         let mut response = DeboaResponse::new(status_code, headers, &raw_body);
 
