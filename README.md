@@ -24,12 +24,12 @@ This release has a major api change. Please check the [migration guide](https://
 - cookies support
 - comprehensive error handling
 - runtime compatibility (tokio, smol, compio)
-- http1 support (http2 coming soon) 
+- http1/2 support 
 
 ## Install
 
 ```rust
-deboa = { version = "0.0.5", features = ["http1", "middlewares",  "json", "tokio-rt"] }
+deboa = { version = "0.0.5", features = ["http1", "tokio-rt"] }
 ```
 
 ## Crate features
@@ -38,8 +38,7 @@ deboa = { version = "0.0.5", features = ["http1", "middlewares",  "json", "tokio
 - smol-rt
 - compio-rt
 - http1 (default)
-- http2 (coming soon)
-- middlewares (default)
+- http2
 
 ## Usage
 
