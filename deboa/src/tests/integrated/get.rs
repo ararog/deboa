@@ -47,7 +47,7 @@ async fn do_get_not_found() -> Result<(), DeboaError> {
         response,
         Err(DeboaError::Response {
             status_code: StatusCode::NOT_FOUND,
-            message: "Request failed with status code: 404 Not Found".to_string()
+            message: "404 Not Found".to_string()
         })
     );
 

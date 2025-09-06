@@ -2,7 +2,6 @@
 #![warn(rust_2018_idioms)]
 
 use bytes::Bytes;
-use http::StatusCode;
 use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
 use hyper_util::rt::TokioExecutor;
@@ -59,22 +58,9 @@ impl DeboaHttpConnection<Http2Request> for BaseHttpConnection<Http2Request> {
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>, DeboaError> {
+        let method = request.method().to_string();
         let result = self.sender.send_request(request).await;
-        if let Err(err) = result {
-            return Err(DeboaError::Response {
-                status_code: StatusCode::INTERNAL_SERVER_ERROR,
-                message: err.to_string(),
-            });
-        }
 
-        let response = result.unwrap();
-        if !response.status().is_success() || response.status() == StatusCode::TOO_MANY_REQUESTS {
-            return Err(DeboaError::Response {
-                status_code: response.status(),
-                message: response.status().to_string(),
-            });
-        }
-
-        Ok(response)
+        self.process_response(self.url.clone(), &method, result)
     }
 }
