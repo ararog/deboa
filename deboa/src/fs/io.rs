@@ -1,6 +1,6 @@
 use bytes::Bytes;
 
-use crate::{errors::DeboaError, response::DeboaResponse, Deboa};
+use crate::{Deboa, errors::DeboaError, response::DeboaResponse};
 
 pub trait Compressor: Send + Sync + 'static {
     /// This method returns the name of encoding for this compressor.

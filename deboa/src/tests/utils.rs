@@ -1,7 +1,7 @@
-use http::{header, StatusCode};
+use http::{StatusCode, header};
 use httpmock::{Method::GET, MockServer};
 
-use crate::{errors::DeboaError, Deboa, HttpVersion};
+use crate::{Deboa, HttpVersion, errors::DeboaError};
 
 pub const JSONPLACEHOLDER: &str = "https://jsonplaceholder.typicode.com";
 

@@ -1,7 +1,8 @@
+use async_trait::async_trait;
 use bytes::Bytes;
 use http::StatusCode;
 use http_body_util::Full;
-use hyper::{body::Incoming, Request, Response};
+use hyper::{Request, Response, body::Incoming};
 use url::Url;
 
 use crate::errors::DeboaError;
@@ -14,7 +15,7 @@ pub struct BaseHttpConnection<T> {
 pub type Http1Request = hyper::client::conn::http1::SendRequest<Full<Bytes>>;
 pub type Http2Request = hyper::client::conn::http2::SendRequest<Full<Bytes>>;
 
-#[async_trait::async_trait]
+#[async_trait]
 pub trait DeboaHttpConnection<T> {
     /// Create a new connection.
     ///

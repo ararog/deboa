@@ -1,15 +1,20 @@
+use crate::HttpVersion;
 #[cfg(test)]
 use crate::errors::DeboaError;
 use crate::response::DeboaResponse;
-use crate::HttpVersion;
 use crate::{
-    tests::utils::{setup_server, JSONPLACEHOLDER},
     Deboa,
+    tests::utils::{JSONPLACEHOLDER, setup_server},
 };
 
 use http::StatusCode;
 use httpmock::MockServer;
 use std::collections::HashMap;
+
+#[cfg(feature = "smol-rt")]
+use macro_rules_attribute::apply;
+#[cfg(feature = "smol-rt")]
+use smol_macros::test;
 
 //
 // GET
@@ -41,7 +46,19 @@ async fn test_get_http1() -> Result<(), DeboaError> {
     do_get_http1().await?;
     Ok(())
 }
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_get_http1() {
+    let _ = do_get_http1().await;
+}
 
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_get_http1() {
+    let _ = do_get_http1().await;
+}
+
+#[cfg(all(feature = "http2", feature = "tokio-rt"))]
 async fn do_get_http2() -> Result<(), DeboaError> {
     let server = MockServer::start();
 
@@ -62,7 +79,7 @@ async fn do_get_http2() -> Result<(), DeboaError> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
+#[cfg(all(feature = "http2", feature = "tokio-rt"))]
 #[tokio::test]
 async fn test_get_http2() -> Result<(), DeboaError> {
     do_get_http2().await?;
@@ -97,6 +114,18 @@ async fn test_get_not_found() -> Result<(), DeboaError> {
     Ok(())
 }
 
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_get_not_found() {
+    let _ = do_get_not_found().await;
+}
+
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_get_not_found() {
+    let _ = do_get_not_found().await;
+}
+
 //
 // GET INVALID SERVER
 //
@@ -126,6 +155,18 @@ async fn do_get_invalid_server() -> Result<(), DeboaError> {
 async fn test_get_invalid_server() -> Result<(), DeboaError> {
     do_get_invalid_server().await?;
     Ok(())
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_get_invalid_server() {
+    let _ = do_get_invalid_server().await;
+}
+
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_get_invalid_server() {
+    let _ = do_get_invalid_server().await;
 }
 
 //
@@ -161,4 +202,16 @@ async fn do_get_by_query() -> Result<(), DeboaError> {
 async fn test_get_by_query() -> Result<(), DeboaError> {
     do_get_by_query().await?;
     Ok(())
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_get_by_query() {
+    let _ = do_get_by_query().await;
+}
+
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_get_by_query() {
+    let _ = do_get_by_query().await;
 }

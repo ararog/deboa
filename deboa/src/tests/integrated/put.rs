@@ -1,7 +1,12 @@
 #[cfg(test)]
 use crate::errors::DeboaError;
-use crate::{tests::utils::JSONPLACEHOLDER, Deboa};
+use crate::{Deboa, tests::utils::JSONPLACEHOLDER};
 use http::StatusCode;
+
+#[cfg(feature = "smol-rt")]
+use macro_rules_attribute::apply;
+#[cfg(feature = "smol-rt")]
+use smol_macros::test;
 
 //
 // PUT
@@ -21,5 +26,18 @@ async fn do_put() -> Result<(), DeboaError> {
 #[tokio::test]
 async fn test_put() -> Result<(), DeboaError> {
     do_put().await?;
+    Ok(())
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_put() -> Result<(), DeboaError> {
+    do_put().await
+}
+
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_put() -> Result<(), DeboaError> {
+    let _ = do_put().await;
     Ok(())
 }

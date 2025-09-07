@@ -8,18 +8,19 @@ use hyper::Request;
 use serde::Serialize;
 
 use crate::client::conn::http::DeboaHttpConnection;
-use crate::client::serde::RequestBody;
-use crate::HttpVersion;
-use crate::{fs::io::Decompressor, middleware::DeboaMiddleware, Deboa};
-
 #[cfg(feature = "http1")]
-use crate::runtimes::tokio::http1::Http1ConnectionPool;
+use crate::client::conn::http::Http1Request;
 #[cfg(feature = "http2")]
-use crate::runtimes::tokio::http2::Http2ConnectionPool;
+use crate::client::conn::http::Http2Request;
 
-use base64::{engine::general_purpose::STANDARD, Engine as _};
-use http::{header, HeaderName, HeaderValue};
-use url::{form_urlencoded, Url};
+use crate::HttpVersion;
+use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
+use crate::client::serde::RequestBody;
+use crate::{Deboa, fs::io::Decompressor, middleware::DeboaMiddleware};
+
+use base64::{Engine as _, engine::general_purpose::STANDARD};
+use http::{HeaderName, HeaderValue, header};
+use url::{Url, form_urlencoded};
 
 use crate::errors::DeboaError;
 use crate::response::DeboaResponse;
@@ -61,9 +62,9 @@ impl Deboa {
             encodings: None,
             protocol: HttpVersion::Http1,
             #[cfg(feature = "http1")]
-            http1_pool: Http1ConnectionPool::new(),
+            http1_pool: HttpConnectionPool::<Http1Request>::new(),
             #[cfg(feature = "http2")]
-            http2_pool: Http2ConnectionPool::new(),
+            http2_pool: HttpConnectionPool::<Http2Request>::new(),
         })
     }
 
@@ -492,10 +493,23 @@ impl Deboa {
             });
         }
 
+        #[cfg(all(feature = "http1", feature = "http2"))]
         let response = if self.protocol == HttpVersion::Http1 {
             let conn = self.http1_pool.create_connection(&url).await?;
             conn.send_request(request.unwrap()).await?
         } else {
+            let conn = self.http2_pool.create_connection(&url).await?;
+            conn.send_request(request.unwrap()).await?
+        };
+
+        #[cfg(feature = "http1")]
+        let response = {
+            let conn = self.http1_pool.create_connection(&url).await?;
+            conn.send_request(request.unwrap()).await?
+        };
+
+        #[cfg(feature = "http2")]
+        let response = {
             let conn = self.http2_pool.create_connection(&url).await?;
             conn.send_request(request.unwrap()).await?
         };

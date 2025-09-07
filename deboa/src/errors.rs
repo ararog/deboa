@@ -20,6 +20,9 @@ pub enum DeboaError {
     #[error("Failed to process response: {message}")]
     ProcessResponse { message: String },
 
+    #[error("Unsupported scheme: {message}")]
+    UnsupportedScheme { message: String },
+
     #[error("Failed to serialize data: {message}")]
     Serialization { message: String },
 
