@@ -1,53 +1,46 @@
-#![deny(warnings)]
-#![warn(rust_2018_idioms)]
+use std::str::FromStr;
 
 use bytes::Bytes;
+use compio::runtime::spawn;
+use cyper_core::{CompioExecutor, HttpStream, TlsBackend};
+use http::Uri;
 use http_body_util::Full;
-use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
-use hyper_util::rt::TokioExecutor;
-use hyper_util::rt::TokioIo;
-use tokio::net::TcpStream;
-use url::{Host, Url};
+use hyper::{Request, Response, body::Incoming, client::conn::http2::handshake};
+use url::Url;
 
-use crate::client::conn::http::DeboaHttpConnection;
 use crate::{
-    client::conn::http::{BaseHttpConnection, Http2Request},
+    client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http2Request},
     errors::DeboaError,
 };
 
-#[async_trait::async_trait]
 impl DeboaHttpConnection<Http2Request> for BaseHttpConnection<Http2Request> {
     fn url(&self) -> &Url {
         &self.url
     }
 
     async fn connect(url: Url) -> Result<BaseHttpConnection<Http2Request>, DeboaError> {
-        let host = url.host().unwrap_or(Host::Domain("localhost"));
-        let port = url.port().unwrap_or(80);
-        let addr = format!("{host}:{port}");
-
-        let stream = TcpStream::connect(addr).await;
+        let uri = Uri::from_str(url.as_str()).unwrap();
+        let stream = HttpStream::connect(uri, TlsBackend::default()).await;
         if let Err(err) = stream {
             return Err(DeboaError::Connection {
-                host: host.to_string(),
+                host: url.host().unwrap().to_string(),
                 message: err.to_string(),
             });
         }
 
-        let io = TokioIo::new(stream.unwrap());
-
-        let result = handshake(TokioExecutor::new(), io).await;
+        let stream = stream.unwrap();
+        let result = handshake(CompioExecutor::default(), stream).await;
 
         if let Err(err) = result {
             return Err(DeboaError::Connection {
-                host: host.to_string(),
+                host: url.host().unwrap().to_string(),
                 message: err.to_string(),
             });
         }
 
         let (sender, conn) = result.unwrap();
 
-        tokio::spawn(async move {
+        spawn(async move {
             match conn.await {
                 Ok(_) => (),
                 Err(_err) => {}

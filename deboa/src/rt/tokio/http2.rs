@@ -1,25 +1,25 @@
-#![deny(warnings)]
-#![warn(rust_2018_idioms)]
-
+use async_trait::async_trait;
 use bytes::Bytes;
 use http_body_util::Full;
-use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
+use hyper::{Request, Response, body::Incoming, client::conn::http2::handshake};
+use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
 use url::{Host, Url};
 
+use crate::client::conn::http::DeboaHttpConnection;
 use crate::{
-    client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http1Request},
+    client::conn::http::{BaseHttpConnection, Http2Request},
     errors::DeboaError,
 };
 
-#[async_trait::async_trait]
-impl DeboaHttpConnection<Http1Request> for BaseHttpConnection<Http1Request> {
+#[async_trait]
+impl DeboaHttpConnection<Http2Request> for BaseHttpConnection<Http2Request> {
     fn url(&self) -> &Url {
         &self.url
     }
 
-    async fn connect(url: Url) -> Result<BaseHttpConnection<Http1Request>, DeboaError> {
+    async fn connect(url: Url) -> Result<BaseHttpConnection<Http2Request>, DeboaError> {
         let host = url.host().unwrap_or(Host::Domain("localhost"));
         let port = url.port().unwrap_or(80);
         let addr = format!("{host}:{port}");
@@ -34,7 +34,7 @@ impl DeboaHttpConnection<Http1Request> for BaseHttpConnection<Http1Request> {
 
         let io = TokioIo::new(stream.unwrap());
 
-        let result = handshake(io).await;
+        let result = handshake(TokioExecutor::new(), io).await;
 
         if let Err(err) = result {
             return Err(DeboaError::Connection {
@@ -52,7 +52,7 @@ impl DeboaHttpConnection<Http1Request> for BaseHttpConnection<Http1Request> {
             };
         });
 
-        Ok(BaseHttpConnection::<Http1Request> { url, sender })
+        Ok(BaseHttpConnection::<Http2Request> { url, sender })
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>, DeboaError> {

@@ -1,4 +1,4 @@
-use crate::{errors::DeboaError, Deboa};
+use crate::{Deboa, errors::DeboaError};
 use serde::{Deserialize, Serialize};
 
 pub trait RequestBody {
