@@ -1,6 +1,6 @@
 #[cfg(test)]
 use crate::errors::DeboaError;
-use crate::{tests::types::JSONPLACEHOLDER, Deboa};
+use crate::{tests::utils::JSONPLACEHOLDER, Deboa};
 use http::StatusCode;
 
 //

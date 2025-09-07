@@ -1,7 +1,7 @@
 use crate::errors::DeboaError;
 use crate::Deboa;
 
-use crate::tests::types::JSONPLACEHOLDER;
+use crate::tests::utils::JSONPLACEHOLDER;
 use http::header;
 use std::collections::HashMap;
 use url::Url;
