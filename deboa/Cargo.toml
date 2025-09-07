@@ -10,7 +10,7 @@ license = "GPL-3.0-or-later"
 keywords = ["http", "networking", "client", "fetch", "rest-client"]
 
 [features]
-default = ["smol-rt"]
+default = ["tokio-rt"]
 
 # runtimes
 tokio-rt = ["http1", "http2", "dep:tokio"]
