@@ -1,7 +1,7 @@
 [package]
 name = "deboa"
 version = "0.0.5"
-edition = "2021"
+edition = "2024"
 repository = "https://github.com/ararog/deboa"
 homepage = "https://github.com/ararog/deboa"
 description = "A friendly rest client on top of hyper."
@@ -10,22 +10,34 @@ license = "GPL-3.0-or-later"
 keywords = ["http", "networking", "client", "fetch", "rest-client"]
 
 [features]
-default = ["tokio-rt"]
+default = ["smol-rt"]
 
 # runtimes
 tokio-rt = ["http1", "http2", "dep:tokio"]
+smol-rt = [
+  "http1",
+  "dep:smol",
+  "dep:async-native-tls",
+  "dep:smol-hyper",
+  "dep:async-executor",
+  "dep:smol-macros",
+  "dep:macro_rules_attribute",
+]
+compio-rt = ["http1", "dep:compio", "dep:cyper-core"]
 
 # protocols
 http1 = []
 http2 = []
 
 [dependencies]
+async-executor = { version = "1.13.3", optional = true }
 async-native-tls = { version = "0.5.0", optional = true }
 async-trait = "0.1.89"
 base64 = "0.22.1"
 bytes = { version = "1.2", optional = false }
 compio = { version = "0.15.0", optional = true, features = ["macros"] }
 cyper-core = { version = "0.4.0", optional = true, features = ["client"] }
+futures = "0.3.31"
 http = "1"
 http-body = "1"
 http-body-util = "0.1"
@@ -41,6 +53,7 @@ macro_rules_attribute = { version = "0.2.2", optional = true }
 mime = { version = "0.3.17" }
 serde = { version = "1.0.217", features = ["derive"] }
 smol = { version = "2.0.2", optional = true }
+smol-executor-trait = "4.1.0"
 smol-hyper = { version = "0.1.0", optional = true }
 smol-macros = { version = "0.1.1", optional = true }
 strum_macros = "0.27.0"
@@ -63,6 +76,3 @@ tokio = { version = "1", features = ["full"] }
 [[bench]]
 name = "deboa_benchmark"
 harness = false
-
-
-

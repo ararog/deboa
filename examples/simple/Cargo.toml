@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-deboa = { path = "../../deboa", features = ["http1", "tokio-rt"] }
+deboa = { path = "../../deboa", features = ["http1"] }
 deboa-extras = { path = "../../deboa-extras", features = ["json"] }
 tokio = { version = "1.47.1", features = ["full"] }
 serde = "1.0.219"

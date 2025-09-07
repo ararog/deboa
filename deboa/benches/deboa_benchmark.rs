@@ -1,10 +1,14 @@
+#[cfg(feature = "tokio-rt")]
 use tokio::runtime::Runtime;
 
-//use criterion::async_executor::SmolExecutor;
-//use criterion::async_executor::CompioExecutor;
+#[cfg(feature = "smol-rt")]
+use criterion::async_executor::SmolExecutor;
 
-use criterion::{criterion_group, criterion_main, Criterion};
-use deboa::{errors::DeboaError, Deboa};
+#[cfg(feature = "compio-rt")]
+use criterion::async_executor::CompioExecutor;
+
+use criterion::{Criterion, criterion_group, criterion_main};
+use deboa::{Deboa, errors::DeboaError};
 
 async fn get_async() -> Result<(), DeboaError> {
     let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
@@ -25,11 +29,10 @@ fn deboa(c: &mut Criterion) {
             let _ = get_async().await;
         });
 
-        /*
+        #[cfg(feature = "smol-rt")]
         b.to_async(SmolExecutor).iter(|| async {
             let _ = get_async().await;
         });
-        */
 
         /*
         b.to_async(CompioExecutor).iter(|| async {
@@ -44,11 +47,10 @@ fn deboa(c: &mut Criterion) {
             let _ = post_async().await;
         });
 
-        /*
+        #[cfg(feature = "smol-rt")]
         b.to_async(SmolExecutor).iter(|| async {
             let _ = post_async().await;
         });
-        */
 
         /*
         b.to_async(CompioExecutor).iter(|| async {

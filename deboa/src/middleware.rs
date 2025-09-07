@@ -1,5 +1,5 @@
 #![allow(unused_variables)]
-use crate::{response::DeboaResponse, Deboa};
+use crate::{Deboa, response::DeboaResponse};
 
 /// DeboaMiddleware
 ///

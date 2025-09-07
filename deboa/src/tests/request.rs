@@ -1,5 +1,5 @@
-use crate::errors::DeboaError;
 use crate::Deboa;
+use crate::errors::DeboaError;
 
 use crate::tests::utils::JSONPLACEHOLDER;
 use http::header;

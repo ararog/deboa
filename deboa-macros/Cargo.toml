@@ -20,7 +20,7 @@ xml = ["deboa-extras/xml"]
 msgpack = ["deboa-extras/msgpack"]
 
 [dependencies]
-deboa = { path = "../deboa", features = ["tokio-rt", "http1"] }
+deboa = { path = "../deboa", features = ["http1"] }
 deboa-extras = { path = "../deboa-extras", features = ["json"] }
 proc-macro2 = "1.0.101"
 tokio = { version = "1.47.1", features = ["full"] }
