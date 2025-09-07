@@ -82,7 +82,7 @@ impl DeboaHttpConnection<Http2Request> for BaseHttpConnection<Http2Request> {
             }
         };
 
-        let result = handshake(SmolExecutor::new(), FuturesIo::new(io)).await;
+        let result = handshake(SmolExecutor::new(Executor::new()), FuturesIo::new(io)).await;
 
         let (sender, conn) = result.unwrap();
 
