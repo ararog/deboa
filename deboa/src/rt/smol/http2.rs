@@ -5,10 +5,9 @@ use async_executor::Executor;
 use async_trait::async_trait;
 use bytes::Bytes;
 use http_body_util::Full;
-use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
+use hyper::{Request, Response, body::Incoming, client::conn::http2::handshake};
 use smol::net::TcpStream;
-use smol_executor_trait::Smol;
-use smol_hyper::rt::{FuturesIo};
+use smol_hyper::rt::{FuturesIo, SmolExecutor};
 use url::{Host, Url};
 
 use crate::client::conn::http::DeboaHttpConnection;
@@ -75,11 +74,15 @@ impl DeboaHttpConnection<Http2Request> for BaseHttpConnection<Http2Request> {
                     let stream = stream.unwrap();
                     SmolStream::Tls(stream)
                 }
-                scheme => return Err(DeboaError::UnsupportedScheme { message: format!("unsupported scheme: {:?}", scheme) }),
+                scheme => {
+                    return Err(DeboaError::UnsupportedScheme {
+                        message: format!("unsupported scheme: {:?}", scheme),
+                    });
+                }
             }
         };
 
-        let result = handshake(Smol::default(), FuturesIo::new(io)).await;
+        let result = handshake(SmolExecutor::new(), FuturesIo::new(io)).await;
 
         let (sender, conn) = result.unwrap();
 
@@ -88,7 +91,8 @@ impl DeboaHttpConnection<Http2Request> for BaseHttpConnection<Http2Request> {
                 Ok(_) => (),
                 Err(_err) => {}
             };
-        });
+        })
+        .detach();
 
         Ok(BaseHttpConnection::<Http2Request> { url, sender })
     }

@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use async_trait::async_trait;
 use bytes::Bytes;
 use compio::runtime::spawn;
 use cyper_core::{CompioExecutor, HttpStream, TlsBackend};
@@ -13,6 +14,7 @@ use crate::{
     errors::DeboaError,
 };
 
+#[async_trait]
 impl DeboaHttpConnection<Http2Request> for BaseHttpConnection<Http2Request> {
     fn url(&self) -> &Url {
         &self.url
@@ -45,7 +47,8 @@ impl DeboaHttpConnection<Http2Request> for BaseHttpConnection<Http2Request> {
                 Ok(_) => (),
                 Err(_err) => {}
             };
-        });
+        })
+        .detach();
 
         Ok(BaseHttpConnection::<Http2Request> { url, sender })
     }
