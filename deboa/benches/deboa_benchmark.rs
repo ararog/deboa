@@ -1,13 +1,7 @@
-#[cfg(feature = "compio-rt")]
-use criterion::async_executor::SmolExecutor;
-#[cfg(feature = "tokio-rt")]
 use tokio::runtime::Runtime;
 
-#[cfg(feature = "smol-rt")]
-use criterion::async_executor::SmolExecutor;
-
-#[cfg(feature = "compio-rt")]
-use criterion::async_executor::CompioExecutor;
+//use criterion::async_executor::SmolExecutor;
+//use criterion::async_executor::CompioExecutor;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use deboa::{errors::DeboaError, Deboa};
@@ -31,15 +25,17 @@ fn deboa(c: &mut Criterion) {
             let _ = get_async().await;
         });
 
-        #[cfg(feature = "smol-rt")]
+        /*
         b.to_async(SmolExecutor).iter(|| async {
             let _ = get_async().await;
         });
+        */
 
-        #[cfg(feature = "compio-rt")]
+        /*
         b.to_async(CompioExecutor).iter(|| async {
             let _ = get_async().await;
         });
+        */
     });
 
     c.bench_function("deboa_post", move |b| {
@@ -48,15 +44,17 @@ fn deboa(c: &mut Criterion) {
             let _ = post_async().await;
         });
 
-        #[cfg(feature = "smol-rt")]
+        /*
         b.to_async(SmolExecutor).iter(|| async {
             let _ = post_async().await;
         });
+        */
 
-        #[cfg(feature = "compio-rt")]
+        /*
         b.to_async(CompioExecutor).iter(|| async {
             let _ = post_async().await;
         });
+        */
     });
 }
 

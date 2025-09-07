@@ -1,5 +1,5 @@
 use crate::errors::DeboaError;
-use crate::tests::types::JSONPLACEHOLDER;
+use crate::tests::utils::JSONPLACEHOLDER;
 use crate::Deboa;
 use http::StatusCode;
 

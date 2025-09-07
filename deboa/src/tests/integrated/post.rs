@@ -1,5 +1,5 @@
 use crate::Deboa;
-use crate::{errors::DeboaError, tests::types::format_address};
+use crate::{errors::DeboaError, tests::utils::format_address};
 use http::{header, StatusCode};
 use httpmock::{Method::POST, MockServer};
 
@@ -12,7 +12,7 @@ async fn do_post() -> Result<(), DeboaError> {
 
     let http_mock = server.mock(|when, then| {
         when.method(POST).path("/posts");
-        then.status(StatusCode::CREATED.into())
+        then.status::<u16>(StatusCode::CREATED.into())
             .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
             .body("ping");
     });

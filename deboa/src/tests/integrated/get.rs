@@ -1,19 +1,28 @@
 #[cfg(test)]
 use crate::errors::DeboaError;
 use crate::response::DeboaResponse;
-use crate::{tests::types::JSONPLACEHOLDER, Deboa};
+use crate::HttpVersion;
+use crate::{
+    tests::utils::{setup_server, JSONPLACEHOLDER},
+    Deboa,
+};
 
 use http::StatusCode;
+use httpmock::MockServer;
 use std::collections::HashMap;
 
 //
 // GET
 //
 
-async fn do_get() -> Result<(), DeboaError> {
-    let mut api = Deboa::new(JSONPLACEHOLDER)?;
+async fn do_get_http1() -> Result<(), DeboaError> {
+    let server = MockServer::start();
+
+    let (http_mock, mut api) = setup_server(&server, HttpVersion::Http1)?;
 
     let response: DeboaResponse = api.get("/posts").await?;
+
+    http_mock.assert();
 
     assert_eq!(
         response.status(),
@@ -28,8 +37,35 @@ async fn do_get() -> Result<(), DeboaError> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get() -> Result<(), DeboaError> {
-    do_get().await?;
+async fn test_get_http1() -> Result<(), DeboaError> {
+    do_get_http1().await?;
+    Ok(())
+}
+
+async fn do_get_http2() -> Result<(), DeboaError> {
+    let server = MockServer::start();
+
+    let (http_mock, mut api) = setup_server(&server, HttpVersion::Http2)?;
+
+    let response: DeboaResponse = api.get("/posts").await?;
+
+    http_mock.assert();
+
+    assert_eq!(
+        response.status(),
+        StatusCode::OK,
+        "Status code is {} and should be {}",
+        response.status().as_u16(),
+        StatusCode::OK.as_u16()
+    );
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio-rt")]
+#[tokio::test]
+async fn test_get_http2() -> Result<(), DeboaError> {
+    do_get_http2().await?;
     Ok(())
 }
 
