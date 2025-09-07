@@ -46,6 +46,7 @@ async fn test_get_http1() -> Result<(), DeboaError> {
     do_get_http1().await?;
     Ok(())
 }
+
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_get_http1() {
@@ -58,7 +59,7 @@ async fn test_get_http1() {
     let _ = do_get_http1().await;
 }
 
-#[cfg(all(feature = "http2", feature = "tokio-rt"))]
+#[cfg(feature = "http2")]
 async fn do_get_http2() -> Result<(), DeboaError> {
     let server = MockServer::start();
 
@@ -84,6 +85,18 @@ async fn do_get_http2() -> Result<(), DeboaError> {
 async fn test_get_http2() -> Result<(), DeboaError> {
     do_get_http2().await?;
     Ok(())
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_get_http2() {
+    let _ = do_get_http2().await;
+}
+
+#[cfg(all(feature = "http2", feature = "compio-rt"))]
+#[compio::test]
+async fn test_get_http2() {
+    let _ = do_get_http2().await;
 }
 
 //
