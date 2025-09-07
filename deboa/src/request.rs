@@ -502,13 +502,13 @@ impl Deboa {
             conn.send_request(request.unwrap()).await?
         };
 
-        #[cfg(feature = "http1")]
+        #[cfg(all(feature = "http1", not(feature = "http2")))]
         let response = {
             let conn = self.http1_pool.create_connection(&url).await?;
             conn.send_request(request.unwrap()).await?
         };
 
-        #[cfg(feature = "http2")]
+        #[cfg(all(feature = "http2", not(feature = "http1")))]
         let response = {
             let conn = self.http2_pool.create_connection(&url).await?;
             conn.send_request(request.unwrap()).await?
