@@ -34,10 +34,3 @@ async fn test_delete() -> Result<(), DeboaError> {
 async fn test_delete() -> Result<(), DeboaError> {
     do_delete().await
 }
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_delete() -> Result<(), DeboaError> {
-    let _ = do_delete().await;
-    Ok(())
-}

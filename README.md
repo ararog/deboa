@@ -23,7 +23,7 @@ This release has a major api change. Please check the [migration guide](https://
 - bora macro to easily create api clients
 - cookies support
 - comprehensive error handling
-- runtime compatibility (tokio, smol, compio)
+- runtime compatibility (tokio and smol)
 - http1/2 support 
 
 ## Install
@@ -36,7 +36,6 @@ deboa = { version = "0.0.5", features = ["http1", "tokio-rt"] }
 
 - tokio-rt (default)
 - smol-rt
-- compio-rt
 - http1 (default)
 - http2
 
