@@ -34,10 +34,3 @@ async fn test_put() -> Result<(), DeboaError> {
 async fn test_put() -> Result<(), DeboaError> {
     do_put().await
 }
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_put() -> Result<(), DeboaError> {
-    let _ = do_put().await;
-    Ok(())
-}

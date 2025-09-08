@@ -47,10 +47,3 @@ async fn test_post() -> Result<(), DeboaError> {
 async fn test_post() -> Result<(), DeboaError> {
     do_post().await
 }
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_post() -> Result<(), DeboaError> {
-    let _ = do_post().await;
-    Ok(())
-}

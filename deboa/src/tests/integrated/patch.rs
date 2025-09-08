@@ -34,10 +34,3 @@ async fn test_patch() -> Result<(), DeboaError> {
 async fn test_patch() -> Result<(), DeboaError> {
     do_patch().await
 }
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_patch() -> Result<(), DeboaError> {
-    let _ = do_patch().await;
-    Ok(())
-}
