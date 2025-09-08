@@ -16,12 +16,14 @@ use crate::fs::io::Decompressor;
 use crate::middleware::DeboaMiddleware;
 
 pub mod client;
+pub mod cookie;
 pub mod errors;
 pub mod fs;
 pub mod middleware;
 pub mod request;
 pub mod response;
 mod rt;
+
 #[cfg(test)]
 mod tests;
 
