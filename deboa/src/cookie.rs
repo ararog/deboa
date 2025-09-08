@@ -11,6 +11,7 @@ pub struct DeboaCookie {
 }
 
 impl DeboaCookie {
+    /// Create a new cookie.
     ///
     /// # Arguments
     ///
@@ -33,6 +34,17 @@ impl DeboaCookie {
         }
     }
 
+    /// Get the cookie name.
+    ///
+    /// # Returns
+    ///
+    /// * `&str` - The cookie name.
+    ///
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Set the cookie expires.
     ///
     /// # Arguments
     ///
@@ -47,6 +59,7 @@ impl DeboaCookie {
         self
     }
 
+    /// Set the cookie path.
     ///
     /// # Arguments
     ///
@@ -61,6 +74,7 @@ impl DeboaCookie {
         self
     }
 
+    /// Set the cookie domain.
     ///
     /// # Arguments
     ///
@@ -75,6 +89,7 @@ impl DeboaCookie {
         self
     }
 
+    /// Set the cookie secure.
     ///
     /// # Arguments
     ///
@@ -89,6 +104,7 @@ impl DeboaCookie {
         self
     }
 
+    /// Set the cookie http only.
     ///
     /// # Arguments
     ///
@@ -104,8 +120,16 @@ impl DeboaCookie {
     }
 }
 
-impl fmt::Display for DeboaCookie {
+impl fmt::Debug for DeboaCookie {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}={};", self.name, self.value)
+        f.debug_struct("DeboaCookie")
+            .field("name", &self.name)
+            .field("value", &self.value)
+            .field("expires", &self.expires)
+            .field("path", &self.path)
+            .field("domain", &self.domain)
+            .field("secure", &self.secure)
+            .field("http_only", &self.http_only)
+            .finish()
     }
 }

@@ -12,6 +12,7 @@ use crate::client::conn::http::Http1Request;
 use crate::client::conn::http::Http2Request;
 
 use crate::client::conn::pool::HttpConnectionPool;
+use crate::cookie::DeboaCookie;
 use crate::fs::io::Decompressor;
 use crate::middleware::DeboaMiddleware;
 
@@ -39,6 +40,7 @@ pub struct Deboa {
     base_url: Url,
     headers: Option<HashMap<::http::HeaderName, String>>,
     query_params: Option<HashMap<String, String>>,
+    cookies: Option<HashMap<String, DeboaCookie>>,
     body: Arc<Vec<u8>>,
     retries: u32,
     connection_timeout: u64,

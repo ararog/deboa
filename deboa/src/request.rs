@@ -16,6 +16,7 @@ use crate::client::conn::http::Http2Request;
 use crate::HttpVersion;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
 use crate::client::serde::RequestBody;
+use crate::cookie::DeboaCookie;
 use crate::{Deboa, fs::io::Decompressor, middleware::DeboaMiddleware};
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
@@ -54,6 +55,7 @@ impl Deboa {
             base_url: base_url.unwrap(),
             headers: None,
             query_params: None,
+            cookies: None,
             body: Vec::new().into(),
             retries: 0,
             connection_timeout: 0,
@@ -221,50 +223,6 @@ impl Deboa {
         self
     }
 
-    /// Allow change request retries at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `retries` - The new retries.
-    ///
-    pub fn set_retries(&mut self, retries: u32) -> &mut Self {
-        self.retries = retries;
-        self
-    }
-
-    /// Allow change request connection timeout at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `timeout` - The new timeout.
-    ///
-    pub fn set_connection_timeout(&mut self, timeout: u64) -> &mut Self {
-        self.connection_timeout = timeout;
-        self
-    }
-
-    /// Allow change request request timeout at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `timeout` - The new timeout.
-    ///
-    pub fn set_request_timeout(&mut self, timeout: u64) -> &mut Self {
-        self.request_timeout = timeout;
-        self
-    }
-
-    /// Allow set text body at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `text` - The text to be set.
-    ///
-    pub fn set_text(&mut self, text: String) -> &mut Self {
-        self.body = text.as_bytes().to_vec().into();
-        self
-    }
-
     /// Allow add query param at any time.
     ///
     /// # Arguments
@@ -320,6 +278,107 @@ impl Deboa {
     ///
     pub fn set_query_params(&mut self, params: HashMap<String, String>) -> &mut Self {
         self.query_params = Some(params);
+        self
+    }
+
+    /// Allow add cookie at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `cookie` - The cookie to be added.
+    ///
+    pub fn add_cookie(&mut self, cookie: DeboaCookie) -> &mut Self {
+        if let Some(cookies) = &mut self.cookies {
+            cookies.insert(cookie.name().to_string(), cookie);
+        } else {
+            self.cookies = Some(HashMap::from([(cookie.name().to_string(), cookie)]));
+        }
+        self
+    }
+
+    /// Allow remove cookie at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The cookie name.
+    ///
+    pub fn remove_cookie(&mut self, name: &str) -> &mut Self {
+        if let Some(cookies) = &mut self.cookies {
+            cookies.remove(name);
+        }
+        self
+    }
+
+    /// Allow check if cookie exists at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The cookie name to check.
+    ///
+    /// # Returns
+    ///
+    /// * `bool` - True if the cookie exists, false otherwise.
+    ///
+    pub fn has_cookie(&self, name: &str) -> bool {
+        if let Some(cookies) = &self.cookies {
+            cookies.contains_key(name)
+        } else {
+            false
+        }
+    }
+
+    /// Allow add cookies at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `cookies` - The cookies to be added.
+    ///
+    pub fn set_cookies(&mut self, cookies: HashMap<String, DeboaCookie>) -> &mut Self {
+        self.cookies = Some(cookies);
+        self
+    }
+
+    /// Allow change request retries at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `retries` - The new retries.
+    ///
+    pub fn set_retries(&mut self, retries: u32) -> &mut Self {
+        self.retries = retries;
+        self
+    }
+
+    /// Allow change request connection timeout at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - The new timeout.
+    ///
+    pub fn set_connection_timeout(&mut self, timeout: u64) -> &mut Self {
+        self.connection_timeout = timeout;
+        self
+    }
+
+    /// Allow change request request timeout at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - The new timeout.
+    ///
+    pub fn set_request_timeout(&mut self, timeout: u64) -> &mut Self {
+        self.request_timeout = timeout;
+        self
+    }
+
+    /// Allow set text body at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `text` - The text to be set.
+    ///
+    pub fn set_text(&mut self, text: String) -> &mut Self {
+        self.body = text.as_bytes().to_vec().into();
         self
     }
 
