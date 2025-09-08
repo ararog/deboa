@@ -871,7 +871,6 @@ dependencies = [
  "mime",
  "serde",
  "smol",
- "smol-executor-trait 4.1.0",
  "smol-hyper",
  "smol-macros",
  "strum_macros",
@@ -1015,24 +1014,6 @@ checksum = "8be9f3dfaaffdae2972880079a491a1a8bb7cbed0b8dd7a347f668b4150a3b93"
 dependencies = [
  "event-listener 5.4.1",
  "pin-project-lite",
-]
-
-[[package]]
-name = "executor-trait"
-version = "2.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13c39dff9342e4e0e16ce96be751eb21a94e94a87bb2f6e63ad1961c2ce109bf"
-dependencies = [
- "async-trait",
-]
-
-[[package]]
-name = "executor-trait"
-version = "3.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57d6a1fc6700fa12782770cb344a29172ae940ea41d5fd5049fdf236dd6eaa92"
-dependencies = [
- "async-trait",
 ]
 
 [[package]]
@@ -2635,32 +2616,6 @@ dependencies = [
  "async-process",
  "blocking",
  "futures-lite",
-]
-
-[[package]]
-name = "smol-executor-trait"
-version = "3.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76e1a698f1ea8bfde1f8f35115488b809fbd39132e9dc2595f967c44f17e4b8f"
-dependencies = [
- "async-trait",
- "blocking",
- "executor-trait 2.1.2",
- "smol",
-]
-
-[[package]]
-name = "smol-executor-trait"
-version = "4.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dec463fb35de27e03293f873142e678b0e296ba433511ca7ab1dc22e43f272e7"
-dependencies = [
- "async-trait",
- "blocking",
- "executor-trait 2.1.2",
- "executor-trait 3.1.0",
- "smol",
- "smol-executor-trait 3.0.2",
 ]
 
 [[package]]

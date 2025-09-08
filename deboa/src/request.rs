@@ -79,6 +79,33 @@ impl Deboa {
         self
     }
 
+    /// Allow change request base url at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `base_url` - The new base url.
+    ///
+    pub fn set_base_url(&mut self, base_url: &str) -> Result<&mut Self, DeboaError> {
+        let url = Url::parse(base_url);
+        if let Err(e) = url {
+            return Err(DeboaError::UrlParse { message: e.to_string() });
+        }
+
+        self.base_url = url.unwrap();
+
+        Ok(self)
+    }
+
+    /// Allow get request base url at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `String` - The base url.
+    ///
+    pub fn base_url(&self) -> String {
+        self.base_url.to_string()
+    }
+
     /// Allow add header at any time.
     ///
     /// # Arguments
@@ -194,33 +221,6 @@ impl Deboa {
         self
     }
 
-    /// Allow change request base url at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `base_url` - The new base url.
-    ///
-    pub fn set_base_url(&mut self, base_url: &str) -> Result<&mut Self, DeboaError> {
-        let url = Url::parse(base_url);
-        if let Err(e) = url {
-            return Err(DeboaError::UrlParse { message: e.to_string() });
-        }
-
-        self.base_url = url.unwrap();
-
-        Ok(self)
-    }
-
-    /// Allow get request base url at any time.
-    ///
-    /// # Returns
-    ///
-    /// * `String` - The base url.
-    ///
-    pub fn base_url(&self) -> String {
-        self.base_url.to_string()
-    }
-
     /// Allow change request retries at any time.
     ///
     /// # Arguments
@@ -263,6 +263,53 @@ impl Deboa {
     pub fn set_text(&mut self, text: String) -> &mut Self {
         self.body = text.as_bytes().to_vec().into();
         self
+    }
+
+    /// Allow add query param at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The query param key.
+    /// * `value` - The query param value.
+    ///
+    pub fn add_query_param(&mut self, key: &str, value: &str) -> &mut Self {
+        if let Some(query_params) = &mut self.query_params {
+            query_params.insert(key.to_string(), value.to_string());
+        } else {
+            self.query_params = Some(HashMap::from([(key.to_string(), value.to_string())]));
+        }
+        self
+    }
+
+    /// Allow remove query param at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The query param key.
+    ///
+    pub fn remove_query_param(&mut self, key: &str) -> &mut Self {
+        if let Some(query_params) = &mut self.query_params {
+            query_params.remove(key);
+        }
+        self
+    }
+
+    /// Allow check if query param exists at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The query param key to check.
+    ///
+    /// # Returns
+    ///
+    /// * `bool` - True if the query param exists, false otherwise.
+    ///
+    pub fn has_query_param(&self, key: &str) -> bool {
+        if let Some(query_params) = &self.query_params {
+            query_params.contains_key(key)
+        } else {
+            false
+        }
     }
 
     /// Allow add query params at any time.
