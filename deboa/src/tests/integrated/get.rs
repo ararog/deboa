@@ -53,12 +53,6 @@ async fn test_get_http1() {
     let _ = do_get_http1().await;
 }
 
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_get_http1() {
-    let _ = do_get_http1().await;
-}
-
 #[cfg(feature = "http2")]
 async fn do_get_http2() -> Result<(), DeboaError> {
     let server = MockServer::start();
@@ -93,12 +87,6 @@ async fn test_get_http2() {
     let _ = do_get_http2().await;
 }
 
-#[cfg(all(feature = "http2", feature = "compio-rt"))]
-#[compio::test]
-async fn test_get_http2() {
-    let _ = do_get_http2().await;
-}
-
 //
 // GET NOT FOUND
 //
@@ -129,12 +117,6 @@ async fn test_get_not_found() -> Result<(), DeboaError> {
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_get_not_found() {
-    let _ = do_get_not_found().await;
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
 async fn test_get_not_found() {
     let _ = do_get_not_found().await;
 }
@@ -176,12 +158,6 @@ async fn test_get_invalid_server() {
     let _ = do_get_invalid_server().await;
 }
 
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_get_invalid_server() {
-    let _ = do_get_invalid_server().await;
-}
-
 //
 // GET BY QUERY
 //
@@ -219,12 +195,6 @@ async fn test_get_by_query() -> Result<(), DeboaError> {
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_get_by_query() {
-    let _ = do_get_by_query().await;
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
 async fn test_get_by_query() {
     let _ = do_get_by_query().await;
 }

@@ -6,15 +6,25 @@
 
 * Config struct was removed
 * DeboaResponse allow traits to add body deserialization
+* Removed builtin json support
+* Added DeboaError
 
 ### Non-breaking changes
 
 * Middleware support
 * HTTP2 support
 * Responses decompression
-* Compio runtime support
+* Introduced deboa_extras crate
+* Introduced deboa_macro crate
 
 ## From 0.0.3 to 0.0.4
+
+### Breaking changes
+
+* Added built-in json support
+* Removed data and config params from requests
+* Introduced DeboaResponse
+* Removed anyhow support
   
 ### Non-breaking changes
 
@@ -26,5 +36,5 @@
 
 ### Non-breaking changes
 
-* Added support to multiple runtimes
+* Added support to smol runtime
 
