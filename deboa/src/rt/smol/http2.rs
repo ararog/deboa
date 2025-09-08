@@ -1,12 +1,13 @@
 use async_trait::async_trait;
 use bytes::Bytes;
 use http_body_util::Full;
-use hyper::{Request, Response, body::Incoming, client::conn::http2::handshake, rt::Executor};
+use hyper::{Request, Response, body::Incoming, client::conn::http2::handshake};
 use smol::net::TcpStream;
 use smol_hyper::rt::FuturesIo;
 use url::Url;
 
 use crate::client::conn::http::DeboaHttpConnection;
+use crate::rt::smol::executor::SmolExecutor;
 use crate::rt::smol::stream::SmolStream;
 use crate::{
     client::conn::http::{BaseHttpConnection, Http2Request},
@@ -94,26 +95,5 @@ impl DeboaHttpConnection<Http2Request> for BaseHttpConnection<Http2Request> {
         let result = self.sender.send_request(request).await;
 
         self.process_response(self.url.clone(), &method, result)
-    }
-}
-
-#[non_exhaustive]
-#[derive(Default, Debug, Clone)]
-pub struct SmolExecutor {}
-
-impl<Fut> Executor<Fut> for SmolExecutor
-where
-    Fut: Future + Send + 'static,
-    Fut::Output: Send + 'static,
-{
-    fn execute(&self, fut: Fut) {
-        smol::spawn(fut).detach();
-    }
-}
-
-impl SmolExecutor {
-    /// Create new executor that relies on [`tokio::spawn`] to execute futures.
-    pub fn new() -> Self {
-        Self {}
     }
 }
