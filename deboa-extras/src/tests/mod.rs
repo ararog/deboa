@@ -1,4 +1,3 @@
-mod types;
-
 mod http;
 mod io;
+mod types;

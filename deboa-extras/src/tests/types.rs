@@ -1,7 +1,5 @@
-use httpmock::MockServer;
 use serde::{Deserialize, Serialize};
 
-pub const JSONPLACEHOLDER: &str = "https://jsonplaceholder.typicode.com";
 #[cfg(feature = "msgpack")]
 pub const MSGPACK_POST: [u8; 23] = [
     147, 1, 164, 84, 101, 115, 116, 175, 83, 111, 109, 101, 32, 116, 101, 115, 116, 32, 116, 111, 32, 100, 111,
@@ -61,13 +59,4 @@ pub struct Comment {
 pub struct Response {
     pub response_code: i32,
     pub response_message: String,
-}
-
-pub fn format_address(server: &MockServer) -> String {
-    let server_address = *server.address();
-
-    let ip = server_address.ip();
-    let port = server_address.port();
-
-    format!("http://{ip}:{port}")
 }

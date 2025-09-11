@@ -1,7 +1,7 @@
 use http::{StatusCode, header};
 use httpmock::{Method::GET, MockServer};
 
-use crate::{Deboa, HttpVersion, errors::DeboaError};
+use crate::errors::DeboaError;
 
 pub const JSONPLACEHOLDER: &str = "https://jsonplaceholder.typicode.com";
 
@@ -14,7 +14,7 @@ pub fn format_address(server: &MockServer) -> String {
     format!("http://{ip}:{port}")
 }
 
-pub fn setup_server(server: &MockServer, protocol: HttpVersion) -> Result<(httpmock::Mock<'_>, Deboa), DeboaError> {
+pub fn setup_server(server: &MockServer) -> Result<httpmock::Mock<'_>, DeboaError> {
     let http_mock = server.mock(|when, then| {
         when.method(GET).path("/posts");
         then.status::<u16>(StatusCode::OK.into())
@@ -22,8 +22,5 @@ pub fn setup_server(server: &MockServer, protocol: HttpVersion) -> Result<(httpm
             .body("ping");
     });
 
-    let mut api = Deboa::new(&format_address(server))?;
-    api.set_protocol(protocol);
-
-    Ok((http_mock, api))
+    Ok(http_mock)
 }

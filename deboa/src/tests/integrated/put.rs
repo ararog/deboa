@@ -1,6 +1,6 @@
 #[cfg(test)]
 use crate::errors::DeboaError;
-use crate::{Deboa, tests::utils::JSONPLACEHOLDER};
+use crate::{Deboa, request::DeboaRequest, tests::utils::JSONPLACEHOLDER};
 use http::StatusCode;
 
 #[cfg(feature = "smol-rt")]
@@ -13,9 +13,11 @@ use smol_macros::test;
 //
 
 async fn do_put() -> Result<(), DeboaError> {
-    let mut api = Deboa::new(JSONPLACEHOLDER)?;
+    let mut client = Deboa::new();
 
-    let response = api.set_text("".to_string()).put("/posts/1").await?;
+    let request = DeboaRequest::put(format!("{JSONPLACEHOLDER}/posts/1").as_str()).text("").build()?;
+
+    let response = client.execute(request).await?;
 
     assert_eq!(response.status(), StatusCode::OK);
 

@@ -2,9 +2,9 @@ use std::io::{Read, Write};
 
 use bytes::{Buf, Bytes};
 use deboa::{
-    Deboa,
     errors::DeboaError,
     fs::io::{Compressor, Decompressor},
+    request::DeboaRequest,
     response::DeboaResponse,
 };
 use flate2::{read::DeflateDecoder, write::DeflateEncoder};
@@ -16,7 +16,7 @@ impl Compressor for DeflateCompressor {
         "deflate".to_string()
     }
 
-    fn compress_body(&self, request: &Deboa) -> Result<Bytes, DeboaError> {
+    fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes, DeboaError> {
         let mut writer = DeflateEncoder::new(Vec::new(), flate2::Compression::default());
         let result = writer.write_all(request.raw_body().as_ref());
 

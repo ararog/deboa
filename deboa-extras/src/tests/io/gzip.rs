@@ -1,33 +1,22 @@
-use deboa::{Deboa, errors::DeboaError};
-use http::{StatusCode, header};
-use httpmock::MockServer;
+use deboa::{errors::DeboaError, interceptor::DeboaInterceptor, response::DeboaResponse};
+use http::{HeaderMap, HeaderValue, StatusCode};
 
 use crate::{
+    interceptor::encoding::EncodingInterceptor,
     io::gzip::GzipDecompressor,
-    tests::types::{DECOMPRESSED, GZIP_COMPRESSED, format_address},
+    tests::types::{DECOMPRESSED, GZIP_COMPRESSED},
 };
 
 #[tokio::test]
 async fn test_gzip() -> Result<(), DeboaError> {
-    let server = MockServer::start();
+    let encoding_interceptor = EncodingInterceptor::register_decoders(vec![Box::new(GzipDecompressor)]);
 
-    let http_mock = server.mock(|when, then| {
-        when.method(http::Method::GET.as_str()).path("/sometext");
-        then.status(StatusCode::OK.into())
-            .header(header::CONTENT_ENCODING.as_str(), "gzip")
-            .body(GZIP_COMPRESSED);
-    });
+    let mut headers = HeaderMap::new();
+    headers.insert("Content-Encoding", HeaderValue::from_static("gzip"));
+    let mut response = DeboaResponse::new(StatusCode::OK, headers, GZIP_COMPRESSED.as_ref());
 
-    let mut api = Deboa::new(&format_address(&server))?;
+    encoding_interceptor.on_response(&mut response);
 
-    let body = DECOMPRESSED;
-    api.set_raw_body(body.as_ref());
-    api.accept_encoding(vec![Box::new(GzipDecompressor)]);
-
-    let response = api.get("/sometext").await?;
-
-    http_mock.assert();
-
-    assert_eq!(response.raw_body(), body);
+    assert_eq!(response.raw_body(), DECOMPRESSED);
     Ok(())
 }

@@ -1,23 +1,15 @@
 use crate::http::serde::json::JsonBody;
-use deboa::Deboa;
 use deboa::errors::DeboaError;
+use deboa::{request::DeboaRequest, response::DeboaResponse};
 
-use http::header;
-
-use crate::tests::types::{JSON_POST, JSONPLACEHOLDER, Post, format_address, sample_post};
-
-use httpmock::MockServer;
+use crate::tests::types::{JSON_POST, Post, sample_post};
 
 #[cfg(feature = "json")]
 #[test]
 fn test_set_json() -> Result<(), DeboaError> {
-    let mut api = Deboa::new(JSONPLACEHOLDER)?;
+    let request = DeboaRequest::post("posts/1").body_as(JsonBody, sample_post())?.build()?;
 
-    let data = sample_post();
-
-    let _ = api.set_body_as(JsonBody, data);
-
-    assert_eq!(*api.raw_body(), JSON_POST.to_vec());
+    assert_eq!(*request.raw_body(), JSON_POST.to_vec());
 
     Ok(())
 }
@@ -25,24 +17,10 @@ fn test_set_json() -> Result<(), DeboaError> {
 #[cfg(feature = "json")]
 #[tokio::test]
 async fn test_response_json() -> Result<(), DeboaError> {
-    let server = MockServer::start();
-
     let data = sample_post();
 
-    let http_mock = server.mock(|when, then| {
-        use http::StatusCode;
-
-        when.method(http::Method::GET.as_str()).path("/posts/1");
-        then.status(StatusCode::OK.into())
-            .header(header::CONTENT_TYPE.as_str(), mime::APPLICATION_JSON.to_string())
-            .body(JSON_POST);
-    });
-
-    let mut api = Deboa::new(&format_address(&server))?;
-
-    let response: Post = api.get("posts/1").await?.body_as(JsonBody)?;
-
-    http_mock.assert();
+    let response = DeboaResponse::new(http::StatusCode::OK, http::HeaderMap::new(), JSON_POST.as_ref());
+    let response: Post = response.body_as(JsonBody)?;
 
     assert_eq!(response, data);
 
