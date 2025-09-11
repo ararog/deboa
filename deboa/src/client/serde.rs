@@ -1,4 +1,4 @@
-use crate::{Deboa, errors::DeboaError};
+use crate::{errors::DeboaError, request::DeboaRequest};
 use serde::{Deserialize, Serialize};
 
 pub trait RequestBody {
@@ -6,9 +6,9 @@ pub trait RequestBody {
     ///
     /// # Arguments
     ///
-    /// * `deboa` - A mutable reference to the Deboa instance
+    /// * `request` - A mutable reference to the DeboaRequest instance
     ///
-    fn register_content_type(&self, deboa: &mut Deboa) -> ();
+    fn register_content_type(&self, request: &mut DeboaRequest) -> ();
     /// Serialize the request body
     ///
     /// # Arguments

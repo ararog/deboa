@@ -3,9 +3,9 @@ use std::io::{Read, Write};
 
 use brotli::CompressorWriter;
 use deboa::{
-    Deboa,
     errors::DeboaError,
     fs::io::{Compressor, Decompressor},
+    request::DeboaRequest,
     response::DeboaResponse,
 };
 
@@ -17,7 +17,7 @@ impl Compressor for BrotliCompressor {
         "br".to_string()
     }
 
-    fn compress_body(&self, request: &Deboa) -> Result<Bytes, DeboaError> {
+    fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes, DeboaError> {
         let mut writer = CompressorWriter::new(Vec::new(), 0, 11, 22);
         let result = writer.write_all(request.raw_body().as_ref());
 

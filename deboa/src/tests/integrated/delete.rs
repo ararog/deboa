@@ -1,6 +1,6 @@
 #[cfg(test)]
 use crate::errors::DeboaError;
-use crate::{Deboa, tests::utils::JSONPLACEHOLDER};
+use crate::{Deboa, request::DeboaRequest, tests::utils::JSONPLACEHOLDER};
 use http::StatusCode;
 
 #[cfg(feature = "smol-rt")]
@@ -13,9 +13,11 @@ use smol_macros::test;
 //
 
 async fn do_delete() -> Result<(), DeboaError> {
-    let mut api = Deboa::new(JSONPLACEHOLDER)?;
+    let mut client = Deboa::new();
 
-    let response = api.delete("/posts/1").await?;
+    let response = DeboaRequest::delete(&format!("{}/posts/1", JSONPLACEHOLDER))
+        .send_with(&mut client)
+        .await?;
 
     assert_eq!(response.status(), StatusCode::OK);
 

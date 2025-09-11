@@ -1,3 +1,5 @@
+pub mod interceptor;
+
 pub mod http;
 #[cfg(feature = "compression")]
 pub mod io;

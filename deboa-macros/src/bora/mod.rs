@@ -57,14 +57,14 @@ fn impl_function(
     if res_body_type.eq(unit_type) {
         quote! {
             async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type, DeboaError> {
-                self.api.set_body_as(#format_module, body)?.#deboa_method(format!(#api_path).as_ref()).await?;
+                self.api.#deboa_method(format!(#api_path).as_ref()).send_with(&mut self.api.client()).await?;
                 Ok(())
             }
         }
     } else {
         quote! {
             async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type, DeboaError> {
-                self.api.set_body_as(#format_module, body)?.#deboa_method(format!(#api_path).as_ref()).await?.body_as(#format_module)
+                self.api.#deboa_method(format!(#api_path).as_ref()).send_with(&mut self.api.client()).set_body_as(#format_module, body)?.await?.body_as(#format_module)
             }
         }
     }
@@ -169,7 +169,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     acc.2.extend(quote! {
                         async fn #method_name(&mut self, #api_params) -> Result<#res_body_type, DeboaError> {
-                            self.api.#method(format!(#api_path).as_ref()).await?.body_as(#format_module)
+                            self.api.#method(format!(#api_path).as_ref()).send_with(&mut self.api.client()).await?.body_as(#format_module)
                         }
                     });
                 }
@@ -375,7 +375,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     acc.2.extend(quote! {
                         async fn #method_name(&mut self, #api_params) -> Result<(), DeboaError> {
-                            self.api.#method(format!(#api_path).as_ref()).await?;
+                            self.api.#method(format!(#api_path).as_ref()).send_with(&mut self.api.client()).await?;
                             Ok(())
                         }
                     });
@@ -386,20 +386,21 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
         });
 
     let ts = quote! {
+        use bora::Bora as Client;
         use deboa::{response::DeboaResponse};
         #imports
 
         pub struct #struct_name {
-            api: Deboa
+            api: Client
         }
 
         pub trait Service {
-            fn new(api: Deboa) -> Self;
+            fn new(api: Bora) -> Self;
             #trait_functions
         }
 
         impl Service for #struct_name {
-            fn new(api: Deboa) -> Self {
+            fn new(api: Bora) -> Self {
                 Self {
                     api
                 }
