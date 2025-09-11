@@ -11,40 +11,22 @@ use crate::{
 
 #[tokio::test]
 async fn test_set_xml() -> Result<(), DeboaError> {
-    use crate::tests::types::{XML_POST, sample_post};
+    let request = DeboaRequest::post("posts/1").body_as(XmlBody, sample_post())?.build()?;
 
-    let mut api = Deboa::new("https://reqbin.com")?;
-
-    let data = sample_post();
-
-    let _ = api.set_body_as::<XmlBody, Post>(XmlBody, data)?;
-
-    assert_eq!(api.raw_body(), &XML_POST.to_vec());
+    assert_eq!(*request.raw_body(), &XML_POST.to_vec());
 
     Ok(())
 }
 
 #[tokio::test]
 async fn test_xml_response() -> Result<(), DeboaError> {
-    let server = MockServer::start();
-
     let data = sample_post();
 
-    let http_mock = server.mock(|when, then| {
-        when.method(GET).path("/posts/1");
-        then.status(200)
-            .header(header::CONTENT_TYPE.as_str(), Xml.to_string().as_str())
-            .body(XML_POST);
-    });
+    let response = DeboaResponse::new(http::StatusCode::OK, http::HeaderMap::new(), &XML_POST.to_vec());
 
-    let mut api = Deboa::new(&format_address(&server))?;
-    api.edit_header(header::CONTENT_TYPE, Xml.to_string().as_str());
-    api.edit_header(header::ACCEPT, Xml.to_string().as_str());
-
-    let response: Post = api.get("/posts/1").await?.body_as(XmlBody)?;
-
-    http_mock.assert();
+    let response: Post = response.body_as(XmlBody)?;
 
     assert_eq!(response, data);
+
     Ok(())
 }

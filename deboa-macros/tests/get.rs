@@ -1,4 +1,5 @@
-use deboa::{Deboa, errors::DeboaError};
+use bora::Bora;
+use deboa::errors::DeboaError;
 use deboa_macros::bora;
 
 use serde::Deserialize;
@@ -20,9 +21,9 @@ pub struct PostService;
 
 #[tokio::test]
 async fn test_get_by_id() -> Result<(), DeboaError> {
-    let deboa = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    let client = Bora::new("https://jsonplaceholder.typicode.com");
 
-    let mut post_service = PostService::new(deboa);
+    let mut post_service = PostService::new(client);
 
     let post = post_service.get_by_id(1).await?;
 
@@ -35,9 +36,9 @@ async fn test_get_by_id() -> Result<(), DeboaError> {
 
 #[tokio::test]
 async fn test_get_all() -> Result<(), DeboaError> {
-    let deboa = Deboa::new("https://jsonplaceholder.typicode.com")?;
+    let client = Bora::new("https://jsonplaceholder.typicode.com");
 
-    let mut post_service = PostService::new(deboa);
+    let mut post_service = PostService::new(client);
 
     let posts = post_service.get_all().await?;
 

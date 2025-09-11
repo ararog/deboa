@@ -1,7 +1,9 @@
 use crate::HttpVersion;
 #[cfg(test)]
 use crate::errors::DeboaError;
+use crate::request::DeboaRequest;
 use crate::response::DeboaResponse;
+use crate::tests::utils::format_address;
 use crate::{
     Deboa,
     tests::utils::{JSONPLACEHOLDER, setup_server},
@@ -9,7 +11,6 @@ use crate::{
 
 use http::StatusCode;
 use httpmock::MockServer;
-use std::collections::HashMap;
 
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
@@ -23,9 +24,14 @@ use smol_macros::test;
 async fn do_get_http1() -> Result<(), DeboaError> {
     let server = MockServer::start();
 
-    let (http_mock, mut api) = setup_server(&server, HttpVersion::Http1)?;
+    let http_mock = setup_server(&server)?;
 
-    let response: DeboaResponse = api.get("/posts").await?;
+    let mut client = Deboa::new();
+    client.set_protocol(HttpVersion::Http1);
+
+    let request = DeboaRequest::get(&format_address(&server)).build()?;
+
+    let response: DeboaResponse = client.execute(request).await?;
 
     http_mock.assert();
 
@@ -57,9 +63,14 @@ async fn test_get_http1() {
 async fn do_get_http2() -> Result<(), DeboaError> {
     let server = MockServer::start();
 
-    let (http_mock, mut api) = setup_server(&server, HttpVersion::Http2)?;
+    let http_mock = setup_server(&server)?;
 
-    let response: DeboaResponse = api.get("/posts").await?;
+    let mut client = Deboa::new();
+    client.set_protocol(HttpVersion::Http2);
+
+    let request = DeboaRequest::get(&format_address(&server)).build()?;
+
+    let response: DeboaResponse = client.execute(request).await?;
 
     http_mock.assert();
 
@@ -92,9 +103,11 @@ async fn test_get_http2() {
 //
 
 async fn do_get_not_found() -> Result<(), DeboaError> {
-    let mut api = Deboa::new(JSONPLACEHOLDER)?;
+    let mut client = Deboa::new();
 
-    let response: Result<DeboaResponse, DeboaError> = api.get("asasa/posts/1ddd").await;
+    let response: Result<DeboaResponse, DeboaError> = DeboaRequest::get(format!("{JSONPLACEHOLDER}/asasa/posts/1ddd").as_str())
+        .send_with(&mut client)
+        .await;
 
     assert!(response.is_err());
     assert_eq!(
@@ -126,9 +139,11 @@ async fn test_get_not_found() {
 //
 
 async fn do_get_invalid_server() -> Result<(), DeboaError> {
-    let mut api = Deboa::new("https://invalid-server.com")?;
+    let mut api = Deboa::new();
 
-    let response: Result<DeboaResponse, DeboaError> = api.get("/posts").await;
+    let request = DeboaRequest::get("https://invalid-server.com/posts").text("test").build()?;
+
+    let response: Result<DeboaResponse, DeboaError> = api.execute(request).await;
 
     assert!(response.is_err());
     assert_eq!(
@@ -163,13 +178,11 @@ async fn test_get_invalid_server() {
 //
 
 async fn do_get_by_query() -> Result<(), DeboaError> {
-    let mut api = Deboa::new(JSONPLACEHOLDER)?;
+    let url = format!("{}/comments?id=1", JSONPLACEHOLDER);
 
-    let query_map = HashMap::from([("id".to_string(), "1".to_string())]);
+    let mut client = Deboa::new();
 
-    api.set_query_params(query_map);
-
-    let response: DeboaResponse = api.get("/comments").await?;
+    let response = DeboaRequest::get(&url).send_with(&mut client).await?;
 
     assert_eq!(
         response.status(),

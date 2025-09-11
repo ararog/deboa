@@ -1,6 +1,6 @@
 use bytes::Bytes;
 
-use crate::{Deboa, errors::DeboaError, response::DeboaResponse};
+use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
 
 pub trait Compressor: Send + Sync + 'static {
     /// This method returns the name of encoding for this compressor.
@@ -20,7 +20,7 @@ pub trait Compressor: Send + Sync + 'static {
     ///
     /// * `Result<Bytes, DeboaError>` - The compressed body of the request.
     ///
-    fn compress_body(&self, request: &Deboa) -> Result<Bytes, DeboaError>;
+    fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes, DeboaError>;
 }
 
 impl<T: Compressor> Compressor for Box<T> {
@@ -28,7 +28,7 @@ impl<T: Compressor> Compressor for Box<T> {
         self.as_ref().name()
     }
 
-    fn compress_body(&self, request: &Deboa) -> Result<Bytes, DeboaError> {
+    fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes, DeboaError> {
         self.as_ref().compress_body(request)
     }
 }

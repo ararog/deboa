@@ -1,5 +1,6 @@
 use crate::Deboa;
 use crate::errors::DeboaError;
+use crate::request::DeboaRequest;
 use crate::tests::utils::JSONPLACEHOLDER;
 use http::StatusCode;
 
@@ -13,9 +14,11 @@ use smol_macros::test;
 //
 
 async fn do_patch() -> Result<(), DeboaError> {
-    let mut api: Deboa = Deboa::new(JSONPLACEHOLDER)?;
+    let mut client: Deboa = Deboa::new();
 
-    let response = api.set_text("".to_string()).patch("/posts/1").await?;
+    let request = DeboaRequest::patch(format!("{JSONPLACEHOLDER}/posts/1").as_str()).text("").build()?;
+
+    let response = client.execute(request).await?;
 
     assert_eq!(response.status(), StatusCode::OK);
 
