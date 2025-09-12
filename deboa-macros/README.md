@@ -13,10 +13,9 @@
 ## Usage
 
 ```rust
-use deboa::{Deboa, errors::DeboaError};
-
-#[macro_use]
-extern crate deboa_macros;
+use deboa::errors::DeboaError;
+use deboa_macros::bora;
+use vamo::Vamo;
 
 #[derive(Deserialize, Debug)]
 pub struct Post {
@@ -31,9 +30,9 @@ pub struct Post {
 )]
 pub struct PostService;
 
-let deboa = Deboa::new("https://jsonplaceholder.typicode.com")?;
+let client = Vamo::new("https://jsonplaceholder.typicode.com");
 
-let mut post_service = PostService::new(deboa);
+let mut post_service = PostService::new(client);
 
 let post = post_service.get_by_id(1).await?;
 
