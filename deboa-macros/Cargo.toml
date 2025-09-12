@@ -1,8 +1,8 @@
 [package]
 name = "deboa-macros"
 edition = "2024"
-version = "0.0.1-alpha.1"
-authors = ["Rogerio Pacheco <rogerio.araujo@gmail.com>"]
+version = "0.0.1-alpha.2"
+authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 description = "macros for deboa"
 license = "MIT"
 repository = "https://github.com/ararog/deboa"
@@ -22,7 +22,7 @@ msgpack = ["deboa-extras/msgpack"]
 
 [dependencies]
 deboa = { path = "../deboa", features = ["http1"] }
-bora = { path = "../bora" }
+vamo = { path = "../vamo" }
 deboa-extras = { path = "../deboa-extras", features = ["json"] }
 proc-macro2 = "1.0.101"
 tokio = { version = "1.47.1", features = ["full"] }

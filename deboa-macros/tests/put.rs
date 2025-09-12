@@ -1,7 +1,7 @@
-use bora::Bora;
 use deboa::errors::DeboaError;
 use deboa_macros::bora;
 use serde::{Deserialize, Serialize};
+use vamo::Vamo;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Post {
@@ -20,7 +20,7 @@ pub struct PostService;
 
 #[tokio::test]
 async fn test_put_by_id() -> Result<(), DeboaError> {
-    let client = Bora::new("https://jsonplaceholder.typicode.com");
+    let client = Vamo::new("https://jsonplaceholder.typicode.com");
 
     let mut post_service = PostService::new(client);
 
