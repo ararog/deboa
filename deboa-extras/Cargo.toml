@@ -1,7 +1,8 @@
 [package]
 name = "deboa-extras"
-version = "0.0.5"
+version = "0.0.1-alpha.1"
 edition = "2024"
+publish = true
 
 [dependencies]
 deboa = { path = "../deboa", features = ["http1"], optional = true }
