@@ -397,7 +397,7 @@ dependencies = [
 
 [[package]]
 name = "bora"
-version = "0.1.0"
+version = "0.0.1-alpha.1"
 dependencies = [
  "deboa",
  "deboa-extras",
@@ -861,7 +861,7 @@ dependencies = [
 
 [[package]]
 name = "deboa"
-version = "0.0.5"
+version = "0.0.1-alpha.1"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -891,7 +891,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-extras"
-version = "0.0.5"
+version = "0.0.1-alpha.1"
 dependencies = [
  "brotli",
  "bytes",
@@ -910,7 +910,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-macros"
-version = "0.0.5"
+version = "0.0.1-alpha.1"
 dependencies = [
  "bora",
  "deboa",
