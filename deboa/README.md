@@ -29,7 +29,7 @@ This release has a major api change. Please check the [migration guide](https://
 ## Install
 
 ```rust
-deboa = { version = "0.0.5", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.0.5-alpha.2", features = ["http1", "tokio-rt"] }
 ```
 
 ## Crate features
@@ -41,108 +41,19 @@ deboa = { version = "0.0.5", features = ["http1", "tokio-rt"] }
 
 ## Usage
 
-### Serialize request and deserialize response using json
-
 ```rust
 use deboa::Deboa;
 use deboa_extras::http::serde::json::JsonBody;
 
-let api = Deboa::new("https://jsonplaceholder.typicode.com");
+let api = Deboa::new();
 
-let posts: Vec<Post> = api.get("/posts").await?.body_as(JsonBody)?;
-
-println!("posts: {:#?}", posts);
-```
-
-### Serialize request and deserialize response using xml
-
-```rust
-use deboa::Deboa;
-use deboa_extras::http::serde::xml::XmlBody;
-
-let api = Deboa::new("https://xmlplaceholder.fake.com");
-
-let posts: Vec<Post> = api.get("/posts").await?.body_as(XmlBody)?;
+let posts: Vec<Post> = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")
+  .add_header(header::CONTENT_TYPE, "application/json")
+  .add_bearer_auth("token")
+  .await?
+  .body_as(JsonBody)?;
 
 println!("posts: {:#?}", posts);
-```
-
-### Adding headers
-
-```rust
-use deboa::Deboa;
-use http::header;
-use deboa_extras::http::serde::json::JsonBody;
-
-let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-api.add_header(header::CONTENT_TYPE, "application/json");
-let posts: Vec<Post> = api.get("/posts").await?.body_as(JsonBody)?;
-
-println!("posts: {:#?}", posts);
-```
-
-### Adding bearer auth
-
-```rust
-use deboa::Deboa;
-use http::header;
-
-let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-api.add_bearer_auth("token");
-let posts: Vec<Post> = api.get("/posts").await?.body_as(JsonBody)?;
-
-println!("posts: {:#?}", posts);
-```
-
-### Adding basic auth
-
-```rust
-use deboa::Deboa;
-use http::header;
-use deboa_extras::http::serde::json::JsonBody;
-
-let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-api.add_basic_auth("username", "password");
-let posts: Vec<Post> = api.get("/posts").await?.body_as(JsonBody)?;
-
-println!("posts: {:#?}", posts);
-```
-
-### Change request base url
-
-```rust
-use deboa::Deboa;
-use deboa_extras::http::serde::json::JsonBody;
-
-let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-api.set_base_url("https://jsonplaceholder.typicode.com");
-let posts: Vec<Post> = api.get("/posts").await?.body_as(JsonBody)?;
-
-println!("posts: {:#?}", posts);
-```
-
-### Adding middleware
-
-```rust
-use deboa::{Deboa, DeboaMiddleware};
-
-struct MyMiddleware;
-
-impl DeboaMiddleware for MyMiddleware {
-    fn on_request(&self, request: &mut Request) {
-        // Do something with the request
-    }
-
-    fn on_response(&self, response: &mut Response) {
-        // Do something with the response
-    }
-}
-
-let mut api = Deboa::new("https://jsonplaceholder.typicode.com");
-api.add_middleware(MyMiddleware);
-let post: Post = api.get("/posts/1").await?.body_as(JsonBody)?;
-
-println!("post: {:#?}", post);
 ```
 
 ## License
