@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 deboa = { path = "../deboa", features = ["http1"] }
 deboa-extras = { path = "../deboa-extras", features = ["json"] }
+http = "1.3.1"

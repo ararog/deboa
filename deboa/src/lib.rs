@@ -39,12 +39,59 @@ pub enum HttpVersion {
     Http2,
 }
 
-pub async fn get(url: &str) -> Result<DeboaResponse, DeboaError> {
-    let mut client = Deboa::new();
+pub struct DeboaBuilder {
+    retries: u32,
+    connection_timeout: u64,
+    request_timeout: u64,
+    interceptors: Option<Vec<Box<dyn DeboaInterceptor>>>,
+    protocol: HttpVersion,
+    #[cfg(feature = "http1")]
+    #[allow(dead_code)]
+    http1_pool: HttpConnectionPool<Http1Request>,
+    #[cfg(feature = "http2")]
+    #[allow(dead_code)]
+    http2_pool: HttpConnectionPool<Http2Request>,
+}
 
-    let request = DeboaRequest::get(url).build()?;
+impl DeboaBuilder {
+    pub fn retries(mut self, retries: u32) -> Self {
+        self.retries = retries;
+        self
+    }
 
-    client.execute(request).await
+    pub fn connection_timeout(mut self, connection_timeout: u64) -> Self {
+        self.connection_timeout = connection_timeout;
+        self
+    }
+
+    pub fn request_timeout(mut self, request_timeout: u64) -> Self {
+        self.request_timeout = request_timeout;
+        self
+    }
+
+    pub fn interceptors(mut self, interceptors: Option<Vec<Box<dyn DeboaInterceptor>>>) -> Self {
+        self.interceptors = interceptors;
+        self
+    }
+
+    pub fn protocol(mut self, protocol: HttpVersion) -> Self {
+        self.protocol = protocol;
+        self
+    }
+
+    pub fn build(self) -> Deboa {
+        Deboa {
+            retries: self.retries,
+            connection_timeout: self.connection_timeout,
+            request_timeout: self.request_timeout,
+            interceptors: self.interceptors,
+            protocol: self.protocol,
+            #[cfg(feature = "http1")]
+            http1_pool: HttpConnectionPool::<Http1Request>::new(),
+            #[cfg(feature = "http2")]
+            http2_pool: HttpConnectionPool::<Http2Request>::new(),
+        }
+    }
 }
 
 pub struct Deboa {
@@ -92,6 +139,36 @@ impl Deboa {
         }
     }
 
+    /// Allow create a new Deboa instance.
+    ///
+    /// # Returns
+    ///
+    /// * `DeboaBuilder` - The new DeboaBuilder instance.
+    ///
+    pub fn builder() -> DeboaBuilder {
+        DeboaBuilder {
+            retries: 0,
+            connection_timeout: 0,
+            request_timeout: 0,
+            interceptors: None,
+            protocol: HttpVersion::Http1,
+            #[cfg(feature = "http1")]
+            http1_pool: HttpConnectionPool::<Http1Request>::new(),
+            #[cfg(feature = "http2")]
+            http2_pool: HttpConnectionPool::<Http2Request>::new(),
+        }
+    }
+
+    /// Allow get protocol at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `&HttpVersion` - The protocol.
+    ///
+    pub fn protocol(&self) -> &HttpVersion {
+        &self.protocol
+    }
+
     /// Allow change protocol at any time.
     ///
     /// # Arguments
@@ -101,6 +178,16 @@ impl Deboa {
     pub fn set_protocol(&mut self, protocol: HttpVersion) -> &mut Self {
         self.protocol = protocol;
         self
+    }
+
+    /// Allow get request retries at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `u32` - The retries.
+    ///
+    pub fn retries(&self) -> u32 {
+        self.retries
     }
 
     /// Allow change request retries at any time.
@@ -114,6 +201,16 @@ impl Deboa {
         self
     }
 
+    /// Allow get request connection timeout at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `u64` - The timeout.
+    ///
+    pub fn connection_timeout(&self) -> u64 {
+        self.connection_timeout
+    }
+
     /// Allow change request connection timeout at any time.
     ///
     /// # Arguments
@@ -123,6 +220,16 @@ impl Deboa {
     pub fn set_connection_timeout(&mut self, timeout: u64) -> &mut Self {
         self.connection_timeout = timeout;
         self
+    }
+
+    /// Allow get request request timeout at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `u64` - The timeout.
+    ///
+    pub fn request_timeout(&self) -> u64 {
+        self.request_timeout
     }
 
     /// Allow change request request timeout at any time.
