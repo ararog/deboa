@@ -1,36 +1,22 @@
-use deboa::{Deboa, errors::DeboaError};
-use http::header;
-use httpmock::MockServer;
+use deboa::{errors::DeboaError, interceptor::DeboaInterceptor, response::DeboaResponse};
+use http::{HeaderMap, HeaderValue, StatusCode};
 
 use crate::{
+    interceptor::encoding::EncodingInterceptor,
     io::brotli::BrotliDecompressor,
-    tests::types::{BROTLI_COMPRESSED, DECOMPRESSED, format_address},
+    tests::types::{BROTLI_COMPRESSED, DECOMPRESSED},
 };
 
 #[tokio::test]
 async fn test_brotli_decompress() -> Result<(), DeboaError> {
-    let server = MockServer::start();
+    let encoding_interceptor = EncodingInterceptor::register_decoders(vec![Box::new(BrotliDecompressor)]);
 
-    let http_mock = server.mock(|when, then| {
-        use http::StatusCode;
+    let mut headers = HeaderMap::new();
+    headers.insert("Content-Encoding", HeaderValue::from_static("br"));
+    let mut response = DeboaResponse::new(StatusCode::OK, headers, BROTLI_COMPRESSED.as_ref());
 
-        when.method(http::Method::GET.as_str()).path("/sometext");
-        then.status(StatusCode::OK.into())
-            .header(header::CONTENT_ENCODING.as_str(), "br")
-            .body(BROTLI_COMPRESSED);
-    });
-
-    let mut api = Deboa::new(&format_address(&server))?;
-
-    let body = b"lorem ipsum";
-    api.set_raw_body(body);
-    api.accept_encoding(vec![Box::new(BrotliDecompressor)]);
-
-    let response = api.get("/sometext").await?;
-
-    http_mock.assert();
+    encoding_interceptor.on_response(&mut response);
 
     assert_eq!(response.raw_body(), DECOMPRESSED);
-
     Ok(())
 }

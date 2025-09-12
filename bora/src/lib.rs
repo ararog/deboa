@@ -3,6 +3,9 @@ use deboa::{
     request::{DeboaRequest, DeboaRequestBuilder},
 };
 
+#[cfg(test)]
+mod tests;
+
 pub struct Bora {
     client: Deboa,
     base_url: String,
