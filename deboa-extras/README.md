@@ -16,14 +16,21 @@ This crate provides additional features for Deboa like compression and serializa
 ### Decompression
 
 ```rust
-use deboa::{Deboa, errors::DeboaError};
-use deboa_extras::io::gzip::GzipDecompressor;
+use deboa::{Deboa, errors::DeboaError, interceptor::DeboaInterceptor, request::DeboaRequest};
+use deboa_extras::{
+    interceptor::encoding::EncodingInterceptor,
+    io::brotli::BrotliDecompressor
+};
 
-let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
+let encoding_interceptor = EncodingInterceptor::register_decoders(vec![Box::new(BrotliDecompressor)]);
 
-api.accept_encoding(vec![Box::new(GzipDecompressor)]);
+let mut client = Deboa::builder()
+  .add_interceptor(encoding_interceptor)
+  .build()?
 
-let posts = api.get("posts/1").await?;
+let posts = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts/1")
+  .send_client(&mut client)
+  .await?;
 
 println!("{:?}", posts.raw_body());
 ```
@@ -31,10 +38,10 @@ println!("{:?}", posts.raw_body());
 ### Serialization
 
 ```rust
-use deboa::{Deboa, errors::DeboaError};
+use deboa::{Deboa, errors::DeboaError, request::DeboaRequest};
 use deboa_extras::http::serde::json::JsonBody;
 
-let mut api = Deboa::new("https://jsonplaceholder.typicode.com")?;
+let mut client = Deboa::new();
 
 let data = Post {
     id: 1,
@@ -43,7 +50,10 @@ let data = Post {
     user_id: 1,
 };
 
-let response = api.set_body_as(JsonBody, data)?.post("posts/1").await?;
+let response = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts/1")
+  .body_as(JsonBody, data)?
+  .send_with(&mut client)
+  .await?;
 
 println!("Response Status Code: {}", response.status());
 ```
