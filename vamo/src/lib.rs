@@ -6,12 +6,12 @@ use deboa::{
 #[cfg(test)]
 mod tests;
 
-pub struct Bora {
+pub struct Vamo {
     client: Deboa,
     base_url: String,
 }
 
-impl Bora {
+impl Vamo {
     pub fn new(url: &str) -> Self {
         Self {
             client: Deboa::new(),
