@@ -61,12 +61,11 @@ typed-builder = "0.21.2"
 url = "2.5.4"
 
 [dev-dependencies]
-criterion = { version = "0.7.1", git = "https://github.com/ararog/criterion.rs.git", branch = "test", features = [
+criterion = { version = "0.7.0", features = [
   "html_reports",
   "async",
   "async_smol",
-  "async_tokio",
-  "async_compio",
+  "async_tokio"
 ] }
 httpmock = { version = "0.8.0-alpha.1", features = ["http2"] }
 smol = "2.0.2"
