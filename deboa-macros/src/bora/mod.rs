@@ -386,7 +386,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
         });
 
     let ts = quote! {
-        use bora::Bora as Client;
+        use vamo::Vamo as Client;
         use deboa::{response::DeboaResponse};
         #imports
 
@@ -395,12 +395,12 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
 
         pub trait Service {
-            fn new(api: Bora) -> Self;
+            fn new(api: Vamo) -> Self;
             #trait_functions
         }
 
         impl Service for #struct_name {
-            fn new(api: Bora) -> Self {
+            fn new(api: Vamo) -> Self {
                 Self {
                     api
                 }

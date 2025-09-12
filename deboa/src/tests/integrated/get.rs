@@ -29,7 +29,7 @@ async fn do_get_http1() -> Result<(), DeboaError> {
     let mut client = Deboa::new();
     client.set_protocol(HttpVersion::Http1);
 
-    let request = DeboaRequest::get(&format_address(&server)).build()?;
+    let request = DeboaRequest::get(&format!("{}/posts", format_address(&server))).build()?;
 
     let response: DeboaResponse = client.execute(request).await?;
 
@@ -68,7 +68,7 @@ async fn do_get_http2() -> Result<(), DeboaError> {
     let mut client = Deboa::new();
     client.set_protocol(HttpVersion::Http2);
 
-    let request = DeboaRequest::get(&format_address(&server)).build()?;
+    let request = DeboaRequest::get(&format!("{}/posts", format_address(&server))).build()?;
 
     let response: DeboaResponse = client.execute(request).await?;
 
