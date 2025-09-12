@@ -1,19 +1,15 @@
-use deboa::{Deboa, errors::DeboaError};
-
-use http::header;
-use httpmock::{Method::GET, MockServer};
-use mime_typed::Xml;
+use deboa::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
 
 use crate::{
     http::serde::xml::XmlBody,
-    tests::types::{Post, XML_POST, format_address, sample_post},
+    tests::types::{Post, XML_POST, sample_post},
 };
 
 #[tokio::test]
 async fn test_set_xml() -> Result<(), DeboaError> {
     let request = DeboaRequest::post("posts/1").body_as(XmlBody, sample_post())?.build()?;
 
-    assert_eq!(*request.raw_body(), &XML_POST.to_vec());
+    assert_eq!(*request.raw_body(), XML_POST.to_vec());
 
     Ok(())
 }

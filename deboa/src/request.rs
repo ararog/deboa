@@ -160,6 +160,10 @@ impl DeboaRequestBuilder {
     /// * `username` - The username.
     /// * `password` - The password.
     ///
+    /// # Returns
+    ///
+    /// * `Self` - The request builder.
+    ///
     pub fn add_basic_auth(mut self, username: &str, password: &str) -> Self {
         self.headers.insert(
             header::AUTHORIZATION,
@@ -327,67 +331,15 @@ impl DeboaRequest {
         DeboaRequest::from(url).method(Method::DELETE)
     }
 
-    /// Allow make a HEAD request.
-    ///
-    /// # Arguments
-    ///
-    /// * `url` - The url to be requested.
-    ///
-    /// # Returns
-    ///
-    /// * `DeboaRequestBuilder` - The request builder.
-    ///
-    pub fn head(url: &str) -> DeboaRequestBuilder {
-        DeboaRequest::from(url).method(Method::HEAD)
-    }
-
-    /// Allow make a OPTIONS request.
-    ///
-    /// # Arguments
-    ///
-    /// * `url` - The url to be requested.
-    ///
-    /// # Returns
-    ///
-    /// * `DeboaRequestBuilder` - The request builder.
-    ///
-    pub fn options(url: &str) -> DeboaRequestBuilder {
-        DeboaRequest::from(url).method(Method::OPTIONS)
-    }
-
-    /// Allow make a TRACE request.
-    ///
-    /// # Arguments
-    ///
-    /// * `url` - The url to be requested.
-    ///
-    /// # Returns
-    ///
-    /// * `DeboaRequestBuilder` - The request builder.
-    ///
-    pub fn trace(url: &str) -> DeboaRequestBuilder {
-        DeboaRequest::from(url).method(Method::TRACE)
-    }
-
-    /// Allow make a CONNECT request.
-    ///
-    /// # Arguments
-    ///
-    /// * `url` - The url to be requested.
-    ///
-    /// # Returns
-    ///
-    /// * `DeboaRequestBuilder` - The request builder.
-    ///
-    pub fn connect(url: &str) -> DeboaRequestBuilder {
-        DeboaRequest::from(url).method(Method::CONNECT)
-    }
-
     /// Allow change request method at any time.
     ///
     /// # Arguments
     ///
     /// * `method` - The new method.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The request.
     ///
     pub fn set_method(&mut self, method: http::Method) -> &mut Self {
         self.method = method;
@@ -409,6 +361,10 @@ impl DeboaRequest {
     /// # Arguments
     ///
     /// * `url` - The new url.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<&mut Self, DeboaError>` - The request.
     ///
     pub fn set_url(&mut self, url: &str) -> Result<&mut Self, DeboaError> {
         self.url = url.to_string();
@@ -452,6 +408,10 @@ impl DeboaRequest {
     /// * `key` - The header key to add.
     /// * `value` - The header value to add.
     ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The request.
+    ///
     pub fn add_header(&mut self, key: HeaderName, value: &str) -> &mut Self {
         self.headers.insert(key, value.to_string());
 
@@ -478,6 +438,10 @@ impl DeboaRequest {
     ///
     /// * `token` - The token to be used in the Authorization header.
     ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The request.
+    ///
     pub fn add_bearer_auth(&mut self, token: &str) -> &mut Self {
         let auth = format!("Bearer {token}");
         if !self.has_header(&header::AUTHORIZATION) {
@@ -493,6 +457,10 @@ impl DeboaRequest {
     /// * `username` - The username.
     /// * `password` - The password.
     ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The request.
+    ///
     pub fn add_basic_auth(&mut self, username: &str, password: &str) -> &mut Self {
         let auth = format!("Basic {}", STANDARD.encode(format!("{username}:{password}")));
         if !self.has_header(&header::AUTHORIZATION) {
@@ -506,6 +474,10 @@ impl DeboaRequest {
     /// # Arguments
     ///
     /// * `cookie` - The cookie to be added.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The request.
     ///
     pub fn add_cookie(&mut self, cookie: DeboaCookie) -> &mut Self {
         if let Some(cookies) = &mut self.cookies {
@@ -521,6 +493,10 @@ impl DeboaRequest {
     /// # Arguments
     ///
     /// * `name` - The cookie name.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The request.
     ///
     pub fn remove_cookie(&mut self, name: &str) -> &mut Self {
         if let Some(cookies) = &mut self.cookies {
@@ -553,6 +529,10 @@ impl DeboaRequest {
     ///
     /// * `cookies` - The cookies to be added.
     ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The request.
+    ///
     pub fn set_cookies(&mut self, cookies: HashMap<String, DeboaCookie>) -> &mut Self {
         self.cookies = Some(cookies);
         self
@@ -564,6 +544,10 @@ impl DeboaRequest {
     ///
     /// * `text` - The text to be set.
     ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The request.
+    ///
     pub fn set_text(&mut self, text: String) -> &mut Self {
         self.body = text.as_bytes().to_vec().into();
         self
@@ -574,6 +558,10 @@ impl DeboaRequest {
     /// # Arguments
     ///
     /// * `body` - The body to be set.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The request.
     ///
     pub fn set_raw_body(&mut self, body: &[u8]) -> &mut Self {
         self.body = body.to_vec().into();
@@ -596,6 +584,10 @@ impl DeboaRequest {
     ///
     /// * `body_type` - The body type to be set.
     /// * `body` - The body to be set.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<&mut Self, DeboaError>` - The request.
     ///
     pub fn set_body_as<T: RequestBody, B: Serialize>(&mut self, body_type: T, body: B) -> Result<&mut Self, DeboaError> {
         body_type.register_content_type(self);
