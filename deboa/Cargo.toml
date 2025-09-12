@@ -1,6 +1,6 @@
 [package]
 name = "deboa"
-version = "0.0.5"
+version = "0.0.1-alpha.1"
 edition = "2024"
 repository = "https://github.com/ararog/deboa"
 homepage = "https://github.com/ararog/deboa"
@@ -8,6 +8,7 @@ description = "A friendly rest client on top of hyper."
 readme = "README.md"
 license = "GPL-3.0-or-later"
 keywords = ["http", "networking", "client", "fetch", "rest-client"]
+publish = true
 
 [features]
 default = ["smol-rt"]
