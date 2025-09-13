@@ -220,6 +220,18 @@ pub struct Deboa {
     http2_pool: HttpConnectionPool<Http2Request>,
 }
 
+impl AsRef<Deboa> for Deboa {
+    fn as_ref(&self) -> &Deboa {
+        self
+    }
+}
+
+impl AsMut<Deboa> for Deboa {
+    fn as_mut(&mut self) -> &mut Deboa {
+        self
+    }
+}
+
 impl Debug for Deboa {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Deboa")

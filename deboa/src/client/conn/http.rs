@@ -7,6 +7,7 @@ use url::Url;
 
 use crate::errors::DeboaError;
 
+#[derive(Debug, Clone)]
 pub struct BaseHttpConnection<T> {
     pub(crate) url: Url,
     pub(crate) sender: T,

@@ -1,7 +1,7 @@
 use http::StatusCode;
 use thiserror::Error;
 
-#[derive(Debug, Error, PartialEq)]
+#[derive(Debug, Clone, Error, PartialEq)]
 pub enum DeboaError {
     #[error("Could not connect to {host}: {message}")]
     Connection { host: String, message: String },

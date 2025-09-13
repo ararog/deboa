@@ -15,3 +15,7 @@ publish = true
 deboa = { path = "../deboa", features = ["http1"] }
 deboa-extras = { path = "../deboa-extras", features = ["json"] }
 http = "1.3.1"
+
+[dev-dependencies]
+httpmock = "0.7.0"
+tokio = "1.47.1"

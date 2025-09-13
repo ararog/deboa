@@ -1,8 +1,9 @@
 #[cfg(test)]
 use crate::errors::DeboaError;
-use crate::{Deboa, request::DeboaRequest, tests::utils::JSONPLACEHOLDER};
+use crate::{Deboa, request::DeboaRequest};
 use http::StatusCode;
 
+use httpmock::{Method::DELETE, MockServer};
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
 #[cfg(feature = "smol-rt")]
@@ -13,11 +14,20 @@ use smol_macros::test;
 //
 
 async fn do_delete() -> Result<(), DeboaError> {
-    let mut client = Deboa::new();
+    let server = MockServer::start();
 
-    let response = DeboaRequest::delete(&format!("{JSONPLACEHOLDER}/posts/1")).send_with(&mut client).await?;
+    let http_mock = server.mock(|when, then| {
+        when.method(DELETE).path("/posts/1");
+        then.status::<u16>(StatusCode::NO_CONTENT.into());
+    });
 
-    assert_eq!(response.status(), StatusCode::OK);
+    let client = Deboa::new();
+
+    let response = DeboaRequest::delete(server.url("/posts/1").as_str()).send_with(client).await?;
+
+    http_mock.assert();
+
+    assert_eq!(response.status(), StatusCode::NO_CONTENT);
 
     Ok(())
 }
