@@ -1,8 +1,8 @@
 # Examples
 
-## Middleware
+## Catcher
 
-This example shows how to use middleware to add request/response logging.
+This example shows how to use catcher to add request/response logging.
 
 ## Simple
 

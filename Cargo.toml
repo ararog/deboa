@@ -7,6 +7,6 @@ members = [
     "deboa-extras",
     "deboa-macros",
     "examples/simple", 
-    "examples/middleware", 
+    "examples/catcher", 
     "vamo",
 ]

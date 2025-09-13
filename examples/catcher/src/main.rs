@@ -1,4 +1,4 @@
-use deboa::{errors::DeboaError, interceptor::DeboaInterceptor, request::DeboaRequest, response::DeboaResponse};
+use deboa::{catcher::DeboaCatcher, errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Post {
@@ -9,7 +9,7 @@ pub struct Post {
 
 struct TestMonitor;
 
-impl DeboaInterceptor for TestMonitor {
+impl DeboaCatcher for TestMonitor {
     fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>, DeboaError> {
         println!("Request: {:?}", request.url());
         Ok(None)
@@ -25,7 +25,7 @@ async fn main() -> Result<(), DeboaError> {
     use deboa::Deboa;
 
     let mut api = Deboa::new();
-    api.add_interceptor(TestMonitor);
+    api.catch(TestMonitor);
 
     let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com").send_with(&mut api).await?;
 
