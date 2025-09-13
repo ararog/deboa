@@ -11,7 +11,7 @@
 
 ### Non-breaking changes
 
-* Middleware support
+* Catchers (interceptors) support
 * HTTP2 support
 * Responses decompression
 * Introduced deboa_extras crate
