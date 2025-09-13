@@ -29,12 +29,12 @@ deboa = { version = "0.0.5-alpha.3", features = ["http1", "tokio-rt"] }
 use deboa::{Deboa, request::DeboaRequest};
 use deboa_extras::http::serde::json::JsonBody;
 
-let mut client = Deboa::new();
+let client = Deboa::new();
 
 let posts: Vec<Post> = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")
   .add_header(header::CONTENT_TYPE, "application/json")
   .add_bearer_auth("token")
-  .send_with(&mut client)
+  .send_with(client)
   .await?
   .body_as(JsonBody)?;
 
