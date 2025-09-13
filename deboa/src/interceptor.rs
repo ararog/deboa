@@ -1,11 +1,14 @@
 #![allow(unused_variables)]
 
+use mockall::automock;
+
 use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
 
 /// DeboaInterceptor
 ///
 /// Trait that define the middleware pattern for Deboa.
 ///
+#[automock]
 pub trait DeboaInterceptor: Send + Sync + 'static {
     ///
     /// This method is called before the request is sent. Please note if this method returns a response,
