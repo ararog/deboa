@@ -9,7 +9,7 @@ use crate::{
 
 #[tokio::test]
 async fn test_gzip() -> Result<(), DeboaError> {
-    let encoding_interceptor = EncodingInterceptor::register_decoders(vec![Box::new(GzipDecompressor)]);
+    let encoding_interceptor = EncodingInterceptor::register_decoders(vec![GzipDecompressor]);
 
     let mut headers = HeaderMap::new();
     headers.insert("Content-Encoding", HeaderValue::from_static("gzip"));

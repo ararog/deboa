@@ -19,6 +19,7 @@ use url::Url;
 use crate::errors::DeboaError;
 use crate::response::DeboaResponse;
 
+pub mod cache;
 pub mod client;
 pub mod cookie;
 pub mod errors;
@@ -249,20 +250,25 @@ impl Deboa {
     ///
     /// * `interceptor` - The interceptor to be added.
     ///
-    pub fn add_interceptor(&mut self, interceptor: Box<dyn DeboaInterceptor>) -> &mut Self {
+    pub fn add_interceptor<T: DeboaInterceptor>(&mut self, interceptor: T) -> &mut Self {
         if let Some(interceptors) = &mut self.interceptors {
-            interceptors.push(interceptor);
+            interceptors.push(Box::new(interceptor));
         } else {
-            self.interceptors = Some(vec![interceptor]);
+            self.interceptors = Some(vec![Box::new(interceptor)]);
         }
         self
     }
 
     pub async fn execute(&mut self, mut request: DeboaRequest) -> Result<DeboaResponse, DeboaError> {
         if let Some(interceptors) = &self.interceptors {
-            interceptors.iter().for_each(|interceptor| {
-                interceptor.on_request(&mut request);
-            });
+            let mut response = interceptors
+                .iter()
+                .filter_map(|interceptor| interceptor.on_request(&mut request).unwrap());
+
+            if let Some(mut response) = response.next() {
+                interceptors.iter().for_each(|interceptor| interceptor.on_response(&mut response));
+                return Ok(response);
+            }
         }
 
         let url = Url::parse(&request.url());

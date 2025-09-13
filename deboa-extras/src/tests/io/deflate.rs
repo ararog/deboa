@@ -9,7 +9,7 @@ use crate::{
 
 #[tokio::test]
 async fn test_deflate_decompress() -> Result<(), DeboaError> {
-    let encoding_interceptor = EncodingInterceptor::register_decoders(vec![Box::new(DeflateDecompressor)]);
+    let encoding_interceptor = EncodingInterceptor::register_decoders(vec![DeflateDecompressor]);
 
     let mut headers = HeaderMap::new();
     headers.insert("Content-Encoding", HeaderValue::from_static("deflate"));
