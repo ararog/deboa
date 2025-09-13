@@ -4,12 +4,12 @@ use mockall::automock;
 
 use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
 
-/// DeboaInterceptor
+/// DeboaCatcher
 ///
 /// Trait that define the middleware pattern for Deboa.
 ///
 #[automock]
-pub trait DeboaInterceptor: Send + Sync + 'static {
+pub trait DeboaCatcher: Send + Sync + 'static {
     ///
     /// This method is called before the request is sent. Please note if this method returns a response,
     /// the request will not be sent and the response will be returned.
@@ -36,7 +36,7 @@ pub trait DeboaInterceptor: Send + Sync + 'static {
     fn on_response(&self, response: &mut DeboaResponse) {}
 }
 
-impl<T: DeboaInterceptor> DeboaInterceptor for Box<T> {
+impl<T: DeboaCatcher> DeboaCatcher for Box<T> {
     fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>, DeboaError> {
         self.as_ref().on_request(request)
     }

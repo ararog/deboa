@@ -17,7 +17,7 @@ This release has a major api change. Please check the [migration guide](https://
 - set base url only once, change it when needed
 - request data only by specifying path
 - set retries and timeout
-- pluggable middleware
+- pluggable catchers (interceptors)
 - pluggable compression (gzip, deflate, br)
 - pluggable serialization (json, xml, msgpack)
 - bora macro to easily create api clients
@@ -29,7 +29,7 @@ This release has a major api change. Please check the [migration guide](https://
 ## Install
 
 ```rust
-deboa = { version = "0.0.5-alpha.2", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.0.5-alpha.3", features = ["http1", "tokio-rt"] }
 ```
 
 ## Crate features

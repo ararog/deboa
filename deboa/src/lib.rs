@@ -1,3 +1,76 @@
+//! # Deboa - Core API Documentation
+//!
+//! Hello, and welcome to the core Deboa API documentation!
+//!
+//! This API documentation is highly technical and is purely a reference.
+//! There's an [overview] of Deboa on the main site as well as a [full,
+//! detailed guide]. If you'd like pointers on getting started, see the
+//! [quickstart] or [getting started] chapters of the guide.
+//!
+//! [overview]: https://rocket.rs/master/overview
+//! [full, detailed guide]: https://rocket.rs/master/guide
+//! [quickstart]: https://rocket.rs/master/guide/quickstart
+//! [getting started]: https://rocket.rs/master/guide/getting-started
+//!
+//! ## Usage
+//!
+//! Depend on `deboa` in `Cargo.toml`:
+//!
+//! ```toml
+//! [dependencies]
+//! deboa = "0.0.5-alpha.3"
+//! ```
+//!
+//! <small>Note that development versions, tagged with `-dev`, are not published
+//! and need to be specified as [git dependencies].</small>
+//!
+//! See the [guide](https://rocket.rs/master/guide) for more information on how
+//! to write Rocket applications. Here's a simple example to get you started:
+//!
+//! [git dependencies]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-git-repositories
+//!
+//! ```rust,no_run
+//! use deboa::{Deboa, request::DeboaRequest};
+//!
+//! #[tokio::main]
+//! async fn main() -> () {
+//!     let mut deboa = Deboa::builder()
+//!         .build();
+//!
+//!     let response = DeboaRequest::get("https://httpbin.org/get")
+//!         .send_with(&mut deboa)
+//!         .await;
+//!
+//!     println!("Response: {:#?}", response);
+//! }
+//! ```
+//!
+//! ## Features
+//!
+//! To avoid compiling unused dependencies, Deboa feature-gates optional
+//! functionality, some enabled by default:
+//!
+//! | Feature         | Default? | Description                                             |
+//! |-----------------|----------|---------------------------------------------------------|
+//! | `tokio_rt`      | Yes      | Enables the default Deboa tracing [subscriber].         |
+//! | `smol_rt`       | Yes      | Enables the default Deboa tracing [subscriber].         |
+//! | `http1`         | Yes      | Support for HTTP/2 (enabled by default).                |
+//! | `http2`         | Yes      | Support for HTTP/2 (enabled by default).                |
+//!
+//! Disabled features can be selectively enabled in `Cargo.toml`:
+//!
+//! ```toml
+//! [dependencies]
+//! deboa = { version = "0.0.5-alpha.3", features = ["tokio_rt", "http1", "http2"] }
+//! ```
+//!
+//! Conversely, HTTP/2 can be disabled:
+//!
+//! ```toml
+//! [dependencies]
+//! deboa = { version = "0.0.5-alpha.3", default-features = false }
+//! ```
+//!
 use std::fmt::Debug;
 
 use bytes::{Buf, Bytes};
@@ -10,8 +83,8 @@ use crate::client::conn::http::Http1Request;
 #[cfg(feature = "http2")]
 use crate::client::conn::http::Http2Request;
 
+use crate::catcher::DeboaCatcher;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
-use crate::interceptor::DeboaInterceptor;
 use crate::request::DeboaRequest;
 
 use url::Url;
@@ -20,11 +93,11 @@ use crate::errors::DeboaError;
 use crate::response::DeboaResponse;
 
 pub mod cache;
+pub mod catcher;
 pub mod client;
 pub mod cookie;
 pub mod errors;
 pub mod fs;
-pub mod interceptor;
 pub mod request;
 pub mod response;
 mod rt;
@@ -44,7 +117,7 @@ pub struct DeboaBuilder {
     retries: u32,
     connection_timeout: u64,
     request_timeout: u64,
-    interceptors: Option<Vec<Box<dyn DeboaInterceptor>>>,
+    catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     #[cfg(feature = "http1")]
     #[allow(dead_code)]
@@ -55,37 +128,77 @@ pub struct DeboaBuilder {
 }
 
 impl DeboaBuilder {
+    /// Allow set request retries at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `retries` - The new retries.
+    ///
     pub fn retries(mut self, retries: u32) -> Self {
         self.retries = retries;
         self
     }
 
+    /// Allow set request connection timeout at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `connection_timeout` - The new connection timeout.
+    ///
     pub fn connection_timeout(mut self, connection_timeout: u64) -> Self {
         self.connection_timeout = connection_timeout;
         self
     }
 
+    /// Allow set request request timeout at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `request_timeout` - The new request timeout.
+    ///
     pub fn request_timeout(mut self, request_timeout: u64) -> Self {
         self.request_timeout = request_timeout;
         self
     }
 
-    pub fn interceptors(mut self, interceptors: Option<Vec<Box<dyn DeboaInterceptor>>>) -> Self {
-        self.interceptors = interceptors;
+    /// Allow add catcher at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `catcher` - The catcher to be added.
+    ///
+    pub fn catch<C: DeboaCatcher>(mut self, catch: C) -> Self {
+        if let Some(catchers) = &mut self.catchers {
+            catchers.push(Box::new(catch));
+        } else {
+            self.catchers = Some(vec![Box::new(catch)]);
+        }
         self
     }
 
+    /// Allow set request protocol at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `protocol` - The new protocol.
+    ///
     pub fn protocol(mut self, protocol: HttpVersion) -> Self {
         self.protocol = protocol;
         self
     }
 
+    /// Allow build Deboa instance.
+    ///
+    /// # Returns
+    ///
+    /// * `Deboa` - The new Deboa instance.
+    ///
     pub fn build(self) -> Deboa {
         Deboa {
             retries: self.retries,
             connection_timeout: self.connection_timeout,
             request_timeout: self.request_timeout,
-            interceptors: self.interceptors,
+            catchers: self.catchers,
             protocol: self.protocol,
             #[cfg(feature = "http1")]
             http1_pool: HttpConnectionPool::<Http1Request>::new(),
@@ -99,7 +212,7 @@ pub struct Deboa {
     retries: u32,
     connection_timeout: u64,
     request_timeout: u64,
-    interceptors: Option<Vec<Box<dyn DeboaInterceptor>>>,
+    catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     #[cfg(feature = "http1")]
     http1_pool: HttpConnectionPool<Http1Request>,
@@ -131,7 +244,7 @@ impl Deboa {
             retries: 0,
             connection_timeout: 0,
             request_timeout: 0,
-            interceptors: None,
+            catchers: None,
             protocol: HttpVersion::Http1,
             #[cfg(feature = "http1")]
             http1_pool: HttpConnectionPool::<Http1Request>::new(),
@@ -151,7 +264,7 @@ impl Deboa {
             retries: 0,
             connection_timeout: 0,
             request_timeout: 0,
-            interceptors: None,
+            catchers: None,
             protocol: HttpVersion::Http1,
             #[cfg(feature = "http1")]
             http1_pool: HttpConnectionPool::<Http1Request>::new(),
@@ -244,29 +357,27 @@ impl Deboa {
         self
     }
 
-    /// Allow add middleware at any time.
+    /// Allow add catcher at any time.
     ///
     /// # Arguments
     ///
-    /// * `interceptor` - The interceptor to be added.
+    /// * `catcher` - The catcher to be added.
     ///
-    pub fn add_interceptor<T: DeboaInterceptor>(&mut self, interceptor: T) -> &mut Self {
-        if let Some(interceptors) = &mut self.interceptors {
-            interceptors.push(Box::new(interceptor));
+    pub fn catch<C: DeboaCatcher>(&mut self, catcher: C) -> &mut Self {
+        if let Some(catchers) = &mut self.catchers {
+            catchers.push(Box::new(catcher));
         } else {
-            self.interceptors = Some(vec![Box::new(interceptor)]);
+            self.catchers = Some(vec![Box::new(catcher)]);
         }
         self
     }
 
     pub async fn execute(&mut self, mut request: DeboaRequest) -> Result<DeboaResponse, DeboaError> {
-        if let Some(interceptors) = &self.interceptors {
-            let mut response = interceptors
-                .iter()
-                .filter_map(|interceptor| interceptor.on_request(&mut request).unwrap());
+        if let Some(catchers) = &self.catchers {
+            let mut response = catchers.iter().filter_map(|catcher| catcher.on_request(&mut request).unwrap());
 
             if let Some(mut response) = response.next() {
-                interceptors.iter().for_each(|interceptor| interceptor.on_response(&mut response));
+                catchers.iter().for_each(|catcher| catcher.on_response(&mut response));
                 return Ok(response);
             }
         }
@@ -341,8 +452,8 @@ impl Deboa {
 
         let mut response = DeboaResponse::new(status_code, headers, &raw_body);
 
-        if let Some(interceptors) = &self.interceptors {
-            interceptors.iter().for_each(|interceptor| interceptor.on_response(&mut response));
+        if let Some(catchers) = &self.catchers {
+            catchers.iter().for_each(|catcher| catcher.on_response(&mut response));
         }
 
         Ok(response)
