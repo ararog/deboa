@@ -429,6 +429,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
 
 [[package]]
+name = "catcher"
+version = "0.1.0"
+dependencies = [
+ "deboa",
+ "deboa-extras",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "cc"
 version = "1.2.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1564,17 +1575,6 @@ name = "memchr"
 version = "2.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a282da65faaf38286cf3be983213fcf1d2e2a58700e808f83f4ea9a4804bc0"
-
-[[package]]
-name = "middleware"
-version = "0.1.0"
-dependencies = [
- "deboa",
- "deboa-extras",
- "serde",
- "serde_json",
- "tokio",
-]
 
 [[package]]
 name = "mime"

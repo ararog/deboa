@@ -1,12 +1,12 @@
-use deboa::{errors::DeboaError, fs::io::Decompressor, interceptor::DeboaInterceptor, request::DeboaRequest, response::DeboaResponse};
+use deboa::{catcher::DeboaCatcher, errors::DeboaError, fs::io::Decompressor, request::DeboaRequest, response::DeboaResponse};
 use http::header;
 use std::collections::HashMap;
 
-pub struct EncodingInterceptor<D: Decompressor> {
+pub struct EncodingCatcher<D: Decompressor> {
     pub accept_encoding: HashMap<String, Box<D>>,
 }
 
-impl<D: Decompressor> EncodingInterceptor<D> {
+impl<D: Decompressor> EncodingCatcher<D> {
     pub fn register_decoders(decoders: Vec<D>) -> Self {
         let mut accept_encoding = HashMap::new();
         for decoder in decoders {
@@ -16,7 +16,7 @@ impl<D: Decompressor> EncodingInterceptor<D> {
     }
 }
 
-impl<D: Decompressor> DeboaInterceptor for EncodingInterceptor<D> {
+impl<D: Decompressor> DeboaCatcher for EncodingCatcher<D> {
     fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>, DeboaError> {
         let encodings = self.accept_encoding.values().map(|decoder| decoder.name()).collect::<Vec<String>>();
 
