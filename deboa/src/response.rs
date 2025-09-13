@@ -22,6 +22,18 @@ impl Debug for DeboaResponse {
     }
 }
 
+impl AsRef<DeboaResponse> for DeboaResponse {
+    fn as_ref(&self) -> &DeboaResponse {
+        self
+    }
+}
+
+impl AsMut<DeboaResponse> for DeboaResponse {
+    fn as_mut(&mut self) -> &mut DeboaResponse {
+        self
+    }
+}
+
 impl DeboaResponse {
     /// Allow create a new DeboaResponse instance.
     ///

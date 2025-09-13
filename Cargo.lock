@@ -2661,6 +2661,8 @@ dependencies = [
  "deboa",
  "deboa-extras",
  "http 1.3.1",
+ "httpmock 0.7.0",
+ "tokio",
 ]
 
 [[package]]

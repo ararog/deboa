@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, fmt::Debug, sync::Arc};
 
 use http::{HeaderName, Method, header};
 
@@ -198,8 +198,8 @@ impl DeboaRequestBuilder {
     ///
     /// * `Result<DeboaResponse, DeboaError>` - The response.
     ///
-    pub async fn send_with(self, client: &mut Deboa) -> Result<DeboaResponse, DeboaError> {
-        client.execute(self.build()?).await
+    pub async fn send_with<T: AsMut<Deboa>>(self, mut client: T) -> Result<DeboaResponse, DeboaError> {
+        client.as_mut().execute(self.build()?).await
     }
 }
 
@@ -209,6 +209,30 @@ pub struct DeboaRequest {
     cookies: Option<HashMap<String, DeboaCookie>>,
     method: http::Method,
     body: Arc<Vec<u8>>,
+}
+
+impl Debug for DeboaRequest {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DeboaRequest")
+            .field("url", &self.url)
+            .field("headers", &self.headers)
+            .field("cookies", &self.cookies)
+            .field("method", &self.method)
+            .field("body", &self.body)
+            .finish()
+    }
+}
+
+impl AsRef<DeboaRequest> for DeboaRequest {
+    fn as_ref(&self) -> &DeboaRequest {
+        self
+    }
+}
+
+impl AsMut<DeboaRequest> for DeboaRequest {
+    fn as_mut(&mut self) -> &mut DeboaRequest {
+        self
+    }
 }
 
 impl DeboaRequest {

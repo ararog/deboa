@@ -1,5 +1,6 @@
 use std::fmt;
 
+#[derive(Clone)]
 pub struct DeboaCookie {
     name: String,
     value: String,
