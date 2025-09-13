@@ -10,8 +10,9 @@ pub struct Post {
 struct TestMonitor;
 
 impl DeboaInterceptor for TestMonitor {
-    fn on_request(&self, request: &mut DeboaRequest) {
+    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>, DeboaError> {
         println!("Request: {:?}", request.url());
+        Ok(None)
     }
 
     fn on_response(&self, response: &mut DeboaResponse) {
@@ -24,7 +25,7 @@ async fn main() -> Result<(), DeboaError> {
     use deboa::Deboa;
 
     let mut api = Deboa::new();
-    api.add_interceptor(Box::new(TestMonitor));
+    api.add_interceptor(TestMonitor);
 
     let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com").send_with(&mut api).await?;
 

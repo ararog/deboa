@@ -1,26 +1,28 @@
-use deboa::{fs::io::Decompressor, interceptor::DeboaInterceptor, request::DeboaRequest, response::DeboaResponse};
+use deboa::{errors::DeboaError, fs::io::Decompressor, interceptor::DeboaInterceptor, request::DeboaRequest, response::DeboaResponse};
 use http::header;
 use std::collections::HashMap;
 
-pub struct EncodingInterceptor {
-    pub accept_encoding: HashMap<String, Box<dyn Decompressor>>,
+pub struct EncodingInterceptor<D: Decompressor> {
+    pub accept_encoding: HashMap<String, Box<D>>,
 }
 
-impl EncodingInterceptor {
-    pub fn register_decoders(decoders: Vec<Box<dyn Decompressor>>) -> Self {
+impl<D: Decompressor> EncodingInterceptor<D> {
+    pub fn register_decoders(decoders: Vec<D>) -> Self {
         let mut accept_encoding = HashMap::new();
         for decoder in decoders {
-            accept_encoding.insert(decoder.name(), decoder);
+            accept_encoding.insert(decoder.name(), Box::new(decoder));
         }
         Self { accept_encoding }
     }
 }
 
-impl DeboaInterceptor for EncodingInterceptor {
-    fn on_request(&self, request: &mut DeboaRequest) {
+impl<D: Decompressor> DeboaInterceptor for EncodingInterceptor<D> {
+    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>, DeboaError> {
         let encodings = self.accept_encoding.values().map(|decoder| decoder.name()).collect::<Vec<String>>();
 
         request.add_header(header::ACCEPT_ENCODING, &encodings.join(","));
+
+        Ok(None)
     }
 
     fn on_response(&self, response: &mut DeboaResponse) {
