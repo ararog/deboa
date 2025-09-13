@@ -6,6 +6,7 @@ use deboa::{
 #[cfg(test)]
 mod tests;
 
+#[derive(Debug)]
 pub struct Vamo {
     client: Deboa,
     base_url: String,

@@ -5,19 +5,10 @@ use crate::errors::DeboaError;
 
 pub const JSONPLACEHOLDER: &str = "https://jsonplaceholder.typicode.com";
 
-pub fn format_address(server: &MockServer) -> String {
-    let server_address = *server.address();
-
-    let ip = server_address.ip();
-    let port = server_address.port();
-
-    format!("http://{ip}:{port}")
-}
-
-pub fn setup_server(server: &MockServer) -> Result<httpmock::Mock<'_>, DeboaError> {
+pub fn setup_server<'a>(server: &'a MockServer, path: &'a str, status: StatusCode) -> Result<httpmock::Mock<'a>, DeboaError> {
     let http_mock = server.mock(|when, then| {
-        when.method(GET).path("/posts");
-        then.status::<u16>(StatusCode::OK.into())
+        when.method(GET).path(path);
+        then.status::<u16>(status.into())
             .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
             .body("ping");
     });

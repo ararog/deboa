@@ -9,12 +9,11 @@ pub struct Post {
 }
 
 #[tokio::main]
-
 async fn main() -> Result<(), DeboaError> {
-    let mut client = Deboa::new();
+    let client = Deboa::new();
 
     let posts: Vec<Post> = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")
-        .send_with(&mut client)
+        .send_with(client)
         .await?
         .body_as(JsonBody)?;
 

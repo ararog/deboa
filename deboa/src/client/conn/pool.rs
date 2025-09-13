@@ -13,6 +13,7 @@ use crate::{
     errors::DeboaError,
 };
 
+#[derive(Debug, Clone)]
 pub struct HttpConnectionPool<T> {
     connections: HashMap<String, BaseHttpConnection<T>>,
 }
