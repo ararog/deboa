@@ -9,7 +9,7 @@ use crate::{
 
 #[tokio::test]
 async fn test_brotli_decompress() -> Result<(), DeboaError> {
-    let encoding_interceptor = EncodingInterceptor::register_decoders(vec![Box::new(BrotliDecompressor)]);
+    let encoding_interceptor = EncodingInterceptor::register_decoders(vec![BrotliDecompressor]);
 
     let mut headers = HeaderMap::new();
     headers.insert("Content-Encoding", HeaderValue::from_static("br"));

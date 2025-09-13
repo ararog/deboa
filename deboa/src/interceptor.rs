@@ -1,18 +1,27 @@
 #![allow(unused_variables)]
-use crate::{request::DeboaRequest, response::DeboaResponse};
+
+use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
 
 /// DeboaInterceptor
 ///
 /// Trait that define the middleware pattern for Deboa.
 ///
 pub trait DeboaInterceptor: Send + Sync + 'static {
-    /// This method is called before the request is sent.
+    ///
+    /// This method is called before the request is sent. Please note if this method returns a response,
+    /// the request will not be sent and the response will be returned.
     ///
     /// # Arguments
     ///
     /// * `request` - The request that was sent.
     ///
-    fn on_request(&self, request: &mut DeboaRequest) {}
+    /// # Returns
+    ///
+    /// * `Result<Option<DeboaResponse>, DeboaError>` - The response that was received.
+    ///
+    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>, DeboaError> {
+        Ok(None)
+    }
 
     ///
     /// This method is called after the response is received.
@@ -25,8 +34,8 @@ pub trait DeboaInterceptor: Send + Sync + 'static {
 }
 
 impl<T: DeboaInterceptor> DeboaInterceptor for Box<T> {
-    fn on_request(&self, request: &mut DeboaRequest) {
-        self.as_ref().on_request(request);
+    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>, DeboaError> {
+        self.as_ref().on_request(request)
     }
 
     fn on_response(&self, response: &mut DeboaResponse) {

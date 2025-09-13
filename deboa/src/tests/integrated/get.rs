@@ -178,7 +178,7 @@ async fn test_get_invalid_server() {
 //
 
 async fn do_get_by_query() -> Result<(), DeboaError> {
-    let url = format!("{}/comments?id=1", JSONPLACEHOLDER);
+    let url = format!("{JSONPLACEHOLDER}/comments?id=1");
 
     let mut client = Deboa::new();
 

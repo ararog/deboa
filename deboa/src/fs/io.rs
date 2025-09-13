@@ -1,3 +1,4 @@
+#![allow(unused_variables)]
 use bytes::Bytes;
 
 use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
@@ -51,7 +52,9 @@ pub trait Decompressor: Send + Sync + 'static {
     ///
     /// * `Result<(), DeboaError>` - The decompressed body of the response.
     ///
-    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<(), DeboaError>;
+    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<(), DeboaError> {
+        Ok(())
+    }
 }
 
 impl<T: Decompressor> Decompressor for Box<T> {
