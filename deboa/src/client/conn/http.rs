@@ -7,17 +7,28 @@ use url::Url;
 
 use crate::errors::DeboaError;
 
+pub enum DeboaConnection {
+    #[cfg(feature = "http1")]
+    Http1(Box<BaseHttpConnection<Http1Request>>),
+    #[cfg(feature = "http2")]
+    Http2(Box<BaseHttpConnection<Http2Request>>),
+}
+
 #[derive(Debug, Clone)]
 pub struct BaseHttpConnection<T> {
     pub(crate) url: Url,
     pub(crate) sender: T,
 }
 
+#[cfg(feature = "http1")]
 pub type Http1Request = hyper::client::conn::http1::SendRequest<Full<Bytes>>;
+#[cfg(feature = "http2")]
 pub type Http2Request = hyper::client::conn::http2::SendRequest<Full<Bytes>>;
 
 #[async_trait]
-pub trait DeboaHttpConnection<T> {
+pub trait DeboaHttpConnection {
+    type Sender;
+
     /// Create a new connection.
     ///
     /// # Arguments
@@ -26,9 +37,9 @@ pub trait DeboaHttpConnection<T> {
     ///
     /// # Returns
     ///
-    /// * `Result<BaseHttpConnection<T>, DeboaError>` - The connection or error.
+    /// * `Result<BaseHttpConnection<Self::Sender>, DeboaError>` - The connection or error.
     ///
-    async fn connect(url: Url) -> Result<BaseHttpConnection<T>, DeboaError>;
+    async fn connect(url: Url) -> Result<BaseHttpConnection<Self::Sender>, DeboaError>;
 
     /// Get connection url.
     ///

@@ -9,68 +9,54 @@ use crate::client::conn::http::Http1Request;
 use crate::client::conn::http::Http2Request;
 
 use crate::{
-    client::conn::http::{BaseHttpConnection, DeboaHttpConnection},
+    HttpVersion,
+    client::conn::http::{BaseHttpConnection, DeboaConnection},
     errors::DeboaError,
 };
 
-#[derive(Debug, Clone)]
-pub struct HttpConnectionPool<T> {
-    connections: HashMap<String, BaseHttpConnection<T>>,
+pub struct HttpConnectionPool {
+    connections: HashMap<String, DeboaConnection>,
+}
+
+impl AsMut<HttpConnectionPool> for HttpConnectionPool {
+    fn as_mut(&mut self) -> &mut HttpConnectionPool {
+        self
+    }
 }
 
 #[async_trait]
-pub trait DeboaHttpConnectionPool<T> {
+pub trait DeboaHttpConnectionPool {
     fn new() -> Self;
 
-    fn connections(&self) -> &HashMap<String, BaseHttpConnection<T>>;
+    fn connections(&self) -> &HashMap<String, DeboaConnection>;
 
-    async fn create_connection<'a>(&'a mut self, url: &Url) -> Result<&'a mut BaseHttpConnection<T>, DeboaError>
-    where
-        T: 'a;
+    async fn create_connection<'a>(&'a mut self, url: &Url, protocol: &HttpVersion) -> Result<&'a mut DeboaConnection, DeboaError>;
 }
 
-#[cfg(feature = "http1")]
 #[async_trait]
-impl DeboaHttpConnectionPool<Http1Request> for HttpConnectionPool<Http1Request> {
+impl DeboaHttpConnectionPool for HttpConnectionPool {
     fn new() -> Self {
         Self { connections: HashMap::new() }
     }
 
-    fn connections(&self) -> &HashMap<String, BaseHttpConnection<Http1Request>> {
+    fn connections(&self) -> &HashMap<String, DeboaConnection> {
         &self.connections
     }
 
-    async fn create_connection(&mut self, url: &Url) -> Result<&mut BaseHttpConnection<Http1Request>, DeboaError> {
+    async fn create_connection(&mut self, url: &Url, protocol: &HttpVersion) -> Result<&mut DeboaConnection, DeboaError> {
+        use crate::client::conn::http::DeboaHttpConnection;
+
         let host = Cow::from(url.host().unwrap().to_string());
         if self.connections.contains_key(&host.to_string()) {
             return Ok(self.connections.get_mut(&host.to_string()).unwrap());
         }
 
-        let connection = BaseHttpConnection::<Http1Request>::connect(url.clone()).await?;
-
-        self.connections.insert(host.to_string(), connection);
-        Ok(self.connections.get_mut(&host.to_string()).unwrap())
-    }
-}
-
-#[cfg(feature = "http2")]
-#[async_trait]
-impl DeboaHttpConnectionPool<Http2Request> for HttpConnectionPool<Http2Request> {
-    fn new() -> Self {
-        Self { connections: HashMap::new() }
-    }
-
-    fn connections(&self) -> &HashMap<String, BaseHttpConnection<Http2Request>> {
-        &self.connections
-    }
-
-    async fn create_connection(&mut self, url: &Url) -> Result<&mut BaseHttpConnection<Http2Request>, DeboaError> {
-        let host = Cow::from(url.host().unwrap().to_string());
-        if self.connections.contains_key(&host.to_string()) {
-            return Ok(self.connections.get_mut(&host.to_string()).unwrap());
-        }
-
-        let connection = BaseHttpConnection::<Http2Request>::connect(url.clone()).await?;
+        let connection = match protocol {
+            #[cfg(feature = "http1")]
+            HttpVersion::Http1 => DeboaConnection::Http1(Box::new(BaseHttpConnection::<Http1Request>::connect(url.clone()).await?)),
+            #[cfg(feature = "http2")]
+            HttpVersion::Http2 => DeboaConnection::Http2(Box::new(BaseHttpConnection::<Http2Request>::connect(url.clone()).await?)),
+        };
 
         self.connections.insert(host.to_string(), connection);
         Ok(self.connections.get_mut(&host.to_string()).unwrap())
