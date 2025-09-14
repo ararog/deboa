@@ -71,17 +71,20 @@
 //! deboa = { version = "0.0.5-alpha.3", default-features = false }
 //! ```
 //!
+
+#[cfg(all(feature = "tokio-rt", feature = "smol-rt"))]
+compile_error!("Only one runtime feature can be enabled at a time.");
+
+#[cfg(not(any(feature = "http1", feature = "http2")))]
+compile_error!("At least one HTTP version feature must be enabled.");
+
 use std::fmt::Debug;
 
 use bytes::{Buf, Bytes};
 use http::{HeaderValue, Request};
 use http_body_util::{BodyExt, Full};
 
-use crate::client::conn::http::DeboaHttpConnection;
-#[cfg(feature = "http1")]
-use crate::client::conn::http::Http1Request;
-#[cfg(feature = "http2")]
-use crate::client::conn::http::Http2Request;
+use crate::client::conn::http::{DeboaConnection, DeboaHttpConnection};
 
 use crate::catcher::DeboaCatcher;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
@@ -119,12 +122,6 @@ pub struct DeboaBuilder {
     request_timeout: u64,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
-    #[cfg(feature = "http1")]
-    #[allow(dead_code)]
-    http1_pool: HttpConnectionPool<Http1Request>,
-    #[cfg(feature = "http2")]
-    #[allow(dead_code)]
-    http2_pool: HttpConnectionPool<Http2Request>,
 }
 
 impl DeboaBuilder {
@@ -200,10 +197,7 @@ impl DeboaBuilder {
             request_timeout: self.request_timeout,
             catchers: self.catchers,
             protocol: self.protocol,
-            #[cfg(feature = "http1")]
-            http1_pool: HttpConnectionPool::<Http1Request>::new(),
-            #[cfg(feature = "http2")]
-            http2_pool: HttpConnectionPool::<Http2Request>::new(),
+            pool: HttpConnectionPool::new(),
         }
     }
 }
@@ -214,10 +208,7 @@ pub struct Deboa {
     request_timeout: u64,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
-    #[cfg(feature = "http1")]
-    http1_pool: HttpConnectionPool<Http1Request>,
-    #[cfg(feature = "http2")]
-    http2_pool: HttpConnectionPool<Http2Request>,
+    pool: HttpConnectionPool,
 }
 
 impl AsRef<Deboa> for Deboa {
@@ -258,10 +249,7 @@ impl Deboa {
             request_timeout: 0,
             catchers: None,
             protocol: HttpVersion::Http1,
-            #[cfg(feature = "http1")]
-            http1_pool: HttpConnectionPool::<Http1Request>::new(),
-            #[cfg(feature = "http2")]
-            http2_pool: HttpConnectionPool::<Http2Request>::new(),
+            pool: HttpConnectionPool::new(),
         }
     }
 
@@ -278,10 +266,6 @@ impl Deboa {
             request_timeout: 0,
             catchers: None,
             protocol: HttpVersion::Http1,
-            #[cfg(feature = "http1")]
-            http1_pool: HttpConnectionPool::<Http1Request>::new(),
-            #[cfg(feature = "http2")]
-            http2_pool: HttpConnectionPool::<Http2Request>::new(),
         }
     }
 
@@ -384,6 +368,16 @@ impl Deboa {
         self
     }
 
+    /// Allow execute a request.
+    ///
+    /// # Arguments
+    ///
+    /// * `request` - The request to be executed.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<DeboaResponse, DeboaError>` - The response.
+    ///
     pub async fn execute(&mut self, mut request: DeboaRequest) -> Result<DeboaResponse, DeboaError> {
         if let Some(catchers) = &self.catchers {
             let mut response = catchers.iter().filter_map(|catcher| catcher.on_request(&mut request).unwrap());
@@ -429,25 +423,12 @@ impl Deboa {
 
         let request = request.unwrap();
 
-        #[cfg(all(feature = "http1", feature = "http2"))]
-        let response = if self.protocol == HttpVersion::Http1 {
-            let conn = self.http1_pool.create_connection(&url).await?;
-            conn.send_request(request).await?
-        } else {
-            let conn = self.http2_pool.create_connection(&url).await?;
-            conn.send_request(request).await?
-        };
-
-        #[cfg(all(feature = "http1", not(feature = "http2")))]
-        let response = {
-            let conn = self.http1_pool.create_connection(&url).await?;
-            conn.send_request(hyper_request).await?
-        };
-
-        #[cfg(all(feature = "http2", not(feature = "http1")))]
-        let response = {
-            let conn = self.http2_pool.create_connection(&url).await?;
-            conn.send_request(hyper_request).await?
+        let conn = self.pool.create_connection(&url, &self.protocol).await?;
+        let response = match *conn {
+            #[cfg(feature = "http1")]
+            DeboaConnection::Http1(ref mut conn) => conn.send_request(request).await?,
+            #[cfg(feature = "http2")]
+            DeboaConnection::Http2(ref mut conn) => conn.send_request(request).await?,
         };
 
         let status_code = response.status();
