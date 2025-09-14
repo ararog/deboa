@@ -15,7 +15,7 @@ async fn test_get() {
     });
 
     let mut vamo = Vamo::new(server.base_url().as_str());
-    let response = vamo.get("/posts").send_with(vamo.client()).await.unwrap();
+    let response = vamo.get("/posts").go(vamo.client()).await.unwrap();
 
     mock.assert();
 
@@ -31,7 +31,7 @@ async fn test_put() {
     });
 
     let mut vamo = Vamo::new(server.base_url().as_str());
-    let response = vamo.put("/posts").send_with(vamo.client()).await.unwrap();
+    let response = vamo.put("/posts").go(vamo.client()).await.unwrap();
 
     mock.assert();
 
@@ -47,7 +47,7 @@ async fn test_post() {
     });
 
     let mut vamo = Vamo::new(server.base_url().as_str());
-    let response = vamo.post("/posts").send_with(vamo.client()).await.unwrap();
+    let response = vamo.post("/posts").go(vamo.client()).await.unwrap();
 
     mock.assert();
 
@@ -63,7 +63,7 @@ async fn test_patch() {
     });
 
     let mut vamo = Vamo::new(server.base_url().as_str());
-    let response = vamo.patch("/posts/1").send_with(vamo.client()).await.unwrap();
+    let response = vamo.patch("/posts/1").go(vamo.client()).await.unwrap();
 
     mock.assert();
 
@@ -79,7 +79,7 @@ async fn test_delete() {
     });
 
     let mut vamo = Vamo::new(server.base_url().as_str());
-    let response = vamo.delete("/posts/1").send_with(vamo.client()).await.unwrap();
+    let response = vamo.delete("/posts/1").go(vamo.client()).await.unwrap();
 
     mock.assert();
 

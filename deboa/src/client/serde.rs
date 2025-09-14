@@ -1,6 +1,7 @@
 use crate::{errors::DeboaError, request::DeboaRequest};
 use serde::{Deserialize, Serialize};
 
+/// Trait that represents the request body.
 pub trait RequestBody {
     /// Register the content type on the Deboa instance
     ///
@@ -22,6 +23,7 @@ pub trait RequestBody {
     fn serialize<T: Serialize>(&self, value: T) -> Result<Vec<u8>, DeboaError>;
 }
 
+/// Trait that represents the response body.
 pub trait ResponseBody {
     /// Deserialize the response body
     ///

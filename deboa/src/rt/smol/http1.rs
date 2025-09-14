@@ -18,7 +18,7 @@ impl DeboaHttpConnection<Http1Request> for BaseHttpConnection<Http1Request> {
         &self.url
     }
 
-    async fn connect(url: Url) -> Result<BaseHttpConnection<Http1Request>, DeboaError> {
+    async fn connect(url: Url, retries: u32) -> Result<BaseHttpConnection<Http1Request>, DeboaError> {
         let host = url.host().expect("uri has no host");
         let io = {
             match url.scheme() {
@@ -85,7 +85,7 @@ impl DeboaHttpConnection<Http1Request> for BaseHttpConnection<Http1Request> {
         })
         .detach();
 
-        Ok(BaseHttpConnection::<Http1Request> { url, sender })
+        Ok(BaseHttpConnection::<Http1Request> { url, sender, retries })
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>, DeboaError> {

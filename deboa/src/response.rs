@@ -6,6 +6,13 @@ use serde::Deserialize;
 use crate::{client::serde::ResponseBody, errors::DeboaError};
 
 #[derive(PartialEq)]
+/// Struct that represents the response.
+///
+/// # Fields
+///
+/// * `status` - The status code of the response.
+/// * `headers` - The headers of the response.
+/// * `body` - The body of the response.
 pub struct DeboaResponse {
     status: http::StatusCode,
     headers: Arc<http::HeaderMap>,
