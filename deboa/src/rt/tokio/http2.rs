@@ -14,7 +14,9 @@ use crate::{
 };
 
 #[async_trait]
-impl DeboaHttpConnection<Http2Request> for BaseHttpConnection<Http2Request> {
+impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
+    type Sender = Http2Request;
+
     fn url(&self) -> &Url {
         &self.url
     }
