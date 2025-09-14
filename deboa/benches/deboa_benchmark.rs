@@ -8,16 +8,16 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use deboa::{Deboa, errors::DeboaError, request::DeboaRequest};
 
 async fn get_async() -> Result<(), DeboaError> {
-    let mut api = Deboa::new();
-    let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts").send_with(&mut api).await;
+    let api = Deboa::new();
+    let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts").go(api).await;
     Ok(())
 }
 
 async fn post_async() -> Result<(), DeboaError> {
-    let mut api = Deboa::new();
+    let api = Deboa::new();
     let _ = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts")
         .text("Some test to do")
-        .send_with(&mut api)
+        .go(api)
         .await;
     Ok(())
 }

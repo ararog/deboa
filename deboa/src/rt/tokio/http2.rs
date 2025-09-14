@@ -21,7 +21,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
         &self.url
     }
 
-    async fn connect(url: Url) -> Result<BaseHttpConnection<Http2Request>, DeboaError> {
+    async fn connect(url: &Url) -> Result<BaseHttpConnection<Http2Request>, DeboaError> {
         let host = url.host().unwrap_or(Host::Domain("localhost"));
         let port = url.port().unwrap_or(80);
         let addr = format!("{host}:{port}");
@@ -54,13 +54,13 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
             };
         });
 
-        Ok(BaseHttpConnection::<Http2Request> { url, sender })
+        Ok(BaseHttpConnection::<Http2Request> { url: url.clone(), sender })
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>, DeboaError> {
         let method = request.method().to_string();
         let result = self.sender.send_request(request).await;
 
-        self.process_response(self.url.clone(), &method, result)
+        self.process_response(&self.url, &method, result)
     }
 }

@@ -6,13 +6,8 @@ pub enum DeboaError {
     #[error("Could not connect to {host}: {message}")]
     Connection { host: String, message: String },
 
-    #[error("Failed to send request: {method} {host}/{path}: {message}")]
-    Request {
-        host: String,
-        path: String,
-        method: String,
-        message: String,
-    },
+    #[error("Failed to send request: {method} {url}: {message}")]
+    Request { url: String, method: String, message: String },
 
     #[error("Failed to receive response: {status_code}: {message}")]
     Response { status_code: StatusCode, message: String },

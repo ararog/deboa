@@ -7,6 +7,13 @@ use url::Url;
 
 use crate::errors::DeboaError;
 
+#[derive(Debug)]
+/// Enum that represents the connection type.
+///
+/// # Variants
+///
+/// * `Http1` - The HTTP/1.1 connection.
+/// * `Http2` - The HTTP/2 connection.
 pub enum DeboaConnection {
     #[cfg(feature = "http1")]
     Http1(Box<BaseHttpConnection<Http1Request>>),
@@ -15,6 +22,12 @@ pub enum DeboaConnection {
 }
 
 #[derive(Debug, Clone)]
+/// Struct that represents the connection.
+///
+/// # Fields
+///
+/// * `url` - The url to connect.
+/// * `sender` - The sender to use.
 pub struct BaseHttpConnection<T> {
     pub(crate) url: Url,
     pub(crate) sender: T,
@@ -26,6 +39,12 @@ pub type Http1Request = hyper::client::conn::http1::SendRequest<Full<Bytes>>;
 pub type Http2Request = hyper::client::conn::http2::SendRequest<Full<Bytes>>;
 
 #[async_trait]
+/// Trait that represents the HTTP connection.
+///
+/// # Type Parameters
+///
+/// * `Sender` - The sender to use.
+///
 pub trait DeboaHttpConnection {
     type Sender;
 
@@ -39,7 +58,7 @@ pub trait DeboaHttpConnection {
     ///
     /// * `Result<BaseHttpConnection<Self::Sender>, DeboaError>` - The connection or error.
     ///
-    async fn connect(url: Url) -> Result<BaseHttpConnection<Self::Sender>, DeboaError>;
+    async fn connect(url: &Url) -> Result<BaseHttpConnection<Self::Sender>, DeboaError>;
 
     /// Get connection url.
     ///
@@ -74,15 +93,14 @@ pub trait DeboaHttpConnection {
     /// * `Result<Response<Incoming>, DeboaError>` - The response or error.
     ///
     fn process_response(
-        &mut self,
-        url: Url,
+        &self,
+        url: &Url,
         method: &str,
         response: Result<Response<Incoming>, hyper::Error>,
     ) -> Result<Response<Incoming>, DeboaError> {
         if let Err(err) = response {
             return Err(DeboaError::Request {
-                host: url.host().unwrap().to_string(),
-                path: url.path().to_string(),
+                url: url.to_string(),
                 method: method.to_string(),
                 message: err.to_string(),
             });

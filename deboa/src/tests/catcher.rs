@@ -12,12 +12,16 @@ async fn test_catcher_request() {
     let mut mock = MockDeboaCatcher::new();
     let mut request = DeboaRequest::get("https://httpbin.org/get").build().unwrap();
     mock.expect_on_request().returning(move |req| {
-        req.headers_mut().insert(HeaderName::from_static("test"), "test".into());
+        req.headers_mut()
+            .insert(HeaderName::from_static("test"), HeaderValue::from_str("test").unwrap());
         Ok(None)
     });
 
     let _ = mock.on_request(&mut request);
-    assert_eq!(request.headers().get(&HeaderName::from_static("test")), Some(&"test".into()));
+    assert_eq!(
+        request.headers().get(HeaderName::from_static("test")),
+        Some(&HeaderValue::from_str("test").unwrap())
+    );
 }
 
 #[tokio::test]
@@ -28,8 +32,8 @@ async fn test_catcher_response() {
         res.set_raw_body(b"test");
     });
 
-    let mut client = Deboa::builder().catch(mock).build();
-    let response = DeboaRequest::get("https://httpbin.org/get").send_with(&mut client).await.unwrap();
+    let client = Deboa::builder().catch(mock).build();
+    let response = DeboaRequest::get("https://httpbin.org/get").go(client).await.unwrap();
     assert_eq!(response.raw_body(), b"test");
 }
 
@@ -46,8 +50,8 @@ async fn test_catcher_early_response() {
 
     mock.expect_on_response().times(1).return_const(());
 
-    let mut client = Deboa::builder().catch(mock).build();
-    let response = DeboaRequest::get("https://httpbin.org/get").send_with(&mut client).await.unwrap();
+    let client = Deboa::builder().catch(mock).build();
+    let response = DeboaRequest::get("https://httpbin.org/get").go(client).await.unwrap();
 
     assert_eq!(response.headers().get("test").unwrap(), "test");
 }

@@ -2,7 +2,7 @@ use crate::errors::DeboaError;
 use crate::request::DeboaRequest;
 
 use crate::tests::utils::JSONPLACEHOLDER;
-use http::header;
+use http::{HeaderValue, header};
 
 #[test]
 fn test_base_url() -> Result<(), DeboaError> {
@@ -16,21 +16,24 @@ fn test_base_url() -> Result<(), DeboaError> {
 #[test]
 fn test_set_headers() -> Result<(), DeboaError> {
     let request = DeboaRequest::to(JSONPLACEHOLDER)
-        .add_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
+        .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
         .build()?;
 
-    assert_eq!(request.headers().get(&header::CONTENT_TYPE), Some(&mime::APPLICATION_JSON.to_string()));
+    assert_eq!(
+        request.headers().get(&header::CONTENT_TYPE),
+        Some(&HeaderValue::from_str(mime::APPLICATION_JSON.as_ref()).unwrap())
+    );
 
     Ok(())
 }
 
 #[test]
 fn test_set_basic_auth() -> Result<(), DeboaError> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER).add_basic_auth("username", "password").build()?;
+    let request = DeboaRequest::get(JSONPLACEHOLDER).basic_auth("username", "password").build()?;
 
     assert_eq!(
         request.headers().get(&header::AUTHORIZATION),
-        Some(&"Basic dXNlcm5hbWU6cGFzc3dvcmQ=".to_string())
+        Some(&HeaderValue::from_str("Basic dXNlcm5hbWU6cGFzc3dvcmQ=").unwrap())
     );
 
     Ok(())
@@ -38,9 +41,12 @@ fn test_set_basic_auth() -> Result<(), DeboaError> {
 
 #[test]
 fn test_set_bearer_auth() -> Result<(), DeboaError> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER).add_bearer_auth("token").build()?;
+    let request = DeboaRequest::get(JSONPLACEHOLDER).bearer_auth("token").build()?;
 
-    assert_eq!(request.headers().get(&header::AUTHORIZATION), Some(&"Bearer token".to_string()));
+    assert_eq!(
+        request.headers().get(&header::AUTHORIZATION),
+        Some(&HeaderValue::from_str("Bearer token").unwrap())
+    );
 
     Ok(())
 }
@@ -48,10 +54,13 @@ fn test_set_bearer_auth() -> Result<(), DeboaError> {
 #[test]
 fn test_add_header() -> Result<(), DeboaError> {
     let request = DeboaRequest::get(JSONPLACEHOLDER)
-        .add_header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
+        .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
         .build()?;
 
-    assert_eq!(request.headers().get(&header::CONTENT_TYPE), Some(&mime::APPLICATION_JSON.to_string()));
+    assert_eq!(
+        request.headers().get(&header::CONTENT_TYPE),
+        Some(&HeaderValue::from_str(mime::APPLICATION_JSON.as_ref()).unwrap())
+    );
 
     Ok(())
 }

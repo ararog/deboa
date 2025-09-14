@@ -1,15 +1,24 @@
 use std::{collections::HashMap, fmt::Debug, sync::Arc};
 
-use http::{HeaderName, Method, header};
+use http::{HeaderMap, HeaderName, HeaderValue, Method, header};
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use serde::Serialize;
 
 use crate::{Deboa, client::serde::RequestBody, cookie::DeboaCookie, errors::DeboaError, response::DeboaResponse};
 
+/// Struct that represents the request builder.
+///
+/// # Fields
+///
+/// * `url` - The url to connect.
+/// * `headers` - The headers to use.
+/// * `cookies` - The cookies to use.
+/// * `method` - The method to use.
+/// * `body` - The body to use.
 pub struct DeboaRequestBuilder {
     url: String,
-    headers: HashMap<::http::HeaderName, String>,
+    headers: HeaderMap,
     cookies: Option<HashMap<String, DeboaCookie>>,
     method: http::Method,
     body: Arc<Vec<u8>>,
@@ -56,8 +65,24 @@ impl DeboaRequestBuilder {
     ///
     /// * `Self` - The request builder.
     ///
-    pub fn headers(mut self, headers: HashMap<HeaderName, String>) -> Self {
+    pub fn headers(mut self, headers: HeaderMap) -> Self {
         self.headers = headers;
+        self
+    }
+
+    /// Add a header to the request.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The header key.
+    /// * `value` - The header value.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The request builder.
+    ///
+    pub fn header(mut self, key: HeaderName, value: &str) -> Self {
+        self.headers.insert(key, HeaderValue::from_str(value).unwrap());
         self
     }
 
@@ -73,22 +98,6 @@ impl DeboaRequestBuilder {
     ///
     pub fn cookies(mut self, cookies: HashMap<String, DeboaCookie>) -> Self {
         self.cookies = Some(cookies);
-        self
-    }
-
-    /// Add a header to the request.
-    ///
-    /// # Arguments
-    ///
-    /// * `key` - The header key.
-    /// * `value` - The header value.
-    ///
-    /// # Returns
-    ///
-    /// * `Self` - The request builder.
-    ///
-    pub fn add_header(mut self, key: HeaderName, value: &str) -> Self {
-        self.headers.insert(key, value.to_string());
         self
     }
 
@@ -148,9 +157,8 @@ impl DeboaRequestBuilder {
     ///
     /// * `token` - The token.
     ///
-    pub fn add_bearer_auth(mut self, token: &str) -> Self {
-        self.headers.insert(header::AUTHORIZATION, format!("Bearer {token}"));
-        self
+    pub fn bearer_auth(self, token: &str) -> Self {
+        self.header(header::AUTHORIZATION, format!("Bearer {token}").as_str())
     }
 
     /// Add basic auth to the request.
@@ -164,12 +172,11 @@ impl DeboaRequestBuilder {
     ///
     /// * `Self` - The request builder.
     ///
-    pub fn add_basic_auth(mut self, username: &str, password: &str) -> Self {
-        self.headers.insert(
+    pub fn basic_auth(self, username: &str, password: &str) -> Self {
+        self.header(
             header::AUTHORIZATION,
-            format!("Basic {}", STANDARD.encode(format!("{username}:{password}"))),
-        );
-        self
+            format!("Basic {}", STANDARD.encode(format!("{username}:{password}"))).as_str(),
+        )
     }
 
     /// Build the request.
@@ -198,14 +205,14 @@ impl DeboaRequestBuilder {
     ///
     /// * `Result<DeboaResponse, DeboaError>` - The response.
     ///
-    pub async fn send_with<T: AsMut<Deboa>>(self, mut client: T) -> Result<DeboaResponse, DeboaError> {
+    pub async fn go<T: AsMut<Deboa>>(self, mut client: T) -> Result<DeboaResponse, DeboaError> {
         client.as_mut().execute(self.build()?).await
     }
 }
 
 pub struct DeboaRequest {
     url: String,
-    headers: HashMap<::http::HeaderName, String>,
+    headers: HeaderMap,
     cookies: Option<HashMap<String, DeboaCookie>>,
     method: http::Method,
     body: Arc<Vec<u8>>,
@@ -250,7 +257,7 @@ impl DeboaRequest {
     fn at(url: &str, method: http::Method) -> DeboaRequestBuilder {
         DeboaRequestBuilder {
             url: url.to_string(),
-            headers: HashMap::new(),
+            headers: HeaderMap::new(),
             cookies: None,
             method,
             body: Arc::new(Vec::new()),
@@ -409,9 +416,9 @@ impl DeboaRequest {
     ///
     /// # Returns
     ///
-    /// * `HashMap<HeaderName, String>` - The headers.
+    /// * `HeaderMap` - The headers.
     ///
-    pub fn headers(&self) -> &HashMap<HeaderName, String> {
+    pub fn headers(&self) -> &HeaderMap {
         &self.headers
     }
 
@@ -419,9 +426,9 @@ impl DeboaRequest {
     ///
     /// # Returns
     ///
-    /// * `&mut HashMap<HeaderName, String>` - The headers.
+    /// * `&mut HeaderMap` - The headers.
     ///
-    pub fn headers_mut(&mut self) -> &mut HashMap<HeaderName, String> {
+    pub fn headers_mut(&mut self) -> &mut HeaderMap {
         &mut self.headers
     }
 
@@ -437,7 +444,7 @@ impl DeboaRequest {
     /// * `&mut Self` - The request.
     ///
     pub fn add_header(&mut self, key: HeaderName, value: &str) -> &mut Self {
-        self.headers.insert(key, value.to_string());
+        self.headers.insert(key, HeaderValue::from_str(value).unwrap());
 
         self
     }

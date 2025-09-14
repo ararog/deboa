@@ -3,16 +3,6 @@
 //! Hello, and welcome to the core Deboa API documentation!
 //!
 //! This API documentation is highly technical and is purely a reference.
-//! There's an [overview] of Deboa on the main site as well as a [full,
-//! detailed guide]. If you'd like pointers on getting started, see the
-//! [quickstart] or [getting started] chapters of the guide.
-//!
-//! [overview]: https://rocket.rs/master/overview
-//! [full, detailed guide]: https://rocket.rs/master/guide
-//! [quickstart]: https://rocket.rs/master/guide/quickstart
-//! [getting started]: https://rocket.rs/master/guide/getting-started
-//!
-//! ## Usage
 //!
 //! Depend on `deboa` in `Cargo.toml`:
 //!
@@ -24,21 +14,16 @@
 //! <small>Note that development versions, tagged with `-dev`, are not published
 //! and need to be specified as [git dependencies].</small>
 //!
-//! See the [guide](https://rocket.rs/master/guide) for more information on how
-//! to write Rocket applications. Here's a simple example to get you started:
-//!
-//! [git dependencies]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-git-repositories
-//!
 //! ```rust,no_run
 //! use deboa::{Deboa, request::DeboaRequest};
 //!
 //! #[tokio::main]
 //! async fn main() -> () {
-//!     let mut deboa = Deboa::builder()
+//!     let deboa = Deboa::builder()
 //!         .build();
 //!
 //!     let response = DeboaRequest::get("https://httpbin.org/get")
-//!         .send_with(&mut deboa)
+//!         .go(deboa)
 //!         .await;
 //!
 //!     println!("Response: {:#?}", response);
@@ -52,9 +37,9 @@
 //!
 //! | Feature         | Default? | Description                                             |
 //! |-----------------|----------|---------------------------------------------------------|
-//! | `tokio_rt`      | Yes      | Enables the default Deboa tracing [subscriber].         |
-//! | `smol_rt`       | Yes      | Enables the default Deboa tracing [subscriber].         |
-//! | `http1`         | Yes      | Support for HTTP/2 (enabled by default).                |
+//! | `tokio_rt`      | Yes      | Support tokio runtime (enabled by default).             |
+//! | `smol_rt`       | Yes      | Support smol runtime.                                   |
+//! | `http1`         | Yes      | Support for HTTP/1 (enabled by default).                |
 //! | `http2`         | Yes      | Support for HTTP/2 (enabled by default).                |
 //!
 //! Disabled features can be selectively enabled in `Cargo.toml`:
@@ -81,8 +66,9 @@ compile_error!("At least one HTTP version feature must be enabled.");
 use std::fmt::Debug;
 
 use bytes::{Buf, Bytes};
-use http::{HeaderValue, Request};
+use http::{Request, Response};
 use http_body_util::{BodyExt, Full};
+use hyper::body::Incoming;
 
 use crate::client::conn::http::{DeboaConnection, DeboaHttpConnection};
 
@@ -109,6 +95,12 @@ mod rt;
 mod tests;
 
 #[derive(PartialEq, Debug)]
+/// Enum that represents the HTTP version.
+///
+/// # Variants
+///
+/// * `Http1` - The HTTP/1.1 version.
+/// * `Http2` - The HTTP/2 version.
 pub enum HttpVersion {
     #[cfg(feature = "http1")]
     Http1,
@@ -116,6 +108,15 @@ pub enum HttpVersion {
     Http2,
 }
 
+/// Struct that represents the Deboa builder.
+///
+/// # Fields
+///
+/// * `retries` - The number of retries.
+/// * `connection_timeout` - The connection timeout.
+/// * `request_timeout` - The request timeout.
+/// * `catchers` - The catchers.
+/// * `protocol` - The protocol to use.
 pub struct DeboaBuilder {
     retries: u32,
     connection_timeout: u64,
@@ -202,6 +203,16 @@ impl DeboaBuilder {
     }
 }
 
+/// Struct that represents the Deboa instance.
+///
+/// # Fields
+///
+/// * `retries` - The number of retries.
+/// * `connection_timeout` - The connection timeout.
+/// * `request_timeout` - The request timeout.
+/// * `catchers` - The catchers.
+/// * `protocol` - The protocol to use.
+/// * `pool` - The connection pool.
 pub struct Deboa {
     retries: u32,
     connection_timeout: u64,
@@ -285,6 +296,10 @@ impl Deboa {
     ///
     /// * `protocol` - The protocol to be used.
     ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The Deboa instance.
+    ///
     pub fn set_protocol(&mut self, protocol: HttpVersion) -> &mut Self {
         self.protocol = protocol;
         self
@@ -305,6 +320,10 @@ impl Deboa {
     /// # Arguments
     ///
     /// * `retries` - The new retries.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The Deboa instance.
     ///
     pub fn set_retries(&mut self, retries: u32) -> &mut Self {
         self.retries = retries;
@@ -327,6 +346,10 @@ impl Deboa {
     ///
     /// * `timeout` - The new timeout.
     ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The Deboa instance.
+    ///
     pub fn set_connection_timeout(&mut self, timeout: u64) -> &mut Self {
         self.connection_timeout = timeout;
         self
@@ -348,6 +371,10 @@ impl Deboa {
     ///
     /// * `timeout` - The new timeout.
     ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The Deboa instance.
+    ///
     pub fn set_request_timeout(&mut self, timeout: u64) -> &mut Self {
         self.request_timeout = timeout;
         self
@@ -358,6 +385,10 @@ impl Deboa {
     /// # Arguments
     ///
     /// * `catcher` - The catcher to be added.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The Deboa instance.
     ///
     pub fn catch<C: DeboaCatcher>(&mut self, catcher: C) -> &mut Self {
         if let Some(catchers) = &mut self.catchers {
@@ -388,6 +419,44 @@ impl Deboa {
             }
         }
 
+        let mut retry_count = 0;
+        let response = loop {
+            let response = self.send_request(&request).await;
+            if let Err(err) = response {
+                if retry_count == self.retries {
+                    #[cfg(feature = "tokio-rt")]
+                    tokio::time::sleep(tokio::time::Duration::from_secs(retry_count.pow(2) as u64)).await;
+                    #[cfg(feature = "smol-rt")]
+                    smol::Timer::after(std::time::Duration::from_secs((retry_count.pow(2) as u64))).await;
+                    break Err(err);
+                }
+                retry_count += 1;
+                continue;
+            }
+
+            break Ok(response.unwrap());
+        };
+
+        let mut response = self.process_response(response?).await?;
+
+        if let Some(catchers) = &self.catchers {
+            catchers.iter().for_each(|catcher| catcher.on_response(&mut response));
+        }
+
+        Ok(response)
+    }
+
+    /// Allow send a request.
+    ///
+    /// # Arguments
+    ///
+    /// * `request` - The request to be sent.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Response<Incoming>, DeboaError>` - The response.
+    ///
+    async fn send_request(&mut self, request: &DeboaRequest) -> Result<Response<Incoming>, DeboaError> {
         let url = Url::parse(&request.url());
         if let Err(e) = url {
             return Err(DeboaError::UrlParse { message: e.to_string() });
@@ -404,7 +473,7 @@ impl Deboa {
         {
             let req_headers = builder.headers_mut().unwrap();
             request.headers().iter().fold(req_headers, |acc, (key, value)| {
-                acc.insert(key, HeaderValue::from_str(value).unwrap());
+                acc.insert(key, value.clone());
                 acc
             });
         }
@@ -414,8 +483,7 @@ impl Deboa {
         let request = builder.body(Full::new(Bytes::from(body.to_vec())));
         if let Err(err) = request {
             return Err(DeboaError::Request {
-                host: url.host().unwrap().to_string(),
-                path: url.path().to_string(),
+                url: url.to_string(),
                 method: method.to_string(),
                 message: err.to_string(),
             });
@@ -424,13 +492,25 @@ impl Deboa {
         let request = request.unwrap();
 
         let conn = self.pool.create_connection(&url, &self.protocol).await?;
-        let response = match *conn {
+        match *conn {
             #[cfg(feature = "http1")]
-            DeboaConnection::Http1(ref mut conn) => conn.send_request(request).await?,
+            DeboaConnection::Http1(ref mut conn) => conn.send_request(request).await,
             #[cfg(feature = "http2")]
-            DeboaConnection::Http2(ref mut conn) => conn.send_request(request).await?,
-        };
+            DeboaConnection::Http2(ref mut conn) => conn.send_request(request).await,
+        }
+    }
 
+    /// Allow process a response.
+    ///
+    /// # Arguments
+    ///
+    /// * `response` - The response to be processed.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<DeboaResponse, DeboaError>` - The response.
+    ///
+    async fn process_response(&self, response: Response<Incoming>) -> Result<DeboaResponse, DeboaError> {
         let status_code = response.status();
         let headers = response.headers().clone();
 
@@ -443,12 +523,6 @@ impl Deboa {
 
         let raw_body = response_body.copy_to_bytes(response_body.remaining()).to_vec();
 
-        let mut response = DeboaResponse::new(status_code, headers, &raw_body);
-
-        if let Some(catchers) = &self.catchers {
-            catchers.iter().for_each(|catcher| catcher.on_response(&mut response));
-        }
-
-        Ok(response)
+        Ok(DeboaResponse::new(status_code, headers, &raw_body))
     }
 }
