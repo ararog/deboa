@@ -13,7 +13,7 @@ async fn main() -> Result<(), DeboaError> {
     let client = Deboa::new();
 
     let posts: Vec<Post> = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")
-        .send_with(client)
+        .go(client)
         .await?
         .body_as(JsonBody)?;
 

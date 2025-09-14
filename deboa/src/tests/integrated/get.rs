@@ -103,7 +103,7 @@ async fn do_get_not_found() -> Result<(), DeboaError> {
 
     let client = Deboa::new();
 
-    let response: Result<DeboaResponse, DeboaError> = DeboaRequest::get(server.url("/asasa/posts/1ddd").as_str()).send_with(client).await;
+    let response: Result<DeboaResponse, DeboaError> = DeboaRequest::get(server.url("/asasa/posts/1ddd").as_str()).go(client).await;
 
     http_mock.assert();
 
@@ -182,7 +182,7 @@ async fn do_get_by_query() -> Result<(), DeboaError> {
 
     let client = Deboa::new();
 
-    let response = DeboaRequest::get(server.url("/comments/1").as_str()).send_with(client).await?;
+    let response = DeboaRequest::get(server.url("/comments/1").as_str()).go(client).await?;
 
     http_mock.assert();
 

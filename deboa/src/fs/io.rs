@@ -3,6 +3,7 @@ use bytes::Bytes;
 
 use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
 
+/// Trait that represents the compressor.
 pub trait Compressor: Send + Sync + 'static {
     /// This method returns the name of encoding for this compressor.
     ///
@@ -34,6 +35,7 @@ impl<T: Compressor> Compressor for Box<T> {
     }
 }
 
+/// Trait that represents the decompressor.
 pub trait Decompressor: Send + Sync + 'static {
     /// This method register the encoding of the response.
     ///
