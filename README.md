@@ -8,7 +8,7 @@
 
 ## Attention
 
-This release has a major api change. Please check the [migration guide](https://github.com/ararog/deboa/blob/main/MIGRATION_GUIDE.md) for more information.
+This release has a major api change. Please check the [migration guide](https://github.com/ararog/deboa/blob/main/MIGRATION_GUIDE.md) for more information. Keep in mind API for 0.0.5 is subject to change in alpha releases. Proper deprecation will be added in the next stable release.
 
 ## Install
 
