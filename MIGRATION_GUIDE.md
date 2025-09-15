@@ -8,6 +8,7 @@
 * DeboaResponse allow traits to add body deserialization
 * Removed builtin json support
 * Added DeboaError
+* Added DeboaRequest and DeboaRequestBuilder
 
 ### Non-breaking changes
 
@@ -16,6 +17,7 @@
 * Responses decompression
 * Introduced deboa_extras crate
 * Introduced deboa_macro crate
+* Introduced vamo crate
 
 ## From 0.0.3 to 0.0.4
 
