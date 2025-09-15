@@ -213,3 +213,40 @@ async fn test_get_by_query() -> Result<(), DeboaError> {
 async fn test_get_by_query() {
     let _ = do_get_by_query().await;
 }
+
+async fn do_get_by_query_with_retries() -> Result<(), DeboaError> {
+    let server = MockServer::start();
+
+    let http_mock = setup_server(&server, "/comments/1", StatusCode::BAD_GATEWAY)?;
+
+    let client = Deboa::builder().retries(2).build();
+
+    let response = DeboaRequest::get(server.url("/comments/1").as_str()).go(client).await;
+
+    http_mock.assert_calls(3);
+
+    if let Err(err) = response {
+        assert_eq!(
+            err,
+            DeboaError::Response {
+                status_code: StatusCode::BAD_GATEWAY,
+                message: "502 Bad Gateway".to_string(),
+            },
+        );
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio-rt")]
+#[tokio::test]
+async fn test_get_by_query_with_retries() -> Result<(), DeboaError> {
+    do_get_by_query_with_retries().await?;
+    Ok(())
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_get_by_query_with_retries() {
+    let _ = do_get_by_query_with_retries().await;
+}
