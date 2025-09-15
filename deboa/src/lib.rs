@@ -64,6 +64,7 @@ compile_error!("Only one runtime feature can be enabled at a time.");
 compile_error!("At least one HTTP version feature must be enabled.");
 
 use std::fmt::Debug;
+use std::time::SystemTime;
 
 use bytes::{Buf, Bytes};
 use http::{Request, Response};
@@ -419,18 +420,23 @@ impl Deboa {
             }
         }
 
-        let mut retry_count = 0;
+        let mut retry_count: u32 = 0;
+        let start_time = SystemTime::now();
         let response = loop {
             let response = self.send_request(&request).await;
             if let Err(err) = response {
                 if retry_count == self.retries {
-                    #[cfg(feature = "tokio-rt")]
-                    tokio::time::sleep(tokio::time::Duration::from_secs(retry_count.pow(2) as u64)).await;
-                    #[cfg(feature = "smol-rt")]
-                    smol::Timer::after(std::time::Duration::from_secs((retry_count.pow(2) as u64))).await;
                     break Err(err);
                 }
+                #[cfg(feature = "tokio-rt")]
+                tokio::time::sleep(tokio::time::Duration::from_secs(2_u32.pow(retry_count) as u64)).await;
+                #[cfg(feature = "smol-rt")]
+                smol::Timer::after(std::time::Duration::from_secs((2_u32.pow(retry_count) as u64))).await;
                 retry_count += 1;
+                println!(
+                    "Retrying request... {retry_count}, after {} seconds",
+                    SystemTime::now().duration_since(start_time).unwrap().as_secs()
+                );
                 continue;
             }
 
