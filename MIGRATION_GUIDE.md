@@ -7,13 +7,16 @@
 * Config struct was removed
 * DeboaResponse allow traits to add body deserialization
 * Removed builtin json support
+- Added DeboaBuilder
 * Added DeboaError
+- Added DeboaRequest and DeboaRequestBuilder
 
 ### Non-breaking changes
 
 * Middleware support
 * HTTP2 support
 * Responses decompression
+* Introduced vamo crate
 * Introduced deboa_extras crate
 * Introduced deboa_macro crate
 
