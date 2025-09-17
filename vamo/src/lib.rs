@@ -1,5 +1,6 @@
 use deboa::{
     Deboa,
+    errors::DeboaError,
     request::{DeboaRequest, DeboaRequestBuilder},
 };
 
@@ -24,23 +25,23 @@ impl Vamo {
         &mut self.client
     }
 
-    pub fn get(&self, path: &str) -> DeboaRequestBuilder {
-        DeboaRequest::get(&format!("{}{}", self.base_url, path))
+    pub fn get(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
+        DeboaRequest::get(format!("{}{}", self.base_url, path))
     }
 
-    pub fn post(&self, path: &str) -> DeboaRequestBuilder {
-        DeboaRequest::post(&format!("{}{}", self.base_url, path))
+    pub fn post(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
+        DeboaRequest::post(format!("{}{}", self.base_url, path))
     }
 
-    pub fn put(&self, path: &str) -> DeboaRequestBuilder {
-        DeboaRequest::put(&format!("{}{}", self.base_url, path))
+    pub fn put(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
+        DeboaRequest::put(format!("{}{}", self.base_url, path))
     }
 
-    pub fn patch(&self, path: &str) -> DeboaRequestBuilder {
-        DeboaRequest::patch(&format!("{}{}", self.base_url, path))
+    pub fn patch(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
+        DeboaRequest::patch(format!("{}{}", self.base_url, path))
     }
 
-    pub fn delete(&self, path: &str) -> DeboaRequestBuilder {
-        DeboaRequest::delete(&format!("{}{}", self.base_url, path))
+    pub fn delete(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
+        DeboaRequest::delete(format!("{}{}", self.base_url, path))
     }
 }
