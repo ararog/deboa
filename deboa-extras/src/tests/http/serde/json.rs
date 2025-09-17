@@ -7,7 +7,7 @@ use crate::tests::types::{JSON_POST, Post, sample_post};
 #[cfg(feature = "json")]
 #[test]
 fn test_set_json() -> Result<(), DeboaError> {
-    let request = DeboaRequest::post("posts/1").body_as(JsonBody, sample_post())?.build()?;
+    let request = DeboaRequest::post("http://test.com/posts/1")?.body_as(JsonBody, sample_post())?.build()?;
 
     assert_eq!(*request.raw_body(), JSON_POST.to_vec());
 

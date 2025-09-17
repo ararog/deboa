@@ -9,13 +9,13 @@ use deboa::{Deboa, errors::DeboaError, request::DeboaRequest};
 
 async fn get_async() -> Result<(), DeboaError> {
     let api = Deboa::new();
-    let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts").go(api).await;
+    let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")?.go(api).await;
     Ok(())
 }
 
 async fn post_async() -> Result<(), DeboaError> {
     let api = Deboa::new();
-    let _ = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts")
+    let _ = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts")?
         .text("Some test to do")
         .go(api)
         .await;

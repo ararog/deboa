@@ -25,7 +25,7 @@ async fn do_post() -> Result<(), DeboaError> {
 
     let mut client = Deboa::new();
 
-    let request = DeboaRequest::post(server.url("/posts").as_str()).text("ping").build()?;
+    let request = DeboaRequest::post(server.url("/posts").as_str())?.text("ping").build()?;
 
     let response = client.execute(request).await?;
 
