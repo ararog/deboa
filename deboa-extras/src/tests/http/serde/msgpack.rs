@@ -5,7 +5,9 @@ use crate::tests::types::{MSGPACK_POST, Post, sample_post};
 
 #[test]
 fn test_set_msgpack() -> Result<(), DeboaError> {
-    let request = DeboaRequest::post("posts/1").body_as(MsgPackBody, sample_post())?.build()?;
+    let request = DeboaRequest::post("http://test.com/posts/1")?
+        .body_as(MsgPackBody, sample_post())?
+        .build()?;
 
     assert_eq!(*request.raw_body(), MSGPACK_POST.to_vec());
 

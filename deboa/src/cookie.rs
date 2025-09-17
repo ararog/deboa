@@ -1,10 +1,12 @@
 use std::fmt;
 
+use cookie::{Cookie, time::OffsetDateTime};
+
 #[derive(Clone)]
 pub struct DeboaCookie {
     name: String,
     value: String,
-    expires: Option<String>,
+    expires: Option<OffsetDateTime>,
     path: Option<String>,
     domain: Option<String>,
     secure: Option<bool>,
@@ -55,7 +57,7 @@ impl DeboaCookie {
     ///
     /// * `&mut Self` - The cookie.
     ///
-    pub fn set_expires(&mut self, expires: String) -> &mut Self {
+    pub fn set_expires(&mut self, expires: OffsetDateTime) -> &mut Self {
         self.expires = Some(expires);
         self
     }
@@ -132,5 +134,27 @@ impl fmt::Debug for DeboaCookie {
             .field("secure", &self.secure)
             .field("http_only", &self.http_only)
             .finish()
+    }
+}
+
+impl From<DeboaCookie> for Cookie<'_> {
+    fn from(deboa_cookie: DeboaCookie) -> Self {
+        let mut cookie = Self::new(deboa_cookie.name, deboa_cookie.value);
+        if let Some(expires) = deboa_cookie.expires {
+            cookie.set_expires(expires);
+        }
+        if let Some(path) = deboa_cookie.path {
+            cookie.set_path(path);
+        }
+        if let Some(domain) = deboa_cookie.domain {
+            cookie.set_domain(domain);
+        }
+        if let Some(secure) = deboa_cookie.secure {
+            cookie.set_secure(secure);
+        }
+        if let Some(http_only) = deboa_cookie.http_only {
+            cookie.set_http_only(http_only);
+        }
+        cookie
     }
 }
