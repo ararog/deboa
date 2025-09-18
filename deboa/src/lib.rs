@@ -66,7 +66,7 @@ compile_error!("At least one HTTP version feature must be enabled.");
 use std::fmt::Debug;
 use std::time::SystemTime;
 
-use bytes::{Buf, Bytes};
+use bytes::Bytes;
 use http::{Request, Response};
 use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
@@ -525,9 +525,7 @@ impl Deboa {
             return Err(DeboaError::ProcessResponse { message: err.to_string() });
         }
 
-        let mut response_body = result.unwrap().aggregate();
-
-        let raw_body = response_body.copy_to_bytes(response_body.remaining()).to_vec();
+        let raw_body = result.unwrap().to_bytes().to_vec();
 
         Ok(DeboaResponse::new(status_code, headers, &raw_body))
     }
