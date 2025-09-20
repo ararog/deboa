@@ -7,6 +7,7 @@
 * Config struct was removed
 * DeboaResponse allow traits to add body deserialization
 * Removed builtin json support
+* Added DeboaBuilder
 * Added DeboaError
 * Added DeboaRequest and DeboaRequestBuilder
 

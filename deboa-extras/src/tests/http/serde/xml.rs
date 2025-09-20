@@ -7,7 +7,7 @@ use crate::{
 
 #[tokio::test]
 async fn test_set_xml() -> Result<(), DeboaError> {
-    let request = DeboaRequest::post("posts/1").body_as(XmlBody, sample_post())?.build()?;
+    let request = DeboaRequest::post("http://test.com/posts/1")?.body_as(XmlBody, sample_post())?.build()?;
 
     assert_eq!(*request.raw_body(), XML_POST.to_vec());
 

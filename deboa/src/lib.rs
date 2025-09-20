@@ -15,18 +15,20 @@
 //! and need to be specified as [git dependencies].</small>
 //!
 //! ```rust,no_run
-//! use deboa::{Deboa, request::DeboaRequest};
+//! use deboa::{Deboa, errors::DeboaError, request::DeboaRequest};
 //!
 //! #[tokio::main]
-//! async fn main() -> () {
+//! async fn main() -> Result<(), DeboaError> {
 //!     let deboa = Deboa::builder()
 //!         .build();
 //!
-//!     let response = DeboaRequest::get("https://httpbin.org/get")
+//!     let response = DeboaRequest::get("https://httpbin.org/get")?
 //!         .go(deboa)
 //!         .await;
 //!
 //!     println!("Response: {:#?}", response);
+//!
+//!     Ok(())
 //! }
 //! ```
 //!

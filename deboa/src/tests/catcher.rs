@@ -12,7 +12,7 @@ use crate::{
 #[tokio::test]
 async fn test_catcher_request() {
     let mut mock = MockDeboaCatcher::new();
-    let mut request = DeboaRequest::get("https://httpbin.org/get").build().unwrap();
+    let mut request = DeboaRequest::get("https://httpbin.org/get").expect("REASON").build().unwrap();
     mock.expect_on_request().returning(move |req| {
         req.headers_mut()
             .insert(HeaderName::from_static("test"), HeaderValue::from_str("test").unwrap());
@@ -39,7 +39,11 @@ async fn test_catcher_response() {
     });
 
     let client = Deboa::builder().catch(catcher_mock).build();
-    let response = DeboaRequest::get(server.url("/get").as_str()).go(client).await.unwrap();
+    let response = DeboaRequest::get(server.url("/get").as_str())
+        .expect("Invalid URL")
+        .go(client)
+        .await
+        .unwrap();
 
     http_mock.assert();
 
@@ -65,7 +69,11 @@ async fn test_catcher_early_response() {
     catcher_mock.expect_on_response().times(1).return_const(());
 
     let client = Deboa::builder().catch(catcher_mock).build();
-    let response = DeboaRequest::get(server.url("/get").as_str()).go(client).await.unwrap();
+    let response = DeboaRequest::get(server.url("/get").as_str())
+        .expect("Invalid URL")
+        .go(client)
+        .await
+        .unwrap();
 
     http_mock.assert_calls(0);
 

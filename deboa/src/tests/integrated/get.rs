@@ -24,7 +24,7 @@ async fn do_get_http1() -> Result<(), DeboaError> {
 
     let mut client = Deboa::builder().protocol(HttpVersion::Http1).build();
 
-    let request = DeboaRequest::get(server.url("/posts").as_str()).build()?;
+    let request = DeboaRequest::get(server.url("/posts").as_str())?.build()?;
 
     let response: DeboaResponse = client.execute(request).await?;
 
@@ -62,7 +62,7 @@ async fn do_get_http2() -> Result<(), DeboaError> {
 
     let mut client = Deboa::builder().protocol(HttpVersion::Http2).build();
 
-    let request = DeboaRequest::get(server.url("/posts").as_str()).build()?;
+    let request = DeboaRequest::get(server.url("/posts").as_str())?.build()?;
 
     let response: DeboaResponse = client.execute(request).await?;
 
@@ -103,7 +103,7 @@ async fn do_get_not_found() -> Result<(), DeboaError> {
 
     let client = Deboa::new();
 
-    let response: Result<DeboaResponse, DeboaError> = DeboaRequest::get(server.url("/asasa/posts/1ddd").as_str()).go(client).await;
+    let response: Result<DeboaResponse, DeboaError> = DeboaRequest::get(server.url("/asasa/posts/1ddd").as_str())?.go(client).await;
 
     http_mock.assert();
 
@@ -139,7 +139,7 @@ async fn test_get_not_found() {
 async fn do_get_invalid_server() -> Result<(), DeboaError> {
     let mut api = Deboa::new();
 
-    let request = DeboaRequest::get("https://invalid-server.com/posts").text("test").build()?;
+    let request = DeboaRequest::get("https://invalid-server.com/posts")?.text("test").build()?;
 
     let response: Result<DeboaResponse, DeboaError> = api.execute(request).await;
 
@@ -182,7 +182,7 @@ async fn do_get_by_query() -> Result<(), DeboaError> {
 
     let client = Deboa::new();
 
-    let response = DeboaRequest::get(server.url("/comments/1").as_str()).go(client).await?;
+    let response = DeboaRequest::get(server.url("/comments/1").as_str())?.go(client).await?;
 
     http_mock.assert();
 
@@ -221,7 +221,7 @@ async fn do_get_by_query_with_retries() -> Result<(), DeboaError> {
 
     let client = Deboa::builder().retries(2).build();
 
-    let response = DeboaRequest::get(server.url("/comments/1").as_str()).go(client).await;
+    let response = DeboaRequest::get(server.url("/comments/1").as_str())?.go(client).await;
 
     http_mock.assert_calls(3);
 

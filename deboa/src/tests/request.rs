@@ -6,7 +6,7 @@ use http::{HeaderValue, header};
 
 #[test]
 fn test_base_url() -> Result<(), DeboaError> {
-    let api = DeboaRequest::get(JSONPLACEHOLDER).build()?;
+    let api = DeboaRequest::get(JSONPLACEHOLDER)?.build()?;
 
     assert_eq!(api.url(), JSONPLACEHOLDER);
 
@@ -15,7 +15,7 @@ fn test_base_url() -> Result<(), DeboaError> {
 
 #[test]
 fn test_set_headers() -> Result<(), DeboaError> {
-    let request = DeboaRequest::to(JSONPLACEHOLDER)
+    let request = DeboaRequest::to(JSONPLACEHOLDER)?
         .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
         .build()?;
 
@@ -29,7 +29,7 @@ fn test_set_headers() -> Result<(), DeboaError> {
 
 #[test]
 fn test_set_basic_auth() -> Result<(), DeboaError> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER).basic_auth("username", "password").build()?;
+    let request = DeboaRequest::get(JSONPLACEHOLDER)?.basic_auth("username", "password").build()?;
 
     assert_eq!(
         request.headers().get(&header::AUTHORIZATION),
@@ -41,7 +41,7 @@ fn test_set_basic_auth() -> Result<(), DeboaError> {
 
 #[test]
 fn test_set_bearer_auth() -> Result<(), DeboaError> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER).bearer_auth("token").build()?;
+    let request = DeboaRequest::get(JSONPLACEHOLDER)?.bearer_auth("token").build()?;
 
     assert_eq!(
         request.headers().get(&header::AUTHORIZATION),
@@ -53,7 +53,7 @@ fn test_set_bearer_auth() -> Result<(), DeboaError> {
 
 #[test]
 fn test_add_header() -> Result<(), DeboaError> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER)
+    let request = DeboaRequest::get(JSONPLACEHOLDER)?
         .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
         .build()?;
 
@@ -67,7 +67,7 @@ fn test_add_header() -> Result<(), DeboaError> {
 
 #[test]
 fn test_set_text_body() -> Result<(), DeboaError> {
-    let request = DeboaRequest::post(JSONPLACEHOLDER).text("test").build()?;
+    let request = DeboaRequest::post(JSONPLACEHOLDER)?.text("test").build()?;
 
     assert_eq!(*request.raw_body(), b"test".to_vec());
 
@@ -76,7 +76,7 @@ fn test_set_text_body() -> Result<(), DeboaError> {
 
 #[test]
 fn test_raw_body() -> Result<(), DeboaError> {
-    let request = DeboaRequest::post(JSONPLACEHOLDER).raw_body(b"test").build()?;
+    let request = DeboaRequest::post(JSONPLACEHOLDER)?.raw_body(b"test").build()?;
 
     assert_eq!(request.raw_body(), b"test");
 
