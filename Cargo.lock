@@ -637,7 +637,7 @@ dependencies = [
 
 [[package]]
 name = "deboa"
-version = "0.0.5-alpha.3"
+version = "0.0.5-beta.1"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -669,7 +669,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-extras"
-version = "0.0.1-alpha.1"
+version = "0.0.1-beta.1"
 dependencies = [
  "brotli",
  "bytes",
@@ -688,7 +688,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-macros"
-version = "0.0.1-alpha.2"
+version = "0.0.1-beta.1"
 dependencies = [
  "deboa",
  "deboa-extras",
@@ -2718,7 +2718,7 @@ checksum = "943ce29a8a743eb10d6082545d861b24f9d1b160b7d741e0f2cdf726bec909c5"
 
 [[package]]
 name = "vamo"
-version = "0.0.1-alpha.1"
+version = "0.0.1-beta.1"
 dependencies = [
  "deboa",
  "deboa-extras",

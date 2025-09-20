@@ -24,6 +24,76 @@ impl IntoUrl<Url> for String {
     }
 }
 
+/// A utility function to create a GET request within DeboaRequest.
+///
+/// # Arguments
+///
+/// * `url` - The url to connect.
+///
+/// # Returns
+///
+/// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
+///
+pub fn get<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+    DeboaRequest::get(url)
+}
+
+/// A utility function to create a POST request within DeboaRequest.
+///
+/// # Arguments
+///
+/// * `url` - The url to connect.
+///
+/// # Returns
+///
+/// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
+///
+pub fn post<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+    DeboaRequest::post(url)
+}
+
+/// A utility function to create a PUT request within DeboaRequest.
+///
+/// # Arguments
+///
+/// * `url` - The url to connect.
+///
+/// # Returns
+///
+/// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
+///
+pub fn put<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+    DeboaRequest::put(url)
+}
+
+/// A utility function to create a DELETE request within DeboaRequest.
+///
+/// # Arguments
+///
+/// * `url` - The url to connect.
+///
+/// # Returns
+///
+/// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
+///
+pub fn delete<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+    DeboaRequest::delete(url)
+}
+
+/// A utility function to create a PATCH request within DeboaRequest.
+///
+/// # Arguments
+///
+/// * `url` - The url to connect.
+///
+/// # Returns
+///
+/// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
+///
+pub fn patch<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+    DeboaRequest::patch(url)
+}
+
 /// Struct that represents the request builder.
 ///
 /// # Fields
