@@ -42,15 +42,14 @@ deboa = { version = "0.0.5-alpha.3", features = ["http1", "tokio-rt"] }
 ## Usage
 
 ```rust
-use deboa::{Deboa, request::DeboaRequest};
+use deboa::{Deboa, request::get};
 use deboa_extras::http::serde::json::JsonBody;
 
 #[tokio::main]
 async fn main() -> Result<(), DeboaError> {
   let client = Deboa::new();
 
-  let posts: Vec<Post> = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")?
-    .header(header::CONTENT_TYPE, "application/json")
+  let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
     .bearer_auth("token")
     .go(client)
     .await?
