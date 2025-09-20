@@ -30,7 +30,7 @@ let client = Deboa::builder()
   .build()?
 
 let posts = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts/1")
-  .send_client(client)
+  .go(client)
   .await?
   .body_as(JsonBody)?;
 
@@ -40,7 +40,7 @@ println!("{:?}", posts.raw_body());
 ### Serialization
 
 ```rust
-use deboa::{Deboa, errors::DeboaError, request::DeboaRequest};
+use deboa::{Deboa, errors::DeboaError, request::post};
 use deboa_extras::http::serde::json::JsonBody;
 
 let client = Deboa::new();
@@ -52,9 +52,9 @@ let data = Post {
     user_id: 1,
 };
 
-let response = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts/1")
+let response = post("https://jsonplaceholder.typicode.com/posts/1")
   .body_as(JsonBody, data)?
-  .send_with(client)
+  .go(client)
   .await?;
 
 println!("Response Status Code: {}", response.status());
