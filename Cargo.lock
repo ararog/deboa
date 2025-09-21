@@ -381,6 +381,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "bora"
+version = "0.1.0"
+dependencies = [
+ "deboa",
+ "deboa-extras",
+ "deboa-macros",
+ "serde",
+ "serde_json",
+ "tokio",
+ "vamo",
+]
+
+[[package]]
 name = "brotli"
 version = "8.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

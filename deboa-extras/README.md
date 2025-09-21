@@ -52,7 +52,7 @@ let data = Post {
     user_id: 1,
 };
 
-let response = post("https://jsonplaceholder.typicode.com/posts/1")
+let response = post("https://jsonplaceholder.typicode.com/posts/1")?
   .body_as(JsonBody, data)?
   .go(client)
   .await?;
@@ -60,3 +60,10 @@ let response = post("https://jsonplaceholder.typicode.com/posts/1")
 println!("Response Status Code: {}", response.status());
 ```
 
+## License
+
+MIT
+
+## Author
+
+Rogerio Pereira Araujo <rogerio.araujo@gmail.com>

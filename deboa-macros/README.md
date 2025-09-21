@@ -41,3 +41,16 @@ println!("title: {}", post.title);
 
 Ok(())
 ```
+
+## Notes
+
+It is not possible to use the same name for different operations.
+Please keep struct names unique and in separate modules if possible.
+
+## License
+
+MIT
+
+## Author
+
+Rogerio Pereira Araujo <rogerio.araujo@gmail.com>
