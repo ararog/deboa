@@ -24,7 +24,7 @@
 //!
 //!     let response = DeboaRequest::get("https://httpbin.org/get")?
 //!         .go(deboa)
-//!         .await;
+//!         .await?;
 //!
 //!     println!("Response: {:#?}", response);
 //!
@@ -168,11 +168,11 @@ impl DeboaBuilder {
     ///
     /// * `catcher` - The catcher to be added.
     ///
-    pub fn catch<C: DeboaCatcher>(mut self, catch: C) -> Self {
+    pub fn catch<C: DeboaCatcher>(mut self, catcher: C) -> Self {
         if let Some(catchers) = &mut self.catchers {
-            catchers.push(Box::new(catch));
+            catchers.push(Box::new(catcher));
         } else {
-            self.catchers = Some(vec![Box::new(catch)]);
+            self.catchers = Some(vec![Box::new(catcher)]);
         }
         self
     }

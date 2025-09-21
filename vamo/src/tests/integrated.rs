@@ -16,7 +16,7 @@ async fn test_get() -> Result<(), DeboaError> {
     });
 
     let mut vamo = Vamo::new(server.base_url().as_str());
-    let response = vamo.get("/posts")?.go(vamo.client()).await.unwrap();
+    let response = vamo.get("/posts")?.go(vamo.client()).await?;
 
     mock.assert();
 
@@ -34,7 +34,7 @@ async fn test_put() -> Result<(), DeboaError> {
     });
 
     let mut vamo = Vamo::new(server.base_url().as_str());
-    let response = vamo.put("/posts")?.go(vamo.client()).await.unwrap();
+    let response = vamo.put("/posts")?.go(vamo.client()).await?;
 
     mock.assert();
 
@@ -52,7 +52,7 @@ async fn test_post() -> Result<(), DeboaError> {
     });
 
     let mut vamo = Vamo::new(server.base_url().as_str());
-    let response = vamo.post("/posts")?.go(vamo.client()).await.unwrap();
+    let response = vamo.post("/posts")?.go(vamo.client()).await?;
 
     mock.assert();
 
@@ -70,7 +70,7 @@ async fn test_patch() -> Result<(), DeboaError> {
     });
 
     let mut vamo = Vamo::new(server.base_url().as_str());
-    let response = vamo.patch("/posts/1")?.go(vamo.client()).await.unwrap();
+    let response = vamo.patch("/posts/1")?.go(vamo.client()).await?;
 
     mock.assert();
 
