@@ -1,14 +1,14 @@
-# Bora
+# Vamo
 
-Bora is a rest wrapper for deboa.
+Vamo is a rest wrapper for deboa.
 
 ## Usage
 
 ```rust
-use bora::Bora;
+use vamo::Vamo;
 
-let bora = Bora::new("https://api.example.com");
-let response = bora.get("/users").await?;
+let vamo = Vamo::new("https://api.example.com");
+let response = vamo.get("/users").await?;
 ```
 
 ## Features
@@ -19,13 +19,13 @@ let response = bora.get("/users").await?;
 - [x] DELETE
 - [x] PATCH
 
-## License
-
-MIT
-
 ## Contributing
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+
+## License
+
+MIT
 
 ## Authors
 
