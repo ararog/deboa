@@ -64,6 +64,7 @@ impl DeboaResponse {
     ///
     /// * `http::StatusCode` - The status code of the response.
     ///
+    #[inline]
     pub fn status(&self) -> http::StatusCode {
         self.status
     }
@@ -74,6 +75,7 @@ impl DeboaResponse {
     ///
     /// * `&http::HeaderMap` - The headers of the response.
     ///
+    #[inline]
     pub fn headers(&self) -> &http::HeaderMap {
         &self.headers
     }
@@ -84,6 +86,7 @@ impl DeboaResponse {
     ///
     /// * `body` - The body to be set.
     ///
+    #[inline]
     pub fn set_raw_body(&mut self, body: &[u8]) {
         self.body = body.to_vec().into();
     }
@@ -98,6 +101,7 @@ impl DeboaResponse {
     ///
     /// * `Result<B, DeboaError>` - The body or error.
     ///
+    #[inline]
     pub fn body_as<T: ResponseBody, B: for<'a> Deserialize<'a>>(&self, body_type: T) -> Result<B, DeboaError> {
         let result = body_type.deserialize::<B>(self.body.to_vec())?;
         Ok(result)
@@ -109,6 +113,7 @@ impl DeboaResponse {
     ///
     /// * `&[u8]` - The raw body of the response.
     ///
+    #[inline]
     pub fn raw_body(&self) -> &[u8] {
         &self.body
     }
@@ -119,6 +124,7 @@ impl DeboaResponse {
     ///
     /// * `Result<String, DeboaError>` - The text body or error.
     ///
+    #[inline]
     pub fn text(&self) -> Result<String, DeboaError> {
         Ok(String::from_utf8_lossy(&self.body).to_string())
     }

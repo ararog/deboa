@@ -70,6 +70,7 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         Self { connections: HashMap::new() }
     }
 
+    #[inline]
     fn connections(&self) -> &HashMap<String, DeboaConnection> {
         &self.connections
     }

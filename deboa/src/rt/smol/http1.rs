@@ -14,6 +14,8 @@ use crate::{
 
 #[async_trait]
 impl DeboaHttpConnection<Http1Request> for BaseHttpConnection<Http1Request> {
+
+    #[inline]
     fn url(&self) -> &Url {
         &self.url
     }

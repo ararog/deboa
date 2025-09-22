@@ -289,6 +289,7 @@ impl Deboa {
     ///
     /// * `&HttpVersion` - The protocol.
     ///
+    #[inline]
     pub fn protocol(&self) -> &HttpVersion {
         &self.protocol
     }
@@ -314,6 +315,7 @@ impl Deboa {
     ///
     /// * `u32` - The retries.
     ///
+    #[inline]
     pub fn retries(&self) -> u32 {
         self.retries
     }
@@ -339,6 +341,7 @@ impl Deboa {
     ///
     /// * `u64` - The timeout.
     ///
+    #[inline]
     pub fn connection_timeout(&self) -> u64 {
         self.connection_timeout
     }
@@ -364,6 +367,7 @@ impl Deboa {
     ///
     /// * `u64` - The timeout.
     ///
+    #[inline]
     pub fn request_timeout(&self) -> u64 {
         self.request_timeout
     }
