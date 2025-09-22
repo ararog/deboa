@@ -6,7 +6,7 @@ use http::{HeaderValue, header};
 
 #[test]
 fn test_base_url() -> Result<(), DeboaError> {
-    let api = DeboaRequest::get(JSONPLACEHOLDER)?.build()?;
+    let api = DeboaRequest::get(String::from(JSONPLACEHOLDER))?.build()?;
 
     assert_eq!(api.url(), JSONPLACEHOLDER);
 
