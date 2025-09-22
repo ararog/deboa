@@ -34,6 +34,7 @@ impl IntoUrl<Url> for String {
 ///
 /// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
 ///
+#[inline]
 pub fn get<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
     DeboaRequest::get(url)
 }
@@ -48,6 +49,7 @@ pub fn get<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
 ///
 /// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
 ///
+#[inline]
 pub fn post<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
     DeboaRequest::post(url)
 }
@@ -62,6 +64,7 @@ pub fn post<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> 
 ///
 /// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
 ///
+#[inline]
 pub fn put<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
     DeboaRequest::put(url)
 }
@@ -76,6 +79,7 @@ pub fn put<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
 ///
 /// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
 ///
+#[inline]
 pub fn delete<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
     DeboaRequest::delete(url)
 }
@@ -90,6 +94,7 @@ pub fn delete<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError
 ///
 /// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
 ///
+#[inline]
 pub fn patch<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
     DeboaRequest::patch(url)
 }
@@ -244,6 +249,7 @@ impl DeboaRequestBuilder {
     ///
     /// * `token` - The token.
     ///
+    #[inline]
     pub fn bearer_auth(self, token: &str) -> Self {
         self.header(header::AUTHORIZATION, format!("Bearer {token}").as_str())
     }
@@ -366,6 +372,7 @@ impl DeboaRequest {
     ///
     /// * `DeboaRequestBuilder` - The request builder.
     ///
+    #[inline]
     pub fn from<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
         DeboaRequest::at(url, Method::GET)
     }
@@ -380,6 +387,7 @@ impl DeboaRequest {
     ///
     /// * `DeboaRequestBuilder` - The request builder.
     ///
+    #[inline]
     pub fn to<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
         DeboaRequest::at(url, Method::POST)
     }
@@ -394,6 +402,7 @@ impl DeboaRequest {
     ///
     /// * `DeboaRequestBuilder` - The request builder.
     ///
+    #[inline]
     pub fn get<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
         Ok(DeboaRequest::from(url)?.method(Method::GET))
     }
@@ -408,6 +417,7 @@ impl DeboaRequest {
     ///
     /// * `DeboaRequestBuilder` - The request builder.
     ///
+    #[inline]
     pub fn post<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
         Ok(DeboaRequest::to(url)?.method(Method::POST))
     }
@@ -422,6 +432,7 @@ impl DeboaRequest {
     ///
     /// * `DeboaRequestBuilder` - The request builder.
     ///
+    #[inline]
     pub fn put<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
         Ok(DeboaRequest::to(url)?.method(Method::PUT))
     }
@@ -436,6 +447,7 @@ impl DeboaRequest {
     ///
     /// * `DeboaRequestBuilder` - The request builder.
     ///
+    #[inline]
     pub fn patch<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
         Ok(DeboaRequest::to(url)?.method(Method::PATCH))
     }
@@ -450,6 +462,7 @@ impl DeboaRequest {
     ///
     /// * `DeboaRequestBuilder` - The request builder.
     ///
+    #[inline]
     pub fn delete<T: IntoUrl<Url>>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
         Ok(DeboaRequest::from(url)?.method(Method::DELETE))
     }
@@ -475,6 +488,7 @@ impl DeboaRequest {
     ///
     /// * `http::Method` - The method.
     ///
+    #[inline]
     pub fn method(&self) -> &http::Method {
         &self.method
     }
@@ -504,6 +518,7 @@ impl DeboaRequest {
     ///
     /// * `String` - The url.
     ///
+    #[inline]
     pub fn url(&self) -> String {
         self.url.to_string()
     }
@@ -514,6 +529,7 @@ impl DeboaRequest {
     ///
     /// * `HeaderMap` - The headers.
     ///
+    #[inline]
     pub fn headers(&self) -> &HeaderMap {
         &self.headers
     }
@@ -524,6 +540,7 @@ impl DeboaRequest {
     ///
     /// * `&mut HeaderMap` - The headers.
     ///
+    #[inline]
     pub fn headers_mut(&mut self) -> &mut HeaderMap {
         &mut self.headers
     }
@@ -541,7 +558,6 @@ impl DeboaRequest {
     ///
     pub fn add_header(&mut self, key: HeaderName, value: &str) -> &mut Self {
         self.headers.insert(key, HeaderValue::from_str(value).unwrap());
-
         self
     }
 
@@ -555,6 +571,7 @@ impl DeboaRequest {
     ///
     /// * `bool` - True if the header exists, false otherwise.
     ///
+    #[inline]
     fn has_header(&self, key: &HeaderName) -> bool {
         self.headers.contains_key(key)
     }
@@ -701,6 +718,7 @@ impl DeboaRequest {
     ///
     /// * `&Vec<u8>` - The raw body.
     ///
+    #[inline]
     pub fn raw_body(&self) -> &Vec<u8> {
         &self.body
     }

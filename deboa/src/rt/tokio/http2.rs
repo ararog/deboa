@@ -17,6 +17,7 @@ use crate::{
 impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
     type Sender = Http2Request;
 
+    #[inline]
     fn url(&self) -> &Url {
         &self.url
     }
