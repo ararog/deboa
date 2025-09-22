@@ -54,7 +54,7 @@ Pluggable compression/decompression, serializers and catchers.
 
 ### deboa-macros
 
-A create with bora macro, for easy rest client generation.
+A crate with bora macro, for easy rest client generation.
 
 ### vamo
 

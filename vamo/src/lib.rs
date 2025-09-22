@@ -1,8 +1,7 @@
 use deboa::{
-    Deboa,
-    errors::DeboaError,
-    request::{DeboaRequest, DeboaRequestBuilder},
+    errors::DeboaError, request::{DeboaRequest, DeboaRequestBuilder, IntoUrl}, Deboa
 };
+use url::Url;
 
 #[cfg(test)]
 mod tests;
@@ -10,15 +9,15 @@ mod tests;
 #[derive(Debug)]
 pub struct Vamo {
     client: Deboa,
-    base_url: String,
+    base_url: Url,
 }
 
 impl Vamo {
-    pub fn new(url: &str) -> Self {
-        Self {
+    pub fn new<T: IntoUrl>(url: T) -> Result<Self, DeboaError> {
+        Ok(Self {
             client: Deboa::new(),
-            base_url: url.to_string(),
-        }
+            base_url: url.into_url()?,
+        })
     }
 
     pub fn client(&mut self) -> &mut Deboa {

@@ -20,7 +20,7 @@ pub struct PostService;
 
 #[tokio::test]
 async fn test_put_by_id() -> Result<(), DeboaError> {
-    let client = Vamo::new("https://jsonplaceholder.typicode.com");
+    let client = Vamo::new("https://jsonplaceholder.typicode.com")?;
 
     let mut post_service = PostService::new(client);
 

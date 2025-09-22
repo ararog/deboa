@@ -7,7 +7,7 @@ mod post_service;
 
 #[tokio::main]
 async fn main() -> Result<(), DeboaError> {
-    let client = Vamo::new("https://jsonplaceholder.typicode.com");
+    let client = Vamo::new("https://jsonplaceholder.typicode.com")?;
     let mut post_service = PostService::new(client);
 
     println!("Listing posts...");
