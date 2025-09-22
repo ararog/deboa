@@ -4,6 +4,10 @@
 
 This example shows how to use bora to quickly create a REST API client based on JSONPlaceholder.
 
+## Blog
+
+This example shows how to use vamo to create a simple rest client for a blog api.
+
 ## Catcher
 
 This example shows how to use catcher to add request/response logging.
@@ -11,4 +15,3 @@ This example shows how to use catcher to add request/response logging.
 ## Simple
 
 This example shows how to use deboa to make a simple GET request of posts from JSONPlaceholder.
-
