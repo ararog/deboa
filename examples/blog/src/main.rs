@@ -4,6 +4,7 @@ use serde::Deserialize;
 use vamo::Vamo;
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct Post {
     id: u32,
     title: String,
