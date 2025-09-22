@@ -18,11 +18,12 @@ use crate::{
 impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
     type Sender = Http1Request;
 
+    #[inline]
     fn url(&self) -> &Url {
         &self.url
     }
 
-    async fn connect(url: &Url) -> Result<BaseHttpConnection<Http1Request>, DeboaError> {
+    async fn connect(url: &Url) -> Result<BaseHttpConnection<Self::Sender>, DeboaError> {
         let host = url.host().unwrap_or(Host::Domain("localhost"));
         let port = url.port().unwrap_or(80);
         let addr = format!("{host}:{port}");
@@ -55,7 +56,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
             };
         });
 
-        Ok(BaseHttpConnection::<Http1Request> { url: url.clone(), sender })
+        Ok(BaseHttpConnection::<Self::Sender> { url: url.clone(), sender })
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>, DeboaError> {
