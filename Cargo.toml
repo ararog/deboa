@@ -6,6 +6,7 @@ members = [
     "deboa",
     "deboa-extras",
     "deboa-macros",
+    "examples/blog", 
     "examples/bora", 
     "examples/catcher",
     "examples/simple", 
