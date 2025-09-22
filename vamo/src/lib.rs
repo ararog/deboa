@@ -1,5 +1,7 @@
 use deboa::{
-    errors::DeboaError, request::{DeboaRequest, DeboaRequestBuilder, IntoUrl}, Deboa
+    Deboa,
+    errors::DeboaError,
+    request::{DeboaRequest, DeboaRequestBuilder, IntoUrl},
 };
 use url::Url;
 
@@ -24,23 +26,31 @@ impl Vamo {
         &mut self.client
     }
 
+    fn url(&self, path: &str) -> Result<Url, DeboaError> {
+        let url = self.base_url.join(path);
+        if let Err(e) = url {
+            return Err(DeboaError::UrlParse { message: e.to_string() });
+        }
+        Ok(url.unwrap())
+    }
+
     pub fn get(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
-        DeboaRequest::get(format!("{}{}", self.base_url, path))
+        DeboaRequest::get(self.url(path)?.as_str())
     }
 
     pub fn post(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
-        DeboaRequest::post(format!("{}{}", self.base_url, path))
+        DeboaRequest::post(self.url(path)?.as_str())
     }
 
     pub fn put(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
-        DeboaRequest::put(format!("{}{}", self.base_url, path))
+        DeboaRequest::put(self.url(path)?.as_str())
     }
 
     pub fn patch(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
-        DeboaRequest::patch(format!("{}{}", self.base_url, path))
+        DeboaRequest::patch(self.url(path)?.as_str())
     }
 
     pub fn delete(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
-        DeboaRequest::delete(format!("{}{}", self.base_url, path))
+        DeboaRequest::delete(self.url(path)?.as_str())
     }
 }

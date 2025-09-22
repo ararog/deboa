@@ -4,21 +4,28 @@ use http::{HeaderMap, HeaderName, HeaderValue, Method, header};
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use serde::Serialize;
-use url::{Url};
+use url::Url;
 
 use crate::{Deboa, client::serde::RequestBody, cookie::DeboaCookie, errors::DeboaError, response::DeboaResponse};
 
 pub trait IntoUrl {
     fn into_url(self) -> Result<Url, DeboaError>;
-    fn parse_url(&self) -> Result<Url, DeboaError> where Self: AsRef<str> {
-        if ! self.as_ref().starts_with("http") {
-            return Err(DeboaError::UrlParse { message: "Scheme must be http or https".to_string() });
+    fn parse_url(&self) -> Result<Url, DeboaError>
+    where
+        Self: AsRef<str>,
+    {
+        if !self.as_ref().starts_with("http") {
+            return Err(DeboaError::UrlParse {
+                message: "Scheme must be http or https".to_string(),
+            });
         }
 
         let url = Url::parse(self.as_ref());
 
         if url.is_err() {
-            return Err(DeboaError::UrlParse { message: "Failed to parse url".to_string() });
+            return Err(DeboaError::UrlParse {
+                message: "Failed to parse url".to_string(),
+            });
         }
 
         Ok(url.unwrap())
