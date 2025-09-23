@@ -1,7 +1,7 @@
 use crate::http::serde::msgpack::MsgPackBody;
 use deboa::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
 
-use crate::tests::types::{url, MSGPACK_POST, Post, sample_post};
+use crate::tests::types::{MSGPACK_POST, Post, sample_post, url};
 
 #[test]
 fn test_set_msgpack() -> Result<(), DeboaError> {
