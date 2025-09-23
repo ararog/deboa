@@ -53,32 +53,26 @@ async fn main() -> Result<(), DeboaError> {
   You can also use the Fetch trait to issue requests
   
   let posts: Vec<Post> = "https://jsonplaceholder.typicode.com/posts"
-    .fetch()?
-    .bearer_auth("token")
-    .go(client)
+    .fetch(client)
     .await?
     .body_as(JsonBody)?;    
 
   or use at, from (defaults to GET) and to (defaults to POST) methods:
 
   let posts: Vec<Post> = at("https://jsonplaceholder.typicode.com/posts", http::Method::GET)?
-    .bearer_auth("token")
     .go(client)
     .await?
     .body_as(JsonBody)?;
 
-  shifleft? Yes sir! Defaults to GET, but you can change it.
+  shifleft? Yes sir! Defaults to GET, but you can change it, same for headers.
 
   let request = client << "https://jsonplaceholder.typicode.com/posts";
-  let posts: Vec<Post> = request
-    .bearer_auth("token")
-    .go(client)
+  let posts: Vec<Post> = client.execute(request)
     .await?
     .body_as(JsonBody)?;
   */
 
   let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
-    .bearer_auth("token")
     .go(client)
     .await?
     .body_as(JsonBody)?;
