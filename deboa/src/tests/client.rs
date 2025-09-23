@@ -1,3 +1,4 @@
+use crate::tests::utils::JSONPLACEHOLDER;
 use crate::Deboa;
 use crate::errors::DeboaError;
 
@@ -40,7 +41,7 @@ fn test_set_protocol() -> Result<(), DeboaError> {
 #[tokio::test]
 async fn test_shl() -> Result<(), DeboaError> {
     let mut client = Deboa::new();
-    let request = &client << "https://httpbin.org/get";
+    let request = &client << JSONPLACEHOLDER;
     let response = client.execute(request).await?;
 
     assert_eq!(response.status(), 200);
