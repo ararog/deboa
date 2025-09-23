@@ -27,6 +27,16 @@ impl AsMut<Deboa> for Vamo {
 }
 
 impl Vamo {
+    /// Creates a new Vamo instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - The base URL.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the new Vamo instance or a DeboaError.
+    ///
     pub fn new<T: IntoUrl>(url: T) -> Result<Self, DeboaError> {
         Ok(Self {
             client: Deboa::new(),
@@ -34,10 +44,26 @@ impl Vamo {
         })
     }
 
+    /// Returns a mutable reference to the Deboa client.
+    ///
+    /// # Returns
+    ///
+    /// A mutable reference to the Deboa client.
+    ///
     pub fn client(&mut self) -> &mut Deboa {
         &mut self.client
     }
 
+    /// Returns a Result containing the URL with the given path.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to append to the base URL.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the URL with the given path or a DeboaError.
+    ///
     fn url(&self, path: &str) -> Result<Url, DeboaError> {
         let url = self.base_url.join(path);
         if let Err(e) = url {
@@ -46,22 +72,72 @@ impl Vamo {
         Ok(url.unwrap())
     }
 
+    /// Returns a Result containing a DeboaRequestBuilder for a GET request.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to append to the base URL.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing a DeboaRequestBuilder or a DeboaError.
+    ///
     pub fn get(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
         DeboaRequest::get(self.url(path)?.as_str())
     }
 
+    /// Returns a Result containing a DeboaRequestBuilder for a POST request.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to append to the base URL.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing a DeboaRequestBuilder or a DeboaError.
+    ///
     pub fn post(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
         DeboaRequest::post(self.url(path)?.as_str())
     }
 
+    /// Returns a Result containing a DeboaRequestBuilder for a PUT request.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to append to the base URL.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing a DeboaRequestBuilder or a DeboaError.
+    ///
     pub fn put(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
         DeboaRequest::put(self.url(path)?.as_str())
     }
 
+    /// Returns a Result containing a DeboaRequestBuilder for a PATCH request.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to append to the base URL.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing a DeboaRequestBuilder or a DeboaError.
+    ///
     pub fn patch(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
         DeboaRequest::patch(self.url(path)?.as_str())
     }
 
+    /// Returns a Result containing a DeboaRequestBuilder for a DELETE request.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to append to the base URL.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing a DeboaRequestBuilder or a DeboaError.
+    ///
     pub fn delete(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
         DeboaRequest::delete(self.url(path)?.as_str())
     }

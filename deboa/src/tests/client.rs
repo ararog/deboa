@@ -36,3 +36,13 @@ fn test_set_protocol() -> Result<(), DeboaError> {
 
     Ok(())
 }
+
+#[test]
+fn test_shl() -> Result<(), DeboaError> {
+    let api = Deboa::new();
+    let request = api << "https://httpbin.org/get";
+
+    assert_eq!(request.url(), "https://httpbin.org/get");
+
+    Ok(())
+}

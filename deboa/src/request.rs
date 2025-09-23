@@ -8,8 +8,21 @@ use url::Url;
 
 use crate::{Deboa, client::serde::RequestBody, cookie::DeboaCookie, errors::DeboaError, response::DeboaResponse};
 
+/// Trait to convert a value into a Url.
 pub trait IntoUrl {
+    /// Convert the value into a Url.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Url, DeboaError>` - The url.
+    ///
     fn into_url(self) -> Result<Url, DeboaError>;
+    /// Parse a string into a Url.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Url, DeboaError>` - The url.
+    ///
     fn parse_url(&self) -> Result<Url, DeboaError>
     where
         Self: AsRef<str>,
@@ -32,6 +45,12 @@ pub trait IntoUrl {
     }
 }
 
+impl IntoUrl for Url {
+    fn into_url(self) -> Result<Url, DeboaError> {
+        Ok(self)
+    }
+}
+
 impl IntoUrl for &str {
     fn into_url(self) -> Result<Url, DeboaError> {
         self.parse_url()
@@ -41,6 +60,35 @@ impl IntoUrl for &str {
 impl IntoUrl for String {
     fn into_url(self) -> Result<Url, DeboaError> {
         self.parse_url()
+    }
+}
+
+/// Trait to allow make a get request from different types.
+pub trait Fetch {
+    /// Fetch the request.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
+    ///
+    fn fetch(&self) -> Result<DeboaRequestBuilder, DeboaError>;
+}
+
+impl Fetch for Url {
+    fn fetch(&self) -> Result<DeboaRequestBuilder, DeboaError> {
+        DeboaRequest::get(self.clone())
+    }
+}
+
+impl Fetch for &str {
+    fn fetch(&self) -> Result<DeboaRequestBuilder, DeboaError> {
+        DeboaRequest::get(*self)
+    }
+}
+
+impl Fetch for String {
+    fn fetch(&self) -> Result<DeboaRequestBuilder, DeboaError> {
+        DeboaRequest::get(self.clone())
     }
 }
 

@@ -1,8 +1,9 @@
-use crate::errors::DeboaError;
 use crate::request::DeboaRequest;
+use crate::{errors::DeboaError, request::Fetch};
 
 use crate::tests::utils::JSONPLACEHOLDER;
 use http::{HeaderValue, header};
+use url::Url;
 
 #[test]
 fn test_base_url() -> Result<(), DeboaError> {
@@ -79,6 +80,34 @@ fn test_raw_body() -> Result<(), DeboaError> {
     let request = DeboaRequest::post(JSONPLACEHOLDER)?.raw_body(b"test").build()?;
 
     assert_eq!(request.raw_body(), b"test");
+
+    Ok(())
+}
+
+#[test]
+fn test_fetch_from_string() -> Result<(), DeboaError> {
+    let request = String::from(JSONPLACEHOLDER).fetch()?.build()?;
+
+    assert_eq!(request.url(), JSONPLACEHOLDER);
+
+    Ok(())
+}
+
+#[test]
+fn test_fetch_from_url() -> Result<(), DeboaError> {
+    let url = Url::parse(JSONPLACEHOLDER).unwrap();
+    let request = url.fetch()?.build()?;
+
+    assert_eq!(request.url(), JSONPLACEHOLDER);
+
+    Ok(())
+}
+
+#[test]
+fn test_fetch_from_str() -> Result<(), DeboaError> {
+    let request = JSONPLACEHOLDER.fetch()?.build()?;
+
+    assert_eq!(request.url(), JSONPLACEHOLDER);
 
     Ok(())
 }
