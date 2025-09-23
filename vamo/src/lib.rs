@@ -14,6 +14,18 @@ pub struct Vamo {
     base_url: Url,
 }
 
+impl From<Vamo> for Deboa {
+    fn from(val: Vamo) -> Self {
+        val.client
+    }
+}
+
+impl AsMut<Deboa> for Vamo {
+    fn as_mut(&mut self) -> &mut Deboa {
+        &mut self.client
+    }
+}
+
 impl Vamo {
     pub fn new<T: IntoUrl>(url: T) -> Result<Self, DeboaError> {
         Ok(Self {

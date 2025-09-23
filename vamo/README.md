@@ -7,8 +7,8 @@ Vamo is a rest wrapper for deboa.
 ```rust
 use vamo::Vamo;
 
-let vamo = Vamo::new("https://api.example.com");
-let response = vamo.get("/users").await?;
+let vamo = Vamo::new("https://api.example.com")?;
+let response = vamo.get("/users")?.go(vamo.client()).await?;
 ```
 
 ## Features
