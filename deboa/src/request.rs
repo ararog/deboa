@@ -182,6 +182,7 @@ pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
 /// * `method` - The method to use.
 /// * `body` - The body to use.
 pub struct DeboaRequestBuilder {
+    retries: u32,
     url: Url,
     headers: HeaderMap,
     cookies: Option<HashMap<String, DeboaCookie>>,
@@ -190,6 +191,17 @@ pub struct DeboaRequestBuilder {
 }
 
 impl DeboaRequestBuilder {
+    /// Allow set request retries at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `retries` - The new retries.
+    ///
+    pub fn retries(mut self, retries: u32) -> Self {
+        self.retries = retries;
+        self
+    }
+
     /// Set the method of the request.
     ///
     /// # Arguments
@@ -356,6 +368,7 @@ impl DeboaRequestBuilder {
             url: self.url,
             headers: self.headers,
             cookies: self.cookies,
+            retries: self.retries,
             method: self.method,
             body: self.body,
         })
@@ -380,6 +393,7 @@ pub struct DeboaRequest {
     url: Url,
     headers: HeaderMap,
     cookies: Option<HashMap<String, DeboaCookie>>,
+    retries: u32,
     method: http::Method,
     body: Arc<Vec<u8>>,
 }
@@ -390,6 +404,7 @@ impl Debug for DeboaRequest {
             .field("url", &self.url)
             .field("headers", &self.headers)
             .field("cookies", &self.cookies)
+            .field("retries", &self.retries)
             .field("method", &self.method)
             .field("body", &self.body)
             .finish()
@@ -430,6 +445,7 @@ impl DeboaRequest {
             url: parsed_url.unwrap(),
             headers: HeaderMap::new(),
             cookies: None,
+            retries: 0,
             method,
             body: Arc::new(Vec::new()),
         })
@@ -589,11 +605,11 @@ impl DeboaRequest {
     ///
     /// # Returns
     ///
-    /// * `String` - The url.
+    /// * `Url` - The url.
     ///
     #[inline]
-    pub fn url(&self) -> String {
-        self.url.to_string()
+    pub fn url(&self) -> &Url {
+        &self.url
     }
 
     /// Allow get request headers at any time.
@@ -794,6 +810,17 @@ impl DeboaRequest {
     #[inline]
     pub fn raw_body(&self) -> &Vec<u8> {
         &self.body
+    }
+
+    /// Allow get retries at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `u32` - The retries.
+    ///
+    #[inline]
+    pub fn retries(&self) -> u32 {
+        self.retries
     }
 
     /// Allow set body at any time.

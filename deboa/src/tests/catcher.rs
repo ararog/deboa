@@ -6,7 +6,7 @@ use crate::{
     catcher::{DeboaCatcher, MockDeboaCatcher},
     request::DeboaRequest,
     response::DeboaResponse,
-    tests::utils::setup_server,
+    tests::utils::{setup_server, url_from_string},
 };
 
 #[tokio::test]
@@ -61,10 +61,12 @@ async fn test_catcher_early_response() {
     let mut headers = HeaderMap::new();
     headers.insert(HeaderName::from_static("test"), HeaderValue::from_static("test"));
 
+    let url = url_from_string(server.url("/get").to_string());
+
     catcher_mock
         .expect_on_request()
         .times(1)
-        .returning(move |_| Ok(Some(DeboaResponse::new(StatusCode::OK, headers.clone(), b"test"))));
+        .returning(move |_| Ok(Some(DeboaResponse::new(url.clone(), StatusCode::OK, headers.clone(), b"test"))));
 
     catcher_mock.expect_on_response().times(1).return_const(());
 

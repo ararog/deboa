@@ -219,9 +219,9 @@ async fn do_get_by_query_with_retries() -> Result<(), DeboaError> {
 
     let http_mock = setup_server(&server, "/comments/1", StatusCode::BAD_GATEWAY)?;
 
-    let client = Deboa::builder().retries(2).build();
+    let client = Deboa::new();
 
-    let response = DeboaRequest::get(server.url("/comments/1").as_str())?.go(client).await;
+    let response = DeboaRequest::get(server.url("/comments/1").as_str())?.retries(2).go(client).await;
 
     http_mock.assert_calls(3);
 

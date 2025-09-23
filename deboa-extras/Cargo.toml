@@ -25,6 +25,7 @@ mime = { version = "0.3.17", optional = true }
 tokio = "1.47.1"
 httpmock = "0.7.0"
 mime_typed = "0.1.7"
+url = "2.5.7"
 
 [features]
 default = ["serialization", "compression"]
