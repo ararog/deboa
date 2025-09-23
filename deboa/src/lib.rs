@@ -79,7 +79,7 @@ use crate::client::conn::http::{DeboaConnection, DeboaHttpConnection};
 
 use crate::catcher::DeboaCatcher;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
-use crate::request::DeboaRequest;
+use crate::request::{DeboaRequest, DeboaRequestBuilder};
 
 use url::Url;
 
@@ -100,10 +100,10 @@ mod rt;
 mod tests;
 
 impl Shl<&str> for Deboa {
-    type Output = DeboaRequest;
+    type Output = DeboaRequestBuilder;
 
     fn shl(self, other: &str) -> Self::Output {
-        DeboaRequest::get(other).expect("Invalid url!").build().expect("Failed to build request")
+        DeboaRequest::get(other).expect("Invalid url!")
     }
 }
 
