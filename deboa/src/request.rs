@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fmt::Debug, sync::Arc};
 
+use async_trait::async_trait;
 use http::{HeaderMap, HeaderName, HeaderValue, Method, header};
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};
@@ -64,31 +65,35 @@ impl IntoUrl for String {
 }
 
 /// Trait to allow make a get request from different types.
+#[async_trait]
 pub trait Fetch {
     /// Fetch the request.
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
+    /// * `Result<DeboaResponse, DeboaError>` - The response.
     ///
-    fn fetch(&self) -> Result<DeboaRequestBuilder, DeboaError>;
+    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse, DeboaError>;
 }
 
+#[async_trait]
 impl Fetch for Url {
-    fn fetch(&self) -> Result<DeboaRequestBuilder, DeboaError> {
-        DeboaRequest::get(self.clone())
+    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse, DeboaError> {
+        DeboaRequest::get(self.clone())?.go(client).await
     }
 }
 
+#[async_trait]
 impl Fetch for &str {
-    fn fetch(&self) -> Result<DeboaRequestBuilder, DeboaError> {
-        DeboaRequest::get(*self)
+    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse, DeboaError> {
+        DeboaRequest::get(*self)?.go(client).await
     }
 }
 
+#[async_trait]
 impl Fetch for String {
-    fn fetch(&self) -> Result<DeboaRequestBuilder, DeboaError> {
-        DeboaRequest::get(self.clone())
+    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse, DeboaError> {
+        DeboaRequest::get(self.clone())?.go(client).await
     }
 }
 

@@ -37,13 +37,13 @@ fn test_set_protocol() -> Result<(), DeboaError> {
     Ok(())
 }
 
-#[test]
-fn test_shl() -> Result<(), DeboaError> {
-    let client = Deboa::new();
-    let request = client << "https://httpbin.org/get";
-    let request = request.build()?;
+#[tokio::test]
+async fn test_shl() -> Result<(), DeboaError> {
+    let mut client = Deboa::new();
+    let request = &client << "https://httpbin.org/get";
+    let response = client.execute(request).await?;
 
-    assert_eq!(request.url(), "https://httpbin.org/get");
+    assert_eq!(response.status(), 200);
 
     Ok(())
 }

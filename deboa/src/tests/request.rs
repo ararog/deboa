@@ -1,3 +1,4 @@
+use crate::Deboa;
 use crate::request::DeboaRequest;
 use crate::{errors::DeboaError, request::Fetch};
 
@@ -84,30 +85,34 @@ fn test_raw_body() -> Result<(), DeboaError> {
     Ok(())
 }
 
-#[test]
-fn test_fetch_from_string() -> Result<(), DeboaError> {
-    let request = String::from(JSONPLACEHOLDER).fetch()?.build()?;
+#[tokio::test]
+async fn test_fetch_from_string() -> Result<(), DeboaError> {
+    let client = Deboa::new();
 
-    assert_eq!(request.url(), JSONPLACEHOLDER);
+    let response = String::from(JSONPLACEHOLDER).fetch(client).await?;
+
+    assert_eq!(response.status(), 200);
 
     Ok(())
 }
 
-#[test]
-fn test_fetch_from_url() -> Result<(), DeboaError> {
+#[tokio::test]
+async fn test_fetch_from_url() -> Result<(), DeboaError> {
+    let client = Deboa::new();
     let url = Url::parse(JSONPLACEHOLDER).unwrap();
-    let request = url.fetch()?.build()?;
+    let response = url.fetch(client).await?;
 
-    assert_eq!(request.url(), JSONPLACEHOLDER);
+    assert_eq!(response.status(), 200);
 
     Ok(())
 }
 
-#[test]
-fn test_fetch_from_str() -> Result<(), DeboaError> {
-    let request = JSONPLACEHOLDER.fetch()?.build()?;
+#[tokio::test]
+async fn test_fetch_from_str() -> Result<(), DeboaError> {
+    let client = Deboa::new();
+    let response = JSONPLACEHOLDER.fetch(client).await?;
 
-    assert_eq!(request.url(), JSONPLACEHOLDER);
+    assert_eq!(response.status(), 200);
 
     Ok(())
 }
