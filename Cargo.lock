@@ -710,6 +710,7 @@ dependencies = [
  "serde-xml-rust",
  "serde_json",
  "tokio",
+ "url",
 ]
 
 [[package]]

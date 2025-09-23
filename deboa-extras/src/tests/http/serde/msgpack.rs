@@ -1,7 +1,7 @@
 use crate::http::serde::msgpack::MsgPackBody;
 use deboa::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
 
-use crate::tests::types::{MSGPACK_POST, Post, sample_post};
+use crate::tests::types::{url, MSGPACK_POST, Post, sample_post};
 
 #[test]
 fn test_set_msgpack() -> Result<(), DeboaError> {
@@ -18,7 +18,7 @@ fn test_set_msgpack() -> Result<(), DeboaError> {
 async fn test_msgpack_response() -> Result<(), DeboaError> {
     let data = sample_post();
 
-    let response = DeboaResponse::new(http::StatusCode::OK, http::HeaderMap::new(), &MSGPACK_POST.to_vec());
+    let response = DeboaResponse::new(url(), http::StatusCode::OK, http::HeaderMap::new(), &MSGPACK_POST.to_vec());
     let response: Post = response.body_as(MsgPackBody)?;
 
     assert_eq!(response, data);

@@ -2,7 +2,7 @@ use deboa::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
 
 use crate::{
     http::serde::xml::XmlBody,
-    tests::types::{Post, XML_POST, sample_post},
+    tests::types::{url, Post, XML_POST, sample_post},
 };
 
 #[tokio::test]
@@ -18,7 +18,7 @@ async fn test_set_xml() -> Result<(), DeboaError> {
 async fn test_xml_response() -> Result<(), DeboaError> {
     let data = sample_post();
 
-    let response = DeboaResponse::new(http::StatusCode::OK, http::HeaderMap::new(), &XML_POST.to_vec());
+    let response = DeboaResponse::new(url(), http::StatusCode::OK, http::HeaderMap::new(), &XML_POST.to_vec());
 
     let response: Post = response.body_as(XmlBody)?;
 

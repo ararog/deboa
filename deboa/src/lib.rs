@@ -131,7 +131,6 @@ pub enum HttpVersion {
 /// * `catchers` - The catchers.
 /// * `protocol` - The protocol to use.
 pub struct DeboaBuilder {
-    retries: u32,
     connection_timeout: u64,
     request_timeout: u64,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
@@ -139,17 +138,6 @@ pub struct DeboaBuilder {
 }
 
 impl DeboaBuilder {
-    /// Allow set request retries at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `retries` - The new retries.
-    ///
-    pub fn retries(mut self, retries: u32) -> Self {
-        self.retries = retries;
-        self
-    }
-
     /// Allow set request connection timeout at any time.
     ///
     /// # Arguments
@@ -206,7 +194,6 @@ impl DeboaBuilder {
     ///
     pub fn build(self) -> Deboa {
         Deboa {
-            retries: self.retries,
             connection_timeout: self.connection_timeout,
             request_timeout: self.request_timeout,
             catchers: self.catchers,
@@ -220,7 +207,6 @@ impl DeboaBuilder {
 ///
 /// # Fields
 ///
-/// * `retries` - The number of retries.
 /// * `connection_timeout` - The connection timeout.
 /// * `request_timeout` - The request timeout.
 /// * `catchers` - The catchers.
@@ -228,7 +214,6 @@ impl DeboaBuilder {
 /// * `pool` - The connection pool.
 //
 pub struct Deboa {
-    retries: u32,
     connection_timeout: u64,
     request_timeout: u64,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
@@ -251,7 +236,6 @@ impl AsMut<Deboa> for Deboa {
 impl Debug for Deboa {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Deboa")
-            .field("retries", &self.retries)
             .field("connection_timeout", &self.connection_timeout)
             .field("request_timeout", &self.request_timeout)
             .field("protocol", &self.protocol)
@@ -269,7 +253,6 @@ impl Deboa {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Deboa {
-            retries: 0,
             connection_timeout: 0,
             request_timeout: 0,
             catchers: None,
@@ -286,7 +269,6 @@ impl Deboa {
     ///
     pub fn builder() -> DeboaBuilder {
         DeboaBuilder {
-            retries: 0,
             connection_timeout: 0,
             request_timeout: 0,
             catchers: None,
@@ -317,32 +299,6 @@ impl Deboa {
     ///
     pub fn set_protocol(&mut self, protocol: HttpVersion) -> &mut Self {
         self.protocol = protocol;
-        self
-    }
-
-    /// Allow get request retries at any time.
-    ///
-    /// # Returns
-    ///
-    /// * `u32` - The retries.
-    ///
-    #[inline]
-    pub fn retries(&self) -> u32 {
-        self.retries
-    }
-
-    /// Allow change request retries at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `retries` - The new retries.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The Deboa instance.
-    ///
-    pub fn set_retries(&mut self, retries: u32) -> &mut Self {
-        self.retries = retries;
         self
     }
 
@@ -442,7 +398,7 @@ impl Deboa {
         let response = loop {
             let response = self.send_request(&request).await;
             if let Err(err) = response {
-                if retry_count == self.retries {
+                if retry_count == request.retries() {
                     break Err(err);
                 }
                 #[cfg(feature = "tokio-rt")]
@@ -460,7 +416,7 @@ impl Deboa {
             break Ok(response.unwrap());
         };
 
-        let mut response = self.process_response(response?).await?;
+        let mut response = self.process_response(request.url(), response?).await?;
 
         if let Some(catchers) = &self.catchers {
             catchers.iter().for_each(|catcher| catcher.on_response(&mut response));
@@ -480,12 +436,7 @@ impl Deboa {
     /// * `Result<Response<Incoming>, DeboaError>` - The response.
     ///
     async fn send_request(&mut self, request: &DeboaRequest) -> Result<Response<Incoming>, DeboaError> {
-        let url = Url::parse(&request.url());
-        if let Err(e) = url {
-            return Err(DeboaError::UrlParse { message: e.to_string() });
-        }
-
-        let url = url.unwrap();
+        let url = request.url();
         let method = request.method();
         let authority = url.authority();
 
@@ -514,7 +465,7 @@ impl Deboa {
 
         let request = request.unwrap();
 
-        let conn = self.pool.create_connection(&url, &self.protocol).await?;
+        let conn = self.pool.create_connection(url, &self.protocol).await?;
         match *conn {
             #[cfg(feature = "http1")]
             DeboaConnection::Http1(ref mut conn) => conn.send_request(request).await,
@@ -533,7 +484,7 @@ impl Deboa {
     ///
     /// * `Result<DeboaResponse, DeboaError>` - The response.
     ///
-    async fn process_response(&self, response: Response<Incoming>) -> Result<DeboaResponse, DeboaError> {
+    async fn process_response(&self, url: &Url, response: Response<Incoming>) -> Result<DeboaResponse, DeboaError> {
         let status_code = response.status();
         let headers = response.headers().clone();
 
@@ -544,6 +495,6 @@ impl Deboa {
 
         let raw_body = result.unwrap().to_bytes().to_vec();
 
-        Ok(DeboaResponse::new(status_code, headers, &raw_body))
+        Ok(DeboaResponse::new(url.clone(), status_code, headers, &raw_body))
     }
 }

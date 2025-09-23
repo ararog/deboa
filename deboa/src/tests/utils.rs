@@ -1,9 +1,19 @@
+use url::Url;
+
 use http::{StatusCode, header};
 use httpmock::{Method::GET, MockServer};
 
 use crate::errors::DeboaError;
 
 pub const JSONPLACEHOLDER: &str = "https://jsonplaceholder.typicode.com/";
+
+pub fn url() -> Url {
+    Url::parse("http://test.com/get").unwrap()
+}
+
+pub fn url_from_string(url: String) -> Url {
+    url.parse().unwrap()
+}
 
 pub fn setup_server<'a>(server: &'a MockServer, path: &'a str, status: StatusCode) -> Result<httpmock::Mock<'a>, DeboaError> {
     let http_mock = server.mock(|when, then| {
