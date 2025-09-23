@@ -4,7 +4,7 @@ use http::{HeaderMap, HeaderValue, StatusCode};
 use crate::{
     catcher::encoding::EncodingCatcher,
     io::gzip::GzipDecompressor,
-    tests::types::{url, DECOMPRESSED, GZIP_COMPRESSED},
+    tests::types::{DECOMPRESSED, GZIP_COMPRESSED, url},
 };
 
 #[tokio::test]
