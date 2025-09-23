@@ -68,6 +68,8 @@ compile_error!("At least one HTTP version feature must be enabled.");
 use std::fmt::Debug;
 use std::time::SystemTime;
 
+use std::ops::Shl;
+
 use bytes::Bytes;
 use http::{Request, Response};
 use http_body_util::{BodyExt, Full};
@@ -96,6 +98,14 @@ mod rt;
 
 #[cfg(test)]
 mod tests;
+
+impl Shl<&str> for Deboa {
+    type Output = DeboaRequest;
+
+    fn shl(self, other: &str) -> Self::Output {
+        DeboaRequest::get(other).expect("Invalid url!").build().expect("Failed to build request")
+    }
+}
 
 #[derive(PartialEq, Debug)]
 /// Enum that represents the HTTP version.
