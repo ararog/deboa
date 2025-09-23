@@ -4,6 +4,7 @@ use std::{fmt::Debug, sync::Arc};
 use serde::Deserialize;
 
 use crate::{client::serde::ResponseBody, errors::DeboaError};
+use url::Url;
 
 #[derive(PartialEq)]
 /// Struct that represents the response.
@@ -14,6 +15,7 @@ use crate::{client::serde::ResponseBody, errors::DeboaError};
 /// * `headers` - The headers of the response.
 /// * `body` - The body of the response.
 pub struct DeboaResponse {
+    url: Url,
     status: http::StatusCode,
     headers: Arc<http::HeaderMap>,
     body: Arc<Vec<u8>>,
@@ -22,6 +24,7 @@ pub struct DeboaResponse {
 impl Debug for DeboaResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("DeboaResponse")
+            .field("url", &self.url)
             .field("status", &self.status)
             .field("headers", &self.headers)
             .field("body", &self.body)
@@ -46,12 +49,14 @@ impl DeboaResponse {
     ///
     /// # Arguments
     ///
+    /// * `url` - The url of the response.
     /// * `status` - The status code of the response.
     /// * `headers` - The headers of the response.
     /// * `body` - The body of the response.
     ///
-    pub fn new(status: http::StatusCode, headers: http::HeaderMap, body: &[u8]) -> Self {
+    pub fn new(url: Url, status: http::StatusCode, headers: http::HeaderMap, body: &[u8]) -> Self {
         Self {
+            url,
             status,
             headers: headers.into(),
             body: body.to_vec().into(),

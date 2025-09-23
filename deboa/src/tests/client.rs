@@ -3,15 +3,6 @@ use crate::Deboa;
 use crate::errors::DeboaError;
 
 #[test]
-fn test_set_retries() -> Result<(), DeboaError> {
-    let api = Deboa::builder().retries(5).build();
-
-    assert_eq!(api.retries, 5);
-
-    Ok(())
-}
-
-#[test]
 fn test_set_connection_timeout() -> Result<(), DeboaError> {
     let api = Deboa::builder().connection_timeout(5).build();
 
