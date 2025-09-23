@@ -2,7 +2,7 @@ use deboa::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
 
 use crate::{
     http::serde::xml::XmlBody,
-    tests::types::{url, Post, XML_POST, sample_post},
+    tests::types::{Post, XML_POST, sample_post, url},
 };
 
 #[tokio::test]

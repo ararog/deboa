@@ -4,7 +4,7 @@ use http::{HeaderMap, HeaderValue, StatusCode};
 use crate::{
     catcher::encoding::EncodingCatcher,
     io::brotli::BrotliDecompressor,
-    tests::types::{url, BROTLI_COMPRESSED, DECOMPRESSED},
+    tests::types::{BROTLI_COMPRESSED, DECOMPRESSED, url},
 };
 
 #[tokio::test]

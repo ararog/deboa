@@ -11,7 +11,7 @@ fn test_status() -> Result<(), DeboaError> {
 
 #[test]
 fn test_headers() -> Result<(), DeboaError> {
-    let response = DeboaResponse::new(url(),http::StatusCode::OK, http::HeaderMap::new(), &Vec::new());
+    let response = DeboaResponse::new(url(), http::StatusCode::OK, http::HeaderMap::new(), &Vec::new());
     assert_eq!(*response.headers(), http::HeaderMap::new());
     Ok(())
 }
