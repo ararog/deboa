@@ -2,7 +2,7 @@ use crate::http::serde::json::JsonBody;
 use deboa::errors::DeboaError;
 use deboa::{request::DeboaRequest, response::DeboaResponse};
 
-use crate::tests::types::{url, JSON_POST, Post, sample_post};
+use crate::tests::types::{JSON_POST, Post, sample_post, url};
 
 #[cfg(feature = "json")]
 #[test]

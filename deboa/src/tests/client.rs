@@ -1,6 +1,6 @@
-use crate::tests::utils::JSONPLACEHOLDER;
 use crate::Deboa;
 use crate::errors::DeboaError;
+use crate::tests::utils::JSONPLACEHOLDER;
 
 #[test]
 fn test_set_connection_timeout() -> Result<(), DeboaError> {
