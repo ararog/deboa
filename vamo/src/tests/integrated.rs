@@ -33,8 +33,8 @@ async fn test_put() -> Result<(), DeboaError> {
         then.status(StatusCode::OK.into());
     });
 
-    let mut vamo = Vamo::new(server.base_url().as_str())?;
-    let response = vamo.put("/posts")?.go(vamo.client()).await?;
+    let vamo = Vamo::new(server.base_url().as_str())?;
+    let response = vamo.put("/posts")?.go(vamo).await?;
 
     mock.assert();
 
@@ -51,8 +51,8 @@ async fn test_post() -> Result<(), DeboaError> {
         then.status(StatusCode::CREATED.into());
     });
 
-    let mut vamo = Vamo::new(server.base_url().as_str())?;
-    let response = vamo.post("/posts")?.go(vamo.client()).await?;
+    let vamo = Vamo::new(server.base_url().as_str())?;
+    let response = vamo.post("/posts")?.go(vamo).await?;
 
     mock.assert();
 
@@ -69,8 +69,8 @@ async fn test_patch() -> Result<(), DeboaError> {
         then.status(StatusCode::OK.into());
     });
 
-    let mut vamo = Vamo::new(server.base_url().as_str())?;
-    let response = vamo.patch("/posts/1")?.go(vamo.client()).await?;
+    let vamo = Vamo::new(server.base_url().as_str())?;
+    let response = vamo.patch("/posts/1")?.go(vamo).await?;
 
     mock.assert();
 
@@ -87,8 +87,8 @@ async fn test_delete() -> Result<(), DeboaError> {
         then.status(StatusCode::NO_CONTENT.into());
     });
 
-    let mut vamo = Vamo::new(server.base_url().as_str())?;
-    let response = vamo.delete("/posts/1")?.go(vamo.client()).await?;
+    let vamo = Vamo::new(server.base_url().as_str())?;
+    let response = vamo.delete("/posts/1")?.go(vamo).await?;
 
     mock.assert();
 

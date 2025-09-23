@@ -22,7 +22,7 @@ async fn main() {
 }
 
 async fn fetch_posts() -> Result<Vec<Post>, DeboaError> {
-    let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
-    let posts: Vec<Post> = vamo.get("/posts")?.go(vamo.client()).await?.body_as(JsonBody)?;
+    let vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
+    let posts: Vec<Post> = vamo.get("/posts")?.go(vamo).await?.body_as(JsonBody)?;
     Ok(posts)
 }
