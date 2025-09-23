@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 #[cfg(feature = "msgpack")]
 pub const MSGPACK_POST: [u8; 23] = [
@@ -22,6 +23,10 @@ pub const GZIP_COMPRESSED: &[u8; 31] = &[
 ];
 
 pub const DECOMPRESSED: &[u8; 11] = b"lorem ipsum";
+
+pub fn url() -> Url {
+    Url::parse("http://test.com/get").unwrap()
+}
 
 pub fn sample_post() -> Post {
     Post {

@@ -4,7 +4,7 @@ use http::{HeaderMap, HeaderValue, StatusCode};
 use crate::{
     catcher::encoding::EncodingCatcher,
     io::brotli::BrotliDecompressor,
-    tests::types::{BROTLI_COMPRESSED, DECOMPRESSED},
+    tests::types::{url, BROTLI_COMPRESSED, DECOMPRESSED},
 };
 
 #[tokio::test]
@@ -13,7 +13,7 @@ async fn test_brotli_decompress() -> Result<(), DeboaError> {
 
     let mut headers = HeaderMap::new();
     headers.insert("Content-Encoding", HeaderValue::from_static("br"));
-    let mut response = DeboaResponse::new(StatusCode::OK, headers, BROTLI_COMPRESSED.as_ref());
+    let mut response = DeboaResponse::new(url(), StatusCode::OK, headers, BROTLI_COMPRESSED.as_ref());
 
     encoding_catcher.on_response(&mut response);
 
