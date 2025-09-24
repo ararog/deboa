@@ -1,7 +1,15 @@
 [package]
 name = "deboa-tests"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2024"
+authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
+repository = "https://github.com/ararog/deboa"
+homepage = "https://github.com/ararog/deboa"
+description = "Tests for deboa"
+readme = "README.md"
+license = "MIT"
+keywords = ["http", "networking", "client", "fetch", "rest-client"]
+publish = false
 
 [dependencies]
 http = "1.3.1"
