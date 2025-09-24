@@ -1,10 +1,11 @@
 use deboa::{catcher::DeboaCatcher, errors::DeboaError, response::DeboaResponse};
 use http::{HeaderMap, HeaderValue, StatusCode};
 
-use crate::{
-    catcher::encoding::EncodingCatcher,
-    io::brotli::BrotliDecompressor,
-    tests::types::{BROTLI_COMPRESSED, DECOMPRESSED, url},
+use crate::{catcher::encoding::EncodingCatcher, io::brotli::BrotliDecompressor};
+
+use deboa_tests::{
+    data::{BROTLI_COMPRESSED, DECOMPRESSED},
+    utils::fake_url,
 };
 
 #[tokio::test]
@@ -13,7 +14,7 @@ async fn test_brotli_decompress() -> Result<(), DeboaError> {
 
     let mut headers = HeaderMap::new();
     headers.insert("Content-Encoding", HeaderValue::from_static("br"));
-    let mut response = DeboaResponse::new(url(), StatusCode::OK, headers, BROTLI_COMPRESSED.as_ref());
+    let mut response = DeboaResponse::new(fake_url(), StatusCode::OK, headers, BROTLI_COMPRESSED.as_ref());
 
     encoding_catcher.on_response(&mut response);
 
