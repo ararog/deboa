@@ -6,8 +6,9 @@ use crate::{
     catcher::{DeboaCatcher, MockDeboaCatcher},
     request::DeboaRequest,
     response::DeboaResponse,
-    tests::utils::{setup_server, url_from_string},
 };
+
+use deboa_tests::utils::{setup_server, url_from_string};
 
 #[tokio::test]
 async fn test_catcher_request() {
@@ -30,7 +31,7 @@ async fn test_catcher_request() {
 async fn test_catcher_response() {
     let server = MockServer::start();
 
-    let http_mock = setup_server(&server, "/get", StatusCode::OK).unwrap();
+    let http_mock = setup_server(&server, "/get", StatusCode::OK);
 
     let mut catcher_mock = MockDeboaCatcher::new();
     catcher_mock.expect_on_request().times(1).returning(move |_| Ok(None));
@@ -54,7 +55,7 @@ async fn test_catcher_response() {
 async fn test_catcher_early_response() {
     let server = MockServer::start();
 
-    let http_mock = setup_server(&server, "/get", StatusCode::OK).unwrap();
+    let http_mock = setup_server(&server, "/get", StatusCode::OK);
 
     let mut catcher_mock = MockDeboaCatcher::new();
 
