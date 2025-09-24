@@ -1,5 +1,6 @@
 use deboa::errors::DeboaError;
 use deboa_macros::bora;
+use deboa_tests::utils::JSONPLACEHOLDER;
 use vamo::Vamo;
 
 use serde::Deserialize;
@@ -22,7 +23,7 @@ pub struct PostService;
 
 #[tokio::test]
 async fn test_get_by_id() -> Result<(), DeboaError> {
-    let client = Vamo::new("https://jsonplaceholder.typicode.com")?;
+    let client = Vamo::new(JSONPLACEHOLDER)?;
 
     let mut post_service = PostService::new(client);
 
@@ -37,7 +38,7 @@ async fn test_get_by_id() -> Result<(), DeboaError> {
 
 #[tokio::test]
 async fn test_get_all() -> Result<(), DeboaError> {
-    let client = Vamo::new("https://jsonplaceholder.typicode.com")?;
+    let client = Vamo::new(JSONPLACEHOLDER)?;
 
     let mut post_service = PostService::new(client);
 
@@ -51,7 +52,7 @@ async fn test_get_all() -> Result<(), DeboaError> {
 
 #[tokio::test]
 async fn test_query_by_id() -> Result<(), DeboaError> {
-    let client = Vamo::new("https://jsonplaceholder.typicode.com")?;
+    let client = Vamo::new(JSONPLACEHOLDER)?;
 
     let mut post_service = PostService::new(client);
 
@@ -65,7 +66,7 @@ async fn test_query_by_id() -> Result<(), DeboaError> {
 
 #[tokio::test]
 async fn test_query_by_title() -> Result<(), DeboaError> {
-    let client = Vamo::new("https://jsonplaceholder.typicode.com")?;
+    let client = Vamo::new(JSONPLACEHOLDER)?;
 
     let mut post_service = PostService::new(client);
 
