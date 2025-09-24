@@ -22,7 +22,7 @@ use smol_macros::test;
 async fn do_get_http1() -> Result<(), DeboaError> {
     let server = MockServer::start();
 
-    let http_mock = setup_server(&server, "/posts", StatusCode::OK);
+    let http_mock = setup_server(&server, "/posts", httpmock::Method::GET, StatusCode::OK);
 
     let mut client = Deboa::builder().protocol(HttpVersion::Http1).build();
 
@@ -60,7 +60,7 @@ async fn test_get_http1() {
 async fn do_get_http2() -> Result<(), DeboaError> {
     let server = MockServer::start();
 
-    let http_mock = setup_server(&server, "/posts", StatusCode::OK);
+    let http_mock = setup_server(&server, "/posts", httpmock::Method::GET, StatusCode::OK);
 
     let mut client = Deboa::builder().protocol(HttpVersion::Http2).build();
 
@@ -101,7 +101,7 @@ async fn test_get_http2() {
 async fn do_get_not_found() -> Result<(), DeboaError> {
     let server = MockServer::start();
 
-    let http_mock = setup_server(&server, "/asasa/posts/1ddd", StatusCode::NOT_FOUND);
+    let http_mock = setup_server(&server, "/asasa/posts/1ddd", httpmock::Method::GET, StatusCode::NOT_FOUND);
 
     let client = Deboa::new();
 
@@ -180,7 +180,7 @@ async fn test_get_invalid_server() {
 async fn do_get_by_query() -> Result<(), DeboaError> {
     let server = MockServer::start();
 
-    let http_mock = setup_server(&server, "/comments/1", StatusCode::OK);
+    let http_mock = setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::OK);
 
     let client = Deboa::new();
 
@@ -219,7 +219,7 @@ async fn test_get_by_query() {
 async fn do_get_by_query_with_retries() -> Result<(), DeboaError> {
     let server = MockServer::start();
 
-    let http_mock = setup_server(&server, "/comments/1", StatusCode::BAD_GATEWAY);
+    let http_mock = setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::BAD_GATEWAY);
 
     let client = Deboa::new();
 
