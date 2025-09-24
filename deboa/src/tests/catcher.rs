@@ -31,7 +31,7 @@ async fn test_catcher_request() {
 async fn test_catcher_response() {
     let server = MockServer::start();
 
-    let http_mock = setup_server(&server, "/get", StatusCode::OK);
+    let http_mock = setup_server(&server, "/get", httpmock::Method::GET, StatusCode::OK);
 
     let mut catcher_mock = MockDeboaCatcher::new();
     catcher_mock.expect_on_request().times(1).returning(move |_| Ok(None));
@@ -55,7 +55,7 @@ async fn test_catcher_response() {
 async fn test_catcher_early_response() {
     let server = MockServer::start();
 
-    let http_mock = setup_server(&server, "/get", StatusCode::OK);
+    let http_mock = setup_server(&server, "/get", httpmock::Method::GET, StatusCode::OK);
 
     let mut catcher_mock = MockDeboaCatcher::new();
 
