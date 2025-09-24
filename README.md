@@ -13,7 +13,7 @@ This release has a major api change. Please check the [migration guide](https://
 ## Install
 
 ```rust
-deboa = { version = "0.0.5-alpha.3", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.0.5-beta.3", features = ["http1", "tokio-rt"] }
 ```
 
 ## Crate features
@@ -55,6 +55,14 @@ Pluggable compression/decompression, serializers and catchers.
 ### deboa-macros
 
 A crate with bora macro, for easy rest client generation.
+
+### deboa-tests
+
+A crate with testing utilities.
+
+### examples
+
+Examples of how to use deboa.
 
 ### vamo
 

@@ -14,8 +14,6 @@ This release has a major api change. Please check the [migration guide](https://
 
 - easily add, remove and update headers
 - helpers to add basic and bearer auth
-- set base url only once, change it when needed
-- request data only by specifying path
 - set retries and timeout
 - pluggable catchers (interceptors)
 - pluggable compression (gzip, deflate, br)
@@ -29,7 +27,7 @@ This release has a major api change. Please check the [migration guide](https://
 ## Install
 
 ```rust
-deboa = { version = "0.0.5-alpha.3", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.0.5-beta.3", features = ["http1", "tokio-rt"] }
 ```
 
 ## Crate features
