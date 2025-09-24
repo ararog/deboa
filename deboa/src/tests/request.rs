@@ -2,7 +2,7 @@ use crate::Deboa;
 use crate::request::DeboaRequest;
 use crate::{errors::DeboaError, request::Fetch};
 
-use crate::tests::utils::JSONPLACEHOLDER;
+use deboa_tests::utils::JSONPLACEHOLDER;
 use http::{HeaderValue, header};
 use url::Url;
 
