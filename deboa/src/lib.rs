@@ -66,7 +66,6 @@ compile_error!("Only one runtime feature can be enabled at a time.");
 compile_error!("At least one HTTP version feature must be enabled.");
 
 use std::fmt::Debug;
-use std::time::SystemTime;
 
 use std::ops::Shl;
 
@@ -383,9 +382,12 @@ impl Deboa {
     ///
     /// * `Result<DeboaResponse, DeboaError>` - The response.
     ///
-    pub async fn execute(&mut self, mut request: DeboaRequest) -> Result<DeboaResponse, DeboaError> {
+    pub async fn execute<R>(&mut self, mut request: R) -> Result<DeboaResponse, DeboaError>
+    where
+        R: AsMut<DeboaRequest> + AsRef<DeboaRequest>,
+    {
         if let Some(catchers) = &self.catchers {
-            let mut response = catchers.iter().filter_map(|catcher| catcher.on_request(&mut request).unwrap());
+            let mut response = catchers.iter().filter_map(|catcher| catcher.on_request(request.as_mut()).unwrap());
 
             if let Some(mut response) = response.next() {
                 catchers.iter().for_each(|catcher| catcher.on_response(&mut response));
@@ -394,29 +396,24 @@ impl Deboa {
         }
 
         let mut retry_count: u32 = 0;
-        let start_time = SystemTime::now();
         let response = loop {
-            let response = self.send_request(&request).await;
+            let response = self.send_request(request.as_ref()).await;
             if let Err(err) = response {
-                if retry_count == request.retries() {
+                if retry_count == request.as_mut().retries() {
                     break Err(err);
                 }
                 #[cfg(feature = "tokio-rt")]
                 tokio::time::sleep(tokio::time::Duration::from_secs(2_u32.pow(retry_count) as u64)).await;
                 #[cfg(feature = "smol-rt")]
-                smol::Timer::after(std::time::Duration::from_secs((2_u32.pow(retry_count) as u64))).await;
+                smol::Timer::after(std::time::Duration::from_secs(2_u32.pow(retry_count) as u64)).await;
                 retry_count += 1;
-                println!(
-                    "Retrying request... {retry_count}, after {} seconds",
-                    SystemTime::now().duration_since(start_time).unwrap().as_secs()
-                );
                 continue;
             }
 
             break Ok(response.unwrap());
         };
 
-        let mut response = self.process_response(request.url(), response?).await?;
+        let mut response = self.process_response(request.as_ref().url(), response?).await?;
 
         if let Some(catchers) = &self.catchers {
             catchers.iter().for_each(|catcher| catcher.on_response(&mut response));
