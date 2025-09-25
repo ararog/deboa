@@ -1,11 +1,12 @@
 use async_trait::async_trait;
 use bytes::Bytes;
-use http::StatusCode;
-use http_body_util::Full;
-use hyper::{Request, Response, body::Incoming};
+use http::{Request, Response, StatusCode};
+use http_body_util::{BodyExt, Full};
+use hyper::body::Incoming;
 use url::Url;
 
 use crate::errors::DeboaError;
+
 
 #[derive(Debug)]
 /// Enum that represents the connection type.
@@ -92,7 +93,7 @@ pub trait DeboaHttpConnection {
     ///
     /// * `Result<Response<Incoming>, DeboaError>` - The response or error.
     ///
-    fn process_response(
+    async fn process_response(
         &self,
         url: &Url,
         method: &str,
@@ -107,10 +108,13 @@ pub trait DeboaHttpConnection {
         }
 
         let response = response.unwrap();
-        if !response.status().is_success() || response.status() == StatusCode::TOO_MANY_REQUESTS {
+        let status_code = response.status();
+        if !status_code.is_success() || status_code == StatusCode::TOO_MANY_REQUESTS {
+            let body = response.collect().await;
+            let body = body.unwrap().to_bytes().to_vec();
             return Err(DeboaError::Response {
-                status_code: response.status(),
-                message: response.status().to_string(),
+                status_code,
+                message: format!("Could not process request: {}", String::from_utf8_lossy(&body)),
             });
         }
 
