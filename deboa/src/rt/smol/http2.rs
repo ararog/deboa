@@ -15,7 +15,7 @@ use crate::{
 };
 
 #[async_trait]
-impl DeboaHttpConnection<Http2Request> for BaseHttpConnection<Http2Request> {
+impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
     type Sender = Http2Request;
 
     #[inline]
@@ -23,7 +23,7 @@ impl DeboaHttpConnection<Http2Request> for BaseHttpConnection<Http2Request> {
         &self.url
     }
 
-    async fn connect(url: Url, retries: u32) -> Result<BaseHttpConnection<Self::Sender>, DeboaError> {
+    async fn connect(url: &Url) -> Result<BaseHttpConnection<Self::Sender>, DeboaError> {
         let host = url.host().expect("uri has no host");
         let io = {
             match url.scheme() {
@@ -90,13 +90,13 @@ impl DeboaHttpConnection<Http2Request> for BaseHttpConnection<Http2Request> {
         })
         .detach();
 
-        Ok(BaseHttpConnection::<Self::Sender> { url, sender, retries })
+        Ok(BaseHttpConnection::<Self::Sender> { url: url.clone(), sender })
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>, DeboaError> {
         let method = request.method().to_string();
         let result = self.sender.send_request(request).await;
 
-        self.process_response(self.url.clone(), &method, result)
+        self.process_response(&self.url, &method, result).await
     }
 }
