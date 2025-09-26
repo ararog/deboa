@@ -5,12 +5,8 @@ use proc_macro2::{Span, TokenStream as TS2};
 use quote::{format_ident, quote};
 use syn::{Data, DeriveInput, Ident, LitStr, Type, TypeTuple, Visibility, parse_macro_input, parse_str, punctuated::Punctuated, token::Paren};
 
-use bora::parser::BoraApi;
+use crate::{parser::{api::{BoraApi, OperationEnum}, operations::{delete::DeleteFieldEnum, get::GetFieldEnum, patch::PatchFieldEnum, post::PostFieldEnum, put::PutFieldEnum}}, token::utils::extract_params_from_path};
 use titlecase::Titlecase;
-
-use crate::{
-    bora::{self, parser::OperationEnum}, parser::operations::{delete::DeleteFieldEnum, get::GetFieldEnum, patch::PatchFieldEnum, post::PostFieldEnum, put::PutFieldEnum}, token::utils::extract_params_from_path
-};
 
 #[allow(clippy::too_many_arguments)]
 fn impl_function(
