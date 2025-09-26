@@ -7,6 +7,7 @@ pub fn extract_path_params(path: &str) -> String {
         .to_string()
 }
 
+/*
 pub fn extract_params_from_path(path: &str) -> Vec<(String, String)> {
     let re = Regex::new(r"<(\w*):(\&{0,1}\w*)>")
         .expect("Invalid path");
@@ -16,3 +17,4 @@ pub fn extract_params_from_path(path: &str) -> Vec<(String, String)> {
     }
     params
 }
+*/
