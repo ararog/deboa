@@ -114,7 +114,7 @@ pub trait DeboaHttpConnection {
             let body = body.unwrap().to_bytes().to_vec();
             return Err(DeboaError::Response {
                 status_code,
-                message: format!("Could not process request: {}", String::from_utf8_lossy(&body)),
+                message: format!("Could not process request ({}): {}", status_code, String::from_utf8_lossy(&body)),
             });
         }
 

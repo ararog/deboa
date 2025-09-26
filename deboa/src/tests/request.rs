@@ -7,6 +7,45 @@ use http::{HeaderValue, header};
 use url::Url;
 
 #[test]
+fn test_into_url() -> Result<(), DeboaError> {
+    let url = Url::parse(JSONPLACEHOLDER).unwrap();
+    let request = DeboaRequest::get(url)?.build()?;
+
+    assert_eq!(request.url().to_string(), JSONPLACEHOLDER);
+
+    Ok(())
+}
+
+#[test]
+fn test_into_str() -> Result<(), DeboaError> {
+    let request = DeboaRequest::get(JSONPLACEHOLDER)?.build()?;
+
+    assert_eq!(request.url().to_string(), JSONPLACEHOLDER);
+
+    Ok(())
+}
+
+#[test]
+fn test_into_string() -> Result<(), DeboaError> {
+    let request = DeboaRequest::get(String::from(JSONPLACEHOLDER))?.build()?;
+
+    assert_eq!(request.url().to_string(), JSONPLACEHOLDER);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_try_into() -> Result<(), DeboaError> {
+    let mut client = Deboa::new();
+    
+    let response = client.execute(JSONPLACEHOLDER).await?;
+
+    assert_eq!(response.status(), 200);
+
+    Ok(())
+}
+
+#[test]
 fn test_set_retries() -> Result<(), DeboaError> {
     let api = DeboaRequest::get(JSONPLACEHOLDER)?.retries(5).build()?;
 

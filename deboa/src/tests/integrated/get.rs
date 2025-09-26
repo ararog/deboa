@@ -114,7 +114,7 @@ async fn do_get_not_found() -> Result<(), DeboaError> {
         response,
         Err(DeboaError::Response {
             status_code: StatusCode::NOT_FOUND,
-            message: "404 Not Found".to_string()
+            message: "Could not process request (404 Not Found): ping".to_string()
         })
     );
 
@@ -232,7 +232,7 @@ async fn do_get_by_query_with_retries() -> Result<(), DeboaError> {
             err,
             DeboaError::Response {
                 status_code: StatusCode::BAD_GATEWAY,
-                message: "502 Bad Gateway".to_string(),
+                message: "Could not process request (502 Bad Gateway): ping".to_string(),
             },
         );
     }
