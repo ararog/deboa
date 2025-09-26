@@ -1,43 +1,44 @@
 use std::collections::HashMap;
 
 use proc_macro::TokenStream;
-use proc_macro2::TokenStream as TS2;
-use syn::{parse_macro_input, ImplItemFn, Pat, PatType, Visibility};
-use crate::token::utils::extract_params_from_path;
-use crate::parser::{operations::delete::{DeleteFieldEnum, DeleteStruct}};
+use quote::ToTokens;
+use syn::{parse_macro_input, parse_str, punctuated::Punctuated, Pat, PatType, Token, TraitItemFn, Visibility};
+use crate::parser::{operations::delete::{DeleteFieldEnum}};
+use crate::parser::utils::extract_params_from_path;
 
 pub fn delete(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let item = parse_macro_input!(item as ImplItemFn);
-    let attr = TS2::from(attr);
-
-    let parse_attr = attr.clone().into();
-    let root = parse_macro_input!(parse_attr as DeleteStruct);
-    let _path_field = root.fields.iter().fold(HashMap::new(), |mut acc, field| {
+    let attrs = parse_macro_input!(attr with Punctuated<DeleteFieldEnum, Token![,]>::parse_terminated);
+    let item = parse_macro_input!(item as TraitItemFn);
+    
+    let path_fields = attrs.iter().fold(HashMap::new(), |mut acc, field| {
         if let DeleteFieldEnum::path(path) = field {
-            let (api_params, _) = extract_params_from_path(&path.value);
-            acc.insert(path.value.value(), api_params);
+            let params = extract_params_from_path(&path.value.value());
+            for param in params {
+                acc.insert(param.0, param.1);
+            }
         }
         acc
     }); 
 
-    let ImplItemFn { attrs: _, vis, defaultness: _, sig, block: _ } = item;
-    
-    if sig.asyncness.is_none() {
+    if item.sig.asyncness.is_none() {
         panic!("expected to be an async function");
     }
 
-    if ! matches!(vis, Visibility::Public(_)) {
-        panic!("expected to be a public function");
-    }
-
-    sig.inputs.iter().for_each(|input| {
+    item.sig.inputs.iter().for_each(|input| {
         if let syn::FnArg::Typed(typed) = input {
-            let PatType { attrs: _, pat, colon_token: _, ty: _ } = typed;
-            if let Pat::Ident(_) = &**pat {
-                
+            let PatType { attrs: _, pat, colon_token: _, ty } = typed;
+            if let Pat::Ident(ident) = &**pat {
+                if ! path_fields.contains_key(&ident.ident.to_string()) {
+                    panic!("expected to have a parameter named {}", ident.ident);
+                }
+
+                let param_type = path_fields.get(&ident.ident.to_string()).unwrap();
+                if *ty.as_ref() != parse_str::<syn::Type>(param_type).unwrap() {
+                    panic!("expected type {param_type}");
+                }
             }
         }
     });
 
-    TokenStream::new()
+    item.to_token_stream().into()
 }
