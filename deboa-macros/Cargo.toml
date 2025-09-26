@@ -1,6 +1,6 @@
 [package]
 name = "deboa-macros"
-edition = "2024"
+edition = "2021"
 version = "0.0.1-beta.2"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 description = "macros for deboa"
@@ -10,6 +10,7 @@ readme = "README.md"
 keywords = ["compiler-plugin"]
 exclude = [".travis.yml"]
 publish = true
+rust-version = "1.64.0"
 
 [lib]
 proc-macro = true
