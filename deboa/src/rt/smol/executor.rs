@@ -1,4 +1,5 @@
 use hyper::rt::Executor;
+use std::future::Future;
 
 #[non_exhaustive]
 #[derive(Default, Debug, Clone)]
