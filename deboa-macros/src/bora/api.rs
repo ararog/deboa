@@ -3,66 +3,14 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TS2};
 use quote::{format_ident, quote};
-use regex::Regex;
 use syn::{Data, DeriveInput, Ident, LitStr, Type, TypeTuple, Visibility, parse_macro_input, parse_str, punctuated::Punctuated, token::Paren};
 
 use bora::parser::BoraApi;
 use titlecase::Titlecase;
 
 use crate::{
-    bora::{self, parser::OperationEnum},
-    parser::operations::{delete::DeleteFieldEnum, get::GetFieldEnum, patch::PatchFieldEnum, post::PostFieldEnum, put::PutFieldEnum},
+    bora::{self, parser::OperationEnum}, parser::operations::{delete::DeleteFieldEnum, get::GetFieldEnum, patch::PatchFieldEnum, post::PostFieldEnum, put::PutFieldEnum}, token::utils::extract_params_from_path
 };
-
-fn extract_path_params(path: &str) -> String {
-    Regex::new(r"<(\w*):\&{0,1}\w*>")
-        .expect("Invalid path")
-        .replace_all(path, "{$1}")
-        .to_string()
-}
-
-fn extract_params_from_path(path: &LitStr) -> (TS2, LitStr) {
-    let raw_path = path.value();
-    let params = Regex::new(r"<(\w*:\&{0,1}\w*)>")
-        .unwrap()
-        .captures_iter(&raw_path)
-        .map(|m| m.get(1).unwrap().as_str())
-        .collect::<Vec<_>>();
-
-    let api_params = params.clone().into_iter().fold(TS2::new(), |mut acc, param| {
-        let pair = param.split(':').collect::<Vec<_>>();
-        let param = parse_str::<syn::Ident>(pair[0]).unwrap();
-        let param_type = parse_str::<syn::Type>(pair[1]).unwrap();
-        acc.extend(quote! {
-            #param: #param_type,
-        });
-        acc
-    });
-
-    let has_query = raw_path.contains("?");
-    let new_path = if has_query {
-        let parts = raw_path.split("?").collect::<Vec<_>>();
-        let path = parts[0];
-        let query = parts[1];
-
-        let path_output = extract_path_params(path);
-
-        let query_regex = Regex::new(r"<(\w*:\&{0,1}\w*)>").expect("Invalid query");
-        let query_output = query_regex
-            .captures_iter(query)
-            .map(|m| {
-                let pair = m.get(1).unwrap().as_str().split(':').collect::<Vec<_>>();
-                format!("{}={{{}}}", pair[0], pair[0])
-            })
-            .collect::<Vec<_>>()
-            .join("&");
-        format!("{path_output}?{query_output}")
-    } else {
-        extract_path_params(&raw_path)
-    };
-
-    (api_params, LitStr::new(&new_path, Span::call_site()))
-}
 
 #[allow(clippy::too_many_arguments)]
 fn impl_function(
@@ -98,8 +46,8 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
     let parse_attr = attr.clone().into();
     let root = parse_macro_input!(parse_attr as BoraApi);
 
-    let name = if let Visibility::Public(_) = item.vis
-        && let Data::Struct(_) = item.data
+    let name = if matches!(item.vis, Visibility::Public(_))
+        && matches!(item.data, Data::Struct(_))
     {
         item.ident.to_string()
     } else {
