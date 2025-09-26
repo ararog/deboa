@@ -76,14 +76,13 @@ use hyper::body::Incoming;
 
 use crate::client::conn::http::{DeboaConnection, DeboaHttpConnection};
 
+use crate::errors::DeboaError;
 use crate::catcher::DeboaCatcher;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
-use crate::request::DeboaRequest;
+use crate::response::DeboaResponse;
+use crate::request::{DeboaRequest, IntoRequest};
 
 use url::Url;
-
-use crate::errors::DeboaError;
-use crate::response::DeboaResponse;
 
 pub mod cache;
 pub mod catcher;
@@ -382,10 +381,11 @@ impl Deboa {
     ///
     /// * `Result<DeboaResponse, DeboaError>` - The response.
     ///
-    pub async fn execute<R>(&mut self, mut request: R) -> Result<DeboaResponse, DeboaError>
+    pub async fn execute<R>(&mut self, request: R) -> Result<DeboaResponse, DeboaError>
     where
-        R: AsMut<DeboaRequest> + AsRef<DeboaRequest>,
+        R: IntoRequest,
     {
+        let mut request = request.into_request()?;
         if let Some(catchers) = &self.catchers {
             let mut response = catchers.iter().filter_map(|catcher| catcher.on_request(request.as_mut()).unwrap());
 
@@ -397,7 +397,7 @@ impl Deboa {
 
         let mut retry_count: u32 = 0;
         let response = loop {
-            let response = self.send_request(request.as_ref()).await;
+            let response = self.send_request(request.as_mut()).await;
             if let Err(err) = response {
                 if retry_count == request.as_mut().retries() {
                     break Err(err);
@@ -413,7 +413,7 @@ impl Deboa {
             break Ok(response.unwrap());
         };
 
-        let mut response = self.process_response(request.as_ref().url(), response?).await?;
+        let mut response = self.process_response(request.as_mut().url(), response?).await?;
 
         if let Some(catchers) = &self.catchers {
             catchers.iter().for_each(|catcher| catcher.on_response(&mut response));
@@ -432,9 +432,12 @@ impl Deboa {
     ///
     /// * `Result<Response<Incoming>, DeboaError>` - The response.
     ///
-    async fn send_request(&mut self, request: &DeboaRequest) -> Result<Response<Incoming>, DeboaError> {
-        let url = request.url();
-        let method = request.method();
+    async fn send_request<R>(&mut self, request: &R) -> Result<Response<Incoming>, DeboaError>
+    where
+        R: AsRef<DeboaRequest>,
+    {
+        let url = request.as_ref().url();
+        let method = request.as_ref().method();
         let authority = url.authority();
 
         let mut builder = Request::builder()
@@ -443,13 +446,13 @@ impl Deboa {
             .header(hyper::header::HOST, authority);
         {
             let req_headers = builder.headers_mut().unwrap();
-            request.headers().iter().fold(req_headers, |acc, (key, value)| {
+            request.as_ref().headers().iter().fold(req_headers, |acc, (key, value)| {
                 acc.insert(key, value.clone());
                 acc
             });
         }
 
-        let body = request.raw_body();
+        let body = request.as_ref().raw_body();
 
         let request = builder.body(Full::new(Bytes::from(body.to_vec())));
         if let Err(err) = request {
