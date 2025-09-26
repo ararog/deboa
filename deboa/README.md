@@ -68,6 +68,12 @@ async fn main() -> Result<(), DeboaError> {
   let posts: Vec<Post> = client.execute(request)
     .await?
     .body_as(JsonBody)?;
+
+  or simply:
+
+  let response = client.execute("https://jsonplaceholder.typicode.com/posts")
+    .await?;
+  let posts: Vec<Post> = response.body_as(JsonBody)?;
   */
 
   let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?

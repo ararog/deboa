@@ -58,9 +58,43 @@ impl IntoUrl for &str {
     }
 }
 
+impl IntoUrl for &mut String {
+    fn into_url(self) -> Result<Url, DeboaError> {
+        self.parse_url()
+    }
+}
+
 impl IntoUrl for String {
     fn into_url(self) -> Result<Url, DeboaError> {
         self.parse_url()
+    }
+}
+
+pub trait IntoRequest {
+    fn into_request(self) -> Result<DeboaRequest, DeboaError>;
+}
+
+impl IntoRequest for DeboaRequest {
+    fn into_request(self) -> Result<DeboaRequest, DeboaError> {
+        Ok(self)
+    }
+}
+
+impl IntoRequest for &str {
+    fn into_request(self) -> Result<DeboaRequest, DeboaError> {
+        DeboaRequest::get(self)?.build()
+    }
+}
+
+impl IntoRequest for String {
+    fn into_request(self) -> Result<DeboaRequest, DeboaError> {
+        DeboaRequest::get(self)?.build()
+    }
+}
+
+impl IntoRequest for Url {
+    fn into_request(self) -> Result<DeboaRequest, DeboaError> {
+        DeboaRequest::get(self)?.build()
     }
 }
 
