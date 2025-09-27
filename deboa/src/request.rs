@@ -805,6 +805,16 @@ impl DeboaRequest {
         self
     }
 
+    /// Allow get cookies at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `Option<&HashMap<String, DeboaCookie>>` - The cookies.
+    ///
+    pub fn cookies(&self) -> Option<&HashMap<String, DeboaCookie>> {
+        self.cookies.as_ref()
+    }
+
     /// Allow set text body at any time.
     ///
     /// # Arguments
