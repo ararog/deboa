@@ -69,7 +69,6 @@ use std::fmt::Debug;
 
 use std::ops::Shl;
 
-use ::cookie::Cookie;
 use bytes::Bytes;
 use http::{header, HeaderValue, Request, Response};
 use http_body_util::{BodyExt, Full};
@@ -457,7 +456,6 @@ impl Deboa {
                 let mut cookies = Vec::<String>::new();
 
                 for cookie in deboa_cookies.values() {
-                    let cookie: Cookie<'_> = cookie.clone().into();
                     cookies.push(cookie.to_string());
                 }
 

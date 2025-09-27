@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use bytes::Bytes;
 use http_body_util::Full;
-use hyper::{Request, Response, body::Incoming, client::conn::http2::handshake};
+use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
 use smol::net::TcpStream;
 use smol_hyper::rt::FuturesIo;
 use url::Url;

@@ -1,6 +1,6 @@
 #[cfg(test)]
 use crate::errors::DeboaError;
-use crate::{Deboa, request::DeboaRequest};
+use crate::{request::DeboaRequest, Deboa};
 use http::StatusCode;
 
 use httpmock::{Method::DELETE, MockServer};

@@ -2,10 +2,10 @@ use http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
 use httpmock::MockServer;
 
 use crate::{
-    Deboa,
     catcher::{DeboaCatcher, MockDeboaCatcher},
     request::DeboaRequest,
     response::DeboaResponse,
+    Deboa,
 };
 
 use deboa_tests::utils::{setup_server, url_from_string};

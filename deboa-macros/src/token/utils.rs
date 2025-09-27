@@ -1,9 +1,9 @@
-use regex::Regex;
 use crate::parser::utils::extract_path_params;
 use proc_macro2::Span;
-use syn::{parse_str, LitStr};
-use quote::quote;
 use proc_macro2::TokenStream;
+use quote::quote;
+use regex::Regex;
+use syn::{parse_str, LitStr};
 
 pub fn extract_params_from_path(path: &LitStr) -> (TokenStream, LitStr) {
     let raw_path = path.value();
