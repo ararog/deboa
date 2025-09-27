@@ -4,8 +4,8 @@ use tokio::runtime::Runtime;
 #[cfg(feature = "smol-rt")]
 use criterion::async_executor::SmolExecutor;
 
-use criterion::{Criterion, criterion_group, criterion_main};
-use deboa::{Deboa, errors::DeboaError, request::DeboaRequest};
+use criterion::{criterion_group, criterion_main, Criterion};
+use deboa::{errors::DeboaError, request::DeboaRequest, Deboa};
 
 async fn get_async() -> Result<(), DeboaError> {
     let api = Deboa::new();

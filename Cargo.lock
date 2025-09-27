@@ -359,6 +359,7 @@ dependencies = [
  "deboa",
  "deboa-extras",
  "deboa-macros",
+ "http",
  "serde",
  "serde_json",
  "tokio",
@@ -622,7 +623,7 @@ dependencies = [
 
 [[package]]
 name = "deboa"
-version = "0.0.5-beta.2"
+version = "0.0.5-beta.3"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -655,7 +656,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-extras"
-version = "0.0.1-beta.2"
+version = "0.0.1-beta.3"
 dependencies = [
  "brotli",
  "bytes",
@@ -676,7 +677,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-macros"
-version = "0.0.1-beta.2"
+version = "0.0.1-beta.3"
 dependencies = [
  "deboa",
  "deboa-extras",
@@ -2453,7 +2454,7 @@ checksum = "943ce29a8a743eb10d6082545d861b24f9d1b160b7d741e0f2cdf726bec909c5"
 
 [[package]]
 name = "vamo"
-version = "0.0.1-beta.2"
+version = "0.0.1-beta.3"
 dependencies = [
  "deboa",
  "deboa-extras",

@@ -1,5 +1,5 @@
-use crate::{Deboa, errors::DeboaError, request::DeboaRequest};
-use http::{StatusCode, header};
+use crate::{errors::DeboaError, request::DeboaRequest, Deboa};
+use http::{header, StatusCode};
 
 use httpmock::Method::PATCH;
 use httpmock::MockServer;

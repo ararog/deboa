@@ -1,7 +1,8 @@
 use syn::{
-    Ident, Token, parenthesized,
+    parenthesized,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
+    Ident, Token,
 };
 
 use crate::parser::operations::{delete::DeleteStruct, get::GetStruct, patch::PatchStruct, post::PostStruct, put::PutStruct};

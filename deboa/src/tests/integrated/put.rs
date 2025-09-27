@@ -1,7 +1,7 @@
 #[cfg(test)]
 use crate::errors::DeboaError;
-use crate::{Deboa, request::DeboaRequest};
-use http::{StatusCode, header};
+use crate::{request::DeboaRequest, Deboa};
+use http::{header, StatusCode};
 
 use httpmock::{Method::PUT, MockServer};
 #[cfg(feature = "smol-rt")]
