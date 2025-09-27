@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use bytes::Bytes;
 use http_body_util::Full;
-use hyper::{Request, Response, body::Incoming, client::conn::http2::handshake};
+use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
 use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;

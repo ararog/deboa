@@ -1,7 +1,8 @@
 use syn::{
-    Ident, Token, parenthesized,
+    parenthesized,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
+    Ident, Token,
 };
 
 use crate::parser::common::field::{NameStruct, PathStruct};

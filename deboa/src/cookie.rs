@@ -1,12 +1,14 @@
 use std::fmt;
 
-use cookie::{Cookie, time::OffsetDateTime};
+use cookie::{Cookie, Expiration};
 
-#[derive(Clone)]
+use crate::errors::DeboaError;
+
+#[derive(Clone, PartialEq)]
 pub struct DeboaCookie {
     name: String,
     value: String,
-    expires: Option<OffsetDateTime>,
+    expires: Option<Expiration>,
     path: Option<String>,
     domain: Option<String>,
     secure: Option<bool>,
@@ -25,10 +27,10 @@ impl DeboaCookie {
     ///
     /// * `DeboaCookie` - The new cookie.
     ///
-    pub fn new(name: String, value: String) -> Self {
+    pub fn new(name: &str, value: &str) -> Self {
         Self {
-            name,
-            value,
+            name: name.to_string(),
+            value: value.to_string(),
             expires: None,
             path: None,
             domain: None,
@@ -47,6 +49,26 @@ impl DeboaCookie {
         &self.name
     }
 
+    /// Get the cookie value.
+    ///
+    /// # Returns
+    ///
+    /// * `&str` - The cookie value.
+    ///
+    pub fn value(&self) -> &str {
+        &self.value
+    }
+
+    /// Get the cookie expires.
+    ///
+    /// # Returns
+    ///
+    /// * `Option<Expiration>` - The cookie expires.
+    ///
+    pub fn expires(&self) -> Option<Expiration> {
+        self.expires
+    }
+
     /// Set the cookie expires.
     ///
     /// # Arguments
@@ -57,9 +79,19 @@ impl DeboaCookie {
     ///
     /// * `&mut Self` - The cookie.
     ///
-    pub fn set_expires(&mut self, expires: OffsetDateTime) -> &mut Self {
+    pub fn set_expires(&mut self, expires: Expiration) -> &mut Self {
         self.expires = Some(expires);
         self
+    }
+
+    /// Get the cookie path.
+    ///
+    /// # Returns
+    ///
+    /// * `Option<&String>` - The cookie path.
+    ///
+    pub fn path(&self) -> Option<&String> {
+        self.path.as_ref()
     }
 
     /// Set the cookie path.
@@ -72,9 +104,19 @@ impl DeboaCookie {
     ///
     /// * `&mut Self` - The cookie.
     ///
-    pub fn set_path(&mut self, path: String) -> &mut Self {
-        self.path = Some(path);
+    pub fn set_path(&mut self, path: &str) -> &mut Self {
+        self.path = Some(path.to_string());
         self
+    }
+
+    /// Get the cookie domain.
+    ///
+    /// # Returns
+    ///
+    /// * `Option<&String>` - The cookie domain.
+    ///
+    pub fn domain(&self) -> Option<&String> {
+        self.domain.as_ref()
     }
 
     /// Set the cookie domain.
@@ -87,9 +129,19 @@ impl DeboaCookie {
     ///
     /// * `&mut Self` - The cookie.
     ///
-    pub fn set_domain(&mut self, domain: String) -> &mut Self {
-        self.domain = Some(domain);
+    pub fn set_domain(&mut self, domain: &str) -> &mut Self {
+        self.domain = Some(domain.to_string());
         self
+    }
+
+    /// Get the cookie secure.
+    ///
+    /// # Returns
+    ///
+    /// * `Option<bool>` - The cookie secure.
+    ///
+    pub fn secure(&self) -> Option<bool> {
+        self.secure
     }
 
     /// Set the cookie secure.
@@ -107,6 +159,16 @@ impl DeboaCookie {
         self
     }
 
+    /// Get the cookie http only.
+    ///
+    /// # Returns
+    ///
+    /// * `Option<bool>` - The cookie http only.
+    ///
+    pub fn http_only(&self) -> Option<bool> {
+        self.http_only
+    }
+
     /// Set the cookie http only.
     ///
     /// # Arguments
@@ -121,6 +183,33 @@ impl DeboaCookie {
         self.http_only = Some(http_only);
         self
     }
+
+    /// Parse a cookie from a header.
+    ///
+    /// # Arguments
+    ///
+    /// * `header` - The cookie header.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Self, DeboaError>` - The cookie.
+    ///
+    pub fn parse_from_header(header: &str) -> Result<Self, DeboaError> {
+        let cookie = Cookie::parse(header);
+        if let Ok(cookie) = cookie {
+            Ok(cookie.into())
+        } else {
+            Err(DeboaError::Cookie {
+                message: "Invalid cookie header".to_string(),
+            })
+        }
+    }
+}
+
+impl fmt::Display for DeboaCookie {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}={}", self.name, self.value)
+    }
 }
 
 impl fmt::Debug for DeboaCookie {
@@ -134,6 +223,30 @@ impl fmt::Debug for DeboaCookie {
             .field("secure", &self.secure)
             .field("http_only", &self.http_only)
             .finish()
+    }
+}
+
+impl From<Cookie<'_>> for DeboaCookie {
+    fn from(cookie: Cookie<'_>) -> Self {
+        let mut path = None;
+        if let Some(path_str) = cookie.path() {
+            path = Some(path_str.to_string());
+        }
+
+        let mut domain = None;
+        if let Some(domain_str) = cookie.domain() {
+            domain = Some(domain_str.to_string());
+        }
+
+        Self {
+            name: cookie.name().to_string(),
+            value: cookie.value().to_string(),
+            expires: cookie.expires(),
+            path,
+            domain,
+            secure: cookie.secure(),
+            http_only: cookie.http_only(),
+        }
     }
 }
 

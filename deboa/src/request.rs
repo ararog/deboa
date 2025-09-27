@@ -1,13 +1,13 @@
 use std::{collections::HashMap, fmt::Debug, sync::Arc};
 
 use async_trait::async_trait;
-use http::{HeaderMap, HeaderName, HeaderValue, Method, header};
+use http::{header, HeaderMap, HeaderName, HeaderValue, Method};
 
-use base64::{Engine as _, engine::general_purpose::STANDARD};
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 use serde::Serialize;
 use url::Url;
 
-use crate::{Deboa, client::serde::RequestBody, cookie::DeboaCookie, errors::DeboaError, response::DeboaResponse};
+use crate::{client::serde::RequestBody, cookie::DeboaCookie, errors::DeboaError, response::DeboaResponse, Deboa};
 
 /// Trait to convert a value into a Url.
 pub trait IntoUrl {

@@ -1,5 +1,6 @@
-use crate::{errors::DeboaError, response::DeboaResponse};
+use crate::{cookie::DeboaCookie, errors::DeboaError, response::DeboaResponse};
 use deboa_tests::utils::fake_url;
+use http::header;
 
 const SAMPLE_TEST: &[u8] = b"Hello, world!";
 
@@ -14,6 +15,15 @@ fn test_status() -> Result<(), DeboaError> {
 fn test_headers() -> Result<(), DeboaError> {
     let response = DeboaResponse::new(fake_url(), http::StatusCode::OK, http::HeaderMap::new(), &Vec::new());
     assert_eq!(*response.headers(), http::HeaderMap::new());
+    Ok(())
+}
+
+#[test]
+fn test_cookies() -> Result<(), DeboaError> {
+    let mut headers = http::HeaderMap::new();
+    headers.insert(header::SET_COOKIE, http::HeaderValue::from_static("test=test"));
+    let response = DeboaResponse::new(fake_url(), http::StatusCode::OK, headers, &Vec::new());
+    assert_eq!(response.cookies(), Ok(Some(vec![DeboaCookie::new("test", "test")])));
     Ok(())
 }
 

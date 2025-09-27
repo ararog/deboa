@@ -1,7 +1,7 @@
 use deboa::{
-    Deboa,
     errors::DeboaError,
     request::{DeboaRequest, DeboaRequestBuilder, IntoUrl},
+    Deboa,
 };
 use url::Url;
 

@@ -1,9 +1,9 @@
-use crate::Deboa;
-use crate::HttpVersion;
 #[cfg(test)]
 use crate::errors::DeboaError;
 use crate::request::DeboaRequest;
 use crate::response::DeboaResponse;
+use crate::Deboa;
+use crate::HttpVersion;
 
 use deboa_tests::utils::setup_server;
 

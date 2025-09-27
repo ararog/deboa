@@ -29,7 +29,7 @@ let client = Deboa::builder()
   .catch(encoding_catcher)
   .build()?
 
-let posts = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts/1")
+let posts = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts/1")?
   .go(client)
   .await?
   .body_as(JsonBody)?;
