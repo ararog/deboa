@@ -1,7 +1,7 @@
 use crate::http::serde::msgpack::MsgPackBody;
 use deboa::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
 
-use deboa_tests::data::{MSGPACK_POST, Post, sample_post};
+use deboa_tests::data::{sample_post, Post, MSGPACK_POST};
 use deboa_tests::utils::fake_url;
 
 #[test]

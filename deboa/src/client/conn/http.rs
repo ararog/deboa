@@ -7,7 +7,6 @@ use url::Url;
 
 use crate::errors::DeboaError;
 
-
 #[derive(Debug)]
 /// Enum that represents the connection type.
 ///

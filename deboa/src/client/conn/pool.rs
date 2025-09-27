@@ -9,9 +9,9 @@ use crate::client::conn::http::Http1Request;
 use crate::client::conn::http::Http2Request;
 
 use crate::{
-    HttpVersion,
     client::conn::http::{BaseHttpConnection, DeboaConnection},
     errors::DeboaError,
+    HttpVersion,
 };
 
 #[derive(Debug)]

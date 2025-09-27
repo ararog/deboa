@@ -1,9 +1,9 @@
-use crate::Deboa;
 use crate::request::DeboaRequest;
+use crate::Deboa;
 use crate::{errors::DeboaError, request::Fetch};
 
 use deboa_tests::utils::JSONPLACEHOLDER;
-use http::{HeaderValue, header};
+use http::{header, HeaderValue};
 use url::Url;
 
 #[test]
@@ -37,7 +37,7 @@ fn test_into_string() -> Result<(), DeboaError> {
 #[tokio::test]
 async fn test_try_into() -> Result<(), DeboaError> {
     let mut client = Deboa::new();
-    
+
     let response = client.execute(JSONPLACEHOLDER).await?;
 
     assert_eq!(response.status(), 200);
