@@ -1,6 +1,6 @@
 use url::Url;
 
-use http::{StatusCode, header};
+use http::{header, StatusCode};
 use httpmock::{Method, MockServer};
 
 pub const JSONPLACEHOLDER: &str = "https://jsonplaceholder.typicode.com/";

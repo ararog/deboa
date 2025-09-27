@@ -3,7 +3,7 @@ use deboa::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
 use crate::http::serde::xml::XmlBody;
 
 use deboa_tests::{
-    data::{Post, XML_POST, sample_post},
+    data::{sample_post, Post, XML_POST},
     utils::fake_url,
 };
 

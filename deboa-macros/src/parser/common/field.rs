@@ -1,6 +1,6 @@
 use syn::{
-    LitStr, Token, Type,
     parse::{Parse, ParseStream},
+    LitStr, Token, Type,
 };
 
 #[derive(Debug)]

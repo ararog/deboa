@@ -1,14 +1,28 @@
-use deboa::errors::DeboaError;
+use deboa::{errors::DeboaError, request::DeboaRequest};
+use http::header;
 use vamo::Vamo;
 
 use crate::post_service::{Post, PostService};
 
 mod post_service;
 
+use deboa::catcher::DeboaCatcher;
+
+struct AuthCatcher;
+
+impl DeboaCatcher for AuthCatcher {
+    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<deboa::response::DeboaResponse>, DeboaError> {
+        request.add_header(header::AUTHORIZATION, "Bearer token");
+        Ok(None)
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), DeboaError> {
-    let client = Vamo::new("https://jsonplaceholder.typicode.com")?;
-    let mut post_service = PostService::new(client);
+    let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
+    vamo.client().catch(AuthCatcher);
+
+    let mut post_service = PostService::new(vamo);
 
     println!("Listing posts...");
     let posts: Vec<Post> = post_service.get_posts().await.unwrap();

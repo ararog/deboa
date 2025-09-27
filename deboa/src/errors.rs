@@ -3,6 +3,9 @@ use thiserror::Error;
 
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum DeboaError {
+    #[error("Invalid cookie header: {message}")]
+    Cookie { message: String },
+
     #[error("Could not connect to {host}: {message}")]
     Connection { host: String, message: String },
 

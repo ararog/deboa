@@ -1,8 +1,10 @@
 use std::fs::write;
 use std::{fmt::Debug, sync::Arc};
 
+use http::header;
 use serde::Deserialize;
 
+use crate::cookie::DeboaCookie;
 use crate::{client::serde::ResponseBody, errors::DeboaError};
 use url::Url;
 
@@ -83,6 +85,38 @@ impl DeboaResponse {
     #[inline]
     pub fn headers(&self) -> &http::HeaderMap {
         &self.headers
+    }
+
+    /// Retrieves cookies from response headers. If cookies are not found, returns None.
+    /// Please note that this method will parse the cookies from the response headers.
+    ///
+    /// # Returns
+    ///
+    /// * `Option<Vec<DeboaCookie>>` - The cookies of the response.
+    ///
+    #[inline]
+    pub fn cookies(&self) -> Result<Option<Vec<DeboaCookie>>, DeboaError> {
+        let view = self.headers.get_all(header::SET_COOKIE);
+        let cookies = view
+            .into_iter()
+            .map(|cookie| {
+                let cookie = cookie.to_str();
+                if let Ok(cookie) = cookie {
+                    DeboaCookie::parse_from_header(cookie)
+                } else {
+                    Err(DeboaError::Cookie {
+                        message: "Invalid cookie header".to_string(),
+                    })
+                }
+            })
+            .collect::<Result<Vec<DeboaCookie>, DeboaError>>()
+            .unwrap();
+
+        if cookies.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(cookies))
+        }
     }
 
     /// Allow set raw body at any time.
