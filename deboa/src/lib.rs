@@ -69,18 +69,19 @@ use std::fmt::Debug;
 
 use std::ops::Shl;
 
+use ::cookie::Cookie;
 use bytes::Bytes;
-use http::{Request, Response};
+use http::{header, HeaderValue, Request, Response};
 use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 
 use crate::client::conn::http::{DeboaConnection, DeboaHttpConnection};
 
-use crate::errors::DeboaError;
 use crate::catcher::DeboaCatcher;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
-use crate::response::DeboaResponse;
+use crate::errors::DeboaError;
 use crate::request::{DeboaRequest, IntoRequest};
+use crate::response::DeboaResponse;
 
 use url::Url;
 
@@ -446,10 +447,24 @@ impl Deboa {
             .header(hyper::header::HOST, authority);
         {
             let req_headers = builder.headers_mut().unwrap();
-            request.as_ref().headers().iter().fold(req_headers, |acc, (key, value)| {
+
+            request.as_ref().headers().iter().fold(&mut *req_headers, |acc, (key, value)| {
                 acc.insert(key, value.clone());
                 acc
             });
+
+            if let Some(deboa_cookies) = request.as_ref().cookies() {
+                let mut cookies = Vec::<String>::new();
+
+                for cookie in deboa_cookies.values() {
+                    let cookie: Cookie<'_> = cookie.clone().into();
+                    cookies.push(cookie.to_string());
+                }
+
+                if let Ok(cookie_header) = HeaderValue::from_str(&cookies.join("; ")) {
+                    req_headers.insert(header::COOKIE, cookie_header);
+                }
+            }
         }
 
         let body = request.as_ref().raw_body();
