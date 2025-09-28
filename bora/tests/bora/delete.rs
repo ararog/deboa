@@ -1,5 +1,5 @@
 use deboa::errors::DeboaError;
-use deboa_macros::bora;
+use bora::bora;
 use deboa_tests::utils::JSONPLACEHOLDER;
 use vamo::Vamo;
 
