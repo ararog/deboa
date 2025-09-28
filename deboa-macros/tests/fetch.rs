@@ -1,6 +1,6 @@
 use deboa::{errors::DeboaError, Deboa};
 use deboa_extras::http::serde::json::JsonBody;
-use deboa_macros::{fetch};
+use deboa_macros::fetch;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -17,7 +17,6 @@ async fn test_fetch_str() -> Result<(), DeboaError> {
     assert_eq!(response.len(), 100);
     Ok(())
 }
-
 
 #[tokio::test]
 async fn test_fetch_ident() -> Result<(), DeboaError> {

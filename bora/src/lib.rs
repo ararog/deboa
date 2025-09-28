@@ -36,18 +36,18 @@
 //!     )
 //! )]
 //! pub struct PostService;
-//! 
+//!
 //! #[tokio::main]
 //! async fn main() -> Result<(), DeboaError> {
 //!     let client = Vamo::new("https://jsonplaceholder.typicode.com")?;
-//! 
+//!
 //!     let mut post_service = PostService::new(client);
-//! 
+//!
 //!     let post = post_service.get_by_id(1).await?;
-//! 
+//!
 //!     println!("id...: {}", post.id);
 //!     println!("title: {}", post.title);
-//! 
+//!
 //!     assert_eq!(post.id, 1);
 //!     Ok(())
 //! }
@@ -72,109 +72,109 @@ mod token;
 use crate::bora::api::bora as bora_macro;
 
 #[proc_macro_attribute]
-/// 
+///
 /// The `bora` attribute macro is used to generate a Deboa client.
 /// With this macro you can define the API endpoints and their methods.
 /// You can define multiple endpoints and methods in the same macro.
-/// 
+///
 /// A basic definition is:
-/// 
+///
 /// #[bora(api(operation)))]
-/// 
+///
 /// Where 'operation' is one or more of the following:
-/// 
+///
 /// - get
 /// - post
 /// - delete
 /// - put
 /// - patch
-/// 
+///
 /// # get
-/// 
+///
 /// The `get` operation is used to retrieve data from the API.
-/// 
+///
 /// It has the following arguments:
-/// 
+///
 /// - name: The name of the operation.
 /// - path: The path of the operation.
 /// - res_body: The type of the response body.
 /// - format: The format of the response body.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```no_run
 /// #[bora(api(get(name = "get_post", path = "/posts/<id:i32>")))]
 /// pub struct PostService;
 /// ```
-/// 
+///
 /// # post
-/// 
+///
 /// The `post` operation is used to create data in the API.
-/// 
+///
 /// It has the following arguments:
-/// 
+///
 /// - name: The name of the operation.
 /// - path: The path of the operation.
 /// - req_body: The type of the request body.
 /// - res_body: The type of the response body.
 /// - format: The format of the response body.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```no_run
 /// #[bora(api(post(name = "post_post", path = "/posts", req_body = "Post", res_body = "Post")))]
 /// pub struct PostService;
 /// ```
-/// 
+///
 /// # delete
-/// 
+///
 /// The `delete` operation is used to delete data from the API.
-/// 
+///
 /// It has the following arguments:
-/// 
+///
 /// - name: The name of the operation.
 /// - path: The path of the operation.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```no_run
 /// #[bora(api(delete(name = "delete_post", path = "/posts/<id:i32>")))]
 /// pub struct PostService;
 /// ```
-/// 
+///
 /// # put
-/// 
+///
 /// The `put` operation is used to update data in the API.
-/// 
+///
 /// It has the following arguments:
-/// 
+///
 /// - name: The name of the operation.
 /// - path: The path of the operation.
 /// - req_body: The type of the request body.
 /// - res_body: The type of the response body.
 /// - format: The format of the response body.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```no_run
 /// #[bora(api(put(name = "put_post", path = "/posts/<id:i32>", req_body = "Post", res_body = "Post")))]
 /// pub struct PostService;
 /// ```
-/// 
+///
 /// # patch
-/// 
+///
 /// The `patch` operation is used to update data in the API.
-/// 
+///
 /// It has the following arguments:
-/// 
+///
 /// - name: The name of the operation.
 /// - path: The path of the operation.
 /// - req_body: The type of the request body.
 /// - res_body: The type of the response body.
 /// - format: The format of the response body.
-/// 
+///
 /// ## Example
-/// 
+///
 /// ```no_run
 /// #[bora(api(patch(name = "patch_post", path = "/posts/<id:i32>", req_body = "Post", res_body = "Post")))]
 /// pub struct PostService;
