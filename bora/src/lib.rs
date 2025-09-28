@@ -100,6 +100,13 @@ use crate::bora::api::bora as bora_macro;
 /// - res_body: The type of the response body.
 /// - format: The format of the response body.
 ///
+/// ## Example
+///
+/// ```compile_fail
+/// #[bora(api(get(name = "get_post", path = "/posts/<id:i32>")))]
+/// pub struct PostService;
+/// ```
+///
 /// # post
 ///
 /// The `post` operation is used to create data in the API.
@@ -112,6 +119,13 @@ use crate::bora::api::bora as bora_macro;
 /// - res_body: The type of the response body.
 /// - format: The format of the response body.
 ///
+/// ## Example
+///
+/// ```compile_fail
+/// #[bora(api(post(name = "post_post", path = "/posts", req_body = "Post", res_body = "Post")))]
+/// pub struct PostService;
+/// ```
+///
 /// # delete
 ///
 /// The `delete` operation is used to delete data from the API.
@@ -120,6 +134,13 @@ use crate::bora::api::bora as bora_macro;
 ///
 /// - name: The name of the operation.
 /// - path: The path of the operation.
+///
+/// ## Example
+///
+/// ```compile_fail
+/// #[bora(api(delete(name = "delete_post", path = "/posts/<id:i32>")))]
+/// pub struct PostService;
+/// ```
 ///
 /// # put
 ///
@@ -133,6 +154,13 @@ use crate::bora::api::bora as bora_macro;
 /// - res_body: The type of the response body.
 /// - format: The format of the response body.
 ///
+/// ## Example
+///
+/// ```compile_fail
+/// #[bora(api(put(name = "put_post", path = "/posts/<id:i32>", req_body = "Post", res_body = "Post")))]
+/// pub struct PostService;
+/// ```
+///
 /// # patch
 ///
 /// The `patch` operation is used to update data in the API.
@@ -145,6 +173,12 @@ use crate::bora::api::bora as bora_macro;
 /// - res_body: The type of the response body.
 /// - format: The format of the response body.
 ///
+/// ## Example
+///
+/// ```compile_fail
+/// #[bora(api(patch(name = "patch_post", path = "/posts/<id:i32>", req_body = "Post", res_body = "Post")))]
+/// pub struct PostService;
+/// ```
 pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
     bora_macro(attr, item)
 }
