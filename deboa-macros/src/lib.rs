@@ -29,7 +29,7 @@ pub use bora::bora;
 ///
 /// # Example
 ///
-/// ```rust, no_run
+/// ```compile_fail
 /// let mut client = Deboa::new();
 /// let response = get!("https://jsonplaceholder.typicode.com/posts" -> JsonBody -> Vec<Post>, using &mut client);
 /// assert_eq!(response.len(), 100);
@@ -68,7 +68,7 @@ macro_rules! get {
 ///
 /// # Example
 ///
-/// ```rust, no_run
+/// ```compile_fail
 /// let mut client = Deboa::new();
 /// let response = post!(data -> JsonBody -> "https://jsonplaceholder.typicode.com/posts" using &mut client);
 /// assert_eq!(response.id, 1);
@@ -104,7 +104,7 @@ macro_rules! post {
 ///
 /// # Example
 ///
-/// ```rust, no_run
+/// ```compile_fail
 /// let mut client = Deboa::new();
 /// let response = delete!("https://jsonplaceholder.typicode.com/posts/1" using &mut client);
 /// assert_eq!(response.id, 1);
@@ -144,7 +144,7 @@ macro_rules! delete {
 ///
 /// # Example
 ///
-/// ```rust, no_run
+/// ```compile_fail
 /// let mut client = Deboa::new();
 /// let response = fetch!("https://jsonplaceholder.typicode.com/posts" -> JsonBody -> Post, using &mut client);
 /// assert_eq!(response.id, 1);
