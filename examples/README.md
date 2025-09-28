@@ -1,9 +1,5 @@
 # Examples
 
-## Bora
-
-This example shows how to use bora to quickly create a REST API client based on JSONPlaceholder.
-
 ## Blog
 
 This example shows how to use vamo to create a simple rest client for a blog api.
@@ -11,6 +7,10 @@ This example shows how to use vamo to create a simple rest client for a blog api
 ## Catcher
 
 This example shows how to use catcher to add request/response logging.
+
+## Postman
+
+This example shows how to use bora to quickly create a REST API client based on JSONPlaceholder.
 
 ## Simple
 
