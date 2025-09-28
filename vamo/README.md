@@ -1,6 +1,6 @@
 # Vamo
 
-Vamo is a rest wrapper for deboa. Vamo is a key part of the deboa ecosystem, allowing bora macro to generate api clients.
+**vamo** ("Let's go" in portuguese) is a rest wrapper for deboa. Vamo is a key part of the deboa ecosystem, allowing bora macro to generate api clients.
 
 ## Usage
 
@@ -8,7 +8,7 @@ Vamo is a rest wrapper for deboa. Vamo is a key part of the deboa ecosystem, all
 use vamo::Vamo;
 
 let vamo = Vamo::new("https://api.example.com")?;
-let response = vamo.get("/users")?.go(vamo.client()).await?;
+let response = vamo.get("/users")?.go(vamo).await?;
 ```
 
 ## Features

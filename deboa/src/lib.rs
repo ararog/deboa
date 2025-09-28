@@ -8,7 +8,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = "0.0.5-alpha.3"
+//! deboa = "0.0.5"
 //! ```
 //!
 //! <small>Note that development versions, tagged with `-dev`, are not published
@@ -40,7 +40,7 @@
 //! | Feature         | Default? | Description                                             |
 //! |-----------------|----------|---------------------------------------------------------|
 //! | `tokio_rt`      | Yes      | Support tokio runtime (enabled by default).             |
-//! | `smol_rt`       | Yes      | Support smol runtime.                                   |
+//! | `smol_rt`       | No       | Support smol runtime.                                   |
 //! | `http1`         | Yes      | Support for HTTP/1 (enabled by default).                |
 //! | `http2`         | Yes      | Support for HTTP/2 (enabled by default).                |
 //!
@@ -48,14 +48,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = { version = "0.0.5-alpha.3", features = ["tokio_rt", "http1", "http2"] }
+//! deboa = { version = "0.0.5", features = ["tokio_rt", "http1", "http2"] }
 //! ```
 //!
 //! Conversely, HTTP/2 can be disabled:
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = { version = "0.0.5-alpha.3", default-features = false }
+//! deboa = { version = "0.0.5", default-features = false }
 //! ```
 //!
 
