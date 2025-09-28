@@ -1,4 +1,4 @@
-mod get;
 mod delete;
-mod post;
 mod fetch;
+mod get;
+mod post;
