@@ -4,6 +4,7 @@ use std::str::FromStr;
 use url::Url;
 
 pub trait Resource {
+    fn id(&self) -> String;
     fn post_path(&self) -> &str;
     fn put_path(&self) -> &str;
     fn patch_path(&self) -> &str;
@@ -13,7 +14,8 @@ pub trait Resource {
       if let Err(e) = url {
           return Err(DeboaError::UrlParse { message: e.to_string() });
       }
-      let full_url = url.unwrap().join(path);
+      let final_path = path.replace("{}", &self.id());
+      let full_url = url.unwrap().join(&final_path);
       if let Err(e) = full_url {
           return Err(DeboaError::UrlParse { message: e.to_string() });
       }
