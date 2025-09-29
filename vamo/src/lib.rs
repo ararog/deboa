@@ -153,8 +153,8 @@ impl Vamo {
     /// A Result containing the DeboaResponse or a DeboaError.
     ///
     pub async fn go(&mut self, mut request: DeboaRequest) -> Result<DeboaResponse, DeboaError> {
-        let url = self.url(request.url().path())?;
-        println!("URL: {url}");
+        let mut url = self.base_url.to_string();
+        url.push_str(request.url().path());
         let result = request.set_url(url);
         if let Err(e) = result {
             return Err(DeboaError::UrlParse { message: e.to_string() });
