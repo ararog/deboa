@@ -1,12 +1,40 @@
-use deboa::errors::DeboaError;
+use deboa::{client::serde::RequestBody, errors::DeboaError};
+use deboa_extras::http::serde::json::JsonBody;
 use deboa_tests::utils::setup_server;
 use http::StatusCode;
 use httpmock::{
     Method::{DELETE, GET, PATCH, POST, PUT},
     MockServer,
 };
+use serde::Serialize;
 
-use crate::Vamo;
+use crate::{resource::{AsPostRequest, Resource}, Vamo};
+
+#[derive(Serialize)]
+struct User {
+    id: u64,
+    name: String,
+    email: String,
+}
+
+impl Resource for User {
+    fn post_path(&self) -> &str {
+        "/users"
+    }
+
+    fn put_path(&self) -> &str {
+        "/users/{id}"
+    }
+
+    fn patch_path(&self) -> &str {
+        "/users/{id}"
+    }
+
+    fn body_type(&self) -> impl RequestBody {
+        JsonBody
+    }
+}
+
 
 #[tokio::test]
 async fn test_get() -> Result<(), DeboaError> {
@@ -82,3 +110,26 @@ async fn test_delete() -> Result<(), DeboaError> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_post_resource() -> Result<(), DeboaError> {
+    let server = MockServer::start();
+    let mock = setup_server(&server, "/api/users", POST, StatusCode::CREATED);
+
+    let user = User {
+        id: 1,
+        name: "User 1".to_string(),
+        email: "user1@example.com".to_string(),
+    };
+
+
+    let mut vamo = Vamo::new(format!("{}{}", server.base_url(), "/api"))?;
+    let response = vamo.go(user.as_post_request()?).await?;
+
+    mock.assert();
+
+    assert_eq!(response.status(), StatusCode::CREATED);
+
+    Ok(())
+}
+
