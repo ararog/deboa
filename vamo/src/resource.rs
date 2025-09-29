@@ -6,6 +6,7 @@ use url::Url;
 pub trait Resource {
     fn id(&self) -> String;
     fn post_path(&self) -> &str;
+    fn delete_path(&self) -> &str;
     fn put_path(&self) -> &str;
     fn patch_path(&self) -> &str;
     fn body_type(&self) -> impl RequestBody;
@@ -32,6 +33,16 @@ impl<T: Resource + Serialize> AsPostRequest<T> for T {
         DeboaRequest::post(self.add_path(self.post_path())?)?
             .body_as(self.body_type(), self)?
             .build()
+    }
+}
+
+pub trait AsDeleteRequest<T: Resource> {
+    fn as_delete_request(&self) -> Result<DeboaRequest, DeboaError>;
+}
+
+impl<T: Resource + Serialize> AsDeleteRequest<T> for T {
+    fn as_delete_request(&self) -> Result<DeboaRequest, DeboaError> {
+        DeboaRequest::delete(self.add_path(self.delete_path())?)?.build()
     }
 }
 
