@@ -18,16 +18,20 @@ struct User {
 }
 
 impl Resource for User {
+    fn id(&self) -> String {
+        self.id.to_string()   
+    }
+
     fn post_path(&self) -> &str {
         "/users"
     }
 
     fn put_path(&self) -> &str {
-        "/users/{id}"
+        "/users/{}"
     }
 
     fn patch_path(&self) -> &str {
-        "/users/{id}"
+        "/users/{}"
     }
 
     fn body_type(&self) -> impl RequestBody {
