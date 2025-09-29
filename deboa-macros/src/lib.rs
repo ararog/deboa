@@ -12,18 +12,18 @@ pub use bora::bora;
 ///
 /// To help understand the macro arguments, here is an example:
 ///
-/// get!(url -> JsonBody -> ty, using &mut client)
+/// get!(url ->  &mut client -> JsonBody -> ty,)
 ///
 /// Is the same as:
 ///
-/// get from url with body serialization type and return type, using client variable.
+/// get from url using client variable then deserializes the response body and return type.
 ///
 /// # Arguments
 ///
 /// * `url`         - The URL to make the GET request to.
+/// * `client`      - The client variable to use for the request.
 /// * `res_body_ty` - The body type of the response.
 /// * `res_ty`      - The type of the response.
-/// * `client`      - The client variable to use for the request.
 ///
 /// Please note url can be a string literal or a variable.
 ///
@@ -31,15 +31,15 @@ pub use bora::bora;
 ///
 /// ```compile_fail
 /// let mut client = Deboa::new();
-/// let response = get!("https://jsonplaceholder.typicode.com/posts" -> JsonBody -> Vec<Post>, using &mut client);
+/// let response = get!("https://jsonplaceholder.typicode.com/posts" -> &mut client -> JsonBody -> Vec<Post>,);
 /// assert_eq!(response.len(), 100);
 /// ```
 macro_rules! get {
-    ($url:literal -> $res_body_ty:ident -> $res_ty:ty, using &mut $client:ident) => {
+    ($url:literal -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
         $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 
-    ($url:ident -> $res_body_ty:ident -> $res_ty:ty, using &mut $client:ident) => {
+    ($url:ident -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
         $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 }
@@ -51,17 +51,80 @@ macro_rules! get {
 ///
 /// To help understand the macro arguments, here is an example:
 ///
-/// post!(input -> req_body_ty -> url using &mut client)
+/// post!(input -> req_body_ty -> url -> &mut client -> res_body_ty -> res_ty,)
 ///
 /// Is the same as:
 ///
-/// post input with body serialization type to url using client variable.
+/// post input with body serialization type to url using client variable then deserializes the response body and return type.
 ///
 /// # Arguments
 ///
 /// * `input`       - The input to send with the request.
 /// * `req_body_ty` - The body serialization type of the request.
 /// * `url`         - The URL to make the POST request to.
+/// * `client`      - The client variable to use for the request.
+/// * `res_body_ty` - The body type of the response.
+/// * `res_ty`      - The type of the response.
+///
+/// Please note url can be a string literal or a variable.
+///
+/// # Example
+///
+/// ## Without response body deserialization
+/// 
+/// ```compile_fail
+/// let mut client = Deboa::new();
+/// let response = post!(data -> JsonBody -> "https://jsonplaceholder.typicode.com/posts" -> &mut client);
+/// assert_eq!(response.id, 1);
+/// ```
+///
+/// ## With response body deserialization
+/// 
+/// ```compile_fail
+/// let mut client = Deboa::new();
+/// let response = post!(data -> JsonBody -> "https://jsonplaceholder.typicode.com/posts" -> &mut client -> JsonBody -> Post,);
+/// assert_eq!(response.id, 1);
+/// ```
+macro_rules! post {
+    ($input:ident -> $req_body_ty:ident -> $url:literal -> &mut $client:ident) => {
+        $client
+            .execute(deboa::request::DeboaRequest::post($url)?.body_as($req_body_ty, $input)?.build()?)
+            .await?
+    };
+
+    ($input:ident -> $req_body_ty:ident -> $url:ident -> &mut $client:ident) => {
+        $client
+            .execute(deboa::request::DeboaRequest::post($url)?.body_as($req_body_ty, $input)?.build()?)
+            .await?
+    };
+
+    ($input:ident -> $req_body_ty:ident -> $url:literal -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
+        $client
+            .execute(deboa::request::DeboaRequest::post($url)?.body_as($req_body_ty, $input)?.build()?)
+            .await?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+    };
+}
+
+#[macro_export]
+/// Make a PUT request to the specified URL.
+///
+/// The `put!` macro is used to make a PUT request to the specified URL
+/// Its first argument is a string literal or a variable.
+///
+/// To help understand the macro arguments, here is an example:
+///
+/// put!(input -> req_body_ty -> url -> &mut client)
+///
+/// Is the same as:
+///
+/// put input with body serialization type to url using client variable.
+///
+/// # Arguments
+///
+/// * `input`       - The input to send with the request.
+/// * `req_body_ty` - The body serialization type of the request.
+/// * `url`         - The URL to make the PUT request to.
 /// * `client`      - The client variable to use for the request.
 ///
 /// Please note url can be a string literal or a variable.
@@ -70,14 +133,78 @@ macro_rules! get {
 ///
 /// ```compile_fail
 /// let mut client = Deboa::new();
-/// let response = post!(data -> JsonBody -> "https://jsonplaceholder.typicode.com/posts" using &mut client);
+/// let response = put!(data -> JsonBody -> "https://jsonplaceholder.typicode.com/posts/1" -> &mut client);
 /// assert_eq!(response.id, 1);
 /// ```
-macro_rules! post {
-    ($input:ident -> $req_body_ty:ident -> $url:literal using &mut $client:ident) => {
+macro_rules! put {
+    ($input:ident -> $req_body_ty:ident -> $url:literal -> &mut $client:ident) => {
         $client
-            .execute(deboa::request::DeboaRequest::post($url)?.body_as($req_body_ty, $input)?.build()?)
+            .execute(deboa::request::DeboaRequest::put($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
+    };
+
+    ($input:ident -> $req_body_ty:ident -> $url:ident -> &mut $client:ident) => {
+        $client
+            .execute(deboa::request::DeboaRequest::put($url)?.body_as($req_body_ty, $input)?.build()?)
+            .await?
+    };
+
+    ($input:ident -> $req_body_ty:ident -> $url:ident -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
+        $client
+            .execute(deboa::request::DeboaRequest::put($url)?.body_as($req_body_ty, $input)?.build()?)
+            .await?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+    };
+}
+
+#[macro_export]
+/// Make a PATCH request to the specified URL.
+///
+/// The `patch!` macro is used to make a PATCH request to the specified URL
+/// Its first argument is a string literal or a variable.
+///
+/// To help understand the macro arguments, here is an example:
+///
+/// patch!(input -> req_body_ty -> url -> &mut client)
+///
+/// Is the same as:
+///
+/// patch input with body serialization type to url using client variable.
+///
+/// # Arguments
+///
+/// * `input`       - The input to send with the request.
+/// * `req_body_ty` - The body serialization type of the request.
+/// * `url`         - The URL to make the PATCH request to.
+/// * `client`      - The client variable to use for the request.
+///
+/// Please note url can be a string literal or a variable.
+///
+/// # Example
+///
+/// ```compile_fail
+/// let mut client = Deboa::new();
+/// let response = patch!(data -> JsonBody -> "https://jsonplaceholder.typicode.com/posts/1" -> &mut client);
+/// assert_eq!(response.id, 1);
+/// ```
+macro_rules! patch {
+    ($input:ident -> $req_body_ty:ident -> $url:literal -> &mut $client:ident) => {
+        $client
+            .execute(deboa::request::DeboaRequest::patch($url)?.body_as($req_body_ty, $input)?.build()?)
+            .await?
+    };
+
+    ($input:ident -> $req_body_ty:ident -> $url:ident -> &mut $client:ident) => {
+        $client
+            .execute(deboa::request::DeboaRequest::patch($url)?.body_as($req_body_ty, $input)?.build()?)
+            .await?
+    };
+
+    ($input:ident -> $req_body_ty:ident -> $url:ident -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
+        $client
+            .execute(deboa::request::DeboaRequest::patch($url)?.body_as($req_body_ty, $input)?.build()?)
+            .await?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 }
 
@@ -106,11 +233,15 @@ macro_rules! post {
 ///
 /// ```compile_fail
 /// let mut client = Deboa::new();
-/// let response = delete!("https://jsonplaceholder.typicode.com/posts/1" using &mut client);
+/// let response = delete!("https://jsonplaceholder.typicode.com/posts/1" -> &mut client);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! delete {
-    ($url:literal using &mut $client:ident) => {
+    ($url:literal -> &mut $client:ident) => {
+        $client.execute(deboa::request::DeboaRequest::delete($url)?.build()?).await?
+    };
+
+    ($url:ident -> &mut $client:ident) => {
         $client.execute(deboa::request::DeboaRequest::delete($url)?.build()?).await?
     };
 }
@@ -131,14 +262,14 @@ macro_rules! delete {
 ///
 /// Is the same as:
 ///
-/// fetch from url with response body type and return type, using client variable.
+/// fetch from url using client variable then deserializes the response body and return type.
 ///
 /// # Arguments
 ///
 /// * `url`         - The URL to make the GET request to.
+/// * `client`      - The client variable to use for the request.
 /// * `res_body_ty` - The body type of the response.
 /// * `res_ty`      - The type of the response.
-/// * `client`      - The client variable to use for the request.
 ///
 /// Please note url can be a string literal or a variable.
 ///
@@ -146,15 +277,15 @@ macro_rules! delete {
 ///
 /// ```compile_fail
 /// let mut client = Deboa::new();
-/// let response = fetch!("https://jsonplaceholder.typicode.com/posts" -> JsonBody -> Post, using &mut client);
+/// let response = fetch!("https://jsonplaceholder.typicode.com/posts" -> &mut client -> JsonBody -> Post);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! fetch {
-    ($url:literal -> $res_body_ty:ident -> $res_ty:ty, using &mut $client:ident) => {
+    ($url:literal -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
         $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 
-    ($url:ident -> $res_body_ty:ident -> $res_ty:ty, using &mut $client:ident) => {
+    ($url:ident -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
         $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 }
