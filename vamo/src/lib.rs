@@ -1,5 +1,8 @@
 use deboa::{
-    errors::DeboaError, request::{DeboaRequest, DeboaRequestBuilder, IntoUrl}, response::DeboaResponse, Deboa
+    errors::DeboaError,
+    request::{DeboaRequest, DeboaRequestBuilder, IntoUrl},
+    response::DeboaResponse,
+    Deboa,
 };
 use url::Url;
 
@@ -159,7 +162,7 @@ impl Vamo {
         if let Err(e) = result {
             return Err(DeboaError::UrlParse { message: e.to_string() });
         }
-        
+
         self.client.execute(request).await
     }
 }

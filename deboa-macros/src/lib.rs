@@ -71,7 +71,7 @@ macro_rules! get {
 /// # Example
 ///
 /// ## Without response body deserialization
-/// 
+///
 /// ```compile_fail
 /// let mut client = Deboa::new();
 /// let response = post!(data => JsonBody => "https://jsonplaceholder.typicode.com/posts" => &mut client);
@@ -79,7 +79,7 @@ macro_rules! get {
 /// ```
 ///
 /// ## With response body deserialization
-/// 
+///
 /// ```compile_fail
 /// let mut client = Deboa::new();
 /// let response = post!(data => JsonBody => "https://jsonplaceholder.typicode.com/posts" => &mut client => JsonBody => Post);
