@@ -12,7 +12,7 @@ pub use bora::bora;
 ///
 /// To help understand the macro arguments, here is an example:
 ///
-/// get!(url ->  &mut client -> JsonBody -> ty,)
+/// get!(url => &mut client => JsonBody => ty)
 ///
 /// Is the same as:
 ///
@@ -31,15 +31,15 @@ pub use bora::bora;
 ///
 /// ```compile_fail
 /// let mut client = Deboa::new();
-/// let response = get!("https://jsonplaceholder.typicode.com/posts" -> &mut client -> JsonBody -> Vec<Post>,);
+/// let response = get!("https://jsonplaceholder.typicode.com/posts" => &mut client => JsonBody => Vec<Post>);
 /// assert_eq!(response.len(), 100);
 /// ```
 macro_rules! get {
-    ($url:literal -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
+    ($url:literal => &mut $client:ident => $res_body_ty:ident => $res_ty:ty) => {
         $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 
-    ($url:ident -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
+    ($url:ident => &mut $client:ident => $res_body_ty:ident => $res_ty:ty) => {
         $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 }
@@ -51,7 +51,7 @@ macro_rules! get {
 ///
 /// To help understand the macro arguments, here is an example:
 ///
-/// post!(input -> req_body_ty -> url -> &mut client -> res_body_ty -> res_ty,)
+/// post!(input => req_body_ty => url => &mut client => res_body_ty => res_ty)
 ///
 /// Is the same as:
 ///
@@ -74,7 +74,7 @@ macro_rules! get {
 /// 
 /// ```compile_fail
 /// let mut client = Deboa::new();
-/// let response = post!(data -> JsonBody -> "https://jsonplaceholder.typicode.com/posts" -> &mut client);
+/// let response = post!(data => JsonBody => "https://jsonplaceholder.typicode.com/posts" => &mut client);
 /// assert_eq!(response.id, 1);
 /// ```
 ///
@@ -82,23 +82,23 @@ macro_rules! get {
 /// 
 /// ```compile_fail
 /// let mut client = Deboa::new();
-/// let response = post!(data -> JsonBody -> "https://jsonplaceholder.typicode.com/posts" -> &mut client -> JsonBody -> Post,);
+/// let response = post!(data => JsonBody => "https://jsonplaceholder.typicode.com/posts" => &mut client => JsonBody => Post);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! post {
-    ($input:ident -> $req_body_ty:ident -> $url:literal -> &mut $client:ident) => {
+    ($input:ident => $req_body_ty:ident => $url:literal => &mut $client:ident) => {
         $client
             .execute(deboa::request::DeboaRequest::post($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
     };
 
-    ($input:ident -> $req_body_ty:ident -> $url:ident -> &mut $client:ident) => {
+    ($input:ident => $req_body_ty:ident => $url:ident => &mut $client:ident) => {
         $client
             .execute(deboa::request::DeboaRequest::post($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
     };
 
-    ($input:ident -> $req_body_ty:ident -> $url:literal -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
+    ($input:ident => $req_body_ty:ident => $url:literal => &mut $client:ident => $res_body_ty:ident => $res_ty:ty) => {
         $client
             .execute(deboa::request::DeboaRequest::post($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
@@ -114,7 +114,7 @@ macro_rules! post {
 ///
 /// To help understand the macro arguments, here is an example:
 ///
-/// put!(input -> req_body_ty -> url -> &mut client)
+/// put!(input => req_body_ty => url => &mut client)
 ///
 /// Is the same as:
 ///
@@ -133,23 +133,23 @@ macro_rules! post {
 ///
 /// ```compile_fail
 /// let mut client = Deboa::new();
-/// let response = put!(data -> JsonBody -> "https://jsonplaceholder.typicode.com/posts/1" -> &mut client);
+/// let response = put!(data => JsonBody => "https://jsonplaceholder.typicode.com/posts/1" => &mut client);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! put {
-    ($input:ident -> $req_body_ty:ident -> $url:literal -> &mut $client:ident) => {
+    ($input:ident => $req_body_ty:ident => $url:literal => &mut $client:ident) => {
         $client
             .execute(deboa::request::DeboaRequest::put($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
     };
 
-    ($input:ident -> $req_body_ty:ident -> $url:ident -> &mut $client:ident) => {
+    ($input:ident => $req_body_ty:ident => $url:ident => &mut $client:ident) => {
         $client
             .execute(deboa::request::DeboaRequest::put($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
     };
 
-    ($input:ident -> $req_body_ty:ident -> $url:ident -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
+    ($input:ident => $req_body_ty:ident => $url:ident => &mut $client:ident => $res_body_ty:ident => $res_ty:ty) => {
         $client
             .execute(deboa::request::DeboaRequest::put($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
@@ -165,7 +165,7 @@ macro_rules! put {
 ///
 /// To help understand the macro arguments, here is an example:
 ///
-/// patch!(input -> req_body_ty -> url -> &mut client)
+/// patch!(input => req_body_ty => url => &mut client)
 ///
 /// Is the same as:
 ///
@@ -184,23 +184,23 @@ macro_rules! put {
 ///
 /// ```compile_fail
 /// let mut client = Deboa::new();
-/// let response = patch!(data -> JsonBody -> "https://jsonplaceholder.typicode.com/posts/1" -> &mut client);
+/// let response = patch!(data => JsonBody => "https://jsonplaceholder.typicode.com/posts/1" => &mut client);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! patch {
-    ($input:ident -> $req_body_ty:ident -> $url:literal -> &mut $client:ident) => {
+    ($input:ident => $req_body_ty:ident => $url:literal => &mut $client:ident) => {
         $client
             .execute(deboa::request::DeboaRequest::patch($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
     };
 
-    ($input:ident -> $req_body_ty:ident -> $url:ident -> &mut $client:ident) => {
+    ($input:ident => $req_body_ty:ident => $url:ident => &mut $client:ident) => {
         $client
             .execute(deboa::request::DeboaRequest::patch($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
     };
 
-    ($input:ident -> $req_body_ty:ident -> $url:ident -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
+    ($input:ident => $req_body_ty:ident => $url:ident => &mut $client:ident => $res_body_ty:ident => $res_ty:ty) => {
         $client
             .execute(deboa::request::DeboaRequest::patch($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
@@ -216,7 +216,7 @@ macro_rules! patch {
 ///
 /// To help understand the macro arguments, here is an example:
 ///
-/// delete!(url using &mut client)
+/// delete!(url => &mut client)
 ///
 /// Is the same as:
 ///
@@ -233,15 +233,15 @@ macro_rules! patch {
 ///
 /// ```compile_fail
 /// let mut client = Deboa::new();
-/// let response = delete!("https://jsonplaceholder.typicode.com/posts/1" -> &mut client);
+/// let response = delete!("https://jsonplaceholder.typicode.com/posts/1" => &mut client);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! delete {
-    ($url:literal -> &mut $client:ident) => {
+    ($url:literal => &mut $client:ident) => {
         $client.execute(deboa::request::DeboaRequest::delete($url)?.build()?).await?
     };
 
-    ($url:ident -> &mut $client:ident) => {
+    ($url:ident => &mut $client:ident) => {
         $client.execute(deboa::request::DeboaRequest::delete($url)?.build()?).await?
     };
 }
@@ -258,7 +258,7 @@ macro_rules! delete {
 ///
 /// To help understand the macro arguments, here is an example:
 ///
-/// fetch!(url -> body -> ty, using &mut client)
+/// fetch!(url => &mut client => body => ty)
 ///
 /// Is the same as:
 ///
@@ -277,15 +277,15 @@ macro_rules! delete {
 ///
 /// ```compile_fail
 /// let mut client = Deboa::new();
-/// let response = fetch!("https://jsonplaceholder.typicode.com/posts" -> &mut client -> JsonBody -> Post);
+/// let response = fetch!("https://jsonplaceholder.typicode.com/posts" => &mut client => JsonBody => Post);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! fetch {
-    ($url:literal -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
+    ($url:literal => &mut $client:ident => $res_body_ty:ident => $res_ty:ty) => {
         $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 
-    ($url:ident -> &mut $client:ident -> $res_body_ty:ident -> $res_ty:ty,) => {
+    ($url:ident => &mut $client:ident => $res_body_ty:ident => $res_ty:ty) => {
         $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 }

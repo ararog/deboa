@@ -8,7 +8,7 @@ use httpmock::{
 };
 use serde::Serialize;
 
-use crate::{resource::{AsPostRequest, Resource}, Vamo};
+use crate::{resource::{AsPostRequest, AsPutRequest, Resource}, Vamo};
 
 #[derive(Serialize)]
 struct User {
@@ -137,3 +137,24 @@ async fn test_post_resource() -> Result<(), DeboaError> {
     Ok(())
 }
 
+#[tokio::test]
+async fn test_put_resource() -> Result<(), DeboaError> {
+    let server = MockServer::start();
+    let mock = setup_server(&server, "/api/users/1", PUT, StatusCode::OK);
+
+    let user = User {
+        id: 1,
+        name: "User 1".to_string(),
+        email: "user1@example.com".to_string(),
+    };
+
+
+    let mut vamo = Vamo::new(format!("{}{}", server.base_url(), "/api"))?;
+    let response = vamo.go(user.as_put_request()?).await?;
+
+    mock.assert();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    Ok(())
+}
