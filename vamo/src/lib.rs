@@ -1,9 +1,9 @@
 use deboa::{
-    errors::DeboaError,
-    request::{DeboaRequest, DeboaRequestBuilder, IntoUrl},
-    Deboa,
+    errors::DeboaError, request::{DeboaRequest, DeboaRequestBuilder, IntoUrl}, response::DeboaResponse, Deboa
 };
 use url::Url;
+
+pub mod resource;
 
 #[cfg(test)]
 mod tests;
@@ -140,5 +140,26 @@ impl Vamo {
     ///
     pub fn delete(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
         DeboaRequest::delete(self.url(path)?.as_str())
+    }
+
+    /// Executes a DeboaRequest.
+    ///
+    /// # Arguments
+    ///
+    /// * `request` - The DeboaRequest to execute.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the DeboaResponse or a DeboaError.
+    ///
+    pub async fn go(&mut self, mut request: DeboaRequest) -> Result<DeboaResponse, DeboaError> {
+        let url = self.url(request.url().path())?;
+        println!("URL: {url}");
+        let result = request.set_url(url);
+        if let Err(e) = result {
+            return Err(DeboaError::UrlParse { message: e.to_string() });
+        }
+        
+        self.client.execute(request).await
     }
 }
