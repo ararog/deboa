@@ -29,6 +29,10 @@ impl Resource for User {
         "/users"
     }
 
+    fn delete_path(&self) -> &str {
+        "/users/{}"
+    }
+
     fn put_path(&self) -> &str {
         "/users/{}"
     }
