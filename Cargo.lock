@@ -2464,6 +2464,7 @@ name = "vamo-macros"
 version = "0.0.1"
 dependencies = [
  "deboa",
+ "deboa-extras",
  "deboa-tests",
  "proc-macro2",
  "quote",
