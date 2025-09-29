@@ -13,7 +13,7 @@ pub struct Post {
 #[tokio::test]
 async fn test_fetch_str() -> Result<(), DeboaError> {
     let mut client = Deboa::new();
-    let response = fetch!("https://jsonplaceholder.typicode.com/posts" -> JsonBody -> Vec<Post>, using &mut client);
+    let response = fetch!("https://jsonplaceholder.typicode.com/posts" -> &mut client -> JsonBody -> Vec<Post>,);
     assert_eq!(response.len(), 100);
     Ok(())
 }
@@ -22,7 +22,7 @@ async fn test_fetch_str() -> Result<(), DeboaError> {
 async fn test_fetch_ident() -> Result<(), DeboaError> {
     let mut client = Deboa::new();
     let url = "https://jsonplaceholder.typicode.com/posts";
-    let response = fetch!(url -> JsonBody -> Vec<Post>, using &mut client);
+    let response = fetch!(url -> &mut client -> JsonBody -> Vec<Post>,);
     assert_eq!(response.len(), 100);
     Ok(())
 }
