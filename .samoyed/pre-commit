@@ -2,3 +2,5 @@
 # Add your pre-commit checks here. For example:
 # echo "Running Samoyed sample pre-commit"
 # exit 0
+cargo fmt --check
+cargo test --release --features "deboa-extras/serialization_all deboa-extras/compression_all" 
