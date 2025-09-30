@@ -68,6 +68,11 @@ Examples of how to use deboa.
 
 Nice wrapper on top of deboa for dry rest client.
 
+### vamo-macros
+
+Vamo macros is a collection of macros to make possible
+use structs as resources to be sent over vamo as client.
+
 ## License
 
 MIT
