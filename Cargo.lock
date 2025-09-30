@@ -2466,6 +2466,8 @@ dependencies = [
  "deboa",
  "deboa-extras",
  "deboa-tests",
+ "http",
+ "httpmock",
  "proc-macro2",
  "quote",
  "serde",
