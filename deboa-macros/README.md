@@ -66,16 +66,16 @@ pub struct Post {
 let mut client = Deboa::new();
 
 // fetch macro
-let response: Vec<Post> = fetch!("https://jsonplaceholder.typicode.com/posts" -> JsonBody -> Vec<Post>, using &mut client);
+let response: Vec<Post> = fetch!("https://jsonplaceholder.typicode.com/posts", JsonBody, Vec<Post>, using &mut client);
 
 // get macro
-let response: Vec<Post> = get!("https://jsonplaceholder.typicode.com/posts" -> JsonBody -> Vec<Post>, using &mut client);
+let response: Vec<Post> = get!("https://jsonplaceholder.typicode.com/posts", JsonBody, Vec<Post>, using &mut client);
 
 // post macro
-let response = post!(data -> JsonBody -> "https://jsonplaceholder.typicode.com/posts" using &mut client);
+let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", using &mut client);
 
 // delete macro
-let response = delete!("https://jsonplaceholder.typicode.com/posts" using &mut client);
+let response = delete!("https://jsonplaceholder.typicode.com/posts", using &mut client);
 
 ```
 
