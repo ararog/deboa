@@ -48,13 +48,17 @@ async fn main() -> Result<(), DeboaError> {
 
 ## Subprojects
 
+### deboa-bora
+
+A crate with bora macro, for easy rest client generation.
+
 ### deboa-extras
 
 Pluggable compression/decompression, serializers and catchers.
 
 ### deboa-macros
 
-A crate with bora macro, for easy rest client generation.
+A crate with set of convenience macros.
 
 ### deboa-tests
 
