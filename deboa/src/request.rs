@@ -469,7 +469,7 @@ impl DeboaRequest {
     ///
     /// * `DeboaRequestBuilder` - The request builder.
     ///
-    fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder, DeboaError> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
             return Err(DeboaError::UrlParse { message: e.to_string() });
