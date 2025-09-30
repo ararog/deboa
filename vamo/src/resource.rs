@@ -78,7 +78,7 @@ pub trait AsPostRequest<T: Resource> {
     /// # Returns
     ///
     /// * `Result<DeboaRequest, DeboaError>` - The post request.
-    ///s
+    ///
     fn as_post_request(&self) -> Result<DeboaRequest, DeboaError>;
 }
 
