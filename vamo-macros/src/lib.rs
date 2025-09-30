@@ -22,6 +22,33 @@ fn extract_ident(attr: &Attribute) -> Option<Ident> {
 }
 
 #[proc_macro_derive(Resource, attributes(rid, post, put, patch, delete, body_type))]
+/// Derive macro for the Resource trait.
+///
+/// # Attributes
+///
+/// * `rid` - The id of the resource.
+/// * `post` - The post path of the resource.
+/// * `put` - The put path of the resource.
+/// * `patch` - The patch path of the resource.
+/// * `delete` - The delete path of the resource.
+/// * `body_type` - The body type of the resource (impl RequestBody from deboa-extras).
+///
+/// # Example
+///
+/// ```compile_fail
+/// use deboa_extras::http::serde::json::JsonBody;
+///
+/// #[derive(Resource)]
+/// #[post("/posts")]
+/// #[put("/posts/{}")]
+/// #[patch("/posts/{}")]
+/// #[delete("/posts/{}")]
+/// #[body_type(JsonBody)]
+/// struct MyResource {
+///     #[rid("id")]
+///     id: String,
+/// }
+/// ```
 pub fn resource(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as syn::DeriveInput);
     let name = &ast.ident;
