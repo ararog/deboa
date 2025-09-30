@@ -16,6 +16,7 @@ let response = vamo.get("/users")?.go(vamo).await?;
 - all deboa features
 - set base url only once, change it when needed
 - request data only by specifying path
+- resource trait to make requests using any struct (experimental)
 
 ## Contributing
 

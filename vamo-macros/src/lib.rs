@@ -21,10 +21,22 @@ fn extract_ident(attr: &Attribute) -> Option<Ident> {
     Some(ident.unwrap())
 }
 
-#[proc_macro_derive(Resource, attributes(post, put, patch, delete, body_type))]
+#[proc_macro_derive(Resource, attributes(rid, post, put, patch, delete, body_type))]
 pub fn resource(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as syn::DeriveInput);
     let name = &ast.ident;
+    let fields = match ast.data {
+        syn::Data::Struct(data) => data.fields,
+        _ => panic!("only structs are supported"),
+    };
+
+    let mut rid_field: Option<Ident> = None;
+    for field in fields {
+        if field.attrs.iter().any(|attr| attr.path().is_ident("rid")) {
+            rid_field = field.ident;
+            break;
+        }
+    }
 
     // Extract literals from attributes
     let mut post_path: Option<String> = None;
@@ -47,19 +59,19 @@ pub fn resource(input: TokenStream) -> TokenStream {
     }
 
     if post_path.is_none() {
-        panic!("post path is required");
+        panic!("missing path for post");
     }
 
     if put_path.is_none() {
-        panic!("put path is required");
+        panic!("missing path for put");
     }
 
     if patch_path.is_none() {
-        panic!("patch path is required");
+        panic!("missing path for patch");
     }
 
     if delete_path.is_none() {
-        panic!("delete path is required");
+        panic!("missing path for delete");
     }
 
     if body_type.is_none() {
@@ -69,7 +81,7 @@ pub fn resource(input: TokenStream) -> TokenStream {
     quote! {
         impl vamo::resource::Resource for #name {
             fn id(&self) -> String {
-                "1".to_string()
+                self.#rid_field.to_string()
             }
 
             fn post_path(&self) -> &str {
