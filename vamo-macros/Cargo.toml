@@ -24,6 +24,8 @@ tokio = { version = "1.47.1", features = ["full"] }
 serde = "1.0.219"
 syn = { version = "2.0", features = ["full"] }
 quote = "1.0.40"
+http = "1.3.1"
 
 [dev-dependencies]
 deboa-tests = { path = "../deboa-tests", version = "0.0.1" }
+httpmock = { version = "0.8.0-alpha.1", features = ["http2"] }
