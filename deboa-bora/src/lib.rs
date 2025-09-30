@@ -16,7 +16,7 @@
 //!
 //! ```rust,no_run
 //! use deboa::errors::DeboaError;
-//! use bora::bora;
+//! use deboa_bora::bora;
 //! use vamo::Vamo;
 //!
 //! use serde::Deserialize;
