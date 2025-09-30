@@ -353,25 +353,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bora"
-version = "0.0.1-beta.3"
-dependencies = [
- "deboa",
- "deboa-extras",
- "deboa-tests",
- "httpmock",
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "regex",
- "serde",
- "syn 2.0.106",
- "titlecase",
- "tokio",
- "vamo",
-]
-
-[[package]]
 name = "brotli"
 version = "8.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -628,7 +609,7 @@ dependencies = [
 
 [[package]]
 name = "deboa"
-version = "0.0.5-beta.3"
+version = "0.0.5"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -660,8 +641,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "deboa-bora"
+version = "0.0.2"
+dependencies = [
+ "deboa",
+ "deboa-extras",
+ "deboa-tests",
+ "httpmock",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "regex",
+ "serde",
+ "syn 2.0.106",
+ "titlecase",
+ "tokio",
+ "vamo",
+]
+
+[[package]]
 name = "deboa-extras"
-version = "0.0.1-beta.3"
+version = "0.0.1"
 dependencies = [
  "brotli",
  "bytes",
@@ -682,10 +682,10 @@ dependencies = [
 
 [[package]]
 name = "deboa-macros"
-version = "0.0.1-beta.3"
+version = "0.0.1"
 dependencies = [
- "bora",
  "deboa",
+ "deboa-bora",
  "deboa-extras",
  "deboa-tests",
  "httpmock",
@@ -2447,7 +2447,7 @@ checksum = "943ce29a8a743eb10d6082545d861b24f9d1b160b7d741e0f2cdf726bec909c5"
 
 [[package]]
 name = "vamo"
-version = "0.0.1-beta.3"
+version = "0.0.1"
 dependencies = [
  "deboa",
  "deboa-extras",
