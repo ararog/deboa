@@ -1,0 +1,19 @@
+[package]
+name = "rurl"
+version = "0.0.1"
+edition = "2021"
+authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
+repository = "https://github.com/ararog/deboa"
+homepage = "https://github.com/ararog/deboa"
+description = "A cli tool to make http requests using deboa as http client."
+readme = "README.md"
+license = "MIT"
+keywords = ["http", "networking", "client", "fetch", "rest"]
+publish = true
+rust-version = "1.64.0"
+
+[dependencies]
+deboa = { version = "0.0.5" }
+deboa-macros = { path= "../../deboa-macros", version = "0.0.3"}
+clap = { version = "4.5.48", features = ["derive"] }
+tokio = "1.47.1"
