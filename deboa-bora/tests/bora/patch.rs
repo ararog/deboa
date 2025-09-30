@@ -1,10 +1,10 @@
-use bora::bora;
 use deboa::errors::DeboaError;
+use deboa_bora::bora;
 use deboa_tests::utils::JSONPLACEHOLDER;
 use serde::{Deserialize, Serialize};
 use vamo::Vamo;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct Post {
     pub title: String,
     pub body: String,
@@ -14,19 +14,19 @@ pub struct Post {
 
 #[bora(
       api(
-        put(name="update_post", path="/posts/<id:i32>", req_body=Post, format="json"),
+        patch(name="patch_post", path="/posts/<id:i32>", req_body=Post, format="json"),
       )
     )]
 pub struct PostService;
 
 #[tokio::test]
-async fn test_put_by_id() -> Result<(), DeboaError> {
+async fn test_patch_by_id() -> Result<(), DeboaError> {
     let client = Vamo::new(JSONPLACEHOLDER)?;
 
     let mut post_service = PostService::new(client);
 
     post_service
-        .update_post(
+        .patch_post(
             1,
             Post {
                 title: "title".to_string(),
