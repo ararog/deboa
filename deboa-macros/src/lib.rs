@@ -35,8 +35,12 @@ macro_rules! get {
         $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 
-    ($url:ident, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+    };
+
+    ($url:expr, &mut $client:ident) => {
+        $client.execute($url).await?.text()
     };
 }
 
@@ -84,13 +88,13 @@ macro_rules! post {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:ident, &mut $client:ident) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident) => {
         $client
             .execute(deboa::request::DeboaRequest::post($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(deboa::request::DeboaRequest::post($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
@@ -131,13 +135,13 @@ macro_rules! put {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:ident, &mut $client:ident) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident) => {
         $client
             .execute(deboa::request::DeboaRequest::put($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:ident, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(deboa::request::DeboaRequest::put($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
@@ -178,13 +182,13 @@ macro_rules! patch {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:ident, &mut $client:ident) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident) => {
         $client
             .execute(deboa::request::DeboaRequest::patch($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:ident, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(deboa::request::DeboaRequest::patch($url)?.body_as($req_body_ty, $input)?.build()?)
             .await?
@@ -221,7 +225,7 @@ macro_rules! delete {
         $client.execute(deboa::request::DeboaRequest::delete($url)?.build()?).await?
     };
 
-    ($url:ident, &mut $client:ident) => {
+    ($url:expr, &mut $client:ident) => {
         $client.execute(deboa::request::DeboaRequest::delete($url)?.build()?).await?
     };
 }
@@ -261,7 +265,50 @@ macro_rules! fetch {
         $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 
-    ($url:ident, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+    };
+
+    ($url:expr, &mut $client:ident) => {
+        $client.execute($url).await?
+    };
+}
+#[macro_export]
+/// Submit a request to the specified URL.
+///
+/// The `submit!` macro is a more generic version of the `get!` macro.
+/// Its first argument is a string literal or a variable. Arrows are
+/// used to specify the body serialization type and the output type.
+///
+/// You can use the `JsonBody`, `XmlBody`, `MsgPack` type for JSON, XML
+/// and MessagePack serialization.
+///
+/// To help understand the macro arguments, here is an example:
+///
+/// fetch!(url, &mut client, body, ty)
+///
+/// # Arguments
+///
+/// * `method`      - The HTTP method to use.
+/// * `input`       - The input to send with the request.
+/// * `url`         - The URL to make the GET request to.
+/// * `client`      - The client variable to use for the request.
+/// * `res_body_ty` - The body type of the response.
+/// * `res_ty`      - The type of the response.
+///
+/// Please note url can be a string literal or a variable.
+///
+/// # Example
+///
+/// ```compile_fail
+/// let mut client = Deboa::new();
+/// let response = submit!("POST", "user=deboa", "https://jsonplaceholder.typicode.com/posts", &mut client);
+/// assert_eq!(response.id, 1);
+/// ```
+macro_rules! submit {
+    ($method:expr, $input:expr, $url:expr, &mut $client:ident) => {
+        $client
+            .execute(deboa::request::DeboaRequest::at($url, $method)?.text($input).build()?)
+            .await?
     };
 }

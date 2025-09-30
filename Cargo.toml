@@ -10,6 +10,7 @@ members = [
     "examples/blog", 
     "examples/postman", 
     "examples/catcher",
+    "examples/rurl", 
     "examples/simple", 
     "vamo", 
     "vamo-macros", 
