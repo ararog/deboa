@@ -11,10 +11,3 @@ deboa-extras = { path = "../../deboa-extras", features = ["json"] }
 tokio = { version = "1.47.1", features = ["full"] }
 serde = "1.0.219"
 serde_json = "1.0.138"
-
-[profile.release]
-strip = true  # Automatically strip symbols from the binary.
-opt-level = "z" 
-lto = true
-codegen-units = 1
-panic = "abort"
