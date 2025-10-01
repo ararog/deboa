@@ -26,7 +26,7 @@ deboa = { path = "../deboa", version = "0.0.5", features = ["http1"] }
 vamo = { path = "../vamo", version = "0.0.1" }
 deboa-extras = { path = "../deboa-extras", version = "0.0.1", features = ["json"] }
 proc-macro2 = "1.0.101"
-tokio = { version = "1.47.1", features = ["full"] }
+tokio = { version = "1.47.1", features = ["rt-multi-thread"] }
 serde = "1.0.219"
 syn = "2.0.106"
 quote = "1.0.40"
@@ -37,5 +37,4 @@ titlecase = "3.6.0"
 [dev-dependencies]
 deboa-tests = { path = "../deboa-tests", version = "0.0.1" }
 httpmock = { version = "0.8.0-alpha.1", features = ["http2"] }
-tokio = "1.47.1"
 
