@@ -1,7 +1,6 @@
 use clap::Parser;
 use deboa::{errors::DeboaError, request::DeboaRequest, Deboa};
-use deboa_macros::fetch;
-use http::{HeaderMap, HeaderName, HeaderValue};
+use http::{header, HeaderMap, HeaderName, HeaderValue, Method};
 use tokio::io::{self, AsyncWriteExt};
 
 #[derive(Parser)]
@@ -10,11 +9,11 @@ struct Args {
     #[arg(short, long, required = true, help = "URL to make the request to.")]
     url: String,
     #[arg(short, long, help = "HTTP method to use.")]
-    method: String,
+    method: Option<String>,
     #[arg(short, long, help = "Request body.")]
-    body: String,
+    body: Option<String>,
     #[arg(short, long, help = "Request headers.")]
-    headers: Vec<String>,
+    headers: Option<Vec<String>>,
 }
 
 #[tokio::main]
@@ -22,37 +21,51 @@ async fn main() -> Result<(), DeboaError> {
     let args = Args::parse();
     let mut client = Deboa::new();
 
-    let method = args.method.parse();
+    let method = args.method.unwrap_or("GET".to_string()).parse::<Method>();
     if let Err(e) = method {
         eprintln!("Error: {}", e);
         return Err(DeboaError::ProcessResponse {
             message: "Invalid HTTP method".to_string(),
         });
     }
-    let headers = args.headers.iter().fold(HeaderMap::new(), |mut map, header| {
-        let pairs = header.split_once(':');
-        if let Some((key, value)) = pairs {
-            let header_name = HeaderName::from_bytes(key.as_bytes());
-            if let Err(e) = header_name {
-                eprintln!("Invalid header name: {}", e);
-                return map;
+
+    let mut headers = if let Some(headers) = args.headers {
+        headers.iter().fold(HeaderMap::new(), |mut map, header| {
+            let pairs = header.split_once(':');
+            if let Some((key, value)) = pairs {
+                let header_name = HeaderName::from_bytes(key.as_bytes());
+                if let Err(e) = header_name {
+                    eprintln!("Invalid header name: {}", e);
+                    return map;
+                }
+                let header_value = HeaderValue::from_bytes(value.as_bytes());
+                if let Err(e) = header_value {
+                    eprintln!("Invalid header value: {}", e);
+                    return map;
+                }
+                map.append(header_name.unwrap(), header_value.unwrap());
             }
-            let header_value = HeaderValue::from_bytes(value.as_bytes());
-            if let Err(e) = header_value {
-                eprintln!("Invalid header value: {}", e);
-                return map;
-            }
-            map.append(header_name.unwrap(), header_value.unwrap());
-        }
-        map
-    });
-    
-    let request = DeboaRequest::at(args.url, method.unwrap())?.headers(headers);
-    let request = if args.method == "GET" || args.method == "DELETE" {
-        request
+            map
+        })
     } else {
-        request.text(&args.body)
+        HeaderMap::new()
     };
+
+    let http_method = method.unwrap();
+    let request = DeboaRequest::at(args.url, http_method.clone())?;
+    let request = if http_method == Method::GET || http_method == Method::DELETE {
+        request
+    } else if let Some(body) = args.body {
+        let content_length = body.len();
+        headers.insert(
+            header::CONTENT_LENGTH,
+            HeaderValue::from_bytes(content_length.to_string().as_bytes()).unwrap(),
+        );
+        request.text(&body)
+    } else {
+        request
+    };
+    let request = request.headers(headers);
     let response = client.execute(request.build()?).await?;
 
     let mut stdout = io::stdout();
