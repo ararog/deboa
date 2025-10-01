@@ -1974,6 +1974,7 @@ dependencies = [
  "clap",
  "deboa",
  "deboa-macros",
+ "http",
  "tokio",
 ]
 
