@@ -1,5 +1,5 @@
 use clap::Parser;
-use deboa::{errors::DeboaError, request, Deboa};
+use deboa::{errors::DeboaError, Deboa};
 use deboa_macros::{fetch, submit};
 use tokio::io::{self, AsyncWriteExt};
 
