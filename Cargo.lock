@@ -387,7 +387,7 @@ dependencies = [
 name = "blog"
 version = "0.1.0"
 dependencies = [
- "deboa 0.0.5",
+ "deboa",
  "deboa-extras",
  "http",
  "serde",
@@ -448,7 +448,7 @@ checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
 name = "catcher"
 version = "0.1.0"
 dependencies = [
- "deboa 0.0.5",
+ "deboa",
  "deboa-extras",
  "serde",
  "serde_json",
@@ -706,36 +706,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "deboa"
-version = "0.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9157d0ba61d92c2b64b2b69ea81125e87f8f2122dd9b0688564f56b3df66968d"
-dependencies = [
- "async-trait",
- "base64",
- "bytes",
- "cookie",
- "futures",
- "http",
- "http-body",
- "http-body-util",
- "hyper",
- "hyper-util",
- "mime",
- "mockall",
- "serde",
- "strum_macros",
- "thiserror 2.0.16",
- "tokio",
- "typed-builder",
- "url",
-]
-
-[[package]]
 name = "deboa-bora"
 version = "0.0.2"
 dependencies = [
- "deboa 0.0.5",
+ "deboa",
  "deboa-extras",
  "deboa-tests",
  "httpmock",
@@ -756,7 +730,7 @@ version = "0.0.1"
 dependencies = [
  "brotli",
  "bytes",
- "deboa 0.0.5",
+ "deboa",
  "deboa-tests",
  "flate2",
  "http",
@@ -775,7 +749,7 @@ dependencies = [
 name = "deboa-macros"
 version = "0.0.3"
 dependencies = [
- "deboa 0.0.5",
+ "deboa",
  "deboa-bora",
  "deboa-extras",
  "deboa-tests",
@@ -1814,7 +1788,7 @@ dependencies = [
 name = "postman"
 version = "0.1.0"
 dependencies = [
- "deboa 0.0.5",
+ "deboa",
  "deboa-extras",
  "deboa-macros",
  "http",
@@ -1998,7 +1972,7 @@ name = "rurl"
 version = "0.0.1"
 dependencies = [
  "clap",
- "deboa 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa",
  "deboa-macros",
  "tokio",
 ]
@@ -2182,7 +2156,7 @@ checksum = "bbbb5d9659141646ae647b42fe094daf6c6192d1620870b449d9557f748b2daa"
 name = "simple"
 version = "0.0.0"
 dependencies = [
- "deboa 0.0.5",
+ "deboa",
  "deboa-extras",
  "serde",
  "serde_json",
@@ -2591,7 +2565,7 @@ checksum = "943ce29a8a743eb10d6082545d861b24f9d1b160b7d741e0f2cdf726bec909c5"
 name = "vamo"
 version = "0.0.1"
 dependencies = [
- "deboa 0.0.5",
+ "deboa",
  "deboa-extras",
  "deboa-tests",
  "http",
@@ -2605,7 +2579,7 @@ dependencies = [
 name = "vamo-macros"
 version = "0.0.1"
 dependencies = [
- "deboa 0.0.5",
+ "deboa",
  "deboa-extras",
  "deboa-tests",
  "http",
