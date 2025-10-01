@@ -60,7 +60,7 @@ smol-hyper = { version = "0.1.0", optional = true, features = ["smol"]}
 smol-macros = { version = "0.1.1", optional = true }
 strum_macros = "0.27.0"
 thiserror = "2.0.16"
-tokio = { version = "1.43.1", features = ["full"], optional = true }
+tokio = { version = "1.47.1", features = ["rt-multi-thread"], optional = true }
 typed-builder = "0.21.2"
 url = "2.5.4"
 
@@ -74,7 +74,6 @@ criterion = { version = "0.7.0", features = [
 ] }
 httpmock = { version = "0.8.0-alpha.1", features = ["http2"] }
 smol = "2.0.2"
-tokio = { version = "1", features = ["full"] }
 
 [[bench]]
 name = "deboa_benchmark"
