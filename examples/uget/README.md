@@ -17,7 +17,7 @@ uget --url <url>
 ## Example
 
 ```sh
-uget --url https://jsonplaceholder.typicode.com/posts -m POST -b ""
+uget --url https://jsonplaceholder.typicode.com/posts -m POST -b "{title: 'foo', body: 'bar', userId: 1}"
 ```
 
 ## License

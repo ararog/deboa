@@ -53,7 +53,7 @@ async fn main() -> Result<(), DeboaError> {
 
     let http_method = method.unwrap();
     let request = DeboaRequest::at(args.url, http_method.clone())?;
-    let request = if http_method == Method::GET || http_method == Method::DELETE {
+    let request = if (http_method == Method::GET || http_method == Method::DELETE) && args.body.is_none() {
         request
     } else if let Some(body) = args.body {
         let content_length = body.len();
@@ -61,7 +61,11 @@ async fn main() -> Result<(), DeboaError> {
             header::CONTENT_LENGTH,
             HeaderValue::from_bytes(content_length.to_string().as_bytes()).unwrap(),
         );
-        request.text(&body)
+        if http_method == Method::GET {
+            request.method(Method::POST).text(&body)
+        } else {
+            request.text(&body)
+        }
     } else {
         request
     };
