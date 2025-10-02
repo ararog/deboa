@@ -15,3 +15,7 @@ This example shows how to use bora to quickly create a REST API client based on 
 ## Simple
 
 This example shows how to use deboa to make a simple GET request of posts from JSONPlaceholder.
+
+## Uget
+
+A minimal cli tool to make http requests. You want, you get!

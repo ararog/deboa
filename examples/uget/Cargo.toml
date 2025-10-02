@@ -1,11 +1,11 @@
 [package]
-name = "rurl"
+name = "uget"
 version = "0.0.1"
 edition = "2021"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 repository = "https://github.com/ararog/deboa"
 homepage = "https://github.com/ararog/deboa"
-description = "A cli tool to make http requests using deboa as http client."
+description = "A minimal cli tool to make http requests. You want, you get!"
 readme = "README.md"
 license = "MIT"
 keywords = ["http", "networking", "client", "fetch", "rest"]

@@ -22,7 +22,7 @@ xml = ["deboa-extras/xml"]
 msgpack = ["deboa-extras/msgpack"]
 
 [dependencies]
-deboa = { path = "../deboa", version = "0.0.5", features = ["http1"] }
+deboa = { path = "../deboa", version = "0.0.6-beta.1", features = ["http1"] }
 vamo = { path = "../vamo", version = "0.0.1" }
 deboa-extras = { path = "../deboa-extras", version = "0.0.1", features = ["json"] }
 proc-macro2 = "1.0.101"

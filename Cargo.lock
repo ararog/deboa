@@ -387,13 +387,13 @@ dependencies = [
 name = "blog"
 version = "0.1.0"
 dependencies = [
- "deboa 0.0.6-beta.1",
- "deboa-extras 0.0.1",
+ "deboa",
+ "deboa-extras",
  "http",
  "serde",
  "serde_json",
  "tokio",
- "vamo 0.0.1",
+ "vamo",
 ]
 
 [[package]]
@@ -448,8 +448,8 @@ checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
 name = "catcher"
 version = "0.1.0"
 dependencies = [
- "deboa 0.0.6-beta.1",
- "deboa-extras 0.0.1",
+ "deboa",
+ "deboa-extras",
  "serde",
  "serde_json",
  "tokio",
@@ -674,32 +674,6 @@ dependencies = [
 
 [[package]]
 name = "deboa"
-version = "0.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9157d0ba61d92c2b64b2b69ea81125e87f8f2122dd9b0688564f56b3df66968d"
-dependencies = [
- "async-trait",
- "base64",
- "bytes",
- "cookie",
- "futures",
- "http",
- "http-body",
- "http-body-util",
- "hyper",
- "hyper-util",
- "mime",
- "mockall",
- "serde",
- "strum_macros",
- "thiserror 2.0.16",
- "tokio",
- "typed-builder",
- "url",
-]
-
-[[package]]
-name = "deboa"
 version = "0.0.6-beta.1"
 dependencies = [
  "async-executor",
@@ -709,6 +683,7 @@ dependencies = [
  "bytes",
  "cookie",
  "criterion",
+ "deboa-tests",
  "futures",
  "http",
  "http-body",
@@ -735,8 +710,9 @@ dependencies = [
 name = "deboa-bora"
 version = "0.0.2"
 dependencies = [
- "deboa 0.0.5",
- "deboa-extras 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa",
+ "deboa-extras",
+ "deboa-tests",
  "httpmock",
  "proc-macro-error",
  "proc-macro2",
@@ -746,26 +722,7 @@ dependencies = [
  "syn 2.0.106",
  "titlecase",
  "tokio",
- "vamo 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "deboa-bora"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "266e1ef7fc722a6149fe34be957f8843b953f9286adfb1715e4ff1e4119a0f52"
-dependencies = [
- "deboa 0.0.5",
- "deboa-extras 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "regex",
- "serde",
- "syn 2.0.106",
- "titlecase",
- "tokio",
- "vamo 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "vamo",
 ]
 
 [[package]]
@@ -774,30 +731,11 @@ version = "0.0.1"
 dependencies = [
  "brotli",
  "bytes",
- "deboa 0.0.5",
+ "deboa",
+ "deboa-tests",
  "flate2",
  "http",
  "httpmock",
- "mime",
- "mime_typed",
- "rmp-serde",
- "serde",
- "serde-xml-rust",
- "serde_json",
- "tokio",
- "url",
-]
-
-[[package]]
-name = "deboa-extras"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0139e0cf533bf5cd3302a0ac954e4fd58cc931e1bf8303e96097d063a31bc6b3"
-dependencies = [
- "bytes",
- "deboa 0.0.5",
- "flate2",
- "http",
  "mime",
  "mime_typed",
  "rmp-serde",
@@ -812,12 +750,25 @@ dependencies = [
 name = "deboa-macros"
 version = "0.0.3"
 dependencies = [
- "deboa 0.0.5",
- "deboa-bora 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "deboa-extras 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa",
+ "deboa-bora",
+ "deboa-extras",
+ "deboa-tests",
  "httpmock",
  "serde",
  "tokio",
+]
+
+[[package]]
+name = "deboa-tests"
+version = "0.0.1"
+dependencies = [
+ "http",
+ "httpmock",
+ "mime",
+ "serde",
+ "serde_json",
+ "url",
 ]
 
 [[package]]
@@ -1838,14 +1789,14 @@ dependencies = [
 name = "postman"
 version = "0.1.0"
 dependencies = [
- "deboa 0.0.6-beta.1",
- "deboa-extras 0.0.1",
+ "deboa",
+ "deboa-extras",
  "deboa-macros",
  "http",
  "serde",
  "serde_json",
  "tokio",
- "vamo 0.0.1",
+ "vamo",
 ]
 
 [[package]]
@@ -2015,17 +1966,6 @@ dependencies = [
  "byteorder",
  "rmp",
  "serde",
-]
-
-[[package]]
-name = "rurl"
-version = "0.0.1"
-dependencies = [
- "clap",
- "deboa 0.0.6-beta.1",
- "deboa-macros",
- "http",
- "tokio",
 ]
 
 [[package]]
@@ -2207,8 +2147,8 @@ checksum = "bbbb5d9659141646ae647b42fe094daf6c6192d1620870b449d9557f748b2daa"
 name = "simple"
 version = "0.0.0"
 dependencies = [
- "deboa 0.0.6-beta.1",
- "deboa-extras 0.0.1",
+ "deboa",
+ "deboa-extras",
  "serde",
  "serde_json",
  "tokio",
@@ -2581,6 +2521,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
+name = "uget"
+version = "0.0.1"
+dependencies = [
+ "clap",
+ "deboa",
+ "deboa-macros",
+ "http",
+ "tokio",
+]
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2626,25 +2577,13 @@ checksum = "943ce29a8a743eb10d6082545d861b24f9d1b160b7d741e0f2cdf726bec909c5"
 name = "vamo"
 version = "0.0.1"
 dependencies = [
- "deboa 0.0.5",
- "deboa-extras 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa",
+ "deboa-extras",
+ "deboa-tests",
  "http",
  "httpmock",
  "serde",
  "tokio",
- "url",
-]
-
-[[package]]
-name = "vamo"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9464dc45993da7a03291d21357685ca2aaec0b4f08f238adce423cdcfbc713a"
-dependencies = [
- "deboa 0.0.5",
- "deboa-extras 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "http",
- "serde",
  "url",
 ]
 
@@ -2652,8 +2591,9 @@ dependencies = [
 name = "vamo-macros"
 version = "0.0.1"
 dependencies = [
- "deboa 0.0.5",
- "deboa-extras 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa",
+ "deboa-extras",
+ "deboa-tests",
  "http",
  "httpmock",
  "proc-macro2",
@@ -2661,7 +2601,7 @@ dependencies = [
  "serde",
  "syn 2.0.106",
  "tokio",
- "vamo 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "vamo",
 ]
 
 [[package]]
