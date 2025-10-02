@@ -4,24 +4,67 @@ use http::{header, HeaderMap, HeaderName, HeaderValue, Method};
 use tokio::io::{self, AsyncWriteExt};
 
 #[derive(Parser)]
-#[command(name = "rurl", about = "rurl - a cli tool to make http requests", long_about = None)]
+#[command(
+    name = "uget",
+    about = "uget - a cli tool to make http requests",
+    long_about = r#"
+uget - a cli tool to make http requests
+
+Usage:
+    uget <URL> [OPTIONS]
+
+Options:
+    -h, --help       Print help information
+    -V, --version    Print version information
+    -m, --method <METHOD>
+                     HTTP method to use
+    -b, --body   <BODY>
+                     Allow set raw request body
+    -H, --header <HEADER>
+                     Set request header field, format: key:value
+    -B, --bearer <BEARER>
+                     Set bearer auth token on Authorization header
+    -a, --basic  <BASIC>
+                     Set basic auth on Authorization header, format: username:password, it will be base64 encoded
+"#
+)]
 struct Args {
     #[arg(short, long, required = true, help = "URL to make the request to.")]
     url: String,
     #[arg(short, long, help = "HTTP method to use.")]
     method: Option<String>,
-    #[arg(short, long, help = "Request body.")]
+    #[arg(short, long, help = "Allow set raw request body.")]
     body: Option<String>,
-    #[arg(long, help = "Request header.")]
+    #[arg(long, help = "Set request header field, format: key:value.")]
     header: Option<Vec<String>>,
+    #[arg(long, help = "Set bearer auth token on Authorization header.")]
+    bearer: Option<String>,
+    #[arg(
+        long,
+        help = "Set basic auth on Authorization header, format: username:password, it will be base64 encoded."
+    )]
+    basic: Option<String>,
 }
 
 #[tokio::main]
-async fn main() -> Result<(), DeboaError> {
+async fn main() {
     let args = Args::parse();
     let mut client = Deboa::new();
 
-    let method = args.method.unwrap_or("GET".to_string()).parse::<Method>();
+    let result = handle_request(&args, &mut client).await;
+    if let Err(err) = result {
+        eprintln!("An error occurred: {:#}", err);
+    }
+}
+
+async fn handle_request(args: &Args, client: &mut Deboa) -> Result<(), DeboaError> {
+    let mut arg_url = args.url.clone();
+    let arg_method = args.method.as_ref();
+    let arg_body = args.body.as_ref();
+    let arg_header = args.header.as_ref();
+    let arg_bearer_auth = args.bearer.as_ref();
+    let arg_basic_auth = args.basic.as_ref();
+    let method = arg_method.unwrap_or(&"GET".to_string()).parse::<Method>();
     if let Err(e) = method {
         eprintln!("Error: {}", e);
         return Err(DeboaError::ProcessResponse {
@@ -29,7 +72,18 @@ async fn main() -> Result<(), DeboaError> {
         });
     }
 
-    let mut headers = if let Some(header) = args.header {
+    if arg_url.starts_with(":") {
+        let port = arg_url.strip_prefix(":");
+        if let Some(port) = port {
+            if port.starts_with('/') {
+                arg_url = format!("http://localhost{}", port);
+            } else {
+                arg_url = format!("http://localhost:{}", port);
+            }
+        }
+    }
+
+    let mut headers = if let Some(header) = arg_header {
         header.iter().fold(HeaderMap::new(), |mut map, header| {
             let pairs = header.split_once(':');
             if let Some((key, value)) = pairs {
@@ -52,24 +106,38 @@ async fn main() -> Result<(), DeboaError> {
     };
 
     let http_method = method.unwrap();
-    let request = DeboaRequest::at(args.url, http_method.clone())?;
+    let request = DeboaRequest::at(arg_url, http_method.clone())?;
     let request = if (http_method == Method::GET || http_method == Method::DELETE) && args.body.is_none() {
         request
-    } else if let Some(body) = args.body {
+    } else if let Some(body) = arg_body {
         let content_length = body.len();
         headers.insert(
             header::CONTENT_LENGTH,
             HeaderValue::from_bytes(content_length.to_string().as_bytes()).unwrap(),
         );
         if http_method == Method::GET {
-            request.method(Method::POST).text(&body)
+            request.method(Method::POST).text(body)
         } else {
-            request.text(&body)
+            request.text(body)
         }
     } else {
         request
     };
     let request = request.headers(headers);
+
+    let request = if let Some(bearer_auth) = arg_bearer_auth {
+        request.bearer_auth(bearer_auth)
+    } else {
+        request
+    };
+
+    let request = if let Some(basic_auth) = arg_basic_auth {
+        let (username, password) = basic_auth.split_once(':').unwrap();
+        request.basic_auth(username, password)
+    } else {
+        request
+    };
+
     let response = client.execute(request.build()?).await?;
 
     let mut stdout = io::stdout();
