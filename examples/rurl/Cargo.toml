@@ -13,7 +13,7 @@ publish = true
 rust-version = "1.64.0"
 
 [dependencies]
-deboa = { path = "../../deboa", version = "0.0.5" }
+deboa = { path = "../../deboa", version = "0.0.6-beta.1" }
 deboa-macros = { path= "../../deboa-macros", version = "0.0.3"}
 clap = { version = "4.5.48", features = ["derive"] }
 tokio = { version = "1.47.1", features = ["full"] }
