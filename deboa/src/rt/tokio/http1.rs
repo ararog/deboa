@@ -1,4 +1,3 @@
-
 use async_trait::async_trait;
 use bytes::Bytes;
 use http_body_util::Full;
@@ -10,7 +9,8 @@ use url::{Host, Url};
 
 use crate::{
     client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http1Request},
-    errors::DeboaError, rt::tokio::stream::TokioStream,
+    errors::DeboaError,
+    rt::tokio::stream::TokioStream,
 };
 
 #[async_trait]
