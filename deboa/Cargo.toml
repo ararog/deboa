@@ -16,7 +16,7 @@ rust-version = "1.64.0"
 default = ["tokio-rt"]
 
 # runtimes
-tokio-rt = ["http1", "http2", "dep:tokio"]
+tokio-rt = ["http1", "http2", "dep:tokio", "dep:tokio-native-tls"]
 smol-rt = [
   "http1",
   "http2",
@@ -61,6 +61,7 @@ smol-macros = { version = "0.1.1", optional = true }
 strum_macros = "0.27.0"
 thiserror = "2.0.16"
 tokio = { version = "1.47.1", features = ["rt-multi-thread"], optional = true }
+tokio-native-tls = { version = "0.3.1", optional = true }
 typed-builder = "0.21.2"
 url = "2.5.4"
 

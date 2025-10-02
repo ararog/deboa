@@ -12,8 +12,8 @@ struct Args {
     method: Option<String>,
     #[arg(short, long, help = "Request body.")]
     body: Option<String>,
-    #[arg(short, long, help = "Request headers.")]
-    headers: Option<Vec<String>>,
+    #[arg(long, help = "Request header.")]
+    header: Option<Vec<String>>,
 }
 
 #[tokio::main]
@@ -29,8 +29,8 @@ async fn main() -> Result<(), DeboaError> {
         });
     }
 
-    let mut headers = if let Some(headers) = args.headers {
-        headers.iter().fold(HeaderMap::new(), |mut map, header| {
+    let mut headers = if let Some(header) = args.header {
+        header.iter().fold(HeaderMap::new(), |mut map, header| {
             let pairs = header.split_once(':');
             if let Some((key, value)) = pairs {
                 let header_name = HeaderName::from_bytes(key.as_bytes());
