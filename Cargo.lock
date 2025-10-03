@@ -674,7 +674,7 @@ dependencies = [
 
 [[package]]
 name = "deboa"
-version = "0.0.6-beta.1"
+version = "0.0.6-beta.2"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -691,6 +691,7 @@ dependencies = [
  "httpmock",
  "hyper",
  "hyper-util",
+ "indexmap",
  "macro_rules_attribute",
  "mime",
  "mockall",
@@ -1363,9 +1364,9 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.11.0"
+version = "2.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2481980430f9f78649238835720ddccc57e52df14ffce1c6f37391d61b563e9"
+checksum = "4b0f83760fb341a774ed326568e19f5a863af4a952def8c39f9ab92fd95b88e5"
 dependencies = [
  "equivalent",
  "hashbrown",
@@ -2523,7 +2524,7 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
 name = "uget"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "clap",
  "deboa",
