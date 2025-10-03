@@ -89,6 +89,7 @@ pub mod catcher;
 pub mod client;
 pub mod cookie;
 pub mod errors;
+pub mod form;
 pub mod fs;
 pub mod request;
 pub mod response;
