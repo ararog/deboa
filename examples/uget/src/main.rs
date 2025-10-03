@@ -1,5 +1,5 @@
 use clap::Parser;
-use deboa::{errors::DeboaError, request::DeboaRequest, Deboa};
+use deboa::{errors::DeboaError, form::Form, request::DeboaRequest, Deboa};
 use http::{header, HeaderMap, HeaderName, HeaderValue, Method};
 use tokio::io::{self, AsyncWriteExt};
 
@@ -20,6 +20,8 @@ Options:
                      HTTP method to use
     -b, --body   <BODY>
                      Allow set raw request body
+    -f, --field <FIELD>
+                     Set form field, format: key=value
     -H, --header <HEADER>
                      Set request header field, format: key:value
     -B, --bearer <BEARER>
@@ -35,7 +37,9 @@ struct Args {
     method: Option<String>,
     #[arg(short, long, help = "Allow set raw request body.")]
     body: Option<String>,
-    #[arg(long, help = "Set request header field, format: key:value.")]
+    #[arg(long, help = "Set form field, format: key=value.")]
+    field: Option<Vec<String>>,
+    #[arg(long, help = "Set header field, format: key:value.")]
     header: Option<Vec<String>>,
     #[arg(long, help = "Set bearer auth token on Authorization header.")]
     bearer: Option<String>,
@@ -61,6 +65,7 @@ async fn handle_request(args: &Args, client: &mut Deboa) -> Result<(), DeboaErro
     let mut arg_url = args.url.clone();
     let arg_method = args.method.as_ref();
     let arg_body = args.body.as_ref();
+    let arg_fields = args.field.as_ref();
     let arg_header = args.header.as_ref();
     let arg_bearer_auth = args.bearer.as_ref();
     let arg_basic_auth = args.basic.as_ref();
@@ -69,6 +74,13 @@ async fn handle_request(args: &Args, client: &mut Deboa) -> Result<(), DeboaErro
         eprintln!("Error: {}", e);
         return Err(DeboaError::ProcessResponse {
             message: "Invalid HTTP method".to_string(),
+        });
+    }
+
+    if arg_body.is_some() && arg_fields.is_some() {
+        eprintln!("Error: Both body and fields are set");
+        return Err(DeboaError::ProcessResponse {
+            message: "Both body and fields are set".to_string(),
         });
     }
 
@@ -120,6 +132,16 @@ async fn handle_request(args: &Args, client: &mut Deboa) -> Result<(), DeboaErro
         } else {
             request.text(body)
         }
+    } else if let Some(fields) = arg_fields {
+        let mut form = Form::builder();
+        headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("application/x-www-form-urlencoded"));
+        for field in fields {
+            let pairs = field.split_once('=');
+            if let Some((key, value)) = pairs {
+                form.field(key.to_string(), value.to_string());
+            }
+        }
+        request.text(&form.build())
     } else {
         request
     };
