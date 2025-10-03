@@ -1,6 +1,6 @@
 [package]
 name = "deboa"
-version = "0.0.6-beta.1"
+version = "0.0.6-beta.2"
 edition = "2021"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 repository = "https://github.com/ararog/deboa"
@@ -51,6 +51,7 @@ hyper-util = { version = "0.1.10", features = [
   "client-legacy",
   "tokio",
 ] }
+indexmap = "2.11.4"
 macro_rules_attribute = { version = "0.2.2", optional = true }
 mime = { version = "0.3.17" }
 mockall = "0.13.1"

@@ -414,11 +414,9 @@ impl Deboa {
             let response = response.unwrap();
 
             if response.status().is_redirection() {
-                println!("Redirect: {}", request.url());
                 let location = response.headers().get(header::LOCATION);
                 if let Some(location) = location {
                     let location = location.to_str().unwrap();
-                    println!("Location: {}", location);
                     let result = request.as_mut().set_url(location);
                     if let Err(err) = result {
                         break Err(err);
