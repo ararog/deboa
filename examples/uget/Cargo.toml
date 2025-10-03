@@ -18,3 +18,4 @@ deboa-macros = { path= "../../deboa-macros", version = "0.0.3"}
 clap = { version = "4.5.48", features = ["derive"] }
 tokio = { version = "1.47.1", features = ["full"] }
 http = "1.3.1"
+mime_typed = "0.1.7"

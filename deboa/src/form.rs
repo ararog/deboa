@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use urlencoding::encode;
 
@@ -8,9 +8,7 @@ pub struct Form {
 
 impl Form {
     pub fn builder() -> Self {
-        Self {
-            fields: HashMap::new(),
-        }
+        Self { fields: HashMap::new() }
     }
 
     pub fn field(&mut self, key: String, value: String) -> &mut Self {
@@ -27,16 +25,13 @@ impl Form {
     }
 }
 
-
 pub struct MultiPartForm {
     fields: HashMap<String, String>,
 }
 
 impl MultiPartForm {
     pub fn builder() -> Self {
-        Self {
-            fields: HashMap::new(),
-        }
+        Self { fields: HashMap::new() }
     }
 
     pub fn field(&mut self, key: String, value: String) -> &mut Self {
