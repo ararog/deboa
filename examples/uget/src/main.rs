@@ -145,7 +145,7 @@ async fn handle_request(args: &Args, client: &mut Deboa) -> Result<(), DeboaErro
         for field in fields {
             let pairs = field.split_once('=');
             if let Some((key, value)) = pairs {
-                form.field(key.to_string(), value.to_string());
+                form.field(key, value);
             }
         }
         request.text(&form.build())
