@@ -1,6 +1,9 @@
+use std::borrow::Cow;
+
 use clap::Parser;
 use deboa::{errors::DeboaError, form::Form, request::DeboaRequest, Deboa};
 use http::{header, HeaderMap, HeaderName, HeaderValue, Method};
+use mime_typed::ApplicationWwwFormUrlEncoded;
 use tokio::io::{self, AsyncWriteExt};
 
 #[derive(Parser)]
@@ -23,15 +26,15 @@ Options:
     -f, --field <FIELD>
                      Set form field, format: key=value
     -H, --header <HEADER>
-                     Set request header field, format: key:value
+                     Set request header field, format: key=value
     -B, --bearer <BEARER>
                      Set bearer auth token on Authorization header
     -a, --basic  <BASIC>
-                     Set basic auth on Authorization header, format: username:password, it will be base64 encoded
+                     Set basic auth on Authorization header, format: username=password, it will be base64 encoded
 "#
 )]
 struct Args {
-    #[arg(short, long, required = true, help = "URL to make the request to.")]
+    #[arg(index = 1, required = true, help = "URL to make the request to.")]
     url: String,
     #[arg(short, long, help = "HTTP method to use.")]
     method: Option<String>,
@@ -39,13 +42,13 @@ struct Args {
     body: Option<String>,
     #[arg(long, help = "Set form field, format: key=value.")]
     field: Option<Vec<String>>,
-    #[arg(long, help = "Set header field, format: key:value.")]
+    #[arg(long, help = "Set header field, format: key=value.")]
     header: Option<Vec<String>>,
     #[arg(long, help = "Set bearer auth token on Authorization header.")]
     bearer: Option<String>,
     #[arg(
         long,
-        help = "Set basic auth on Authorization header, format: username:password, it will be base64 encoded."
+        help = "Set basic auth on Authorization header, format: username=password, it will be base64 encoded."
     )]
     basic: Option<String>,
 }
@@ -69,7 +72,13 @@ async fn handle_request(args: &Args, client: &mut Deboa) -> Result<(), DeboaErro
     let arg_header = args.header.as_ref();
     let arg_bearer_auth = args.bearer.as_ref();
     let arg_basic_auth = args.basic.as_ref();
-    let method = arg_method.unwrap_or(&"GET".to_string()).parse::<Method>();
+
+    let mut method = Cow::from("GET");
+    if let Some(some_method) = arg_method {
+        method = some_method.to_uppercase().into();
+    }
+
+    let method = method.parse::<Method>();
     if let Err(e) = method {
         eprintln!("Error: {}", e);
         return Err(DeboaError::ProcessResponse {
@@ -118,15 +127,12 @@ async fn handle_request(args: &Args, client: &mut Deboa) -> Result<(), DeboaErro
     };
 
     let http_method = method.unwrap();
-    let request = DeboaRequest::at(arg_url, http_method.clone())?;
-    let request = if (http_method == Method::GET || http_method == Method::DELETE) && args.body.is_none() {
+    let request = DeboaRequest::at(arg_url.as_ref(), http_method.clone())?;
+    let request = if (http_method == Method::GET || http_method == Method::DELETE) && args.body.is_none() && args.field.is_none() {
         request
     } else if let Some(body) = arg_body {
-        let content_length = body.len();
-        headers.insert(
-            header::CONTENT_LENGTH,
-            HeaderValue::from_bytes(content_length.to_string().as_bytes()).unwrap(),
-        );
+        let content_length = HeaderValue::from_bytes(body.len().to_string().as_bytes());
+        headers.insert(header::CONTENT_LENGTH, content_length.unwrap());
         if http_method == Method::GET {
             request.method(Method::POST).text(body)
         } else {
@@ -134,7 +140,8 @@ async fn handle_request(args: &Args, client: &mut Deboa) -> Result<(), DeboaErro
         }
     } else if let Some(fields) = arg_fields {
         let mut form = Form::builder();
-        headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("application/x-www-form-urlencoded"));
+        let content_type = HeaderValue::from_bytes(ApplicationWwwFormUrlEncoded.to_string().as_bytes());
+        headers.insert(header::CONTENT_TYPE, content_type.unwrap());
         for field in fields {
             let pairs = field.split_once('=');
             if let Some((key, value)) = pairs {
