@@ -1,9 +1,9 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, io::Write};
 
 use clap::Parser;
 use deboa::{errors::DeboaError, form::Form, request::DeboaRequest, Deboa};
 use http::{header, HeaderMap, HeaderName, HeaderValue, Method};
-use mime_typed::ApplicationWwwFormUrlEncoded;
+use std::fs::File;
 use tokio::io::{self, AsyncWriteExt};
 
 #[derive(Parser)]
@@ -23,7 +23,7 @@ Options:
                      HTTP method to use
     -b, --body   <BODY>
                      Allow set raw request body
-    -f, --field <FIELD>
+    -f, --field  <FIELD>
                      Set form field, format: key=value
     -H, --header <HEADER>
                      Set request header field, format: key=value
@@ -31,6 +31,14 @@ Options:
                      Set bearer auth token on Authorization header
     -a, --basic  <BASIC>
                      Set basic auth on Authorization header, format: username=password, it will be base64 encoded
+    -s, --save   <FILE_PATH>
+                     Set the file to save the response body.
+    -p, --part   <PART>
+                     Set the part of multipart/form-data.
+    -b, --bdry   <BOUNDARY>
+                     Set boundary for multipart/form-data.
+    -r, --raw    <RAW>
+                     Set raw request body.
 "#
 )]
 struct Args {
@@ -51,6 +59,12 @@ struct Args {
         help = "Set basic auth on Authorization header, format: username=password, it will be base64 encoded."
     )]
     basic: Option<String>,
+    #[arg(long, help = "Set the file to save the response body.")]
+    save: Option<String>,
+    #[arg(long, help = "Set the part of multipart/form-data.")]
+    part: Option<Vec<String>>,
+    #[arg(long, help = "Set boundary for multipart/form-data.")]
+    bdry: Option<String>,
 }
 
 #[tokio::main]
@@ -72,6 +86,9 @@ async fn handle_request(args: &Args, client: &mut Deboa) -> Result<(), DeboaErro
     let arg_header = args.header.as_ref();
     let arg_bearer_auth = args.bearer.as_ref();
     let arg_basic_auth = args.basic.as_ref();
+    let arg_save = args.save.as_ref();
+    let arg_part = args.part.as_ref();
+    let arg_bdry = args.bdry.as_ref();
 
     let mut method = Cow::from("GET");
     if let Some(some_method) = arg_method {
@@ -80,16 +97,14 @@ async fn handle_request(args: &Args, client: &mut Deboa) -> Result<(), DeboaErro
 
     let method = method.parse::<Method>();
     if let Err(e) = method {
-        eprintln!("Error: {}", e);
         return Err(DeboaError::ProcessResponse {
             message: "Invalid HTTP method".to_string(),
         });
     }
 
-    if arg_body.is_some() && arg_fields.is_some() {
-        eprintln!("Error: Both body and fields are set");
+    if arg_body.is_some() && arg_fields.is_some() && arg_part.is_some() {
         return Err(DeboaError::ProcessResponse {
-            message: "Both body and fields are set".to_string(),
+            message: "Both body, fields and part are set, you can only use one of them.".to_string(),
         });
     }
 
@@ -131,7 +146,7 @@ async fn handle_request(args: &Args, client: &mut Deboa) -> Result<(), DeboaErro
     let request = if (http_method == Method::GET || http_method == Method::DELETE) && args.body.is_none() && args.field.is_none() {
         request
     } else if let Some(body) = arg_body {
-        let content_length = HeaderValue::from_bytes(body.len().to_string().as_bytes());
+        let content_length = HeaderValue::from_str(&body.len().to_string());
         headers.insert(header::CONTENT_LENGTH, content_length.unwrap());
         if http_method == Method::GET {
             request.method(Method::POST).text(body)
@@ -140,8 +155,8 @@ async fn handle_request(args: &Args, client: &mut Deboa) -> Result<(), DeboaErro
         }
     } else if let Some(fields) = arg_fields {
         let mut form = Form::builder();
-        let content_type = HeaderValue::from_bytes(ApplicationWwwFormUrlEncoded.to_string().as_bytes());
-        headers.insert(header::CONTENT_TYPE, content_type.unwrap());
+        let content_type = mime::APPLICATION_WWW_FORM_URLENCODED.as_ref();
+        headers.insert(header::CONTENT_TYPE, HeaderValue::from_str(content_type).unwrap());
         for field in fields {
             let pairs = field.split_once('=');
             if let Some((key, value)) = pairs {
@@ -169,13 +184,24 @@ async fn handle_request(args: &Args, client: &mut Deboa) -> Result<(), DeboaErro
 
     let response = client.execute(request.build()?).await?;
 
-    let mut stdout = io::stdout();
-    let result = stdout.write(response.raw_body()).await;
-    if let Err(e) = result {
-        eprintln!("Error: {}", e);
-        return Err(DeboaError::Io {
-            message: "Failed to write to stdout".to_string(),
-        });
+    if let Some(save) = arg_save {
+        let file = File::create(save);
+        if let Ok(mut file) = file {
+            let result = file.write(response.raw_body());
+            if let Err(e) = result {
+                return Err(DeboaError::Io {
+                    message: "Failed to write to file".to_string(),
+                });
+            }
+        }
+    } else {
+        let mut stdout = io::stdout();
+        let result = stdout.write(response.raw_body()).await;
+        if let Err(e) = result {
+            return Err(DeboaError::Io {
+                message: "Failed to write to stdout".to_string(),
+            });
+        }
     }
 
     Ok(())
