@@ -2530,7 +2530,7 @@ dependencies = [
  "deboa",
  "deboa-macros",
  "http",
- "mime_typed",
+ "mime",
  "tokio",
 ]
 
