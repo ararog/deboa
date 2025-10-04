@@ -89,6 +89,7 @@ pub mod catcher;
 pub mod client;
 pub mod cookie;
 pub mod errors;
+pub mod form;
 pub mod fs;
 pub mod request;
 pub mod response;
@@ -410,7 +411,21 @@ impl Deboa {
                 continue;
             }
 
-            break Ok(response.unwrap());
+            let response = response.unwrap();
+
+            if response.status().is_redirection() {
+                let location = response.headers().get(header::LOCATION);
+                if let Some(location) = location {
+                    let location = location.to_str().unwrap();
+                    let result = request.as_mut().set_url(location);
+                    if let Err(err) = result {
+                        break Err(err);
+                    }
+                }
+                continue;
+            }
+
+            break Ok(response);
         };
 
         let mut response = self.process_response(request.as_mut().url(), response?).await?;

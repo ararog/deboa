@@ -10,8 +10,8 @@ members = [
     "examples/blog", 
     "examples/postman", 
     "examples/catcher",
-    "examples/rurl", 
     "examples/simple", 
+    "examples/uget", 
     "vamo", 
     "vamo-macros", 
 ]

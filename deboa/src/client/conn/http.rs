@@ -108,7 +108,7 @@ pub trait DeboaHttpConnection {
 
         let response = response.unwrap();
         let status_code = response.status();
-        if !status_code.is_success() || status_code == StatusCode::TOO_MANY_REQUESTS {
+        if (!status_code.is_success() && !status_code.is_redirection()) || status_code == StatusCode::TOO_MANY_REQUESTS {
             let body = response.collect().await;
             let body = body.unwrap().to_bytes().to_vec();
             return Err(DeboaError::Response {

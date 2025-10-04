@@ -1,6 +1,6 @@
 [package]
 name = "deboa"
-version = "0.0.5"
+version = "0.0.6-beta.2"
 edition = "2021"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 repository = "https://github.com/ararog/deboa"
@@ -16,7 +16,7 @@ rust-version = "1.64.0"
 default = ["tokio-rt"]
 
 # runtimes
-tokio-rt = ["http1", "http2", "dep:tokio"]
+tokio-rt = ["http1", "http2", "dep:tokio", "dep:tokio-native-tls"]
 smol-rt = [
   "http1",
   "http2",
@@ -51,6 +51,7 @@ hyper-util = { version = "0.1.10", features = [
   "client-legacy",
   "tokio",
 ] }
+indexmap = "2.11.4"
 macro_rules_attribute = { version = "0.2.2", optional = true }
 mime = { version = "0.3.17" }
 mockall = "0.13.1"
@@ -61,8 +62,10 @@ smol-macros = { version = "0.1.1", optional = true }
 strum_macros = "0.27.0"
 thiserror = "2.0.16"
 tokio = { version = "1.47.1", features = ["rt-multi-thread"], optional = true }
+tokio-native-tls = { version = "0.3.1", optional = true }
 typed-builder = "0.21.2"
 url = "2.5.4"
+urlencoding = "2.1.3"
 
 [dev-dependencies]
 deboa-tests = { path = "../deboa-tests", version = "0.0.1" }

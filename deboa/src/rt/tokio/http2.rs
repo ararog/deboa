@@ -5,9 +5,11 @@ use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
 use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
+use tokio_native_tls::native_tls::TlsConnector;
 use url::{Host, Url};
 
 use crate::client::conn::http::DeboaHttpConnection;
+use crate::rt::tokio::stream::TokioStream;
 use crate::{
     client::conn::http::{BaseHttpConnection, Http2Request},
     errors::DeboaError,
@@ -24,20 +26,60 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
 
     async fn connect(url: &Url) -> Result<BaseHttpConnection<Http2Request>, DeboaError> {
         let host = url.host().unwrap_or(Host::Domain("localhost"));
-        let port = url.port().unwrap_or(80);
-        let addr = format!("{host}:{port}");
+        let stream = {
+            match url.scheme() {
+                "http" => {
+                    let stream = {
+                        let port = url.port().unwrap_or(80);
+                        TcpStream::connect((host.to_string(), port)).await
+                    };
 
-        let stream = TcpStream::connect(addr).await;
-        if let Err(err) = stream {
-            return Err(DeboaError::Connection {
-                host: host.to_string(),
-                message: err.to_string(),
-            });
-        }
+                    if let Err(e) = stream {
+                        return Err(DeboaError::Connection {
+                            host: host.to_string(),
+                            message: e.to_string(),
+                        });
+                    }
 
-        let io = TokioIo::new(stream.unwrap());
+                    TokioStream::Plain(stream.unwrap())
+                }
+                "https" => {
+                    let stream = {
+                        let port = url.port().unwrap_or(443);
+                        TcpStream::connect((host.to_string(), port)).await
+                    };
 
-        let result = handshake(TokioExecutor::new(), io).await;
+                    if let Err(e) = stream {
+                        return Err(DeboaError::Connection {
+                            host: host.to_string(),
+                            message: e.to_string(),
+                        });
+                    }
+
+                    let socket = stream.unwrap();
+                    let cx = TlsConnector::builder().build().unwrap();
+                    let cx = tokio_native_tls::TlsConnector::from(cx);
+
+                    let stream = cx.connect(&host.to_string(), socket).await;
+
+                    if let Err(e) = stream {
+                        return Err(DeboaError::Connection {
+                            host: host.to_string(),
+                            message: e.to_string(),
+                        });
+                    }
+
+                    TokioStream::Tls(stream.unwrap())
+                }
+                scheme => {
+                    return Err(DeboaError::UnsupportedScheme {
+                        message: format!("unsupported scheme: {scheme:?}"),
+                    });
+                }
+            }
+        };
+
+        let result = handshake(TokioExecutor::new(), TokioIo::new(stream)).await;
 
         if let Err(err) = result {
             return Err(DeboaError::Connection {
