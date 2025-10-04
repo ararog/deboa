@@ -396,11 +396,12 @@ impl Deboa {
             }
         }
 
+        let url = request.url().clone();
         let mut retry_count: u32 = 0;
         let response = loop {
             let response = self.send_request(request.as_mut()).await;
             if let Err(err) = response {
-                if retry_count == request.as_mut().retries() {
+                if retry_count == request.retries() {
                     break Err(err);
                 }
                 #[cfg(feature = "tokio-rt")]
@@ -428,7 +429,7 @@ impl Deboa {
             break Ok(response);
         };
 
-        let mut response = self.process_response(request.as_mut().url(), response?).await?;
+        let mut response = self.process_response(url, response?).await?;
 
         if let Some(catchers) = &self.catchers {
             catchers.iter().for_each(|catcher| catcher.on_response(&mut response));
@@ -462,8 +463,8 @@ impl Deboa {
         {
             let req_headers = builder.headers_mut().unwrap();
 
-            request.as_ref().headers().iter().fold(&mut *req_headers, |acc, (key, value)| {
-                acc.insert(key, value.clone());
+            request.as_ref().headers().into_iter().fold(&mut *req_headers, |acc, (key, value)| {
+                acc.insert(key, value.into());
                 acc
             });
 
@@ -512,7 +513,7 @@ impl Deboa {
     ///
     /// * `Result<DeboaResponse, DeboaError>` - The response.
     ///
-    async fn process_response(&self, url: &Url, response: Response<Incoming>) -> Result<DeboaResponse, DeboaError> {
+    async fn process_response(&self, url: Url, response: Response<Incoming>) -> Result<DeboaResponse, DeboaError> {
         let status_code = response.status();
         let headers = response.headers().clone();
 
@@ -523,6 +524,6 @@ impl Deboa {
 
         let raw_body = result.unwrap().to_bytes().to_vec();
 
-        Ok(DeboaResponse::new(url.clone(), status_code, headers, &raw_body))
+        Ok(DeboaResponse::new(url, status_code, headers, &raw_body))
     }
 }
