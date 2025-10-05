@@ -7,7 +7,7 @@ use base64::{engine::general_purpose::STANDARD, Engine as _};
 use serde::Serialize;
 use url::Url;
 
-use crate::{client::serde::RequestBody, cookie::DeboaCookie, errors::DeboaError, response::DeboaResponse, Deboa};
+use crate::{client::serde::RequestBody, cookie::DeboaCookie, errors::DeboaError, form::{DeboaForm, Form}, response::DeboaResponse, Deboa};
 
 /// Trait to convert a value into a Url.
 pub trait IntoUrl {
@@ -222,6 +222,7 @@ pub struct DeboaRequestBuilder {
     cookies: Option<HashMap<String, DeboaCookie>>,
     method: http::Method,
     body: Arc<Vec<u8>>,
+    form: Option<Form>,
 }
 
 impl DeboaRequestBuilder {
@@ -331,6 +332,21 @@ impl DeboaRequestBuilder {
         self
     }
 
+    /// Set multipart form of the request.
+    ///
+    /// # Arguments
+    ///
+    /// * `form` - The form.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The request builder.
+    ///
+    pub fn form(mut self, form: Form) -> Self {
+        self.form = Some(form);
+        self
+    }
+
     /// Set the body of the request as text.
     ///
     /// # Arguments
@@ -398,14 +414,20 @@ impl DeboaRequestBuilder {
     /// * `Result<DeboaRequest, DeboaError>` - The request.
     ///
     pub fn build(self) -> Result<DeboaRequest, DeboaError> {
-        Ok(DeboaRequest {
+        let mut request = DeboaRequest {
             url: self.url,
             headers: self.headers,
             cookies: self.cookies,
             retries: self.retries,
             method: self.method,
             body: self.body,
-        })
+        };
+
+        if let Some(form) = self.form {
+            request.set_form(form);
+        }
+
+        Ok(request)
     }
 
     /// Send the request.
@@ -433,8 +455,8 @@ pub struct DeboaRequest {
 }
 
 impl Debug for DeboaRequest {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("DeboaRequest")
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {  
+          f.debug_struct("DeboaRequest")
             .field("url", &self.url)
             .field("headers", &self.headers)
             .field("cookies", &self.cookies)
@@ -482,6 +504,7 @@ impl DeboaRequest {
             retries: 0,
             method,
             body: Arc::new(Vec::new()),
+            form: None,
         })
     }
 
@@ -644,6 +667,17 @@ impl DeboaRequest {
     #[inline]
     pub fn url(&self) -> &Url {
         &self.url
+    }
+
+    /// Allow get retries at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `u32` - The retries.
+    ///
+    #[inline]
+    pub fn retries(&self) -> u32 {
+        self.retries
     }
 
     /// Allow get request headers at any time.
@@ -815,6 +849,30 @@ impl DeboaRequest {
         self.cookies.as_ref()
     }
 
+    /// Allow set form at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `form` - The form to be set.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The request.
+    ///
+    pub fn set_form(&mut self, form: Form) -> &mut Self {
+        let (content_type, body) = match form {
+            Form::EncodedForm(form) => {
+                (form.content_type(), form.build())
+            }
+            Form::MultiPartForm(form) => {
+                (form.content_type(), form.build())
+            }
+        };
+        self.add_header(header::CONTENT_TYPE, &content_type);
+        self.body = Arc::from(body.as_bytes().to_vec());
+        self
+    }
+
     /// Allow set text body at any time.
     ///
     /// # Arguments
@@ -854,17 +912,6 @@ impl DeboaRequest {
     #[inline]
     pub fn raw_body(&self) -> &Vec<u8> {
         &self.body
-    }
-
-    /// Allow get retries at any time.
-    ///
-    /// # Returns
-    ///
-    /// * `u32` - The retries.
-    ///
-    #[inline]
-    pub fn retries(&self) -> u32 {
-        self.retries
     }
 
     /// Allow set body at any time.

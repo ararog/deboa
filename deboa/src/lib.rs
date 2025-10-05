@@ -480,10 +480,8 @@ impl Deboa {
                 }
             }
         }
-
-        let body = request.as_ref().raw_body();
-
-        let request = builder.body(Full::new(Bytes::from(body.to_vec())));
+ 
+        let request = builder.body(Full::new(Bytes::from(request.as_ref().raw_body().to_vec())));
         if let Err(err) = request {
             return Err(DeboaError::Request {
                 url: url.to_string(),

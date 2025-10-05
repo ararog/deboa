@@ -1,8 +1,8 @@
-use crate::{errors::DeboaError, form::Form};
+use crate::{errors::DeboaError, form::{DeboaForm, EncodedForm}};
 
 #[test]
 fn test_form() -> Result<(), DeboaError> {
-    let form = Form::builder()
+    let form = EncodedForm::builder()
         .field("name", "deboa")
         .field("version", "0.0.1")
         .build();
