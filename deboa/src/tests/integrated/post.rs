@@ -1,6 +1,7 @@
+use crate::form::{DeboaForm, EncodedForm};
 use crate::request::DeboaRequest;
 use crate::Deboa;
-use crate::{errors::DeboaError, form::Form};
+use crate::{errors::DeboaError};
 use http::{header, StatusCode};
 use httpmock::{Method::POST, MockServer};
 
@@ -65,7 +66,7 @@ async fn do_post_form() -> Result<(), DeboaError> {
 
     let mut client = Deboa::new();
 
-    let form = Form::builder().field("name", "deboa").field("version", "0.0.1").build();
+    let form = EncodedForm::builder().field("name", "deboa").field("version", "0.0.1").build();
 
     let request = DeboaRequest::post(server.url("/posts").as_str())?
         .header(header::CONTENT_TYPE, mime::WWW_FORM_URLENCODED.into())
