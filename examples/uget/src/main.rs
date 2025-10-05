@@ -1,9 +1,9 @@
 use std::{
-    borrow::Cow,
-    io::{Read, Write},
+    io::{Write},
 };
 
 use clap::Parser;
+use clap_stdin::MaybeStdin;
 use deboa::{
     errors::DeboaError,
     form::{DeboaForm, EncodedForm},
@@ -52,10 +52,10 @@ Options:
 struct Args {
     #[arg(index = 1, required = true, help = "URL to make the request to.")]
     url: String,
+    #[arg(index = 2, default_value = "-", help = "Allow set raw request body.")]
+    body: Option<MaybeStdin<String>>,
     #[arg(short, long, help = "HTTP method to use.")]
     method: Option<String>,
-    #[arg(short, long, help = "Allow set raw request body.")]
-    body: Option<String>,
     #[arg(long, help = "Set form field, format: key=value.")]
     field: Option<Vec<String>>,
     #[arg(long, help = "Set header field, format: key=value.")]
@@ -89,7 +89,7 @@ async fn main() {
 async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let mut arg_url = args.url;
     let arg_method = args.method;
-    let mut arg_body = args.body;
+    let arg_body = args.body;
     let arg_fields = args.field;
     let arg_header = args.header;
     let arg_bearer_auth = args.bearer;
@@ -98,23 +98,11 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let arg_part = args.part;
     let _arg_bdry = args.bdry;
 
-    let stdin = std::io::stdin();
-    let mut reader = stdin.lock();
-    let mut buffer = String::new();
-    let stdin_body = reader.read_to_string(&mut buffer);
-    if let Err(e) = stdin_body {
-        return Err(DeboaError::Io {
-            message: format!("Failed to read from stdin: {}", e),
-        });
-    }
-
-    if !buffer.is_empty() {
-        arg_body = Some(buffer);
-    }
-
-    let mut method = Cow::from("GET");
+    let mut method = "GET".to_string();
     if let Some(some_method) = arg_method {
-        method = some_method.to_uppercase().into();
+        method = some_method.to_uppercase();
+    } else if arg_body.is_some() || arg_fields.is_some() || arg_part.is_some() {
+        method = "POST".to_string();
     }
 
     let method = method.parse::<Method>();
@@ -165,28 +153,19 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
 
     let http_method = method.unwrap();
     let request = DeboaRequest::to(arg_url.as_ref())?;
-    let request = if (http_method == Method::GET || http_method == Method::DELETE) && arg_body.is_none() && arg_fields.is_none() && arg_part.is_none()
-    {
-        request
-    } else if let Some(body) = arg_body {
+    let request = if let Some(body) = arg_body {
         let content_length = HeaderValue::from_str(&body.len().to_string());
         headers.insert(header::CONTENT_LENGTH, content_length.unwrap());
-        if http_method == Method::GET {
-            request.method(Method::POST).text(&body)
-        } else {
-            request.text(&body)
-        }
+        request.text(&body)
     } else if let Some(fields) = arg_fields {
         let mut form = EncodedForm::builder();
-        let content_type = mime::APPLICATION_WWW_FORM_URLENCODED.as_ref();
-        headers.insert(header::CONTENT_TYPE, HeaderValue::from_str(content_type).unwrap());
         for field in fields {
             let pairs = field.split_once('=');
             if let Some((key, value)) = pairs {
                 form.field(key, value);
             }
         }
-        request.text(&form.build())
+        request.form(form.into())
     } else {
         request
     };

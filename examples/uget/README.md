@@ -33,7 +33,7 @@ uget https://example.com --field "title=foo" --field "body=bar" --field "userId=
 
 ### Header
 ```sh
-uget https://example.com -m POST --header "Content-Type: application/json" --body "{ title: 'foo', body: 'bar', userId: 1 }"
+uget https://example.com -m POST --header "Content-Type: application/json" "{ title: 'foo', body: 'bar', userId: 1 }"
 ```
 
 ### Bearer
