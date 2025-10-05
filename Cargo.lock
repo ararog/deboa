@@ -508,6 +508,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap-stdin"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce9eaafece93d07ba62941de901e54d8df03800b7d775000d0d8cd5f876a592d"
+dependencies = [
+ "thiserror 2.0.16",
+]
+
+[[package]]
 name = "clap_builder"
 version = "4.5.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -674,7 +683,7 @@ dependencies = [
 
 [[package]]
 name = "deboa"
-version = "0.0.6-beta.2"
+version = "0.0.6-beta.3"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -2563,11 +2572,11 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
 name = "uget"
-version = "0.0.2"
+version = "0.0.3"
 dependencies = [
  "clap",
+ "clap-stdin",
  "deboa",
- "deboa-macros",
  "http",
  "mime",
  "tokio",
