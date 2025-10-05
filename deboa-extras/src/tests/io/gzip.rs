@@ -1,4 +1,4 @@
-use deboa::{catcher::DeboaCatcher, errors::DeboaError, response::DeboaResponse};
+use deboa::{catcher::DeboaCatcher, response::DeboaResponse, Result};
 use http::{HeaderMap, HeaderValue, StatusCode};
 
 use crate::{catcher::encoding::EncodingCatcher, io::gzip::GzipDecompressor};
@@ -7,7 +7,7 @@ use deboa_tests::data::{DECOMPRESSED, GZIP_COMPRESSED};
 use deboa_tests::utils::fake_url;
 
 #[tokio::test]
-async fn test_gzip() -> Result<(), DeboaError> {
+async fn test_gzip() -> Result<()> {
     let encoding_catcher = EncodingCatcher::register_decoders(vec![GzipDecompressor]);
 
     let mut headers = HeaderMap::new();

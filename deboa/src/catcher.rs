@@ -2,7 +2,7 @@
 
 use mockall::automock;
 
-use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
+use crate::{request::DeboaRequest, response::DeboaResponse, Result};
 
 /// DeboaCatcher
 ///
@@ -20,9 +20,9 @@ pub trait DeboaCatcher: Send + Sync + 'static {
     ///
     /// # Returns
     ///
-    /// * `Result<Option<DeboaResponse>, DeboaError>` - The response that was received.
+    /// * `Result<Option<DeboaResponse>>` - The response that was received.
     ///
-    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>, DeboaError> {
+    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
         Ok(None)
     }
 
@@ -37,7 +37,7 @@ pub trait DeboaCatcher: Send + Sync + 'static {
 }
 
 impl<T: DeboaCatcher> DeboaCatcher for Box<T> {
-    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>, DeboaError> {
+    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
         self.as_ref().on_request(request)
     }
 

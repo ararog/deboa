@@ -1,4 +1,4 @@
-use deboa::errors::DeboaError;
+use deboa::Result;
 use deboa_extras::http::serde::json::JsonBody;
 use serde::Deserialize;
 use vamo::Vamo;
@@ -21,7 +21,7 @@ async fn main() {
     }
 }
 
-async fn fetch_posts() -> Result<Vec<Post>, DeboaError> {
+async fn fetch_posts() -> Result<Vec<Post>> {
     let vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
     let posts: Vec<Post> = vamo.get("/posts")?.go(vamo).await?.body_as(JsonBody)?;
     Ok(posts)

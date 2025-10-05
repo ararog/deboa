@@ -6,6 +6,7 @@ use deboa::{
     fs::io::{Compressor, Decompressor},
     request::DeboaRequest,
     response::DeboaResponse,
+    Result,
 };
 use flate2::{read::GzDecoder, write::GzEncoder};
 
@@ -17,7 +18,7 @@ impl Compressor for GzipCompressor {
         "gzip".to_string()
     }
 
-    fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes, DeboaError> {
+    fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes> {
         let mut writer = GzEncoder::new(Vec::new(), flate2::Compression::default());
         let result = writer.write_all(request.raw_body().as_ref());
 
@@ -43,7 +44,7 @@ impl Decompressor for GzipDecompressor {
         "gzip".to_string()
     }
 
-    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<(), DeboaError> {
+    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
         let binding = response.raw_body();
         let mut reader = GzDecoder::new(binding.reader());
         let mut buffer = Vec::new();

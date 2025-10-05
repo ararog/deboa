@@ -1,4 +1,3 @@
-use deboa::errors::DeboaError;
 use deboa_macros::bora;
 use vamo::Vamo;
 

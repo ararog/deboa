@@ -1,4 +1,4 @@
-use deboa::{errors::DeboaError, Deboa};
+use deboa::{Deboa, Result};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_macros::post;
 use serde::{Deserialize, Serialize};
@@ -11,7 +11,7 @@ pub struct Post {
 }
 
 #[tokio::test]
-async fn test_post() -> Result<(), DeboaError> {
+async fn test_post() -> Result<()> {
     let mut client = Deboa::new();
     let data: Post = Post {
         id: 1,

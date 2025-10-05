@@ -7,93 +7,40 @@ use base64::{engine::general_purpose::STANDARD, Engine as _};
 use serde::Serialize;
 use url::Url;
 
-use crate::{client::serde::RequestBody, cookie::DeboaCookie, errors::DeboaError, form::{DeboaForm, Form}, response::DeboaResponse, Deboa};
-
-/// Trait to convert a value into a Url.
-pub trait IntoUrl {
-    /// Convert the value into a Url.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<Url, DeboaError>` - The url.
-    ///
-    fn into_url(self) -> Result<Url, DeboaError>;
-    /// Parse a string into a Url.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<Url, DeboaError>` - The url.
-    ///
-    fn parse_url(&self) -> Result<Url, DeboaError>
-    where
-        Self: AsRef<str>,
-    {
-        if !self.as_ref().starts_with("http") {
-            return Err(DeboaError::UrlParse {
-                message: "Scheme must be http or https".to_string(),
-            });
-        }
-
-        let url = Url::parse(self.as_ref());
-
-        if url.is_err() {
-            return Err(DeboaError::UrlParse {
-                message: "Failed to parse url".to_string(),
-            });
-        }
-
-        Ok(url.unwrap())
-    }
-}
-
-impl IntoUrl for Url {
-    fn into_url(self) -> Result<Url, DeboaError> {
-        Ok(self)
-    }
-}
-
-impl IntoUrl for &str {
-    fn into_url(self) -> Result<Url, DeboaError> {
-        self.parse_url()
-    }
-}
-
-impl IntoUrl for &mut String {
-    fn into_url(self) -> Result<Url, DeboaError> {
-        self.parse_url()
-    }
-}
-
-impl IntoUrl for String {
-    fn into_url(self) -> Result<Url, DeboaError> {
-        self.parse_url()
-    }
-}
+use crate::{
+    client::serde::RequestBody,
+    cookie::DeboaCookie,
+    errors::DeboaError,
+    form::{DeboaForm, Form},
+    response::DeboaResponse,
+    url::IntoUrl,
+    Deboa, Result,
+};
 
 pub trait IntoRequest {
-    fn into_request(self) -> Result<DeboaRequest, DeboaError>;
+    fn into_request(self) -> Result<DeboaRequest>;
 }
 
 impl IntoRequest for DeboaRequest {
-    fn into_request(self) -> Result<DeboaRequest, DeboaError> {
+    fn into_request(self) -> Result<DeboaRequest> {
         Ok(self)
     }
 }
 
 impl IntoRequest for &str {
-    fn into_request(self) -> Result<DeboaRequest, DeboaError> {
+    fn into_request(self) -> Result<DeboaRequest> {
         DeboaRequest::get(self)?.build()
     }
 }
 
 impl IntoRequest for String {
-    fn into_request(self) -> Result<DeboaRequest, DeboaError> {
+    fn into_request(self) -> Result<DeboaRequest> {
         DeboaRequest::get(self)?.build()
     }
 }
 
 impl IntoRequest for Url {
-    fn into_request(self) -> Result<DeboaRequest, DeboaError> {
+    fn into_request(self) -> Result<DeboaRequest> {
         DeboaRequest::get(self)?.build()
     }
 }
@@ -105,28 +52,28 @@ pub trait Fetch {
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaResponse, DeboaError>` - The response.
+    /// * `Result<DeboaResponse>` - The response.
     ///
-    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse, DeboaError>;
+    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse>;
 }
 
 #[async_trait]
 impl Fetch for Url {
-    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse, DeboaError> {
+    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse> {
         DeboaRequest::get(self.clone())?.go(client).await
     }
 }
 
 #[async_trait]
 impl Fetch for &str {
-    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse, DeboaError> {
+    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse> {
         DeboaRequest::get(*self)?.go(client).await
     }
 }
 
 #[async_trait]
 impl Fetch for String {
-    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse, DeboaError> {
+    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse> {
         DeboaRequest::get(self.clone())?.go(client).await
     }
 }
@@ -139,10 +86,10 @@ impl Fetch for String {
 ///
 /// # Returns
 ///
-/// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
+/// * `Result<DeboaRequestBuilder>` - The request builder.
 ///
 #[inline]
-pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
     DeboaRequest::get(url)
 }
 
@@ -154,10 +101,10 @@ pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
 ///
 /// # Returns
 ///
-/// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
+/// * `Result<DeboaRequestBuilder>` - The request builder.
 ///
 #[inline]
-pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
     DeboaRequest::post(url)
 }
 
@@ -169,10 +116,10 @@ pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
 ///
 /// # Returns
 ///
-/// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
+/// * `Result<DeboaRequestBuilder>` - The request builder.
 ///
 #[inline]
-pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
     DeboaRequest::put(url)
 }
 
@@ -184,10 +131,10 @@ pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
 ///
 /// # Returns
 ///
-/// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
+/// * `Result<DeboaRequestBuilder>` - The request builder.
 ///
 #[inline]
-pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
     DeboaRequest::delete(url)
 }
 
@@ -199,10 +146,10 @@ pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
 ///
 /// # Returns
 ///
-/// * `Result<DeboaRequestBuilder, DeboaError>` - The request builder.
+/// * `Result<DeboaRequestBuilder>` - The request builder.
 ///
 #[inline]
-pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
     DeboaRequest::patch(url)
 }
 
@@ -371,9 +318,9 @@ impl DeboaRequestBuilder {
     ///
     /// # Returns
     ///
-    /// * `Result<Self, DeboaError>` - The request builder.
+    /// * `Result<Self>` - The request builder.
     ///
-    pub fn body_as<T: RequestBody, B: Serialize>(mut self, body_type: T, body: B) -> Result<Self, DeboaError> {
+    pub fn body_as<T: RequestBody, B: Serialize>(mut self, body_type: T, body: B) -> Result<Self> {
         self.body = body_type.serialize(body)?.into();
         Ok(self)
     }
@@ -411,9 +358,9 @@ impl DeboaRequestBuilder {
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaRequest, DeboaError>` - The request.
+    /// * `Result<DeboaRequest>` - The request.
     ///
-    pub fn build(self) -> Result<DeboaRequest, DeboaError> {
+    pub fn build(self) -> Result<DeboaRequest> {
         let mut request = DeboaRequest {
             url: self.url,
             headers: self.headers,
@@ -438,9 +385,9 @@ impl DeboaRequestBuilder {
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaResponse, DeboaError>` - The response.
+    /// * `Result<DeboaResponse>` - The response.
     ///
-    pub async fn go<T: AsMut<Deboa>>(self, mut client: T) -> Result<DeboaResponse, DeboaError> {
+    pub async fn go<T: AsMut<Deboa>>(self, mut client: T) -> Result<DeboaResponse> {
         client.as_mut().execute(self.build()?).await
     }
 }
@@ -455,8 +402,8 @@ pub struct DeboaRequest {
 }
 
 impl Debug for DeboaRequest {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {  
-          f.debug_struct("DeboaRequest")
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DeboaRequest")
             .field("url", &self.url)
             .field("headers", &self.headers)
             .field("cookies", &self.cookies)
@@ -491,7 +438,7 @@ impl DeboaRequest {
     ///
     /// * `DeboaRequestBuilder` - The request builder.
     ///
-    pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
             return Err(DeboaError::UrlParse { message: e.to_string() });
@@ -519,7 +466,7 @@ impl DeboaRequest {
     /// * `DeboaRequestBuilder` - The request builder.
     ///
     #[inline]
-    pub fn from<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn from<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
         DeboaRequest::at(url, Method::GET)
     }
 
@@ -534,7 +481,7 @@ impl DeboaRequest {
     /// * `DeboaRequestBuilder` - The request builder.
     ///
     #[inline]
-    pub fn to<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn to<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
         DeboaRequest::at(url, Method::POST)
     }
 
@@ -549,7 +496,7 @@ impl DeboaRequest {
     /// * `DeboaRequestBuilder` - The request builder.
     ///
     #[inline]
-    pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
         Ok(DeboaRequest::from(url)?.method(Method::GET))
     }
 
@@ -564,7 +511,7 @@ impl DeboaRequest {
     /// * `DeboaRequestBuilder` - The request builder.
     ///
     #[inline]
-    pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
         Ok(DeboaRequest::to(url)?.method(Method::POST))
     }
 
@@ -579,7 +526,7 @@ impl DeboaRequest {
     /// * `DeboaRequestBuilder` - The request builder.
     ///
     #[inline]
-    pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
         Ok(DeboaRequest::to(url)?.method(Method::PUT))
     }
 
@@ -594,7 +541,7 @@ impl DeboaRequest {
     /// * `DeboaRequestBuilder` - The request builder.
     ///
     #[inline]
-    pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
         Ok(DeboaRequest::to(url)?.method(Method::PATCH))
     }
 
@@ -609,7 +556,7 @@ impl DeboaRequest {
     /// * `DeboaRequestBuilder` - The request builder.
     ///
     #[inline]
-    pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
         Ok(DeboaRequest::from(url)?.method(Method::DELETE))
     }
 
@@ -647,9 +594,9 @@ impl DeboaRequest {
     ///
     /// # Returns
     ///
-    /// * `Result<&mut Self, DeboaError>` - The request.
+    /// * `Result<&mut Self>` - The request.
     ///
-    pub fn set_url<T: IntoUrl>(&mut self, url: T) -> Result<&mut Self, DeboaError> {
+    pub fn set_url<T: IntoUrl>(&mut self, url: T) -> Result<&mut Self> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
             return Err(DeboaError::UrlParse { message: e.to_string() });
@@ -861,12 +808,8 @@ impl DeboaRequest {
     ///
     pub fn set_form(&mut self, form: Form) -> &mut Self {
         let (content_type, body) = match form {
-            Form::EncodedForm(form) => {
-                (form.content_type(), form.build())
-            }
-            Form::MultiPartForm(form) => {
-                (form.content_type(), form.build())
-            }
+            Form::EncodedForm(form) => (form.content_type(), form.build()),
+            Form::MultiPartForm(form) => (form.content_type(), form.build()),
         };
         self.add_header(header::CONTENT_TYPE, &content_type);
         self.body = Arc::from(body.as_bytes().to_vec());
@@ -923,9 +866,9 @@ impl DeboaRequest {
     ///
     /// # Returns
     ///
-    /// * `Result<&mut Self, DeboaError>` - The request.
+    /// * `Result<&mut Self>` - The request.
     ///
-    pub fn set_body_as<T: RequestBody, B: Serialize>(&mut self, body_type: T, body: B) -> Result<&mut Self, DeboaError> {
+    pub fn set_body_as<T: RequestBody, B: Serialize>(&mut self, body_type: T, body: B) -> Result<&mut Self> {
         body_type.register_content_type(self);
         self.body = body_type.serialize(body)?.into();
         Ok(self)

@@ -44,7 +44,7 @@ use deboa::{Deboa, request::get};
 use deboa_extras::http::serde::json::JsonBody;
 
 #[tokio::main]
-async fn main() -> Result<(), DeboaError> {
+async fn main() -> Result<()> {
   let client = Deboa::new();
 
   /* 

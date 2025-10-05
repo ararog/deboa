@@ -5,7 +5,7 @@ use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 use url::Url;
 
-use crate::errors::DeboaError;
+use crate::{errors::DeboaError, Result};
 
 #[derive(Debug)]
 /// Enum that represents the connection type.
@@ -56,9 +56,9 @@ pub trait DeboaHttpConnection {
     ///
     /// # Returns
     ///
-    /// * `Result<BaseHttpConnection<Self::Sender>, DeboaError>` - The connection or error.
+    /// * `Result<BaseHttpConnection<Self::Sender>>` - The connection or error.
     ///
-    async fn connect(url: &Url) -> Result<BaseHttpConnection<Self::Sender>, DeboaError>;
+    async fn connect(url: &Url) -> Result<BaseHttpConnection<Self::Sender>>;
 
     /// Get connection url.
     ///
@@ -76,9 +76,9 @@ pub trait DeboaHttpConnection {
     ///
     /// # Returns
     ///
-    /// * `Result<Response<Incoming>, DeboaError>` - The response or error.
+    /// * `Result<Response<Incoming>>` - The response or error.
     ///
-    async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>, DeboaError>;
+    async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>>;
 
     /// Process a response.
     ///
@@ -90,14 +90,14 @@ pub trait DeboaHttpConnection {
     ///
     /// # Returns
     ///
-    /// * `Result<Response<Incoming>, DeboaError>` - The response or error.
+    /// * `Result<Response<Incoming>>` - The response or error.
     ///
     async fn process_response(
         &self,
         url: &Url,
         method: &str,
-        response: Result<Response<Incoming>, hyper::Error>,
-    ) -> Result<Response<Incoming>, DeboaError> {
+        response: std::result::Result<Response<Incoming>, hyper::Error>,
+    ) -> Result<Response<Incoming>> {
         if let Err(err) = response {
             return Err(DeboaError::Request {
                 url: url.to_string(),

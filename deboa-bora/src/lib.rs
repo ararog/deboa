@@ -38,7 +38,7 @@
 //! pub struct PostService;
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), DeboaError> {
+//! async fn main() -> Result<()> {
 //!     let client = Vamo::new("https://jsonplaceholder.typicode.com")?;
 //!
 //!     let mut post_service = PostService::new(client);

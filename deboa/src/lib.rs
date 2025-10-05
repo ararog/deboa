@@ -15,10 +15,10 @@
 //! and need to be specified as [git dependencies].</small>
 //!
 //! ```rust,no_run
-//! use deboa::{Deboa, errors::DeboaError, request::DeboaRequest};
+//! use deboa::{Deboa, Result, errors::DeboaError, request::DeboaRequest};
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), DeboaError> {
+//! async fn main() -> Result<()> {
 //!     let deboa = Deboa::builder()
 //!         .build();
 //!
@@ -69,6 +69,7 @@ use std::fmt::Debug;
 
 use std::ops::Shl;
 
+use ::url::Url;
 use bytes::Bytes;
 use http::{header, HeaderValue, Request, Response};
 use http_body_util::{BodyExt, Full};
@@ -82,8 +83,6 @@ use crate::errors::DeboaError;
 use crate::request::{DeboaRequest, IntoRequest};
 use crate::response::DeboaResponse;
 
-use url::Url;
-
 pub mod cache;
 pub mod catcher;
 pub mod client;
@@ -94,9 +93,12 @@ pub mod fs;
 pub mod request;
 pub mod response;
 mod rt;
+pub mod url;
 
 #[cfg(test)]
 mod tests;
+
+pub type Result<T> = std::result::Result<T, DeboaError>;
 
 impl Shl<&str> for &Deboa {
     type Output = DeboaRequest;
@@ -380,9 +382,9 @@ impl Deboa {
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaResponse, DeboaError>` - The response.
+    /// * `Result<DeboaResponse>` - The response.
     ///
-    pub async fn execute<R>(&mut self, request: R) -> Result<DeboaResponse, DeboaError>
+    pub async fn execute<R>(&mut self, request: R) -> Result<DeboaResponse>
     where
         R: IntoRequest,
     {
@@ -446,9 +448,9 @@ impl Deboa {
     ///
     /// # Returns
     ///
-    /// * `Result<Response<Incoming>, DeboaError>` - The response.
+    /// * `Result<Response<Incoming>>` - The response.
     ///
-    async fn send_request<R>(&mut self, request: &R) -> Result<Response<Incoming>, DeboaError>
+    async fn send_request<R>(&mut self, request: &R) -> Result<Response<Incoming>>
     where
         R: AsRef<DeboaRequest>,
     {
@@ -480,7 +482,7 @@ impl Deboa {
                 }
             }
         }
- 
+
         let request = builder.body(Full::new(Bytes::from(request.as_ref().raw_body().to_vec())));
         if let Err(err) = request {
             return Err(DeboaError::Request {
@@ -509,9 +511,9 @@ impl Deboa {
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaResponse, DeboaError>` - The response.
+    /// * `Result<DeboaResponse>` - The response.
     ///
-    async fn process_response(&self, url: Url, response: Response<Incoming>) -> Result<DeboaResponse, DeboaError> {
+    async fn process_response(&self, url: Url, response: Response<Incoming>) -> Result<DeboaResponse> {
         let status_code = response.status();
         let headers = response.headers().clone();
 

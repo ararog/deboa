@@ -1,4 +1,3 @@
-use deboa::errors::DeboaError;
 use deboa_bora::bora;
 use deboa_tests::utils::JSONPLACEHOLDER;
 use vamo::Vamo;
@@ -22,7 +21,7 @@ pub struct Post {
 pub struct PostService;
 
 #[tokio::test]
-async fn test_get_by_id() -> Result<(), DeboaError> {
+async fn test_get_by_id() -> Result<()> {
     let client = Vamo::new(JSONPLACEHOLDER)?;
 
     let mut post_service = PostService::new(client);
@@ -37,7 +36,7 @@ async fn test_get_by_id() -> Result<(), DeboaError> {
 }
 
 #[tokio::test]
-async fn test_get_all() -> Result<(), DeboaError> {
+async fn test_get_all() -> Result<()> {
     let client = Vamo::new(JSONPLACEHOLDER)?;
 
     let mut post_service = PostService::new(client);
@@ -51,7 +50,7 @@ async fn test_get_all() -> Result<(), DeboaError> {
 }
 
 #[tokio::test]
-async fn test_query_by_id() -> Result<(), DeboaError> {
+async fn test_query_by_id() -> Result<()> {
     let client = Vamo::new(JSONPLACEHOLDER)?;
 
     let mut post_service = PostService::new(client);
@@ -65,7 +64,7 @@ async fn test_query_by_id() -> Result<(), DeboaError> {
 }
 
 #[tokio::test]
-async fn test_query_by_title() -> Result<(), DeboaError> {
+async fn test_query_by_title() -> Result<()> {
     let client = Vamo::new(JSONPLACEHOLDER)?;
 
     let mut post_service = PostService::new(client);

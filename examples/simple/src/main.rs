@@ -1,4 +1,4 @@
-use deboa::{errors::DeboaError, request::get, Deboa};
+use deboa::{request::get, Deboa, Result};
 use deboa_extras::http::serde::json::JsonBody;
 
 #[derive(Debug, serde::Deserialize)]
@@ -9,7 +9,7 @@ pub struct Post {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), DeboaError> {
+async fn main() -> Result<()> {
     let client = Deboa::new();
 
     let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?.go(client).await?.body_as(JsonBody)?;

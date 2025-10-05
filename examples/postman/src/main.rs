@@ -1,4 +1,4 @@
-use deboa::{errors::DeboaError, request::DeboaRequest};
+use deboa::{Result, request::DeboaRequest};
 use http::header;
 use vamo::Vamo;
 
@@ -11,14 +11,14 @@ use deboa::catcher::DeboaCatcher;
 struct AuthCatcher;
 
 impl DeboaCatcher for AuthCatcher {
-    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<deboa::response::DeboaResponse>, DeboaError> {
+    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<deboa::response::DeboaResponse>> {
         request.add_header(header::AUTHORIZATION, "Bearer token");
         Ok(None)
     }
 }
 
 #[tokio::main]
-async fn main() -> Result<(), DeboaError> {
+async fn main() -> Result<()> {
     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
     vamo.client().catch(AuthCatcher);
 

@@ -1,5 +1,5 @@
 use crate::Vamo;
-use deboa::{errors::DeboaError, request::IntoUrl, HttpVersion};
+use deboa::{url::IntoUrl, HttpVersion, Result};
 use http::Method;
 
 const JSONPLACEHOLDER: &str = "https://jsonplaceholder.typicode.com";
@@ -7,7 +7,7 @@ const JSONPLACEHOLDER: &str = "https://jsonplaceholder.typicode.com";
 mod integrated;
 
 #[test]
-fn test_create_vamo() -> Result<(), DeboaError> {
+fn test_create_vamo() -> Result<()> {
     let vamo = Vamo::new(JSONPLACEHOLDER)?;
 
     assert_eq!(vamo.base_url, JSONPLACEHOLDER.into_url()?);
@@ -16,7 +16,7 @@ fn test_create_vamo() -> Result<(), DeboaError> {
 }
 
 #[test]
-fn test_client() -> Result<(), DeboaError> {
+fn test_client() -> Result<()> {
     let mut vamo = Vamo::new(JSONPLACEHOLDER)?;
     assert_eq!(vamo.client().protocol(), &HttpVersion::Http1);
 
@@ -24,7 +24,7 @@ fn test_client() -> Result<(), DeboaError> {
 }
 
 #[test]
-fn test_get() -> Result<(), DeboaError> {
+fn test_get() -> Result<()> {
     let vamo = Vamo::new(JSONPLACEHOLDER)?;
     let response = vamo.get("/posts")?.build().unwrap();
     assert_eq!(response.method(), Method::GET);
@@ -33,7 +33,7 @@ fn test_get() -> Result<(), DeboaError> {
 }
 
 #[test]
-fn test_post() -> Result<(), DeboaError> {
+fn test_post() -> Result<()> {
     let vamo = Vamo::new(JSONPLACEHOLDER)?;
     let response = vamo.post("/posts")?.build().unwrap();
     assert_eq!(response.method(), Method::POST);
@@ -42,7 +42,7 @@ fn test_post() -> Result<(), DeboaError> {
 }
 
 #[test]
-fn test_put() -> Result<(), DeboaError> {
+fn test_put() -> Result<()> {
     let vamo = Vamo::new(JSONPLACEHOLDER)?;
     let response = vamo.put("/posts")?.build().unwrap();
     assert_eq!(response.method(), Method::PUT);
@@ -51,7 +51,7 @@ fn test_put() -> Result<(), DeboaError> {
 }
 
 #[test]
-fn test_patch() -> Result<(), DeboaError> {
+fn test_patch() -> Result<()> {
     let vamo = Vamo::new(JSONPLACEHOLDER)?;
     let response = vamo.patch("/posts")?.build().unwrap();
     assert_eq!(response.method(), Method::PATCH);
@@ -60,7 +60,7 @@ fn test_patch() -> Result<(), DeboaError> {
 }
 
 #[test]
-fn test_delete() -> Result<(), DeboaError> {
+fn test_delete() -> Result<()> {
     let vamo = Vamo::new(JSONPLACEHOLDER)?;
     let response = vamo.delete("/posts")?.build().unwrap();
     assert_eq!(response.method(), Method::DELETE);

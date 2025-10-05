@@ -1,7 +1,15 @@
-use std::{borrow::Cow, io::Write};
+use std::{
+    borrow::Cow,
+    io::{Read, Write},
+};
 
 use clap::Parser;
-use deboa::{errors::DeboaError, form::{DeboaForm, EncodedForm}, request::DeboaRequest, Deboa};
+use deboa::{
+    errors::DeboaError,
+    form::{DeboaForm, EncodedForm},
+    request::DeboaRequest,
+    Deboa, Result,
+};
 use http::{header, HeaderMap, HeaderName, HeaderValue, Method};
 use std::fs::File;
 use tokio::io::{self, AsyncWriteExt};
@@ -78,17 +86,31 @@ async fn main() {
     }
 }
 
-async fn handle_request(args: Args, client: &mut Deboa) -> Result<(), DeboaError> {
+async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let mut arg_url = args.url;
     let arg_method = args.method;
-    let arg_body = args.body;
+    let mut arg_body = args.body;
     let arg_fields = args.field;
     let arg_header = args.header;
     let arg_bearer_auth = args.bearer;
     let arg_basic_auth = args.basic;
     let arg_save = args.save;
     let arg_part = args.part;
-    let arg_bdry = args.bdry;
+    let _arg_bdry = args.bdry;
+
+    let stdin = std::io::stdin();
+    let mut reader = stdin.lock();
+    let mut buffer = String::new();
+    let stdin_body = reader.read_to_string(&mut buffer);
+    if let Err(e) = stdin_body {
+        return Err(DeboaError::Io {
+            message: format!("Failed to read from stdin: {}", e),
+        });
+    }
+
+    if !buffer.is_empty() {
+        arg_body = Some(buffer);
+    }
 
     let mut method = Cow::from("GET");
     if let Some(some_method) = arg_method {
@@ -98,7 +120,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<(), DeboaError
     let method = method.parse::<Method>();
     if let Err(e) = method {
         return Err(DeboaError::ProcessResponse {
-            message: "Invalid HTTP method".to_string(),
+            message: format!("Invalid HTTP method: {}", e),
         });
     }
 
@@ -143,7 +165,8 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<(), DeboaError
 
     let http_method = method.unwrap();
     let request = DeboaRequest::to(arg_url.as_ref())?;
-    let request = if (http_method == Method::GET || http_method == Method::DELETE) && arg_body.is_none() && arg_fields.is_none() {
+    let request = if (http_method == Method::GET || http_method == Method::DELETE) && arg_body.is_none() && arg_fields.is_none() && arg_part.is_none()
+    {
         request
     } else if let Some(body) = arg_body {
         let content_length = HeaderValue::from_str(&body.len().to_string());
@@ -192,7 +215,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<(), DeboaError
             let result = file.write(response.raw_body());
             if let Err(e) = result {
                 return Err(DeboaError::Io {
-                    message: "Failed to write to file".to_string(),
+                    message: format!("Failed to write to file: {}", e),
                 });
             }
         }
@@ -201,7 +224,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<(), DeboaError
         let result = stdout.write(response.raw_body()).await;
         if let Err(e) = result {
             return Err(DeboaError::Io {
-                message: "Failed to write to stdout".to_string(),
+                message: format!("Failed to write to stdout: {}", e),
             });
         }
     }

@@ -1,4 +1,4 @@
-use crate::{errors::DeboaError, request::DeboaRequest};
+use crate::{request::DeboaRequest, Result};
 use serde::{Deserialize, Serialize};
 
 /// Trait that represents the request body.
@@ -18,9 +18,9 @@ pub trait RequestBody {
     ///
     /// # Returns
     ///
-    /// * `Result<Vec<u8>, DeboaError>` - The serialized request body
+    /// * `Result<Vec<u8>>` - The serialized request body
     ///
-    fn serialize<T: Serialize>(&self, value: T) -> Result<Vec<u8>, DeboaError>;
+    fn serialize<T: Serialize>(&self, value: T) -> Result<Vec<u8>>;
 }
 
 /// Trait that represents the response body.
@@ -33,7 +33,7 @@ pub trait ResponseBody {
     ///
     /// # Returns
     ///
-    /// * `Result<T, DeboaError>` - The deserialized response body
+    /// * `Result<T>` - The deserialized response body
     ///
-    fn deserialize<T: for<'a> Deserialize<'a>>(&self, value: Vec<u8>) -> Result<T, DeboaError>;
+    fn deserialize<T: for<'a> Deserialize<'a>>(&self, value: Vec<u8>) -> Result<T>;
 }

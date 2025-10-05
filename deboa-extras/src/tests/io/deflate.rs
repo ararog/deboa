@@ -1,4 +1,4 @@
-use deboa::{catcher::DeboaCatcher, errors::DeboaError, response::DeboaResponse};
+use deboa::{catcher::DeboaCatcher, response::DeboaResponse, Result};
 use http::{HeaderMap, HeaderValue, StatusCode};
 
 use crate::{catcher::encoding::EncodingCatcher, io::deflate::DeflateDecompressor};
@@ -9,7 +9,7 @@ use deboa_tests::{
 };
 
 #[tokio::test]
-async fn test_deflate_decompress() -> Result<(), DeboaError> {
+async fn test_deflate_decompress() -> Result<()> {
     let encoding_catcher = EncodingCatcher::register_decoders(vec![DeflateDecompressor]);
 
     let mut headers = HeaderMap::new();

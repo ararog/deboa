@@ -10,8 +10,7 @@ use crate::client::conn::http::Http2Request;
 
 use crate::{
     client::conn::http::{BaseHttpConnection, DeboaConnection},
-    errors::DeboaError,
-    HttpVersion,
+    HttpVersion, Result,
 };
 
 #[derive(Debug)]
@@ -59,9 +58,9 @@ pub trait DeboaHttpConnectionPool {
     ///
     /// # Returns
     ///
-    /// * `Result<&mut DeboaConnection, DeboaError>` - The connection or error.
+    /// * `Result<&mut DeboaConnection>` - The connection or error.
     ///
-    async fn create_connection<'a>(&'a mut self, url: &Url, protocol: &HttpVersion) -> Result<&'a mut DeboaConnection, DeboaError>;
+    async fn create_connection<'a>(&'a mut self, url: &Url, protocol: &HttpVersion) -> Result<&'a mut DeboaConnection>;
 }
 
 #[async_trait]
@@ -75,7 +74,7 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         &self.connections
     }
 
-    async fn create_connection(&mut self, url: &Url, protocol: &HttpVersion) -> Result<&mut DeboaConnection, DeboaError> {
+    async fn create_connection(&mut self, url: &Url, protocol: &HttpVersion) -> Result<&mut DeboaConnection> {
         use crate::client::conn::http::DeboaHttpConnection;
 
         let host = Cow::from(url.host().unwrap().to_string());

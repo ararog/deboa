@@ -1,4 +1,4 @@
-use deboa::{errors::DeboaError, Deboa};
+use deboa::{Deboa, Result};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_macros::get;
 use serde::{Deserialize, Serialize};
@@ -11,7 +11,7 @@ pub struct Post {
 }
 
 #[tokio::test]
-async fn test_get() -> Result<(), DeboaError> {
+async fn test_get() -> Result<()> {
     let mut client = Deboa::new();
     let response = get!("https://jsonplaceholder.typicode.com/posts", &mut client, JsonBody, Vec<Post>);
     assert_eq!(response.len(), 100);

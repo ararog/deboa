@@ -1,8 +1,5 @@
-#[cfg(test)]
-use crate::errors::DeboaError;
-use crate::{request::DeboaRequest, Deboa};
+use crate::{request::DeboaRequest, Deboa, Result};
 use http::{header, StatusCode};
-
 use httpmock::{Method::PUT, MockServer};
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
@@ -13,7 +10,7 @@ use smol_macros::test;
 // PUT
 //
 
-async fn do_put() -> Result<(), DeboaError> {
+async fn do_put() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = server.mock(|when, then| {
@@ -38,13 +35,13 @@ async fn do_put() -> Result<(), DeboaError> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_put() -> Result<(), DeboaError> {
+async fn test_put() -> Result<()> {
     do_put().await?;
     Ok(())
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_put() -> Result<(), DeboaError> {
+async fn test_put() -> Result<()> {
     do_put().await
 }

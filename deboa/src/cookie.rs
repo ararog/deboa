@@ -2,7 +2,7 @@ use std::fmt;
 
 use cookie::{Cookie, Expiration};
 
-use crate::errors::DeboaError;
+use crate::{errors::DeboaError, Result};
 
 #[derive(Clone, PartialEq)]
 pub struct DeboaCookie {
@@ -192,9 +192,9 @@ impl DeboaCookie {
     ///
     /// # Returns
     ///
-    /// * `Result<Self, DeboaError>` - The cookie.
+    /// * `Result<Self>` - The cookie.
     ///
-    pub fn parse_from_header(header: &str) -> Result<Self, DeboaError> {
+    pub fn parse_from_header(header: &str) -> Result<Self> {
         let cookie = Cookie::parse(header);
         if let Ok(cookie) = cookie {
             Ok(cookie.into())
