@@ -1,7 +1,7 @@
 use std::{borrow::Cow, io::Write};
 
 use clap::Parser;
-use deboa::{errors::DeboaError, form::Form, request::DeboaRequest, Deboa};
+use deboa::{errors::DeboaError, form::{DeboaForm, EncodedForm}, request::DeboaRequest, Deboa};
 use http::{header, HeaderMap, HeaderName, HeaderValue, Method};
 use std::fs::File;
 use tokio::io::{self, AsyncWriteExt};
@@ -154,7 +154,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<(), DeboaError
             request.text(&body)
         }
     } else if let Some(fields) = arg_fields {
-        let mut form = Form::builder();
+        let mut form = EncodedForm::builder();
         let content_type = mime::APPLICATION_WWW_FORM_URLENCODED.as_ref();
         headers.insert(header::CONTENT_TYPE, HeaderValue::from_str(content_type).unwrap());
         for field in fields {
