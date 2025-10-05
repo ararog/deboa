@@ -76,7 +76,7 @@ impl DeboaForm for EncodedForm {
     fn content_type(&self) -> String {
         "application/x-www-form-urlencoded".to_string()
     }
-    
+
     fn field(&mut self, key: &str, value: &str) -> &mut Self {
         self.fields.insert(key.to_string(), value.to_string());
         self
@@ -106,7 +106,10 @@ impl MultiPartForm {
     ///
     pub fn builder() -> Self {
         let boundary = Alphanumeric.sample_string(&mut rand::rng(), 10);
-        Self { fields: IndexMap::new(), boundary: format!("-----DeboaFormBdry{}", boundary) }
+        Self {
+            fields: IndexMap::new(),
+            boundary: format!("-----DeboaFormBdry{}", boundary),
+        }
     }
 
     /// Get the boundary of the form.
@@ -116,7 +119,7 @@ impl MultiPartForm {
     /// * `&String` - The boundary.
     ///
     fn boundary(&self) -> &String {
-      &self.boundary
+        &self.boundary
     }
 }
 
@@ -124,7 +127,7 @@ impl DeboaForm for MultiPartForm {
     fn content_type(&self) -> String {
         format!("multipart/form-data; boundary={}", self.boundary)
     }
-    
+
     fn field(&mut self, key: &str, value: &str) -> &mut Self {
         self.fields.insert(key.to_string(), value.to_string());
         self
@@ -141,11 +144,11 @@ impl DeboaForm for MultiPartForm {
             form.push_str(value);
             form.push_str(boundary);
             if key != self.fields.last().unwrap().0 {
-              form.push_str("\r\n");                
+                form.push_str("\r\n");
             } else {
-              form.push_str("--");
+                form.push_str("--");
             }
-          }
+        }
         form
     }
 }

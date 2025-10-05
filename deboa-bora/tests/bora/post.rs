@@ -1,4 +1,3 @@
-use deboa::errors::DeboaError;
 use deboa_bora::bora;
 use deboa_tests::utils::JSONPLACEHOLDER;
 use serde::{Deserialize, Serialize};
@@ -21,7 +20,7 @@ pub struct Post {
 pub struct PostService;
 
 #[tokio::test]
-async fn test_get_by_id() -> Result<(), DeboaError> {
+async fn test_get_by_id() -> Result<()> {
     let client = Vamo::new(JSONPLACEHOLDER)?;
 
     let mut post_service = PostService::new(client);

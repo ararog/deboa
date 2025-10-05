@@ -30,7 +30,7 @@ use deboa::{Deboa, errors::DeboaError, request::get};
 use deboa_extras::http::serde::json::JsonBody;
 
 #[tokio::main]
-async fn main() -> Result<(), DeboaError> {
+async fn main() -> Result<()> {
   // Create a new Deboa instance, set timeouts, catches and protocol.
   let client = Deboa::new();
 

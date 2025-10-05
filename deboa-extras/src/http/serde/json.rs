@@ -2,6 +2,7 @@ use deboa::{
     client::serde::{RequestBody, ResponseBody},
     errors::DeboaError,
     request::DeboaRequest,
+    Result,
 };
 use http::header;
 use mime_typed::Json;
@@ -15,7 +16,7 @@ impl RequestBody for JsonBody {
         request.add_header(header::ACCEPT, Json.to_string().as_str());
     }
 
-    fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>, DeboaError> {
+    fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>> {
         let result = serde_json::to_vec(&data);
         if let Err(error) = result {
             return Err(DeboaError::Serialization { message: error.to_string() });
@@ -26,7 +27,7 @@ impl RequestBody for JsonBody {
 }
 
 impl ResponseBody for JsonBody {
-    fn deserialize<T: for<'a> Deserialize<'a>>(&self, body: Vec<u8>) -> Result<T, DeboaError> {
+    fn deserialize<T: for<'a> Deserialize<'a>>(&self, body: Vec<u8>) -> Result<T> {
         let binding = body;
         let body = binding.as_ref();
 

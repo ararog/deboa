@@ -1,4 +1,4 @@
-use deboa::{client::serde::RequestBody, errors::DeboaError};
+use deboa::{client::serde::RequestBody, Result};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tests::utils::setup_server;
 use http::StatusCode;
@@ -19,7 +19,7 @@ pub struct User {
 }
 
 #[tokio::test]
-async fn test_post_resource() -> Result<(), DeboaError> {
+async fn test_post_resource() -> Result<()> {
     let server = MockServer::start();
     let mock = setup_server(&server, "/api/users", POST, StatusCode::CREATED);
 

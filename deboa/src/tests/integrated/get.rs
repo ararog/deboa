@@ -1,9 +1,5 @@
 #[cfg(test)]
-use crate::errors::DeboaError;
-use crate::request::DeboaRequest;
-use crate::response::DeboaResponse;
-use crate::Deboa;
-use crate::HttpVersion;
+use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Deboa, HttpVersion, Result};
 
 use deboa_tests::utils::setup_server;
 
@@ -19,7 +15,7 @@ use smol_macros::test;
 // GET
 //
 
-async fn do_get_http1() -> Result<(), DeboaError> {
+async fn do_get_http1() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = setup_server(&server, "/posts", httpmock::Method::GET, StatusCode::OK);
@@ -45,7 +41,7 @@ async fn do_get_http1() -> Result<(), DeboaError> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_http1() -> Result<(), DeboaError> {
+async fn test_get_http1() -> Result<()> {
     do_get_http1().await?;
     Ok(())
 }
@@ -57,7 +53,7 @@ async fn test_get_http1() {
 }
 
 #[cfg(feature = "http2")]
-async fn do_get_http2() -> Result<(), DeboaError> {
+async fn do_get_http2() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = setup_server(&server, "/posts", httpmock::Method::GET, StatusCode::OK);
@@ -83,7 +79,7 @@ async fn do_get_http2() -> Result<(), DeboaError> {
 
 #[cfg(all(feature = "http2", feature = "tokio-rt"))]
 #[tokio::test]
-async fn test_get_http2() -> Result<(), DeboaError> {
+async fn test_get_http2() -> Result<()> {
     do_get_http2().await?;
     Ok(())
 }
@@ -98,14 +94,14 @@ async fn test_get_http2() {
 // GET NOT FOUND
 //
 
-async fn do_get_not_found() -> Result<(), DeboaError> {
+async fn do_get_not_found() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = setup_server(&server, "/asasa/posts/1ddd", httpmock::Method::GET, StatusCode::NOT_FOUND);
 
     let client = Deboa::new();
 
-    let response: Result<DeboaResponse, DeboaError> = DeboaRequest::get(server.url("/asasa/posts/1ddd").as_str())?.go(client).await;
+    let response: Result<DeboaResponse> = DeboaRequest::get(server.url("/asasa/posts/1ddd").as_str())?.go(client).await;
 
     http_mock.assert();
 
@@ -123,7 +119,7 @@ async fn do_get_not_found() -> Result<(), DeboaError> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_not_found() -> Result<(), DeboaError> {
+async fn test_get_not_found() -> Result<()> {
     do_get_not_found().await?;
     Ok(())
 }
@@ -138,12 +134,12 @@ async fn test_get_not_found() {
 // GET INVALID SERVER
 //
 
-async fn do_get_invalid_server() -> Result<(), DeboaError> {
+async fn do_get_invalid_server() -> Result<()> {
     let mut api = Deboa::new();
 
     let request = DeboaRequest::get("https://invalid-server.com/posts")?.text("test").build()?;
 
-    let response: Result<DeboaResponse, DeboaError> = api.execute(request).await;
+    let response: Result<DeboaResponse> = api.execute(request).await;
 
     assert!(response.is_err());
     assert_eq!(
@@ -162,7 +158,7 @@ async fn do_get_invalid_server() -> Result<(), DeboaError> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_invalid_server() -> Result<(), DeboaError> {
+async fn test_get_invalid_server() -> Result<()> {
     do_get_invalid_server().await?;
     Ok(())
 }
@@ -177,7 +173,7 @@ async fn test_get_invalid_server() {
 // GET BY QUERY
 //
 
-async fn do_get_by_query() -> Result<(), DeboaError> {
+async fn do_get_by_query() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::OK);
@@ -205,7 +201,7 @@ async fn do_get_by_query() -> Result<(), DeboaError> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_by_query() -> Result<(), DeboaError> {
+async fn test_get_by_query() -> Result<()> {
     do_get_by_query().await?;
     Ok(())
 }
@@ -216,7 +212,7 @@ async fn test_get_by_query() {
     let _ = do_get_by_query().await;
 }
 
-async fn do_get_by_query_with_retries() -> Result<(), DeboaError> {
+async fn do_get_by_query_with_retries() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::BAD_GATEWAY);
@@ -242,7 +238,7 @@ async fn do_get_by_query_with_retries() -> Result<(), DeboaError> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_by_query_with_retries() -> Result<(), DeboaError> {
+async fn test_get_by_query_with_retries() -> Result<()> {
     do_get_by_query_with_retries().await?;
     Ok(())
 }

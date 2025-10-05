@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 use deboa::client::serde::{RequestBody, ResponseBody};
-use deboa::{errors::DeboaError, request::DeboaRequest};
+use deboa::{errors::DeboaError, request::DeboaRequest, Result};
 use http::header;
 use mime_typed::Xml;
 use serde::{Deserialize, Serialize};
@@ -13,7 +13,7 @@ impl RequestBody for XmlBody {
         request.add_header(header::ACCEPT, Xml.to_string().as_str());
     }
 
-    fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>, DeboaError> {
+    fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>> {
         let mut ser_xml_buf = Vec::new();
 
         let result = serde_xml_rust::to_writer(&mut ser_xml_buf, &data);
@@ -27,7 +27,7 @@ impl RequestBody for XmlBody {
 }
 
 impl ResponseBody for XmlBody {
-    fn deserialize<T: for<'a> Deserialize<'a>>(&self, body: Vec<u8>) -> Result<T, DeboaError> {
+    fn deserialize<T: for<'a> Deserialize<'a>>(&self, body: Vec<u8>) -> Result<T> {
         let xml = serde_xml_rust::from_reader(Cursor::new(body));
 
         match xml {

@@ -1,7 +1,7 @@
 #![allow(unused_variables)]
 use bytes::Bytes;
 
-use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse};
+use crate::{request::DeboaRequest, response::DeboaResponse, Result};
 
 /// Trait that represents the compressor.
 pub trait Compressor: Send + Sync + 'static {
@@ -20,9 +20,9 @@ pub trait Compressor: Send + Sync + 'static {
     ///
     /// # Returns
     ///
-    /// * `Result<Bytes, DeboaError>` - The compressed body of the request.
+    /// * `Result<Bytes>` - The compressed body of the request.
     ///
-    fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes, DeboaError>;
+    fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes>;
 }
 
 impl<T: Compressor> Compressor for Box<T> {
@@ -30,7 +30,7 @@ impl<T: Compressor> Compressor for Box<T> {
         self.as_ref().name()
     }
 
-    fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes, DeboaError> {
+    fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes> {
         self.as_ref().compress_body(request)
     }
 }
@@ -52,9 +52,9 @@ pub trait Decompressor: Send + Sync + 'static {
     ///
     /// # Returns
     ///
-    /// * `Result<(), DeboaError>` - The decompressed body of the response.
+    /// * `Result<()>` - The decompressed body of the response.
     ///
-    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<(), DeboaError> {
+    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
         Ok(())
     }
 }
@@ -64,7 +64,7 @@ impl<T: Decompressor> Decompressor for Box<T> {
         self.as_ref().name()
     }
 
-    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<(), DeboaError> {
+    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
         self.as_ref().decompress_body(response)
     }
 }

@@ -1,4 +1,4 @@
-use crate::{errors::DeboaError, request::DeboaRequest, Deboa};
+use crate::{request::DeboaRequest, Deboa, Result};
 use http::{header, StatusCode};
 
 use httpmock::Method::PATCH;
@@ -12,7 +12,7 @@ use smol_macros::test;
 // PATCH
 //
 
-async fn do_patch() -> Result<(), DeboaError> {
+async fn do_patch() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = server.mock(|when, then| {
@@ -37,13 +37,13 @@ async fn do_patch() -> Result<(), DeboaError> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_patch() -> Result<(), DeboaError> {
+async fn test_patch() -> Result<()> {
     do_patch().await?;
     Ok(())
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_patch() -> Result<(), DeboaError> {
+async fn test_patch() -> Result<()> {
     do_patch().await
 }

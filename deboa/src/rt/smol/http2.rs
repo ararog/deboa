@@ -6,12 +6,11 @@ use smol::net::TcpStream;
 use smol_hyper::rt::FuturesIo;
 use url::Url;
 
-use crate::client::conn::http::DeboaHttpConnection;
-use crate::rt::smol::executor::SmolExecutor;
-use crate::rt::smol::stream::SmolStream;
 use crate::{
-    client::conn::http::{BaseHttpConnection, Http2Request},
+    client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http2Request},
     errors::DeboaError,
+    rt::smol::executor::{SmolExecutor, SmolStream},
+    Result,
 };
 
 #[async_trait]
@@ -23,7 +22,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
         &self.url
     }
 
-    async fn connect(url: &Url) -> Result<BaseHttpConnection<Self::Sender>, DeboaError> {
+    async fn connect(url: &Url) -> Result<BaseHttpConnection<Self::Sender>> {
         let host = url.host().expect("uri has no host");
         let io = {
             match url.scheme() {
@@ -93,7 +92,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
         Ok(BaseHttpConnection::<Self::Sender> { url: url.clone(), sender })
     }
 
-    async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>, DeboaError> {
+    async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {
         let method = request.method().to_string();
         let result = self.sender.send_request(request).await;
 

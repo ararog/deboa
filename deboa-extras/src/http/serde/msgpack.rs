@@ -2,6 +2,7 @@ use deboa::{
     client::serde::{RequestBody, ResponseBody},
     errors::DeboaError,
     request::DeboaRequest,
+    Result,
 };
 use http::header;
 use mime_typed::Msgpack;
@@ -15,7 +16,7 @@ impl RequestBody for MsgPackBody {
         request.add_header(header::ACCEPT, Msgpack.to_string().as_str());
     }
 
-    fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>, DeboaError> {
+    fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>> {
         let result = rmp_serde::to_vec(&data);
         if let Err(error) = result {
             return Err(DeboaError::Serialization { message: error.to_string() });
@@ -26,7 +27,7 @@ impl RequestBody for MsgPackBody {
 }
 
 impl ResponseBody for MsgPackBody {
-    fn deserialize<T: for<'a> Deserialize<'a>>(&self, body: Vec<u8>) -> Result<T, DeboaError> {
+    fn deserialize<T: for<'a> Deserialize<'a>>(&self, body: Vec<u8>) -> Result<T> {
         let binding = body;
         let body = binding.as_ref();
 

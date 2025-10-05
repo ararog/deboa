@@ -5,15 +5,15 @@ use tokio::runtime::Runtime;
 use criterion::async_executor::SmolExecutor;
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use deboa::{errors::DeboaError, request::DeboaRequest, Deboa};
+use deboa::{request::DeboaRequest, Deboa, Result};
 
-async fn get_async() -> Result<(), DeboaError> {
+async fn get_async() -> Result<()> {
     let api = Deboa::new();
     let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")?.go(api).await;
     Ok(())
 }
 
-async fn post_async() -> Result<(), DeboaError> {
+async fn post_async() -> Result<()> {
     let api = Deboa::new();
     let _ = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts")?
         .text("Some test to do")

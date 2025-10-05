@@ -1,4 +1,4 @@
-use deboa::{client::serde::RequestBody, errors::DeboaError, request::DeboaRequest};
+use deboa::{client::serde::RequestBody, errors::DeboaError, request::DeboaRequest, Result};
 use serde::Serialize;
 use std::str::FromStr;
 use url::Url;
@@ -55,9 +55,9 @@ pub trait Resource {
     ///
     /// # Returns
     ///
-    /// * `Result<Url, DeboaError>` - The url with the path added.
+    /// * `Result<Url>` - The url with the path added.
     ///
-    fn add_path(&self, path: &str) -> Result<Url, DeboaError> {
+    fn add_path(&self, path: &str) -> Result<Url> {
         let url = Url::from_str("http://deboa");
         if let Err(e) = url {
             return Err(DeboaError::UrlParse { message: e.to_string() });
@@ -77,13 +77,13 @@ pub trait AsPostRequest<T: Resource> {
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaRequest, DeboaError>` - The post request.
+    /// * `Result<DeboaRequest>` - The post request.
     ///
-    fn as_post_request(&self) -> Result<DeboaRequest, DeboaError>;
+    fn as_post_request(&self) -> Result<DeboaRequest>;
 }
 
 impl<T: Resource + Serialize> AsPostRequest<T> for T {
-    fn as_post_request(&self) -> Result<DeboaRequest, DeboaError> {
+    fn as_post_request(&self) -> Result<DeboaRequest> {
         DeboaRequest::post(self.add_path(self.post_path())?)?
             .body_as(self.body_type(), self)?
             .build()
@@ -96,13 +96,13 @@ pub trait AsDeleteRequest<T: Resource> {
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaRequest, DeboaError>` - The delete request.
+    /// * `Result<DeboaRequest>` - The delete request.
     ///
-    fn as_delete_request(&self) -> Result<DeboaRequest, DeboaError>;
+    fn as_delete_request(&self) -> Result<DeboaRequest>;
 }
 
 impl<T: Resource + Serialize> AsDeleteRequest<T> for T {
-    fn as_delete_request(&self) -> Result<DeboaRequest, DeboaError> {
+    fn as_delete_request(&self) -> Result<DeboaRequest> {
         DeboaRequest::delete(self.add_path(self.delete_path())?)?.build()
     }
 }
@@ -113,13 +113,13 @@ pub trait AsPutRequest<T: Resource> {
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaRequest, DeboaError>` - The put request.
+    /// * `Result<DeboaRequest>` - The put request.
     ///
-    fn as_put_request(&self) -> Result<DeboaRequest, DeboaError>;
+    fn as_put_request(&self) -> Result<DeboaRequest>;
 }
 
 impl<T: Resource + Serialize> AsPutRequest<T> for T {
-    fn as_put_request(&self) -> Result<DeboaRequest, DeboaError> {
+    fn as_put_request(&self) -> Result<DeboaRequest> {
         DeboaRequest::put(self.add_path(self.put_path())?)?
             .body_as(self.body_type(), self)?
             .build()
@@ -132,13 +132,13 @@ pub trait AsPatchRequest<T: Resource> {
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaRequest, DeboaError>` - The patch request.
+    /// * `Result<DeboaRequest>` - The patch request.
     ///
-    fn as_patch_request(&self) -> Result<DeboaRequest, DeboaError>;
+    fn as_patch_request(&self) -> Result<DeboaRequest>;
 }
 
 impl<T: Resource + Serialize> AsPatchRequest<T> for T {
-    fn as_patch_request(&self) -> Result<DeboaRequest, DeboaError> {
+    fn as_patch_request(&self) -> Result<DeboaRequest> {
         DeboaRequest::patch(self.add_path(self.patch_path())?)?
             .body_as(self.body_type(), self)?
             .build()

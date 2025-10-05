@@ -5,7 +5,7 @@ use http::header;
 use serde::Deserialize;
 
 use crate::cookie::DeboaCookie;
-use crate::{client::serde::ResponseBody, errors::DeboaError};
+use crate::{client::serde::ResponseBody, errors::DeboaError, Result};
 use url::Url;
 
 #[derive(PartialEq)]
@@ -95,7 +95,7 @@ impl DeboaResponse {
     /// * `Option<Vec<DeboaCookie>>` - The cookies of the response.
     ///
     #[inline]
-    pub fn cookies(&self) -> Result<Option<Vec<DeboaCookie>>, DeboaError> {
+    pub fn cookies(&self) -> Result<Option<Vec<DeboaCookie>>> {
         let view = self.headers.get_all(header::SET_COOKIE);
         let cookies = view
             .into_iter()
@@ -109,7 +109,7 @@ impl DeboaResponse {
                     })
                 }
             })
-            .collect::<Result<Vec<DeboaCookie>, DeboaError>>()
+            .collect::<Result<Vec<DeboaCookie>>>()
             .unwrap();
 
         if cookies.is_empty() {
@@ -138,10 +138,10 @@ impl DeboaResponse {
     ///
     /// # Returns
     ///
-    /// * `Result<B, DeboaError>` - The body or error.
+    /// * `Result<B>` - The body or error.
     ///
     #[inline]
-    pub fn body_as<T: ResponseBody, B: for<'a> Deserialize<'a>>(&self, body_type: T) -> Result<B, DeboaError> {
+    pub fn body_as<T: ResponseBody, B: for<'a> Deserialize<'a>>(&self, body_type: T) -> Result<B> {
         let result = body_type.deserialize::<B>(self.body.to_vec())?;
         Ok(result)
     }
@@ -161,10 +161,10 @@ impl DeboaResponse {
     ///
     /// # Returns
     ///
-    /// * `Result<String, DeboaError>` - The text body or error.
+    /// * `Result<String>` - The text body or error.
     ///
     #[inline]
-    pub fn text(&self) -> Result<String, DeboaError> {
+    pub fn text(&self) -> Result<String> {
         Ok(String::from_utf8_lossy(&self.body).to_string())
     }
 
@@ -176,9 +176,9 @@ impl DeboaResponse {
     ///
     /// # Returns
     ///
-    /// * `Result<(), DeboaError>` - The result or error.
+    /// * `Result<()>` - The result or error.
     ///
-    pub fn to_file(&self, path: &str) -> Result<(), DeboaError> {
+    pub fn to_file(&self, path: &str) -> Result<()> {
         let result = write(path, &*self.body);
         if let Err(e) = result {
             return Err(DeboaError::Io { message: e.to_string() });

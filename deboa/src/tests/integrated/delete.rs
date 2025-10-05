@@ -1,6 +1,5 @@
 #[cfg(test)]
-use crate::errors::DeboaError;
-use crate::{request::DeboaRequest, Deboa};
+use crate::{request::DeboaRequest, Deboa, Result};
 use http::StatusCode;
 
 use httpmock::{Method::DELETE, MockServer};
@@ -13,7 +12,7 @@ use smol_macros::test;
 // DELETE
 //
 
-async fn do_delete() -> Result<(), DeboaError> {
+async fn do_delete() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = server.mock(|when, then| {
@@ -34,13 +33,13 @@ async fn do_delete() -> Result<(), DeboaError> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_delete() -> Result<(), DeboaError> {
+async fn test_delete() -> Result<()> {
     do_delete().await?;
     Ok(())
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_delete() -> Result<(), DeboaError> {
+async fn test_delete() -> Result<()> {
     do_delete().await
 }

@@ -13,6 +13,7 @@ use crate::rt::tokio::stream::TokioStream;
 use crate::{
     client::conn::http::{BaseHttpConnection, Http2Request},
     errors::DeboaError,
+    Result,
 };
 
 #[async_trait]
@@ -24,7 +25,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
         &self.url
     }
 
-    async fn connect(url: &Url) -> Result<BaseHttpConnection<Http2Request>, DeboaError> {
+    async fn connect(url: &Url) -> Result<BaseHttpConnection<Http2Request>> {
         let host = url.host().unwrap_or(Host::Domain("localhost"));
         let stream = {
             match url.scheme() {
@@ -100,7 +101,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
         Ok(BaseHttpConnection::<Http2Request> { url: url.clone(), sender })
     }
 
-    async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>, DeboaError> {
+    async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {
         let method = request.method().to_string();
         let result = self.sender.send_request(request).await;
 

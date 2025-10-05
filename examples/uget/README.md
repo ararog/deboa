@@ -23,7 +23,7 @@ uget https://example.com
 
 ### JSON (defaults to POST method)
 ```sh
-uget https://example.com --body "{title: 'foo', body: 'bar', userId: 1}"
+echo "{title: 'foo', body: 'bar', userId: 1}" | uget https://example.com 
 ```
 
 ### Form (defaults to POST method)

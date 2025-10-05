@@ -1,7 +1,8 @@
-use crate::form::{DeboaForm, EncodedForm};
-use crate::request::DeboaRequest;
-use crate::Deboa;
-use crate::{errors::DeboaError};
+use crate::{
+    form::{DeboaForm, EncodedForm},
+    request::DeboaRequest,
+    Deboa, Result,
+};
 use http::{header, StatusCode};
 use httpmock::{Method::POST, MockServer};
 
@@ -14,7 +15,7 @@ use smol_macros::test;
 // POST
 //
 
-async fn do_post() -> Result<(), DeboaError> {
+async fn do_post() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = server.mock(|when, then| {
@@ -40,18 +41,18 @@ async fn do_post() -> Result<(), DeboaError> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_post() -> Result<(), DeboaError> {
+async fn test_post() -> Result<()> {
     do_post().await?;
     Ok(())
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_post() -> Result<(), DeboaError> {
+async fn test_post() -> Result<()> {
     do_post().await
 }
 
-async fn do_post_form() -> Result<(), DeboaError> {
+async fn do_post_form() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = server.mock(|when, then| {
@@ -85,13 +86,13 @@ async fn do_post_form() -> Result<(), DeboaError> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_post_form() -> Result<(), DeboaError> {
+async fn test_post_form() -> Result<()> {
     do_post_form().await?;
     Ok(())
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_post_form() -> Result<(), DeboaError> {
+async fn test_post_form() -> Result<()> {
     do_post_form().await
 }

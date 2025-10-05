@@ -1,8 +1,9 @@
 use deboa::{
     errors::DeboaError,
-    request::{DeboaRequest, DeboaRequestBuilder, IntoUrl},
+    request::{DeboaRequest, DeboaRequestBuilder},
     response::DeboaResponse,
-    Deboa,
+    url::IntoUrl,
+    Deboa, Result,
 };
 use url::Url;
 
@@ -38,9 +39,9 @@ impl Vamo {
     ///
     /// # Returns
     ///
-    /// A Result containing the new Vamo instance or a DeboaError.
+    /// A Result containing the new Vamo instance.
     ///
-    pub fn new<T: IntoUrl>(url: T) -> Result<Self, DeboaError> {
+    pub fn new<T: IntoUrl>(url: T) -> Result<Self> {
         Ok(Self {
             client: Deboa::new(),
             base_url: url.into_url()?,
@@ -65,9 +66,9 @@ impl Vamo {
     ///
     /// # Returns
     ///
-    /// A Result containing the URL with the given path or a DeboaError.
+    /// A Result containing the URL with the given path.
     ///
-    fn url(&self, path: &str) -> Result<Url, DeboaError> {
+    fn url(&self, path: &str) -> Result<Url> {
         let url = self.base_url.join(path);
         if let Err(e) = url {
             return Err(DeboaError::UrlParse { message: e.to_string() });
@@ -83,9 +84,9 @@ impl Vamo {
     ///
     /// # Returns
     ///
-    /// A Result containing a DeboaRequestBuilder or a DeboaError.
+    /// A Result containing a DeboaRequestBuilder.
     ///
-    pub fn get(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn get(&self, path: &str) -> Result<DeboaRequestBuilder> {
         DeboaRequest::get(self.url(path)?.as_str())
     }
 
@@ -97,9 +98,9 @@ impl Vamo {
     ///
     /// # Returns
     ///
-    /// A Result containing a DeboaRequestBuilder or a DeboaError.
+    /// A Result containing a DeboaRequestBuilder.
     ///
-    pub fn post(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn post(&self, path: &str) -> Result<DeboaRequestBuilder> {
         DeboaRequest::post(self.url(path)?.as_str())
     }
 
@@ -111,9 +112,9 @@ impl Vamo {
     ///
     /// # Returns
     ///
-    /// A Result containing a DeboaRequestBuilder or a DeboaError.
+    /// A Result containing a DeboaRequestBuilder.
     ///
-    pub fn put(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn put(&self, path: &str) -> Result<DeboaRequestBuilder> {
         DeboaRequest::put(self.url(path)?.as_str())
     }
 
@@ -125,9 +126,9 @@ impl Vamo {
     ///
     /// # Returns
     ///
-    /// A Result containing a DeboaRequestBuilder or a DeboaError.
+    /// A Result containing a DeboaRequestBuilder.
     ///
-    pub fn patch(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn patch(&self, path: &str) -> Result<DeboaRequestBuilder> {
         DeboaRequest::patch(self.url(path)?.as_str())
     }
 
@@ -139,9 +140,9 @@ impl Vamo {
     ///
     /// # Returns
     ///
-    /// A Result containing a DeboaRequestBuilder or a DeboaError.
+    /// A Result containing a DeboaRequestBuilder.
     ///
-    pub fn delete(&self, path: &str) -> Result<DeboaRequestBuilder, DeboaError> {
+    pub fn delete(&self, path: &str) -> Result<DeboaRequestBuilder> {
         DeboaRequest::delete(self.url(path)?.as_str())
     }
 
@@ -153,9 +154,9 @@ impl Vamo {
     ///
     /// # Returns
     ///
-    /// A Result containing the DeboaResponse or a DeboaError.
+    /// A Result containing the DeboaResponse.
     ///
-    pub async fn go(&mut self, mut request: DeboaRequest) -> Result<DeboaResponse, DeboaError> {
+    pub async fn go(&mut self, mut request: DeboaRequest) -> Result<DeboaResponse> {
         let mut url = self.base_url.to_string();
         url.push_str(request.url().path());
         let result = request.set_url(url);

@@ -1,4 +1,4 @@
-use deboa::{client::serde::RequestBody, errors::DeboaError};
+use deboa::{client::serde::RequestBody, Result};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tests::utils::setup_server;
 use http::StatusCode;
@@ -47,7 +47,7 @@ impl Resource for User {
 }
 
 #[tokio::test]
-async fn test_get() -> Result<(), DeboaError> {
+async fn test_get() -> Result<()> {
     let server = MockServer::start();
     let mock = setup_server(&server, "/posts", GET, StatusCode::OK);
 
@@ -62,7 +62,7 @@ async fn test_get() -> Result<(), DeboaError> {
 }
 
 #[tokio::test]
-async fn test_put() -> Result<(), DeboaError> {
+async fn test_put() -> Result<()> {
     let server = MockServer::start();
     let mock = setup_server(&server, "/posts", PUT, StatusCode::OK);
 
@@ -77,7 +77,7 @@ async fn test_put() -> Result<(), DeboaError> {
 }
 
 #[tokio::test]
-async fn test_post() -> Result<(), DeboaError> {
+async fn test_post() -> Result<()> {
     let server = MockServer::start();
     let mock = setup_server(&server, "/posts", POST, StatusCode::CREATED);
 
@@ -92,7 +92,7 @@ async fn test_post() -> Result<(), DeboaError> {
 }
 
 #[tokio::test]
-async fn test_patch() -> Result<(), DeboaError> {
+async fn test_patch() -> Result<()> {
     let server = MockServer::start();
     let mock = setup_server(&server, "/posts/1", PATCH, StatusCode::OK);
 
@@ -107,7 +107,7 @@ async fn test_patch() -> Result<(), DeboaError> {
 }
 
 #[tokio::test]
-async fn test_delete() -> Result<(), DeboaError> {
+async fn test_delete() -> Result<()> {
     let server = MockServer::start();
     let mock = setup_server(&server, "/posts/1", DELETE, StatusCode::NO_CONTENT);
 
@@ -122,7 +122,7 @@ async fn test_delete() -> Result<(), DeboaError> {
 }
 
 #[tokio::test]
-async fn test_post_resource() -> Result<(), DeboaError> {
+async fn test_post_resource() -> Result<()> {
     let server = MockServer::start();
     let mock = setup_server(&server, "/api/users", POST, StatusCode::CREATED);
 
@@ -143,7 +143,7 @@ async fn test_post_resource() -> Result<(), DeboaError> {
 }
 
 #[tokio::test]
-async fn test_put_resource() -> Result<(), DeboaError> {
+async fn test_put_resource() -> Result<()> {
     let server = MockServer::start();
     let mock = setup_server(&server, "/api/users/1", PUT, StatusCode::OK);
 
@@ -164,7 +164,7 @@ async fn test_put_resource() -> Result<(), DeboaError> {
 }
 
 #[tokio::test]
-async fn test_patch_resource() -> Result<(), DeboaError> {
+async fn test_patch_resource() -> Result<()> {
     let server = MockServer::start();
     let mock = setup_server(&server, "/api/users/1", PATCH, StatusCode::OK);
 
