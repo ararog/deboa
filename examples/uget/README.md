@@ -11,7 +11,7 @@ cargo install uget
 ## Usage
 
 ```sh
-uget <url> [OPTIONS]
+uget <url> <body> [OPTIONS]
 ```
 
 ## Example
@@ -21,9 +21,9 @@ uget <url> [OPTIONS]
 uget https://example.com
 ```
 
-### JSON (defaults to POST method)
+### JSON (defaults to POST method), dont forget to use - to read from stdin
 ```sh
-echo "{title: 'foo', body: 'bar', userId: 1}" | uget https://example.com 
+echo "{title: 'foo', body: 'bar', userId: 1}" | uget https://example.com - 
 ```
 
 ### Form (defaults to POST method)
