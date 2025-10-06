@@ -1,9 +1,6 @@
-use std::{
-    io::{Write},
-};
+use std::io::{stdin, IsTerminal, Read, Write};
 
 use clap::Parser;
-use clap_stdin::MaybeStdin;
 use deboa::{
     errors::DeboaError,
     form::{DeboaForm, EncodedForm, MultiPartForm},
@@ -55,7 +52,7 @@ struct Args {
     #[arg(index = 1, required = true, help = "URL to make the request to.")]
     url: String,
     #[arg(index = 2, required = false, help = "Allow set raw request body.")]
-    body: Option<MaybeStdin<String>>,
+    body: Option<String>,
     #[arg(short, long, help = "HTTP method to use.")]
     method: Option<String>,
     #[arg(long, help = "Set form field, format: key=value.")]
@@ -96,7 +93,7 @@ async fn main() {
 async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let mut arg_url = args.url;
     let arg_method = args.method;
-    let arg_body = args.body;
+    let mut arg_body = args.body;
     let arg_fields = args.field;
     let arg_header = args.header;
     let arg_bearer_auth = args.bearer;
@@ -106,6 +103,18 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let _arg_cert = args.cert;
     let _arg_key = args.key;
     let _arg_key_pw = args.key_pw;
+
+    let mut stdin = stdin();
+    if ! stdin.is_terminal() {
+        let mut stdin_body = String::new();
+        let result = stdin.read_to_string(&mut stdin_body);
+        if let Err(e) = result {
+            return Err(DeboaError::Io {
+                message: format!("Failed to read from stdin: {}", e),
+            });
+        }
+        arg_body = Some(stdin_body);
+    }
 
     let mut method = "GET".to_string();
     if let Some(some_method) = arg_method {
