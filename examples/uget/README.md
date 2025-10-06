@@ -21,9 +21,9 @@ uget <url> <body> [OPTIONS]
 uget https://example.com
 ```
 
-### JSON (defaults to POST method), dont forget to use - to read from stdin
+### JSON (defaults to POST method)
 ```sh
-echo "{title: 'foo', body: 'bar', userId: 1}" | uget https://example.com - 
+echo "{title: 'foo', body: 'bar', userId: 1}" | uget https://example.com
 ```
 
 ### Form (defaults to POST method)
