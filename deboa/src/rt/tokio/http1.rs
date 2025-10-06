@@ -1,16 +1,14 @@
-use std::sync::Arc;
-
 use async_trait::async_trait;
 use bytes::Bytes;
 use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
 use hyper_util::rt::TokioIo;
-use rustls::pki_types::ServerName;
 use tokio::net::TcpStream;
-use tokio_rustls::{rustls, TlsConnector};
+use tokio_native_tls::native_tls::{Identity, TlsConnector};
 use url::{Host, Url};
 
 use crate::{
+    cert::ClientCert,
     client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http1Request},
     errors::DeboaError,
     rt::tokio::stream::TokioStream,
@@ -26,7 +24,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         &self.url
     }
 
-    async fn connect(url: &Url) -> Result<BaseHttpConnection<Self::Sender>> {
+    async fn connect(url: &Url, client_cert: &Option<ClientCert>) -> Result<BaseHttpConnection<Self::Sender>> {
         let host = url.host().unwrap_or(Host::Domain("localhost"));
         let stream = {
             match url.scheme() {
@@ -59,13 +57,21 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                     }
 
                     let socket = stream.unwrap();
-                    let root_store = rustls::RootCertStore {
-                        roots: webpki_roots::TLS_SERVER_ROOTS.to_vec(),
+                    let connector = if let Some(client_cert) = client_cert {
+                        let file = std::fs::read(client_cert.cert());
+                        if let Err(e) = file {
+                            return Err(DeboaError::ClientCert { message: e.to_string() });
+                        }
+                        let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.key_pw());
+                        if let Err(e) = identity {
+                            return Err(DeboaError::ClientCert { message: e.to_string() });
+                        }
+                        TlsConnector::builder().identity(identity.unwrap()).build().unwrap()
+                    } else {
+                        TlsConnector::builder().build().unwrap()
                     };
-                    let config = rustls::ClientConfig::builder().with_root_certificates(root_store).with_no_client_auth();
-                    let connector = TlsConnector::from(Arc::new(config));
-
-                    let stream = connector.connect(ServerName::try_from(host.to_string()).unwrap(), socket).await;
+                    let connector = tokio_native_tls::TlsConnector::from(connector);
+                    let stream = connector.connect(&host.to_string(), socket).await;
 
                     if let Err(e) = stream {
                         return Err(DeboaError::Connection {
@@ -74,7 +80,8 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                         });
                     }
 
-                    TokioStream::Tls(tokio_rustls::TlsStream::Client(stream.unwrap()))
+                    let stream = stream.unwrap();
+                    TokioStream::Tls(stream)
                 }
                 scheme => {
                     return Err(DeboaError::UnsupportedScheme {

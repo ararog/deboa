@@ -1,20 +1,14 @@
-use std::sync::Arc;
-
+use async_native_tls::{Identity, TlsConnector};
 use async_trait::async_trait;
 use bytes::Bytes;
-use futures_rustls::TlsConnector;
 use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
-use rustls::{pki_types::ServerName};
 use smol::net::TcpStream;
 use smol_hyper::rt::FuturesIo;
 use url::Url;
 
 use crate::{
-    client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http1Request},
-    errors::DeboaError,
-    rt::smol::stream::SmolStream,
-    Result,
+    cert::ClientCert, client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http1Request}, errors::DeboaError, rt::smol::stream::SmolStream, Result
 };
 
 #[async_trait]
@@ -26,7 +20,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         &self.url
     }
 
-    async fn connect(url: &Url) -> Result<BaseHttpConnection<Self::Sender>> {
+    async fn connect(url: &Url, client_cert: &Option<ClientCert>) -> Result<BaseHttpConnection<Self::Sender>> {
         let host = url.host().expect("uri has no host");
         let io = {
             match url.scheme() {
@@ -61,12 +55,25 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                     }
 
                     let stream = stream.unwrap();
-                    let root_store = rustls::RootCertStore {
-                        roots: webpki_roots::TLS_SERVER_ROOTS.to_vec(),
+                    let connector = if let Some(client_cert) = client_cert {
+                        let file = std::fs::read(client_cert.cert());
+                        if let Err(e) = file {
+                            return Err(DeboaError::ClientCert {
+                                message: e.to_string(),
+                            });
+                        }
+                        let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.key_pw());
+                        if let Err(e) = identity {
+                            return Err(DeboaError::ClientCert {
+                                message: e.to_string(),
+                            });
+                        }
+                        TlsConnector::new().identity(identity.unwrap())
+                    } else {
+                        TlsConnector::new()
                     };
-                    let config = rustls::ClientConfig::builder().with_root_certificates(root_store).with_no_client_auth();
-                    let config = TlsConnector::from(Arc::new(config));
-                    let stream = config.connect(ServerName::try_from(host.to_string()).unwrap(), stream).await;
+
+                    let stream = connector.connect(host.to_string(), stream).await;
 
                     if let Err(e) = stream {
                         return Err(DeboaError::Connection {
@@ -76,7 +83,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                     }
 
                     let stream = stream.unwrap();
-                    SmolStream::Tls(futures_rustls::TlsStream::Client(stream))
+                    SmolStream::Tls(stream)
                 }
                 scheme => {
                     return Err(DeboaError::UnsupportedScheme {

@@ -75,6 +75,7 @@ use http::{header, HeaderValue, Request, Response};
 use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 
+use crate::cert::ClientCert;
 use crate::client::conn::http::{DeboaConnection, DeboaHttpConnection};
 
 use crate::catcher::DeboaCatcher;
@@ -85,6 +86,7 @@ use crate::response::DeboaResponse;
 
 pub mod cache;
 pub mod catcher;
+pub mod cert;
 pub mod client;
 pub mod cookie;
 pub mod errors;
@@ -134,6 +136,7 @@ pub enum HttpVersion {
 pub struct DeboaBuilder {
     connection_timeout: u64,
     request_timeout: u64,
+    client_cert: Option<ClientCert>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
 }
@@ -158,6 +161,17 @@ impl DeboaBuilder {
     ///
     pub fn request_timeout(mut self, request_timeout: u64) -> Self {
         self.request_timeout = request_timeout;
+        self
+    }
+
+    /// Allow set client certificate at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `client_cert` - The client certificate.
+    ///
+    pub fn client_cert(mut self, client_cert: ClientCert) -> Self {
+        self.client_cert = Some(client_cert);
         self
     }
 
@@ -197,6 +211,7 @@ impl DeboaBuilder {
         Deboa {
             connection_timeout: self.connection_timeout,
             request_timeout: self.request_timeout,
+            client_cert: self.client_cert,
             catchers: self.catchers,
             protocol: self.protocol,
             pool: HttpConnectionPool::new(),
@@ -217,6 +232,7 @@ impl DeboaBuilder {
 pub struct Deboa {
     connection_timeout: u64,
     request_timeout: u64,
+    client_cert: Option<ClientCert>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     pool: HttpConnectionPool,
@@ -256,6 +272,7 @@ impl Deboa {
         Deboa {
             connection_timeout: 0,
             request_timeout: 0,
+            client_cert: None,
             catchers: None,
             protocol: HttpVersion::Http1,
             pool: HttpConnectionPool::new(),
@@ -272,6 +289,7 @@ impl Deboa {
         DeboaBuilder {
             connection_timeout: 0,
             request_timeout: 0,
+            client_cert: None,
             catchers: None,
             protocol: HttpVersion::Http1,
         }
@@ -494,7 +512,7 @@ impl Deboa {
 
         let request = request.unwrap();
 
-        let conn = self.pool.create_connection(url, &self.protocol).await?;
+        let conn = self.pool.create_connection(url, &self.protocol, &self.client_cert).await?;
         match *conn {
             #[cfg(feature = "http1")]
             DeboaConnection::Http1(ref mut conn) => conn.send_request(request).await,

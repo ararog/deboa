@@ -6,6 +6,9 @@ pub enum DeboaError {
     #[error("Invalid cookie header: {message}")]
     Cookie { message: String },
 
+    #[error("Invalid client certificate: {message}")]
+    ClientCert { message: String },
+
     #[error("Invalid header: {message}")]
     InvalidHeader { message: String },
 
