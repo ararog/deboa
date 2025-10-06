@@ -9,6 +9,7 @@ use smol::{
     net::TcpStream,
 };
 
+#[allow(clippy::large_enum_variant)]
 pub enum SmolStream {
     /// A plain TCP connection.
     Plain(TcpStream),
