@@ -1,3 +1,6 @@
+use std::path::Path;
+
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 use indexmap::IndexMap;
 use rand::distr::{Alphanumeric, SampleString};
 use urlencoding::encode;
@@ -112,6 +115,25 @@ impl MultiPartForm {
         }
     }
 
+    /// Add a file to the form.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The key.
+    /// * `value` - The value.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The form.
+    ///
+    pub fn file<F>(&mut self, key: &str, value: F) -> &mut Self
+    where
+        F: AsRef<std::path::Path>,
+    {
+        self.fields.insert(key.to_string(), value.as_ref().to_str().unwrap().to_string());
+        self
+    }
+
     /// Get the boundary of the form.
     ///
     /// # Returns
@@ -138,11 +160,36 @@ impl DeboaForm for MultiPartForm {
         let boundary = self.boundary();
         form.push_str("\r\n");
         for (key, value) in &self.fields {
-            form.push_str(&format!("Content-Disposition: form-data; name=\"{}\"", key));
-            form.push_str("\r\n");
-            form.push_str("\r\n");
-            form.push_str(value);
+            if Path::is_file(value.as_ref()) {
+                let kind = minimime::lookup_by_filename(value);
+                let path = Path::new(value);
+                if let Some(kind) = kind {
+                    let file_name = path.file_name();
+                    let file_content = std::fs::read(value).unwrap();
+                    if file_name.is_some() {
+                        form.push_str(&format!(
+                            "Content-Disposition: file; form-data=\"{}\"; filename=\"{}\"",
+                            key,
+                            file_name.unwrap().to_str().unwrap()
+                        ));
+                        form.push_str("\r\n");
+                        form.push_str(&format!("Content-Type: {}\r\n", kind.content_type));
+                        form.push_str("\r\n");
+                        if kind.is_binary() {
+                            form.push_str(&STANDARD.encode(&file_content));
+                        } else {
+                            form.push_str(&String::from_utf8_lossy(&file_content));
+                        }
+                    }
+                }
+            } else {
+                form.push_str(&format!("Content-Disposition: form-data; name=\"{}\"", key));
+                form.push_str("\r\n");
+                form.push_str("\r\n");
+                form.push_str(value);
+            }
             form.push_str(boundary);
+
             if key != self.fields.last().unwrap().0 {
                 form.push_str("\r\n");
             } else {
