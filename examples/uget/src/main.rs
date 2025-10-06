@@ -2,6 +2,7 @@ use std::io::{stdin, IsTerminal, Read, Write};
 
 use clap::Parser;
 use deboa::{
+    cert::ClientCert,
     errors::DeboaError,
     form::{DeboaForm, EncodedForm, MultiPartForm},
     request::DeboaRequest,
@@ -72,10 +73,8 @@ struct Args {
     part: Option<Vec<String>>,
     #[arg(long, help = "Set the certificate file to use.")]
     cert: Option<String>,
-    #[arg(long, help = "Set the private key file to use.")]
-    key: Option<String>,
-    #[arg(long, help = "Set the private key password.")]
-    key_pw: Option<String>,
+    #[arg(long, help = "Set the certificate password.")]
+    cert_pw: Option<String>,
 }
 
 #[tokio::main]
@@ -100,12 +99,17 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let arg_basic_auth = args.basic;
     let arg_save = args.save;
     let arg_part = args.part;
-    let _arg_cert = args.cert;
-    let _arg_key = args.key;
-    let _arg_key_pw = args.key_pw;
+    let arg_cert = args.cert;
+    let arg_cert_pw = args.cert_pw;
+
+    if arg_cert.is_some() && arg_cert_pw.is_some() {
+        let cert = arg_cert.unwrap();
+        let cert_pw = arg_cert_pw.unwrap();
+        client.set_client_cert(Some(ClientCert::new(cert, cert_pw)));
+    }
 
     let mut stdin = stdin();
-    if ! stdin.is_terminal() {
+    if !stdin.is_terminal() {
         let mut stdin_body = String::new();
         let result = stdin.read_to_string(&mut stdin_body);
         if let Err(e) = result {
