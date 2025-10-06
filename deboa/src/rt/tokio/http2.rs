@@ -65,7 +65,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
                         if let Err(e) = file {
                             return Err(DeboaError::ClientCert { message: e.to_string() });
                         }
-                        let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.key_pw());
+                        let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.pw());
                         if let Err(e) = identity {
                             return Err(DeboaError::ClientCert { message: e.to_string() });
                         }

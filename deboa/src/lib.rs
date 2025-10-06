@@ -373,6 +373,32 @@ impl Deboa {
         self
     }
 
+    /// Allow get client certificate at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `Option<ClientCert>` - The client certificate.
+    ///
+    #[inline]
+    pub fn client_cert(&self) -> Option<&ClientCert> {
+        self.client_cert.as_ref()
+    }
+
+    /// Allow change client certificate at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `client_cert` - The client certificate to be used.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The Deboa instance.
+    ///
+    pub fn set_client_cert(&mut self, client_cert: Option<ClientCert>) -> &mut Self {
+        self.client_cert = client_cert;
+        self
+    }
+
     /// Allow add catcher at any time.
     ///
     /// # Arguments
