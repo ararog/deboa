@@ -444,9 +444,14 @@ impl DeboaRequest {
             return Err(DeboaError::UrlParse { message: e.to_string() });
         }
 
+        let url = parsed_url.unwrap();
+        let authority = url.authority();
+        let mut headers = HeaderMap::new();
+        headers.insert(header::HOST, HeaderValue::from_str(authority).unwrap());
+
         Ok(DeboaRequestBuilder {
-            url: parsed_url.unwrap(),
-            headers: HeaderMap::new(),
+            url,
+            headers,
             cookies: None,
             retries: 0,
             method,

@@ -500,12 +500,8 @@ impl Deboa {
     {
         let url = request.as_ref().url();
         let method = request.as_ref().method();
-        let authority = url.authority();
 
-        let mut builder = Request::builder()
-            .uri(url.as_str())
-            .method(method.to_string().as_str())
-            .header(hyper::header::HOST, authority);
+        let mut builder = Request::builder().uri(url.as_str()).method(method.to_string().as_str());
         {
             let req_headers = builder.headers_mut().unwrap();
 
