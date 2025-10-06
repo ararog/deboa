@@ -1,4 +1,4 @@
-use async_native_tls::TlsStream;
+use futures_rustls::TlsStream;
 use std::{
     pin::Pin,
     task::{Context, Poll},

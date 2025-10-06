@@ -52,7 +52,7 @@ Options:
 struct Args {
     #[arg(index = 1, required = true, help = "URL to make the request to.")]
     url: String,
-    #[arg(index = 2, default_value = "-", help = "Allow set raw request body.")]
+    #[arg(index = 2, required = false, help = "Allow set raw request body.")]
     body: Option<MaybeStdin<String>>,
     #[arg(short, long, help = "HTTP method to use.")]
     method: Option<String>,
@@ -78,6 +78,7 @@ struct Args {
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
+
     let mut client = Deboa::new();
 
     let result = handle_request(args, &mut client).await;

@@ -1,7 +1,11 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use bytes::Bytes;
+use futures_rustls::TlsConnector;
 use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
+use rustls::{pki_types::ServerName};
 use smol::net::TcpStream;
 use smol_hyper::rt::FuturesIo;
 use url::Url;
@@ -57,7 +61,12 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                     }
 
                     let stream = stream.unwrap();
-                    let stream = async_native_tls::connect(host.to_string(), stream).await;
+                    let root_store = rustls::RootCertStore {
+                        roots: webpki_roots::TLS_SERVER_ROOTS.to_vec(),
+                    };
+                    let config = rustls::ClientConfig::builder().with_root_certificates(root_store).with_no_client_auth();
+                    let config = TlsConnector::from(Arc::new(config));
+                    let stream = config.connect(ServerName::try_from(host.to_string()).unwrap(), stream).await;
 
                     if let Err(e) = stream {
                         return Err(DeboaError::Connection {
@@ -67,7 +76,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                     }
 
                     let stream = stream.unwrap();
-                    SmolStream::Tls(stream)
+                    SmolStream::Tls(futures_rustls::TlsStream::Client(stream))
                 }
                 scheme => {
                     return Err(DeboaError::UnsupportedScheme {
