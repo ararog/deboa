@@ -16,11 +16,11 @@ rust-version = "1.64.0"
 default = ["tokio-rt"]
 
 # runtimes
-tokio-rt = ["http1", "http2", "dep:tokio", "dep:tokio-rustls"]
+tokio-rt = ["http1", "http2", "dep:tokio", "dep:tokio-native-tls"]
 smol-rt = [
   "http1",
   "http2",
-  "dep:futures-rustls",
+  "dep:async-native-tls",
   "dep:smol",
   "dep:smol-hyper",
   "dep:async-executor",
@@ -34,12 +34,12 @@ http2 = []
 
 [dependencies]
 async-executor = { version = "1.13.3", optional = true }
+async-native-tls = { version = "0.5.0", optional = true }
 async-trait = "0.1.89"
 base64 = "0.22.1"
 bytes = { version = "1.2", optional = false }
 cookie = "0.18.1"
 futures = "0.3.31"
-futures-rustls = { version = "0.26.0", optional = true }
 http = "1"
 http-body = "1"
 http-body-util = "0.1"
@@ -56,7 +56,6 @@ macro_rules_attribute = { version = "0.2.2", optional = true }
 mime = { version = "0.3.17" }
 mockall = "0.13.1"
 rand = "0.9.2"
-rustls = "0.23.19"
 serde = { version = "1.0.217", features = ["derive"] }
 smol = { version = "2.0.2", optional = true }
 smol-hyper = { version = "0.1.0", optional = true, features = ["smol"]}
@@ -64,7 +63,7 @@ smol-macros = { version = "0.1.1", optional = true }
 strum_macros = "0.27.0"
 thiserror = "2.0.16"
 tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"], optional = true }
-tokio-rustls = { version = "0.26.4", optional = true }
+tokio-native-tls = { version = "0.3.1", optional = true }
 typed-builder = "0.21.2"
 url = "2.5.4"
 urlencoding = "2.1.3"

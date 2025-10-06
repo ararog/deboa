@@ -5,7 +5,7 @@ use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 use url::Url;
 
-use crate::{errors::DeboaError, Result};
+use crate::{cert::ClientCert, errors::DeboaError, Result};
 
 #[derive(Debug)]
 /// Enum that represents the connection type.
@@ -58,7 +58,7 @@ pub trait DeboaHttpConnection {
     ///
     /// * `Result<BaseHttpConnection<Self::Sender>>` - The connection or error.
     ///
-    async fn connect(url: &Url) -> Result<BaseHttpConnection<Self::Sender>>;
+    async fn connect(url: &Url, client_cert: &Option<ClientCert>) -> Result<BaseHttpConnection<Self::Sender>>;
 
     /// Get connection url.
     ///

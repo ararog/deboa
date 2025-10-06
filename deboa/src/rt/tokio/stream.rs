@@ -2,7 +2,7 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
-use tokio_rustls::TlsStream;
+use tokio_native_tls::TlsStream;
 
 use tokio::{
     io::{self, AsyncRead, AsyncWrite},
