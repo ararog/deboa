@@ -8,7 +8,7 @@ use deboa::{
     request::DeboaRequest,
     Deboa, Result,
 };
-use http::{header, HeaderMap, HeaderName, HeaderValue, Method};
+use http::{header, HeaderName, Method};
 use std::fs::File;
 use tokio::io::{self, AsyncWriteExt};
 
@@ -56,25 +56,28 @@ struct Args {
     body: Option<String>,
     #[arg(short, long, help = "HTTP method to use.")]
     method: Option<String>,
-    #[arg(long, help = "Set form field, format: key=value.")]
+    #[arg(short = 'f', long, help = "Set form field, format: key=value.")]
     field: Option<Vec<String>>,
-    #[arg(long, help = "Set header field, format: key=value.")]
+    #[arg(short = 'H', long, help = "Set header field, format: key=value.")]
     header: Option<Vec<String>>,
-    #[arg(long, help = "Set bearer auth token on Authorization header.")]
+    #[arg(short = 'b', long, help = "Set bearer auth token on Authorization header.")]
     bearer: Option<String>,
     #[arg(
+        short = 'a',
         long,
         help = "Set basic auth on Authorization header, format: username=password, it will be base64 encoded."
     )]
     basic: Option<String>,
-    #[arg(long, help = "Set the file to save the response body.")]
+    #[arg(short = 's', long, help = "Set the file to save the response body.")]
     save: Option<String>,
-    #[arg(long, help = "Set the part of multipart/form-data.")]
+    #[arg(short = 'p', long, help = "Set the part of multipart/form-data.")]
     part: Option<Vec<String>>,
-    #[arg(long, help = "Set the certificate file to use.")]
+    #[arg(short = 'c', long, help = "Set the certificate file to use.")]
     cert: Option<String>,
-    #[arg(long, help = "Set the certificate password.")]
+    #[arg(short = 'k', long, help = "Set the certificate password.")]
     cert_pw: Option<String>,
+    #[arg(short = 'P', long, help = "Print request or response.")]
+    print: Option<String>,
 }
 
 #[tokio::main]
@@ -85,7 +88,7 @@ async fn main() {
 
     let result = handle_request(args, &mut client).await;
     if let Err(err) = result {
-        eprintln!("An error occurred: {:#}", err);
+        //eprintln!("An error occurred: {:#}", err);
     }
 }
 
@@ -101,6 +104,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let arg_part = args.part;
     let arg_cert = args.cert;
     let arg_cert_pw = args.cert_pw;
+    let arg_print = args.print;
 
     if arg_cert.is_some() && arg_cert_pw.is_some() {
         let cert = arg_cert.unwrap();
@@ -151,34 +155,30 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         }
     }
 
-    let mut headers = if let Some(header) = arg_header {
-        header.iter().fold(HeaderMap::new(), |mut map, header| {
-            let pairs = header.split_once(':');
-            if let Some((key, value)) = pairs {
-                let header_name = HeaderName::from_bytes(key.as_bytes());
-                if let Err(e) = header_name {
-                    eprintln!("Invalid header name: {}", e);
-                    return map;
-                }
-                let header_value = HeaderValue::from_bytes(value.as_bytes());
-                if let Err(e) = header_value {
-                    eprintln!("Invalid header value: {}", e);
-                    return map;
-                }
-                map.append(header_name.unwrap(), header_value.unwrap());
-            }
-            map
-        })
-    } else {
-        HeaderMap::new()
-    };
-
     let http_method = method.unwrap();
     let request = DeboaRequest::to(arg_url.as_ref())?;
+
+    let request = if let Some(header) = arg_header {
+        header.iter().fold(request, |request, header| {
+            let pairs = header.split_once(':');
+            let request = if let Some((key, value)) = pairs {
+                let header_name = HeaderName::from_bytes(key.as_bytes());
+                if let Err(e) = header_name {
+                    eprintln!("Error: {:#}", e);
+                    return request;
+                }
+                request.header(header_name.unwrap(), value)
+            } else {
+                request
+            };
+            request
+        })
+    } else {
+        request
+    };
+
     let request = if let Some(body) = arg_body {
-        let content_length = HeaderValue::from_str(&body.len().to_string());
-        headers.insert(header::CONTENT_LENGTH, content_length.unwrap());
-        request.text(&body)
+        request.header(header::CONTENT_LENGTH, &body.len().to_string()).text(&body)
     } else if let Some(fields) = arg_fields {
         let mut form = EncodedForm::builder();
         for field in fields {
@@ -200,7 +200,6 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     } else {
         request
     };
-    let request = request.headers(headers);
 
     let request = if let Some(bearer_auth) = arg_bearer_auth {
         request.bearer_auth(&bearer_auth)
@@ -216,8 +215,16 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     };
 
     let request = request.method(http_method);
+    let request = request.build()?;
 
-    let response = client.execute(request.build()?).await?;
+    if let Some(print) = arg_print {
+        if print == "req" {
+            println!("\n\n{} {}", request.method(), request.url());
+            println!("Headers: {:#?}", request.headers());
+        }
+    }
+
+    let response = client.execute(request).await?;
 
     if let Some(save) = arg_save {
         let file = File::create(save);
