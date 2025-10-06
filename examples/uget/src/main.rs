@@ -6,7 +6,7 @@ use clap::Parser;
 use clap_stdin::MaybeStdin;
 use deboa::{
     errors::DeboaError,
-    form::{DeboaForm, EncodedForm},
+    form::{DeboaForm, EncodedForm, MultiPartForm},
     request::DeboaRequest,
     Deboa, Result,
 };
@@ -22,7 +22,7 @@ use tokio::io::{self, AsyncWriteExt};
 uget - a cli tool to make http requests
 
 Usage:
-    uget <URL> [OPTIONS]
+    uget <URL> <BODY> [OPTIONS]
 
 Options:
     -h, --help       Print help information
@@ -43,10 +43,12 @@ Options:
                      Set the file to save the response body.
     -p, --part   <PART>
                      Set the part of multipart/form-data.
-    -b, --bdry   <BOUNDARY>
-                     Set boundary for multipart/form-data.
-    -r, --raw    <RAW>
-                     Set raw request body.
+    -c, --cert   <CERT>
+                     Set the certificate file to use.
+    -k, --key    <KEY>
+                     Set the private key file to use.
+    -K, --key-pw <KEY_PW>
+                     Set the private key password.
 "#
 )]
 struct Args {
@@ -71,8 +73,12 @@ struct Args {
     save: Option<String>,
     #[arg(long, help = "Set the part of multipart/form-data.")]
     part: Option<Vec<String>>,
-    #[arg(long, help = "Set boundary for multipart/form-data.")]
-    bdry: Option<String>,
+    #[arg(long, help = "Set the certificate file to use.")]
+    cert: Option<String>,
+    #[arg(long, help = "Set the private key file to use.")]
+    key: Option<String>,
+    #[arg(long, help = "Set the private key password.")]
+    key_pw: Option<String>,
 }
 
 #[tokio::main]
@@ -97,7 +103,9 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let arg_basic_auth = args.basic;
     let arg_save = args.save;
     let arg_part = args.part;
-    let _arg_bdry = args.bdry;
+    let _arg_cert = args.cert;
+    let _arg_key = args.key;
+    let _arg_key_pw = args.key_pw;
 
     let mut method = "GET".to_string();
     if let Some(some_method) = arg_method {
@@ -162,6 +170,15 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         let mut form = EncodedForm::builder();
         for field in fields {
             let pairs = field.split_once('=');
+            if let Some((key, value)) = pairs {
+                form.field(key, value);
+            }
+        }
+        request.form(form.into())
+    } else if let Some(part) = arg_part {
+        let mut form = MultiPartForm::builder();
+        for part in part {
+            let pairs = part.split_once('=');
             if let Some((key, value)) = pairs {
                 form.field(key, value);
             }
