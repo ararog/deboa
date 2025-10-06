@@ -8,7 +8,11 @@ use smol_hyper::rt::FuturesIo;
 use url::Url;
 
 use crate::{
-    cert::ClientCert, client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http1Request}, errors::DeboaError, rt::smol::stream::SmolStream, Result
+    cert::ClientCert,
+    client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http1Request},
+    errors::DeboaError,
+    rt::smol::stream::SmolStream,
+    Result,
 };
 
 #[async_trait]
@@ -58,15 +62,11 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                     let connector = if let Some(client_cert) = client_cert {
                         let file = std::fs::read(client_cert.cert());
                         if let Err(e) = file {
-                            return Err(DeboaError::ClientCert {
-                                message: e.to_string(),
-                            });
+                            return Err(DeboaError::ClientCert { message: e.to_string() });
                         }
-                        let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.key_pw());
+                        let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.pw());
                         if let Err(e) = identity {
-                            return Err(DeboaError::ClientCert {
-                                message: e.to_string(),
-                            });
+                            return Err(DeboaError::ClientCert { message: e.to_string() });
                         }
                         TlsConnector::new().identity(identity.unwrap())
                     } else {
