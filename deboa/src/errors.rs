@@ -16,10 +16,17 @@ pub enum DeboaError {
     Connection { host: String, message: String },
 
     #[error("Failed to send request: {method} {url}: {message}")]
-    Request { url: String, method: String, message: String },
+    Request {
+        url: String,
+        method: String,
+        message: String,
+    },
 
     #[error("Failed to receive response: {status_code}: {message}")]
-    Response { status_code: StatusCode, message: String },
+    Response {
+        status_code: StatusCode,
+        message: String,
+    },
 
     #[error("Failed to process response: {message}")]
     ProcessResponse { message: String },

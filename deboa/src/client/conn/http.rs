@@ -58,7 +58,10 @@ pub trait DeboaHttpConnection {
     ///
     /// * `Result<BaseHttpConnection<Self::Sender>>` - The connection or error.
     ///
-    async fn connect(url: &Url, client_cert: &Option<ClientCert>) -> Result<BaseHttpConnection<Self::Sender>>;
+    async fn connect(
+        url: &Url,
+        client_cert: &Option<ClientCert>,
+    ) -> Result<BaseHttpConnection<Self::Sender>>;
 
     /// Get connection url.
     ///
@@ -108,12 +111,18 @@ pub trait DeboaHttpConnection {
 
         let response = response.unwrap();
         let status_code = response.status();
-        if (!status_code.is_success() && !status_code.is_redirection()) || status_code == StatusCode::TOO_MANY_REQUESTS {
+        if (!status_code.is_success() && !status_code.is_redirection())
+            || status_code == StatusCode::TOO_MANY_REQUESTS
+        {
             let body = response.collect().await;
             let body = body.unwrap().to_bytes().to_vec();
             return Err(DeboaError::Response {
                 status_code,
-                message: format!("Could not process request ({}): {}", status_code, String::from_utf8_lossy(&body)),
+                message: format!(
+                    "Could not process request ({}): {}",
+                    status_code,
+                    String::from_utf8_lossy(&body)
+                ),
             });
         }
 

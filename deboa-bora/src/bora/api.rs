@@ -3,12 +3,18 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TS2};
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, parse_str, punctuated::Punctuated, token::Paren, Data, DeriveInput, Ident, LitStr, Type, TypeTuple, Visibility};
+use syn::{
+    parse_macro_input, parse_str, punctuated::Punctuated, token::Paren, Data, DeriveInput, Ident,
+    LitStr, Type, TypeTuple, Visibility,
+};
 
 use crate::{
     parser::{
         api::{BoraApi, OperationEnum},
-        operations::{delete::DeleteFieldEnum, get::GetFieldEnum, patch::PatchFieldEnum, post::PostFieldEnum, put::PutFieldEnum},
+        operations::{
+            delete::DeleteFieldEnum, get::GetFieldEnum, patch::PatchFieldEnum, post::PostFieldEnum,
+            put::PutFieldEnum,
+        },
     },
     token::utils::extract_params_from_path,
 };
@@ -48,7 +54,8 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
     let parse_attr = attr.clone().into();
     let root = parse_macro_input!(parse_attr as BoraApi);
 
-    let name = if matches!(item.vis, Visibility::Public(_)) && matches!(item.data, Data::Struct(_)) {
+    let name = if matches!(item.vis, Visibility::Public(_)) && matches!(item.data, Data::Struct(_))
+    {
         item.ident.to_string()
     } else {
         panic!("expected public struct");

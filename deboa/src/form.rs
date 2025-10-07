@@ -71,7 +71,9 @@ impl EncodedForm {
     /// * `Self` - The encoded form.
     ///
     pub fn builder() -> Self {
-        Self { fields: IndexMap::new() }
+        Self {
+            fields: IndexMap::new(),
+        }
     }
 }
 
@@ -130,7 +132,10 @@ impl MultiPartForm {
     where
         F: AsRef<std::path::Path>,
     {
-        self.fields.insert(key.to_string(), value.as_ref().to_str().unwrap().to_string());
+        self.fields.insert(
+            key.to_string(),
+            value.as_ref().to_str().unwrap().to_string(),
+        );
         self
     }
 

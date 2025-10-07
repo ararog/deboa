@@ -5,7 +5,9 @@ use syn::{
     Ident, Token,
 };
 
-use crate::parser::common::field::{FormatStruct, NameStruct, PathStruct, ReqBodyStruct, ResBodyStruct};
+use crate::parser::common::field::{
+    FormatStruct, NameStruct, PathStruct, ReqBodyStruct, ResBodyStruct,
+};
 
 pub struct PostStruct {
     pub fields: Punctuated<PostFieldEnum, Token![,]>,
@@ -60,10 +62,16 @@ impl Parse for PostFieldEnum {
             match ident.to_string().as_str() {
                 "name" => Ok(PostFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(PostFieldEnum::path(PathStruct::parse(input)?)),
-                "req_body" => Ok(PostFieldEnum::req_body(Box::new(ReqBodyStruct::parse(input)?))),
-                "res_body" => Ok(PostFieldEnum::res_body(Box::new(ResBodyStruct::parse(input)?))),
+                "req_body" => Ok(PostFieldEnum::req_body(Box::new(ReqBodyStruct::parse(
+                    input,
+                )?))),
+                "res_body" => Ok(PostFieldEnum::res_body(Box::new(ResBodyStruct::parse(
+                    input,
+                )?))),
                 "format" => Ok(PostFieldEnum::format(FormatStruct::parse(input)?)),
-                _ => Err(input.error(format!("expected one of name, path or req_body, found '{ident}'"))),
+                _ => Err(input.error(format!(
+                    "expected one of name, path or req_body, found '{ident}'"
+                ))),
             }
         } else {
             Err(lookahead.error())

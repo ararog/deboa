@@ -181,7 +181,9 @@ impl DeboaResponse {
     pub fn to_file(&self, path: &str) -> Result<()> {
         let result = write(path, &*self.body);
         if let Err(e) = result {
-            return Err(DeboaError::Io { message: e.to_string() });
+            return Err(DeboaError::Io {
+                message: e.to_string(),
+            });
         }
         Ok(())
     }

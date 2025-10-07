@@ -37,7 +37,9 @@ impl Parse for DeleteFieldEnum {
             match ident.to_string().as_str() {
                 "name" => Ok(DeleteFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(DeleteFieldEnum::path(PathStruct::parse(input)?)),
-                _ => Err(input.error(format!("expected one of name, path or req_body, found '{ident}'"))),
+                _ => Err(input.error(format!(
+                    "expected one of name, path or req_body, found '{ident}'"
+                ))),
             }
         } else {
             Err(lookahead.error())

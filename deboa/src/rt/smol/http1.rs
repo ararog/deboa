@@ -24,7 +24,10 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         &self.url
     }
 
-    async fn connect(url: &Url, client_cert: &Option<ClientCert>) -> Result<BaseHttpConnection<Self::Sender>> {
+    async fn connect(
+        url: &Url,
+        client_cert: &Option<ClientCert>,
+    ) -> Result<BaseHttpConnection<Self::Sender>> {
         let host = url.host().expect("uri has no host");
         let io = {
             match url.scheme() {
@@ -62,11 +65,15 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                     let connector = if let Some(client_cert) = client_cert {
                         let file = std::fs::read(client_cert.cert());
                         if let Err(e) = file {
-                            return Err(DeboaError::ClientCert { message: e.to_string() });
+                            return Err(DeboaError::ClientCert {
+                                message: e.to_string(),
+                            });
                         }
                         let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.pw());
                         if let Err(e) = identity {
-                            return Err(DeboaError::ClientCert { message: e.to_string() });
+                            return Err(DeboaError::ClientCert {
+                                message: e.to_string(),
+                            });
                         }
                         TlsConnector::new().identity(identity.unwrap())
                     } else {
@@ -105,7 +112,10 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         })
         .detach();
 
-        Ok(BaseHttpConnection::<Http1Request> { url: url.clone(), sender })
+        Ok(BaseHttpConnection::<Http1Request> {
+            url: url.clone(),
+            sender,
+        })
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {

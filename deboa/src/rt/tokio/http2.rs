@@ -28,7 +28,10 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
         &self.url
     }
 
-    async fn connect(url: &Url, client_cert: &Option<ClientCert>) -> Result<BaseHttpConnection<Http2Request>> {
+    async fn connect(
+        url: &Url,
+        client_cert: &Option<ClientCert>,
+    ) -> Result<BaseHttpConnection<Http2Request>> {
         let host = url.host().unwrap_or(Host::Domain("localhost"));
         let stream = {
             match url.scheme() {
@@ -65,18 +68,24 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
                     if let Some(client_cert) = client_cert {
                         let file = std::fs::read(client_cert.cert());
                         if let Err(e) = file {
-                            return Err(DeboaError::ClientCert { message: e.to_string() });
+                            return Err(DeboaError::ClientCert {
+                                message: e.to_string(),
+                            });
                         }
                         let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.pw());
                         if let Err(e) = identity {
-                            return Err(DeboaError::ClientCert { message: e.to_string() });
+                            return Err(DeboaError::ClientCert {
+                                message: e.to_string(),
+                            });
                         }
                         builder.identity(identity.unwrap());
 
                         if let Some(ca) = client_cert.ca() {
                             let pem = std::fs::read(ca);
                             if let Err(e) = pem {
-                                return Err(DeboaError::ClientCert { message: e.to_string() });
+                                return Err(DeboaError::ClientCert {
+                                    message: e.to_string(),
+                                });
                             }
                             let cert = Certificate::from_pem(&pem.unwrap());
                             builder.add_root_certificate(cert.unwrap());
@@ -123,7 +132,10 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
             };
         });
 
-        Ok(BaseHttpConnection::<Http2Request> { url: url.clone(), sender })
+        Ok(BaseHttpConnection::<Http2Request> {
+            url: url.clone(),
+            sender,
+        })
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {

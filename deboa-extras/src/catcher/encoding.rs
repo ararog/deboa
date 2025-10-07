@@ -1,4 +1,7 @@
-use deboa::{catcher::DeboaCatcher, fs::io::Decompressor, request::DeboaRequest, response::DeboaResponse, Result};
+use deboa::{
+    catcher::DeboaCatcher, fs::io::Decompressor, request::DeboaRequest, response::DeboaResponse,
+    Result,
+};
 use http::header;
 use std::collections::HashMap;
 
@@ -18,7 +21,11 @@ impl<D: Decompressor> EncodingCatcher<D> {
 
 impl<D: Decompressor> DeboaCatcher for EncodingCatcher<D> {
     fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
-        let encodings = self.accept_encoding.values().map(|decoder| decoder.name()).collect::<Vec<String>>();
+        let encodings = self
+            .accept_encoding
+            .values()
+            .map(|decoder| decoder.name())
+            .collect::<Vec<String>>();
 
         request.add_header(header::ACCEPT_ENCODING, &encodings.join(","));
 

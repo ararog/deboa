@@ -6,7 +6,9 @@ use deboa_tests::utils::fake_url;
 #[cfg(feature = "json")]
 #[test]
 fn test_set_json() -> Result<()> {
-    let request = DeboaRequest::post(fake_url())?.body_as(JsonBody, sample_post())?.build()?;
+    let request = DeboaRequest::post(fake_url())?
+        .body_as(JsonBody, sample_post())?
+        .build()?;
 
     assert_eq!(*request.raw_body(), JSON_POST.to_vec());
 
@@ -18,7 +20,12 @@ fn test_set_json() -> Result<()> {
 async fn test_response_json() -> Result<()> {
     let data = sample_post();
 
-    let response = DeboaResponse::new(fake_url(), http::StatusCode::OK, http::HeaderMap::new(), JSON_POST.as_ref());
+    let response = DeboaResponse::new(
+        fake_url(),
+        http::StatusCode::OK,
+        http::HeaderMap::new(),
+        JSON_POST.as_ref(),
+    );
     let response: Post = response.body_as(JsonBody)?;
 
     assert_eq!(response, data);

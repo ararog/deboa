@@ -23,13 +23,17 @@ impl Compressor for GzipCompressor {
         let result = writer.write_all(request.raw_body().as_ref());
 
         if let Err(e) = result {
-            return Err(DeboaError::Compress { message: e.to_string() });
+            return Err(DeboaError::Compress {
+                message: e.to_string(),
+            });
         }
 
         let result = writer.finish();
 
         if let Err(e) = result {
-            return Err(DeboaError::Compress { message: e.to_string() });
+            return Err(DeboaError::Compress {
+                message: e.to_string(),
+            });
         }
 
         Ok(Bytes::from(result.unwrap()))
@@ -51,7 +55,9 @@ impl Decompressor for GzipDecompressor {
         let result = reader.read_to_end(&mut buffer);
 
         if let Err(e) = result {
-            return Err(DeboaError::Decompress { message: e.to_string() });
+            return Err(DeboaError::Decompress {
+                message: e.to_string(),
+            });
         }
 
         response.set_raw_body(&buffer);

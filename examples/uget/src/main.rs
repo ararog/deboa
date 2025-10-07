@@ -64,7 +64,11 @@ struct Args {
     field: Option<Vec<String>>,
     #[arg(short = 'H', long, help = "Set header field, format: key=value.")]
     header: Option<Vec<String>>,
-    #[arg(short = 'b', long, help = "Set bearer auth token on Authorization header.")]
+    #[arg(
+        short = 'b',
+        long,
+        help = "Set bearer auth token on Authorization header."
+    )]
     bearer: Option<String>,
     #[arg(
         short = 'a',
@@ -80,7 +84,11 @@ struct Args {
     cert: Option<String>,
     #[arg(short = 'k', long, help = "Set the certificate password.")]
     cert_pw: Option<String>,
-    #[arg(short = 'v', long, help = "Set the ca certificate file to use (pem format).")]
+    #[arg(
+        short = 'v',
+        long,
+        help = "Set the ca certificate file to use (pem format)."
+    )]
     verify: Option<String>,
     #[arg(short = 'P', long, help = "Print request or response.")]
     print: Option<String>,
@@ -147,7 +155,8 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
 
     if arg_body.is_some() && arg_fields.is_some() && arg_part.is_some() {
         return Err(DeboaError::ProcessResponse {
-            message: "Both body, fields and part are set, you can only use one of them.".to_string(),
+            message: "Both body, fields and part are set, you can only use one of them."
+                .to_string(),
         });
     }
 
@@ -185,7 +194,9 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     };
 
     let request = if let Some(body) = arg_body {
-        request.header(header::CONTENT_LENGTH, &body.len().to_string()).text(&body)
+        request
+            .header(header::CONTENT_LENGTH, &body.len().to_string())
+            .text(&body)
     } else if let Some(fields) = arg_fields {
         let mut form = EncodedForm::builder();
         for field in fields {

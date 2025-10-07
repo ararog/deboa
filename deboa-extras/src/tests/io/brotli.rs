@@ -14,7 +14,12 @@ async fn test_brotli_decompress() -> Result<()> {
 
     let mut headers = HeaderMap::new();
     headers.insert("Content-Encoding", HeaderValue::from_static("br"));
-    let mut response = DeboaResponse::new(fake_url(), StatusCode::OK, headers, BROTLI_COMPRESSED.as_ref());
+    let mut response = DeboaResponse::new(
+        fake_url(),
+        StatusCode::OK,
+        headers,
+        BROTLI_COMPRESSED.as_ref(),
+    );
 
     encoding_catcher.on_response(&mut response);
 

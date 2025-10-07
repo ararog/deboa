@@ -69,7 +69,9 @@ async fn test_query_by_title() -> Result<()> {
 
     let mut post_service = PostService::new(client);
 
-    let posts = post_service.query_by_title(6, "dolorem eum magni eos aperiam quia").await?;
+    let posts = post_service
+        .query_by_title(6, "dolorem eum magni eos aperiam quia")
+        .await?;
 
     println!("posts: {posts:?}");
 

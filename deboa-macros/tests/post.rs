@@ -18,7 +18,12 @@ async fn test_post() -> Result<()> {
         title: "title".to_string(),
         body: "body".to_string(),
     };
-    let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &mut client);
+    let response = post!(
+        data,
+        JsonBody,
+        "https://jsonplaceholder.typicode.com/posts",
+        &mut client
+    );
     assert_eq!(response.status(), 201);
     Ok(())
 }

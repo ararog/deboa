@@ -24,7 +24,9 @@ async fn do_patch() -> Result<()> {
 
     let mut client: Deboa = Deboa::new();
 
-    let request = DeboaRequest::patch(server.url("/posts/1").as_str())?.text("").build()?;
+    let request = DeboaRequest::patch(server.url("/posts/1").as_str())?
+        .text("")
+        .build()?;
 
     let response = client.execute(request).await?;
 

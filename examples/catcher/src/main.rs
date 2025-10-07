@@ -26,7 +26,9 @@ async fn main() -> Result<()> {
 
     let client = Deboa::builder().catch(TestMonitor).build();
 
-    let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com")?.go(client).await?;
+    let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com")?
+        .go(client)
+        .await?;
 
     Ok(())
 }

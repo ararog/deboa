@@ -27,7 +27,9 @@ async fn do_post() -> Result<()> {
 
     let mut client = Deboa::new();
 
-    let request = DeboaRequest::post(server.url("/posts").as_str())?.text("ping").build()?;
+    let request = DeboaRequest::post(server.url("/posts").as_str())?
+        .text("ping")
+        .build()?;
 
     let response = client.execute(request).await?;
 
@@ -58,7 +60,10 @@ async fn do_post_form() -> Result<()> {
     let http_mock = server.mock(|when, then| {
         when.method(POST)
             .path("/posts")
-            .header(header::CONTENT_TYPE.as_str(), mime::WWW_FORM_URLENCODED.to_string())
+            .header(
+                header::CONTENT_TYPE.as_str(),
+                mime::WWW_FORM_URLENCODED.to_string(),
+            )
             .body("name=deboa&version=0.0.1");
         then.status::<u16>(StatusCode::CREATED.into())
             .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
@@ -67,7 +72,10 @@ async fn do_post_form() -> Result<()> {
 
     let mut client = Deboa::new();
 
-    let form = EncodedForm::builder().field("name", "deboa").field("version", "0.0.1").build();
+    let form = EncodedForm::builder()
+        .field("name", "deboa")
+        .field("version", "0.0.1")
+        .build();
 
     let request = DeboaRequest::post(server.url("/posts").as_str())?
         .header(header::CONTENT_TYPE, mime::WWW_FORM_URLENCODED.into())

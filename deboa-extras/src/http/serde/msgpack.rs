@@ -19,7 +19,9 @@ impl RequestBody for MsgPackBody {
     fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>> {
         let result = rmp_serde::to_vec(&data);
         if let Err(error) = result {
-            return Err(DeboaError::Serialization { message: error.to_string() });
+            return Err(DeboaError::Serialization {
+                message: error.to_string(),
+            });
         }
 
         Ok(result.unwrap())
@@ -35,7 +37,9 @@ impl ResponseBody for MsgPackBody {
 
         match json {
             Ok(deserialized_body) => Ok(deserialized_body),
-            Err(err) => Err(DeboaError::Deserialization { message: err.to_string() }),
+            Err(err) => Err(DeboaError::Deserialization {
+                message: err.to_string(),
+            }),
         }
     }
 }
