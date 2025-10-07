@@ -4,7 +4,7 @@ use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
-use tokio_native_tls::native_tls::{Identity, TlsConnector};
+use tokio_native_tls::native_tls::{Certificate, Identity, TlsConnector};
 use url::{Host, Url};
 
 use crate::{
@@ -57,7 +57,8 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                     }
 
                     let socket = stream.unwrap();
-                    let connector = if let Some(client_cert) = client_cert {
+                    let mut builder = TlsConnector::builder();
+                    if let Some(client_cert) = client_cert {
                         let file = std::fs::read(client_cert.cert());
                         if let Err(e) = file {
                             return Err(DeboaError::ClientCert { message: e.to_string() });
@@ -66,10 +67,19 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                         if let Err(e) = identity {
                             return Err(DeboaError::ClientCert { message: e.to_string() });
                         }
-                        TlsConnector::builder().identity(identity.unwrap()).build().unwrap()
-                    } else {
-                        TlsConnector::builder().build().unwrap()
-                    };
+                        builder.identity(identity.unwrap());
+
+                        if let Some(ca) = client_cert.ca() {
+                            let pem = std::fs::read(ca);
+                            if let Err(e) = pem {
+                                return Err(DeboaError::ClientCert { message: e.to_string() });
+                            }
+                            let cert = Certificate::from_pem(&pem.unwrap());
+                            builder.add_root_certificate(cert.unwrap());
+                        }
+                    }
+
+                    let connector = builder.build().unwrap();
                     let connector = tokio_native_tls::TlsConnector::from(connector);
                     let stream = connector.connect(&host.to_string(), socket).await;
 
