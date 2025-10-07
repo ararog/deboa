@@ -47,6 +47,10 @@ Options:
                      Set the private key file to use.
     -K, --key-pw <KEY_PW>
                      Set the private key password.
+    -v, --verify <VERIFY>
+                     Set the ca certificate file to use (pem format).
+    -P, --print  <PRINT>
+                     Print request or response.
 "#
 )]
 struct Args {
@@ -76,6 +80,8 @@ struct Args {
     cert: Option<String>,
     #[arg(short = 'k', long, help = "Set the certificate password.")]
     cert_pw: Option<String>,
+    #[arg(short = 'v', long, help = "Set the ca certificate file to use (pem format).")]
+    verify: Option<String>,
     #[arg(short = 'P', long, help = "Print request or response.")]
     print: Option<String>,
 }
@@ -88,7 +94,7 @@ async fn main() {
 
     let result = handle_request(args, &mut client).await;
     if let Err(err) = result {
-        //eprintln!("An error occurred: {:#}", err);
+        eprintln!("An error occurred: {:#}", err);
     }
 }
 
@@ -105,11 +111,12 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let arg_cert = args.cert;
     let arg_cert_pw = args.cert_pw;
     let arg_print = args.print;
+    let arg_verify = args.verify;
 
     if arg_cert.is_some() && arg_cert_pw.is_some() {
         let cert = arg_cert.unwrap();
         let cert_pw = arg_cert_pw.unwrap();
-        client.set_client_cert(Some(ClientCert::new(cert, cert_pw)));
+        client.set_client_cert(Some(ClientCert::new(cert, cert_pw, arg_verify)));
     }
 
     let mut stdin = stdin();
