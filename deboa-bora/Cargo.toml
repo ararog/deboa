@@ -36,5 +36,5 @@ titlecase = "3.6.0"
 
 [dev-dependencies]
 deboa-tests = { path = "../deboa-tests", version = "0.0.1" }
-httpmock = { version = "0.8.0-alpha.1", features = ["http2"] }
+httpmock = { version = "0.8.1", features = ["http2"] }
 
