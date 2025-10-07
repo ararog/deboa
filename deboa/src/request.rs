@@ -1,7 +1,10 @@
 use std::{collections::HashMap, fmt::Debug, sync::Arc};
 
 use async_trait::async_trait;
-use http::{header, HeaderMap, HeaderName, HeaderValue, Method};
+use http::{
+    header::{self, HOST},
+    HeaderMap, HeaderName, HeaderValue, Method,
+};
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use serde::Serialize;
@@ -615,7 +618,14 @@ impl DeboaRequest {
                 message: e.to_string(),
             });
         }
-        self.url = parsed_url.unwrap();
+
+        let parsed_url = parsed_url.unwrap();
+        if self.has_header(&header::HOST) {
+            self.headers.remove(&header::HOST);
+            self.add_header(HOST, parsed_url.authority());
+        }
+
+        self.url = parsed_url;
         Ok(self)
     }
 

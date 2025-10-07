@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use std::borrow::Cow;
 use std::collections::HashMap;
 use url::Url;
 
@@ -90,10 +89,21 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
     ) -> Result<&mut DeboaConnection> {
         use crate::client::conn::http::DeboaHttpConnection;
 
-        let host = Cow::from(url.host().unwrap().to_string());
-        let host_key = &host.to_string();
-        if self.connections.contains_key(host_key) {
-            return Ok(self.connections.get_mut(host_key).unwrap());
+        let mut host = url.host_str().unwrap().to_string();
+        if url.port().is_some() {
+            let port = url.port().unwrap();
+            host = format!("{}:{}", host, port);
+        } else {
+            match url.scheme() {
+                "http" => host = format!("{}:80", host),
+                "https" => host = format!("{}:443", host),
+                _ => panic!("Unsupported scheme: {}", url.scheme()),
+            }
+        }
+
+        let host_key = host;
+        if self.connections.contains_key(&host_key) {
+            return Ok(self.connections.get_mut(&host_key).unwrap());
         }
 
         let url = url.clone();
@@ -113,6 +123,6 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         };
 
         self.connections.insert(host_key.to_string(), connection);
-        Ok(self.connections.get_mut(host_key).unwrap())
+        Ok(self.connections.get_mut(&host_key).unwrap())
     }
 }
