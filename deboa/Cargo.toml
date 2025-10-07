@@ -43,7 +43,7 @@ futures = "0.3.31"
 http = "1"
 http-body = "1"
 http-body-util = "0.1"
-hyper = { version = "1.6.0", features = ["client", "http1", "http2"] }
+hyper = { version = "1.7.0", features = ["client", "http1", "http2"] }
 hyper-util = { version = "0.1.10", features = [
   "http1",
   "http2",

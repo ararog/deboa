@@ -512,10 +512,16 @@ impl Deboa {
         R: AsRef<DeboaRequest>,
     {
         let url = request.as_ref().url();
+        let mut uri = url.path().to_string();
+        if let Some(query) = url.query() {
+            uri.push('?');
+            uri.push_str(query);
+        }
+
         let method = request.as_ref().method();
 
         let mut builder = Request::builder()
-            .uri(url.as_str())
+            .uri(uri)
             .method(method.to_string().as_str());
         {
             let req_headers = builder.headers_mut().unwrap();
