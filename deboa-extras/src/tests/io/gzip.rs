@@ -12,7 +12,12 @@ async fn test_gzip() -> Result<()> {
 
     let mut headers = HeaderMap::new();
     headers.insert("Content-Encoding", HeaderValue::from_static("gzip"));
-    let mut response = DeboaResponse::new(fake_url(), StatusCode::OK, headers, GZIP_COMPRESSED.as_ref());
+    let mut response = DeboaResponse::new(
+        fake_url(),
+        StatusCode::OK,
+        headers,
+        GZIP_COMPRESSED.as_ref(),
+    );
 
     encoding_catcher.on_response(&mut response);
 

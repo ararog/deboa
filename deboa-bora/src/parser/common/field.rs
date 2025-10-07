@@ -95,7 +95,10 @@ impl Parse for FormatStruct {
 
         let format_name = format.value.value();
         if !is_valid_format(&format_name) {
-            return Err(input.error(format!("expected one of {}, found '{format_name}'", avaliable_formats().join(", "))));
+            return Err(input.error(format!(
+                "expected one of {}, found '{format_name}'",
+                avaliable_formats().join(", ")
+            )));
         }
 
         Ok(format)

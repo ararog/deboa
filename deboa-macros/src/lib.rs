@@ -32,11 +32,17 @@ pub use deboa_bora::bora;
 /// ```
 macro_rules! get {
     ($url:literal, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+        $client
+            .execute($url)
+            .await?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 
     ($url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+        $client
+            .execute($url)
+            .await?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 
     ($url:expr, &mut $client:ident) => {
@@ -84,19 +90,31 @@ macro_rules! get {
 macro_rules! post {
     ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
         $client
-            .execute(deboa::request::DeboaRequest::post($url)?.body_as($req_body_ty, $input)?.build()?)
+            .execute(
+                deboa::request::DeboaRequest::post($url)?
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
             .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident) => {
         $client
-            .execute(deboa::request::DeboaRequest::post($url)?.body_as($req_body_ty, $input)?.build()?)
+            .execute(
+                deboa::request::DeboaRequest::post($url)?
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
             .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
-            .execute(deboa::request::DeboaRequest::post($url)?.body_as($req_body_ty, $input)?.build()?)
+            .execute(
+                deboa::request::DeboaRequest::post($url)?
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
             .await?
             .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
@@ -131,19 +149,31 @@ macro_rules! post {
 macro_rules! put {
     ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
         $client
-            .execute(deboa::request::DeboaRequest::put($url)?.body_as($req_body_ty, $input)?.build()?)
+            .execute(
+                deboa::request::DeboaRequest::put($url)?
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
             .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident) => {
         $client
-            .execute(deboa::request::DeboaRequest::put($url)?.body_as($req_body_ty, $input)?.build()?)
+            .execute(
+                deboa::request::DeboaRequest::put($url)?
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
             .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
-            .execute(deboa::request::DeboaRequest::put($url)?.body_as($req_body_ty, $input)?.build()?)
+            .execute(
+                deboa::request::DeboaRequest::put($url)?
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
             .await?
             .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
@@ -178,19 +208,31 @@ macro_rules! put {
 macro_rules! patch {
     ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
         $client
-            .execute(deboa::request::DeboaRequest::patch($url)?.body_as($req_body_ty, $input)?.build()?)
+            .execute(
+                deboa::request::DeboaRequest::patch($url)?
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
             .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident) => {
         $client
-            .execute(deboa::request::DeboaRequest::patch($url)?.body_as($req_body_ty, $input)?.build()?)
+            .execute(
+                deboa::request::DeboaRequest::patch($url)?
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
             .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
-            .execute(deboa::request::DeboaRequest::patch($url)?.body_as($req_body_ty, $input)?.build()?)
+            .execute(
+                deboa::request::DeboaRequest::patch($url)?
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
             .await?
             .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
@@ -222,11 +264,15 @@ macro_rules! patch {
 /// ```
 macro_rules! delete {
     ($url:literal, &mut $client:ident) => {
-        $client.execute(deboa::request::DeboaRequest::delete($url)?.build()?).await?
+        $client
+            .execute(deboa::request::DeboaRequest::delete($url)?.build()?)
+            .await?
     };
 
     ($url:expr, &mut $client:ident) => {
-        $client.execute(deboa::request::DeboaRequest::delete($url)?.build()?).await?
+        $client
+            .execute(deboa::request::DeboaRequest::delete($url)?.build()?)
+            .await?
     };
 }
 
@@ -262,11 +308,17 @@ macro_rules! delete {
 /// ```
 macro_rules! fetch {
     ($url:literal, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+        $client
+            .execute($url)
+            .await?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 
     ($url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client.execute($url).await?.body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+        $client
+            .execute($url)
+            .await?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 
     ($url:expr, &mut $client:ident) => {
@@ -308,7 +360,11 @@ macro_rules! fetch {
 macro_rules! submit {
     ($method:expr, $input:expr, $url:expr, &mut $client:ident) => {
         $client
-            .execute(deboa::request::DeboaRequest::at($url, $method)?.text($input).build()?)
+            .execute(
+                deboa::request::DeboaRequest::at($url, $method)?
+                    .text($input)
+                    .build()?,
+            )
             .await?
     };
 }

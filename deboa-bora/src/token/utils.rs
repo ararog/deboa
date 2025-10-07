@@ -13,15 +13,18 @@ pub fn extract_params_from_path(path: &LitStr) -> (TokenStream, LitStr) {
         .map(|m| m.get(1).unwrap().as_str())
         .collect::<Vec<_>>();
 
-    let api_params = params.clone().into_iter().fold(TokenStream::new(), |mut acc, param| {
-        let pair = param.split(':').collect::<Vec<_>>();
-        let param = parse_str::<syn::Ident>(pair[0]).unwrap();
-        let param_type = parse_str::<syn::Type>(pair[1]).unwrap();
-        acc.extend(quote! {
-            #param: #param_type,
+    let api_params = params
+        .clone()
+        .into_iter()
+        .fold(TokenStream::new(), |mut acc, param| {
+            let pair = param.split(':').collect::<Vec<_>>();
+            let param = parse_str::<syn::Ident>(pair[0]).unwrap();
+            let param_type = parse_str::<syn::Type>(pair[1]).unwrap();
+            acc.extend(quote! {
+                #param: #param_type,
+            });
+            acc
         });
-        acc
-    });
 
     let has_query = raw_path.contains("?");
     let new_path = if has_query {

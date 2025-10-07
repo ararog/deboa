@@ -6,7 +6,9 @@ use deboa_tests::utils::fake_url;
 
 #[test]
 fn test_set_msgpack() -> Result<()> {
-    let request = DeboaRequest::post(fake_url())?.body_as(MsgPackBody, sample_post())?.build()?;
+    let request = DeboaRequest::post(fake_url())?
+        .body_as(MsgPackBody, sample_post())?
+        .build()?;
 
     assert_eq!(*request.raw_body(), MSGPACK_POST.to_vec());
 
@@ -17,7 +19,12 @@ fn test_set_msgpack() -> Result<()> {
 async fn test_msgpack_response() -> Result<()> {
     let data = sample_post();
 
-    let response = DeboaResponse::new(fake_url(), http::StatusCode::OK, http::HeaderMap::new(), &MSGPACK_POST.to_vec());
+    let response = DeboaResponse::new(
+        fake_url(),
+        http::StatusCode::OK,
+        http::HeaderMap::new(),
+        &MSGPACK_POST.to_vec(),
+    );
     let response: Post = response.body_as(MsgPackBody)?;
 
     assert_eq!(response, data);

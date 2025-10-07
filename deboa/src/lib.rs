@@ -106,7 +106,10 @@ impl Shl<&str> for &Deboa {
     type Output = DeboaRequest;
 
     fn shl(self, other: &str) -> Self::Output {
-        DeboaRequest::get(other).expect("Invalid url!").build().expect("Could not build request!")
+        DeboaRequest::get(other)
+            .expect("Invalid url!")
+            .build()
+            .expect("Could not build request!")
     }
 }
 
@@ -434,10 +437,14 @@ impl Deboa {
     {
         let mut request = request.into_request()?;
         if let Some(catchers) = &self.catchers {
-            let mut response = catchers.iter().filter_map(|catcher| catcher.on_request(request.as_mut()).unwrap());
+            let mut response = catchers
+                .iter()
+                .filter_map(|catcher| catcher.on_request(request.as_mut()).unwrap());
 
             if let Some(mut response) = response.next() {
-                catchers.iter().for_each(|catcher| catcher.on_response(&mut response));
+                catchers
+                    .iter()
+                    .for_each(|catcher| catcher.on_response(&mut response));
                 return Ok(response);
             }
         }
@@ -451,9 +458,13 @@ impl Deboa {
                     break Err(err);
                 }
                 #[cfg(feature = "tokio-rt")]
-                tokio::time::sleep(tokio::time::Duration::from_secs(2_u32.pow(retry_count) as u64)).await;
+                tokio::time::sleep(tokio::time::Duration::from_secs(
+                    2_u32.pow(retry_count) as u64
+                ))
+                .await;
                 #[cfg(feature = "smol-rt")]
-                smol::Timer::after(std::time::Duration::from_secs(2_u32.pow(retry_count) as u64)).await;
+                smol::Timer::after(std::time::Duration::from_secs(2_u32.pow(retry_count) as u64))
+                    .await;
                 retry_count += 1;
                 continue;
             }
@@ -478,7 +489,9 @@ impl Deboa {
         let mut response = self.process_response(url, response?).await?;
 
         if let Some(catchers) = &self.catchers {
-            catchers.iter().for_each(|catcher| catcher.on_response(&mut response));
+            catchers
+                .iter()
+                .for_each(|catcher| catcher.on_response(&mut response));
         }
 
         Ok(response)
@@ -501,14 +514,20 @@ impl Deboa {
         let url = request.as_ref().url();
         let method = request.as_ref().method();
 
-        let mut builder = Request::builder().uri(url.as_str()).method(method.to_string().as_str());
+        let mut builder = Request::builder()
+            .uri(url.as_str())
+            .method(method.to_string().as_str());
         {
             let req_headers = builder.headers_mut().unwrap();
 
-            request.as_ref().headers().into_iter().fold(&mut *req_headers, |acc, (key, value)| {
-                acc.insert(key, value.into());
-                acc
-            });
+            request
+                .as_ref()
+                .headers()
+                .into_iter()
+                .fold(&mut *req_headers, |acc, (key, value)| {
+                    acc.insert(key, value.into());
+                    acc
+                });
 
             if let Some(deboa_cookies) = request.as_ref().cookies() {
                 let mut cookies = Vec::<String>::new();
@@ -534,7 +553,10 @@ impl Deboa {
 
         let request = request.unwrap();
 
-        let conn = self.pool.create_connection(url, &self.protocol, &self.client_cert).await?;
+        let conn = self
+            .pool
+            .create_connection(url, &self.protocol, &self.client_cert)
+            .await?;
         match *conn {
             #[cfg(feature = "http1")]
             DeboaConnection::Http1(ref mut conn) => conn.send_request(request).await,
@@ -553,13 +575,19 @@ impl Deboa {
     ///
     /// * `Result<DeboaResponse>` - The response.
     ///
-    async fn process_response(&self, url: Url, response: Response<Incoming>) -> Result<DeboaResponse> {
+    async fn process_response(
+        &self,
+        url: Url,
+        response: Response<Incoming>,
+    ) -> Result<DeboaResponse> {
         let status_code = response.status();
         let headers = response.headers().clone();
 
         let result = response.collect().await;
         if let Err(err) = result {
-            return Err(DeboaError::ProcessResponse { message: err.to_string() });
+            return Err(DeboaError::ProcessResponse {
+                message: err.to_string(),
+            });
         }
 
         let raw_body = result.unwrap().to_bytes().to_vec();

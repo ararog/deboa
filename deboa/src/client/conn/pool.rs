@@ -72,7 +72,9 @@ pub trait DeboaHttpConnectionPool {
 #[async_trait]
 impl DeboaHttpConnectionPool for HttpConnectionPool {
     fn new() -> Self {
-        Self { connections: HashMap::new() }
+        Self {
+            connections: HashMap::new(),
+        }
     }
 
     #[inline]
@@ -80,7 +82,12 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         &self.connections
     }
 
-    async fn create_connection(&mut self, url: &Url, protocol: &HttpVersion, client_cert: &Option<ClientCert>) -> Result<&mut DeboaConnection> {
+    async fn create_connection(
+        &mut self,
+        url: &Url,
+        protocol: &HttpVersion,
+        client_cert: &Option<ClientCert>,
+    ) -> Result<&mut DeboaConnection> {
         use crate::client::conn::http::DeboaHttpConnection;
 
         let host = Cow::from(url.host().unwrap().to_string());
@@ -93,12 +100,14 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         let connection = match protocol {
             #[cfg(feature = "http1")]
             HttpVersion::Http1 => {
-                let connection = BaseHttpConnection::<Http1Request>::connect(&url, client_cert).await?;
+                let connection =
+                    BaseHttpConnection::<Http1Request>::connect(&url, client_cert).await?;
                 DeboaConnection::Http1(Box::new(connection))
             }
             #[cfg(feature = "http2")]
             HttpVersion::Http2 => {
-                let connection = BaseHttpConnection::<Http2Request>::connect(&url, client_cert).await?;
+                let connection =
+                    BaseHttpConnection::<Http2Request>::connect(&url, client_cert).await?;
                 DeboaConnection::Http2(Box::new(connection))
             }
         };

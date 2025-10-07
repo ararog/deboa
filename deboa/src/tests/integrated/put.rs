@@ -22,7 +22,9 @@ async fn do_put() -> Result<()> {
 
     let mut client = Deboa::new();
 
-    let request = DeboaRequest::put(server.url("/posts/1").as_str())?.text("ping").build()?;
+    let request = DeboaRequest::put(server.url("/posts/1").as_str())?
+        .text("ping")
+        .build()?;
 
     let response = client.execute(request).await?;
 

@@ -13,7 +13,12 @@ pub fn url_from_string(url: String) -> Url {
     url.parse().unwrap()
 }
 
-pub fn setup_server<'a>(server: &'a MockServer, path: &'a str, method: Method, status: StatusCode) -> httpmock::Mock<'a> {
+pub fn setup_server<'a>(
+    server: &'a MockServer,
+    path: &'a str,
+    method: Method,
+    status: StatusCode,
+) -> httpmock::Mock<'a> {
     server.mock(|when, then| {
         when.method(method).path(path);
         then.status::<u16>(status.into())

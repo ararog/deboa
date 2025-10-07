@@ -14,7 +14,12 @@ async fn test_deflate_decompress() -> Result<()> {
 
     let mut headers = HeaderMap::new();
     headers.insert("Content-Encoding", HeaderValue::from_static("deflate"));
-    let mut response = DeboaResponse::new(fake_url(), StatusCode::OK, headers, DEFLATE_COMPRESSED.as_ref());
+    let mut response = DeboaResponse::new(
+        fake_url(),
+        StatusCode::OK,
+        headers,
+        DEFLATE_COMPRESSED.as_ref(),
+    );
 
     encoding_catcher.on_response(&mut response);
 

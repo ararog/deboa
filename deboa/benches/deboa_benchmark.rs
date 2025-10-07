@@ -9,7 +9,9 @@ use deboa::{request::DeboaRequest, Deboa, Result};
 
 async fn get_async() -> Result<()> {
     let api = Deboa::new();
-    let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")?.go(api).await;
+    let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")?
+        .go(api)
+        .await;
     Ok(())
 }
 

@@ -5,7 +5,9 @@ use syn::{
     Ident, Token,
 };
 
-use crate::parser::operations::{delete::DeleteStruct, get::GetStruct, patch::PatchStruct, post::PostStruct, put::PutStruct};
+use crate::parser::operations::{
+    delete::DeleteStruct, get::GetStruct, patch::PatchStruct, post::PostStruct, put::PutStruct,
+};
 pub struct BoraApi {
     pub operations: Punctuated<OperationEnum, Token![,]>,
 }
@@ -38,7 +40,9 @@ pub enum OperationEnum {
     patch(PatchStruct),
 }
 
-const METHODS: [&str; 9] = ["get", "post", "put", "delete", "patch", "head", "options", "connect", "trace"];
+const METHODS: [&str; 9] = [
+    "get", "post", "put", "delete", "patch", "head", "options", "connect", "trace",
+];
 
 impl Parse for OperationEnum {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {

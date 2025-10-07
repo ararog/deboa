@@ -241,7 +241,8 @@ impl DeboaRequestBuilder {
     /// * `Self` - The request builder.
     ///
     pub fn header(mut self, key: HeaderName, value: &str) -> Self {
-        self.headers.insert(key, HeaderValue::from_str(value).unwrap());
+        self.headers
+            .insert(key, HeaderValue::from_str(value).unwrap());
         self
     }
 
@@ -350,7 +351,11 @@ impl DeboaRequestBuilder {
     pub fn basic_auth(self, username: &str, password: &str) -> Self {
         self.header(
             header::AUTHORIZATION,
-            format!("Basic {}", STANDARD.encode(format!("{username}:{password}"))).as_str(),
+            format!(
+                "Basic {}",
+                STANDARD.encode(format!("{username}:{password}"))
+            )
+            .as_str(),
         )
     }
 
@@ -441,7 +446,9 @@ impl DeboaRequest {
     pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
-            return Err(DeboaError::UrlParse { message: e.to_string() });
+            return Err(DeboaError::UrlParse {
+                message: e.to_string(),
+            });
         }
 
         let url = parsed_url.unwrap();
@@ -604,7 +611,9 @@ impl DeboaRequest {
     pub fn set_url<T: IntoUrl>(&mut self, url: T) -> Result<&mut Self> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
-            return Err(DeboaError::UrlParse { message: e.to_string() });
+            return Err(DeboaError::UrlParse {
+                message: e.to_string(),
+            });
         }
         self.url = parsed_url.unwrap();
         Ok(self)
@@ -666,7 +675,8 @@ impl DeboaRequest {
     /// * `&mut Self` - The request.
     ///
     pub fn add_header(&mut self, key: HeaderName, value: &str) -> &mut Self {
-        self.headers.insert(key, HeaderValue::from_str(value).unwrap());
+        self.headers
+            .insert(key, HeaderValue::from_str(value).unwrap());
         self
     }
 
@@ -715,7 +725,10 @@ impl DeboaRequest {
     /// * `&mut Self` - The request.
     ///
     pub fn add_basic_auth(&mut self, username: &str, password: &str) -> &mut Self {
-        let auth = format!("Basic {}", STANDARD.encode(format!("{username}:{password}")));
+        let auth = format!(
+            "Basic {}",
+            STANDARD.encode(format!("{username}:{password}"))
+        );
         if !self.has_header(&header::AUTHORIZATION) {
             self.add_header(header::AUTHORIZATION, &auth);
         }
@@ -873,7 +886,11 @@ impl DeboaRequest {
     ///
     /// * `Result<&mut Self>` - The request.
     ///
-    pub fn set_body_as<T: RequestBody, B: Serialize>(&mut self, body_type: T, body: B) -> Result<&mut Self> {
+    pub fn set_body_as<T: RequestBody, B: Serialize>(
+        &mut self,
+        body_type: T,
+        body: B,
+    ) -> Result<&mut Self> {
         body_type.register_content_type(self);
         self.body = body_type.serialize(body)?.into();
         Ok(self)

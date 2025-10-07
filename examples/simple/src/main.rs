@@ -12,7 +12,10 @@ pub struct Post {
 async fn main() -> Result<()> {
     let client = Deboa::new();
 
-    let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?.go(client).await?.body_as(JsonBody)?;
+    let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
+        .go(client)
+        .await?
+        .body_as(JsonBody)?;
 
     println!("posts: {posts:#?}");
 

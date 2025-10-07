@@ -57,9 +57,13 @@ impl Parse for GetFieldEnum {
             match ident.to_string().as_str() {
                 "name" => Ok(GetFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(GetFieldEnum::path(PathStruct::parse(input)?)),
-                "res_body" => Ok(GetFieldEnum::res_body(Box::new(ResBodyStruct::parse(input)?))),
+                "res_body" => Ok(GetFieldEnum::res_body(Box::new(ResBodyStruct::parse(
+                    input,
+                )?))),
                 "format" => Ok(GetFieldEnum::format(FormatStruct::parse(input)?)),
-                _ => Err(input.error(format!("expected one of name, path or res_body, found '{ident}'"))),
+                _ => Err(input.error(format!(
+                    "expected one of name, path or res_body, found '{ident}'"
+                ))),
             }
         } else {
             Err(lookahead.error())

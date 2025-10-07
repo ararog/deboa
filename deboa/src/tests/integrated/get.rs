@@ -1,5 +1,7 @@
 #[cfg(test)]
-use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Deboa, HttpVersion, Result};
+use crate::{
+    errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Deboa, HttpVersion, Result,
+};
 
 use deboa_tests::utils::setup_server;
 
@@ -97,11 +99,19 @@ async fn test_get_http2() {
 async fn do_get_not_found() -> Result<()> {
     let server = MockServer::start();
 
-    let http_mock = setup_server(&server, "/asasa/posts/1ddd", httpmock::Method::GET, StatusCode::NOT_FOUND);
+    let http_mock = setup_server(
+        &server,
+        "/asasa/posts/1ddd",
+        httpmock::Method::GET,
+        StatusCode::NOT_FOUND,
+    );
 
     let client = Deboa::new();
 
-    let response: Result<DeboaResponse> = DeboaRequest::get(server.url("/asasa/posts/1ddd").as_str())?.go(client).await;
+    let response: Result<DeboaResponse> =
+        DeboaRequest::get(server.url("/asasa/posts/1ddd").as_str())?
+            .go(client)
+            .await;
 
     http_mock.assert();
 
@@ -137,7 +147,9 @@ async fn test_get_not_found() {
 async fn do_get_invalid_server() -> Result<()> {
     let mut api = Deboa::new();
 
-    let request = DeboaRequest::get("https://invalid-server.com/posts")?.text("test").build()?;
+    let request = DeboaRequest::get("https://invalid-server.com/posts")?
+        .text("test")
+        .build()?;
 
     let response: Result<DeboaResponse> = api.execute(request).await;
 
@@ -149,7 +161,9 @@ async fn do_get_invalid_server() -> Result<()> {
             #[cfg(target_os = "linux")]
             message: "failed to lookup address information: Name or service not known".to_string(),
             #[cfg(target_os = "macos")]
-            message: "failed to lookup address information: nodename nor servname provided, or not known".to_string(),
+            message:
+                "failed to lookup address information: nodename nor servname provided, or not known"
+                    .to_string(),
         })
     );
 
@@ -176,11 +190,18 @@ async fn test_get_invalid_server() {
 async fn do_get_by_query() -> Result<()> {
     let server = MockServer::start();
 
-    let http_mock = setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::OK);
+    let http_mock = setup_server(
+        &server,
+        "/comments/1",
+        httpmock::Method::GET,
+        StatusCode::OK,
+    );
 
     let client = Deboa::new();
 
-    let response = DeboaRequest::get(server.url("/comments/1").as_str())?.go(client).await?;
+    let response = DeboaRequest::get(server.url("/comments/1").as_str())?
+        .go(client)
+        .await?;
 
     http_mock.assert();
 
@@ -215,11 +236,19 @@ async fn test_get_by_query() {
 async fn do_get_by_query_with_retries() -> Result<()> {
     let server = MockServer::start();
 
-    let http_mock = setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::BAD_GATEWAY);
+    let http_mock = setup_server(
+        &server,
+        "/comments/1",
+        httpmock::Method::GET,
+        StatusCode::BAD_GATEWAY,
+    );
 
     let client = Deboa::new();
 
-    let response = DeboaRequest::get(server.url("/comments/1").as_str())?.retries(2).go(client).await;
+    let response = DeboaRequest::get(server.url("/comments/1").as_str())?
+        .retries(2)
+        .go(client)
+        .await;
 
     http_mock.assert_calls(3);
 

@@ -77,7 +77,9 @@ fn test_set_headers() -> Result<()> {
 
 #[test]
 fn test_set_basic_auth() -> Result<()> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER)?.basic_auth("username", "password").build()?;
+    let request = DeboaRequest::get(JSONPLACEHOLDER)?
+        .basic_auth("username", "password")
+        .build()?;
 
     assert_eq!(
         request.headers().get(&header::AUTHORIZATION),
@@ -89,7 +91,9 @@ fn test_set_basic_auth() -> Result<()> {
 
 #[test]
 fn test_set_bearer_auth() -> Result<()> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER)?.bearer_auth("token").build()?;
+    let request = DeboaRequest::get(JSONPLACEHOLDER)?
+        .bearer_auth("token")
+        .build()?;
 
     assert_eq!(
         request.headers().get(&header::AUTHORIZATION),
@@ -124,7 +128,9 @@ fn test_set_text_body() -> Result<()> {
 
 #[test]
 fn test_raw_body() -> Result<()> {
-    let request = DeboaRequest::post(JSONPLACEHOLDER)?.raw_body(b"test").build()?;
+    let request = DeboaRequest::post(JSONPLACEHOLDER)?
+        .raw_body(b"test")
+        .build()?;
 
     assert_eq!(request.raw_body(), b"test");
 

@@ -11,7 +11,10 @@ use deboa::catcher::DeboaCatcher;
 struct AuthCatcher;
 
 impl DeboaCatcher for AuthCatcher {
-    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<deboa::response::DeboaResponse>> {
+    fn on_request(
+        &self,
+        request: &mut DeboaRequest,
+    ) -> Result<Option<deboa::response::DeboaResponse>> {
         request.add_header(header::AUTHORIZATION, "Bearer token");
         Ok(None)
     }
