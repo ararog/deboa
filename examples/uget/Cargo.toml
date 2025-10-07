@@ -1,6 +1,6 @@
 [package]
 name = "uget"
-version = "0.0.4"
+version = "0.0.5-beta.1"
 edition = "2021"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 repository = "https://github.com/ararog/deboa"
@@ -13,7 +13,7 @@ publish = true
 rust-version = "1.70.0"
 
 [dependencies]
-deboa = { path = "../../deboa", version = "0.0.6-beta.4" }
+deboa = { path = "../../deboa", version = "0.0.6-beta.5" }
 clap = { version = "4.5.48", features = ["derive"] }
 tokio = { version = "1.47.1", features = ["full"] }
 http = "1.3.1"
