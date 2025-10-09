@@ -2,13 +2,42 @@ use std::fs::write;
 use std::{fmt::Debug, sync::Arc};
 
 use http::header;
+use http_body_util::{BodyExt, Either, Full};
+use hyper::body::{Bytes, Incoming};
 use serde::Deserialize;
 
 use crate::cookie::DeboaCookie;
 use crate::{client::serde::ResponseBody, errors::DeboaError, Result};
 use url::Url;
 
-#[derive(PartialEq)]
+pub trait IntoBody {
+    fn into_body(self) -> Either<Incoming, Full<Bytes>>;
+}
+
+impl IntoBody for Incoming {
+    fn into_body(self) -> Either<Incoming, Full<Bytes>> {
+        Either::Left(self)
+    }
+}
+
+impl IntoBody for &[u8] {
+    fn into_body(self) -> Either<Incoming, Full<Bytes>> {
+        Either::Right(Full::<Bytes>::from(self.to_vec()))
+    }
+}
+
+impl IntoBody for Vec<u8> {
+    fn into_body(self) -> Either<Incoming, Full<Bytes>> {
+        Either::Right(Full::<Bytes>::from(self))
+    }
+}
+
+impl IntoBody for Full<Bytes> {
+    fn into_body(self) -> Either<Incoming, Full<Bytes>> {
+        Either::Right(self)
+    }
+}
+
 /// Struct that represents the response.
 ///
 /// # Fields
@@ -20,7 +49,7 @@ pub struct DeboaResponse {
     url: Url,
     status: http::StatusCode,
     headers: Arc<http::HeaderMap>,
-    body: Arc<Vec<u8>>,
+    body: Either<Incoming, Full<Bytes>>,
 }
 
 impl Debug for DeboaResponse {
@@ -56,13 +85,27 @@ impl DeboaResponse {
     /// * `headers` - The headers of the response.
     /// * `body` - The body of the response.
     ///
-    pub fn new(url: Url, status: http::StatusCode, headers: http::HeaderMap, body: &[u8]) -> Self {
+    pub fn new<B>(url: Url, status: http::StatusCode, headers: http::HeaderMap, body: B) -> Self
+    where
+        B: IntoBody,
+    {
         Self {
             url,
             status,
             headers: headers.into(),
-            body: body.to_vec().into(),
+            body: body.into_body(),
         }
+    }
+
+    /// Allow get url at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `&Url` - The url of the response.
+    ///
+    #[inline]
+    pub fn url(&self) -> &Url {
+        &self.url
     }
 
     /// Allow get status code at any time.
@@ -119,17 +162,6 @@ impl DeboaResponse {
         }
     }
 
-    /// Allow set raw body at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `body` - The body to be set.
-    ///
-    #[inline]
-    pub fn set_raw_body(&mut self, body: &[u8]) {
-        self.body = body.to_vec().into();
-    }
-
     /// Allow get body at any time.
     ///
     /// # Arguments
@@ -141,8 +173,11 @@ impl DeboaResponse {
     /// * `Result<B>` - The body or error.
     ///
     #[inline]
-    pub fn body_as<T: ResponseBody, B: for<'a> Deserialize<'a>>(&self, body_type: T) -> Result<B> {
-        let result = body_type.deserialize::<B>(self.body.to_vec())?;
+    pub async fn body_as<T: ResponseBody, B: for<'a> Deserialize<'a>>(
+        &mut self,
+        body_type: T,
+    ) -> Result<B> {
+        let result = body_type.deserialize::<B>(self.raw_body().await)?;
         Ok(result)
     }
 
@@ -153,8 +188,15 @@ impl DeboaResponse {
     /// * `&[u8]` - The raw body of the response.
     ///
     #[inline]
-    pub fn raw_body(&self) -> &[u8] {
-        &self.body
+    pub async fn raw_body(&mut self) -> Vec<u8> {
+        let mut data = Vec::<u8>::new();
+        while let Some(chunk) = self.body.frame().await {
+            let frame = chunk.unwrap();
+            if let Some(bytes) = frame.data_ref() {
+                data.extend_from_slice(bytes);
+            }
+        }
+        data
     }
 
     /// Allow get text body at any time.
@@ -164,8 +206,8 @@ impl DeboaResponse {
     /// * `Result<String>` - The text body or error.
     ///
     #[inline]
-    pub fn text(&self) -> Result<String> {
-        Ok(String::from_utf8_lossy(&self.body).to_string())
+    pub async fn text(&mut self) -> Result<String> {
+        Ok(String::from_utf8_lossy(&self.raw_body().await).to_string())
     }
 
     /// Allow save response body to file at any time.
@@ -178,8 +220,8 @@ impl DeboaResponse {
     ///
     /// * `Result<()>` - The result or error.
     ///
-    pub fn to_file(&self, path: &str) -> Result<()> {
-        let result = write(path, &*self.body);
+    pub async fn to_file(&mut self, path: &str) -> Result<()> {
+        let result = write(path, &*self.raw_body().await);
         if let Err(e) = result {
             return Err(DeboaError::Io {
                 message: e.to_string(),

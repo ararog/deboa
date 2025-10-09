@@ -13,12 +13,13 @@ use deboa::{
 #[derive(PartialEq)]
 pub struct BrotliCompressor;
 
+#[async_trait::async_trait]
 impl Compressor for BrotliCompressor {
     fn name(&self) -> String {
         "br".to_string()
     }
 
-    fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes> {
+    async fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes> {
         let mut writer = CompressorWriter::new(Vec::new(), 0, 11, 22);
         let result = writer.write_all(request.raw_body().as_ref());
 
@@ -43,13 +44,14 @@ impl Compressor for BrotliCompressor {
 #[derive(PartialEq)]
 pub struct BrotliDecompressor;
 
+#[async_trait::async_trait]
 impl Decompressor for BrotliDecompressor {
     fn name(&self) -> String {
         "br".to_string()
     }
 
-    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
-        let binding = response.raw_body();
+    async fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
+        let binding = response.raw_body().await;
         let mut reader = brotli::Decompressor::new(binding.reader(), 0);
         let mut buffer = Vec::new();
         let result = reader.read_to_end(&mut buffer);
@@ -59,8 +61,6 @@ impl Decompressor for BrotliDecompressor {
                 message: e.to_string(),
             });
         }
-
-        response.set_raw_body(&buffer);
 
         Ok(())
     }

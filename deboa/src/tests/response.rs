@@ -10,7 +10,7 @@ fn test_status() -> Result<()> {
         fake_url(),
         http::StatusCode::OK,
         http::HeaderMap::new(),
-        &Vec::new(),
+        Vec::new(),
     );
     assert_eq!(response.status(), http::StatusCode::OK);
     Ok(())
@@ -22,7 +22,7 @@ fn test_headers() -> Result<()> {
         fake_url(),
         http::StatusCode::OK,
         http::HeaderMap::new(),
-        &Vec::new(),
+        Vec::new(),
     );
     assert_eq!(*response.headers(), http::HeaderMap::new());
     Ok(())
@@ -35,7 +35,7 @@ fn test_cookies() -> Result<()> {
         header::SET_COOKIE,
         http::HeaderValue::from_static("test=test"),
     );
-    let response = DeboaResponse::new(fake_url(), http::StatusCode::OK, headers, &Vec::new());
+    let response = DeboaResponse::new(fake_url(), http::StatusCode::OK, headers, Vec::new());
     assert_eq!(
         response.cookies(),
         Ok(Some(vec![DeboaCookie::new("test", "test")]))
@@ -43,54 +43,41 @@ fn test_cookies() -> Result<()> {
     Ok(())
 }
 
-#[test]
-fn test_set_raw_body() -> Result<()> {
+#[tokio::test]
+async fn raw_body() -> Result<()> {
     let mut response = DeboaResponse::new(
         fake_url(),
         http::StatusCode::OK,
         http::HeaderMap::new(),
-        &Vec::new(),
+        SAMPLE_TEST.to_vec(),
     );
-    response.set_raw_body(SAMPLE_TEST);
-    assert_eq!(response.raw_body(), SAMPLE_TEST);
+    assert_eq!(response.raw_body().await, SAMPLE_TEST);
     Ok(())
 }
 
-#[test]
-fn test_raw_body() -> Result<()> {
-    let response = DeboaResponse::new(
+#[tokio::test]
+async fn test_text() -> Result<()> {
+    let mut response = DeboaResponse::new(
         fake_url(),
         http::StatusCode::OK,
         http::HeaderMap::new(),
-        SAMPLE_TEST,
-    );
-    assert_eq!(response.raw_body(), SAMPLE_TEST);
-    Ok(())
-}
-
-#[test]
-fn test_text() -> Result<()> {
-    let response = DeboaResponse::new(
-        fake_url(),
-        http::StatusCode::OK,
-        http::HeaderMap::new(),
-        SAMPLE_TEST,
+        SAMPLE_TEST.to_vec(),
     );
     assert_eq!(
-        response.text(),
+        response.text().await,
         Ok(String::from_utf8_lossy(SAMPLE_TEST).to_string())
     );
     Ok(())
 }
 
-#[test]
-fn test_to_file() -> Result<()> {
-    let response = DeboaResponse::new(
+#[tokio::test]
+async fn test_to_file() -> Result<()> {
+    let mut response = DeboaResponse::new(
         fake_url(),
         http::StatusCode::OK,
         http::HeaderMap::new(),
-        SAMPLE_TEST,
+        SAMPLE_TEST.to_vec(),
     );
-    assert_eq!(response.to_file("test.txt"), Ok(()));
+    assert_eq!(response.to_file("test.txt").await, Ok(()));
     Ok(())
 }

@@ -21,14 +21,14 @@ async fn test_set_xml() -> Result<()> {
 async fn test_xml_response() -> Result<()> {
     let data = sample_post();
 
-    let response = DeboaResponse::new(
+    let mut response = DeboaResponse::new(
         fake_url(),
         http::StatusCode::OK,
         http::HeaderMap::new(),
-        &XML_POST.to_vec(),
+        &XML_POST[..],
     );
 
-    let response: Post = response.body_as(XmlBody)?;
+    let response: Post = response.body_as(XmlBody).await?;
 
     assert_eq!(response, data);
 

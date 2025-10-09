@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use deboa::{Result, request::DeboaRequest};
 use http::header;
 use vamo::Vamo;
@@ -10,8 +11,9 @@ use deboa::catcher::DeboaCatcher;
 
 struct AuthCatcher;
 
+#[async_trait]
 impl DeboaCatcher for AuthCatcher {
-    fn on_request(
+    async fn on_request(
         &self,
         request: &mut DeboaRequest,
     ) -> Result<Option<deboa::response::DeboaResponse>> {

@@ -41,7 +41,7 @@ fn impl_function(
     } else {
         quote! {
             pub async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type> {
-                self.api.#deboa_method(format!(#api_path).as_ref())?.go(self.api.client()).set_body_as(#format_module, body)?.await?.body_as(#format_module)
+                self.api.#deboa_method(format!(#api_path).as_ref())?.go(self.api.client()).set_body_as(#format_module, body)?.await?.body_as(#format_module).await?
             }
         }
     }
@@ -111,7 +111,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                 acc.1.extend(quote! {
                     pub async fn #method_name(&mut self, #api_params) -> Result<#res_body_type> {
-                        self.api.#method(format!(#api_path).as_ref())?.go(&mut self.api.client()).await?.body_as(#format_module)
+                        self.api.#method(format!(#api_path).as_ref())?.go(&mut self.api.client()).await?.body_as(#format_module).await
                     }
                 });
             }

@@ -31,12 +31,12 @@ async fn do_post() -> Result<()> {
         .text("ping")
         .build()?;
 
-    let response = client.execute(request).await?;
+    let mut response = client.execute(request).await?;
 
     http_mock.assert();
 
     assert_eq!(response.status(), StatusCode::CREATED);
-    assert_eq!(response.raw_body(), b"ping");
+    assert_eq!(response.raw_body().await, b"ping");
 
     Ok(())
 }
@@ -82,12 +82,12 @@ async fn do_post_form() -> Result<()> {
         .text(&form)
         .build()?;
 
-    let response = client.execute(request).await?;
+    let mut response = client.execute(request).await?;
 
     http_mock.assert();
 
     assert_eq!(response.status(), StatusCode::CREATED);
-    assert_eq!(response.raw_body(), b"ping");
+    assert_eq!(response.raw_body().await, b"ping");
 
     Ok(())
 }
