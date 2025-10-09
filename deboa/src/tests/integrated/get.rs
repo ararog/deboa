@@ -117,11 +117,11 @@ async fn do_get_not_found() -> Result<()> {
 
     assert!(response.is_err());
     assert_eq!(
-        response,
-        Err(DeboaError::Response {
+        response.unwrap_err(),
+        DeboaError::Response {
             status_code: StatusCode::NOT_FOUND,
             message: "Could not process request (404 Not Found): ping".to_string()
-        })
+        }
     );
 
     Ok(())
@@ -155,8 +155,8 @@ async fn do_get_invalid_server() -> Result<()> {
 
     assert!(response.is_err());
     assert_eq!(
-        response,
-        Err(DeboaError::Connection {
+        response.unwrap_err(),
+        DeboaError::Connection {
             host: "invalid-server.com".to_string(),
             #[cfg(target_os = "linux")]
             message: "failed to lookup address information: Name or service not known".to_string(),
@@ -164,7 +164,7 @@ async fn do_get_invalid_server() -> Result<()> {
             message:
                 "failed to lookup address information: nodename nor servname provided, or not known"
                     .to_string(),
-        })
+        }
     );
 
     Ok(())
@@ -199,7 +199,7 @@ async fn do_get_by_query() -> Result<()> {
 
     let client = Deboa::new();
 
-    let response = DeboaRequest::get(server.url("/comments/1").as_str())?
+    let mut response = DeboaRequest::get(server.url("/comments/1").as_str())?
         .go(client)
         .await?;
 
@@ -213,7 +213,7 @@ async fn do_get_by_query() -> Result<()> {
         StatusCode::OK.as_u16()
     );
 
-    let comments = response.text();
+    let comments = response.text().await;
 
     assert!(comments.is_ok());
 

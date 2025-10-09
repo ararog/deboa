@@ -15,7 +15,8 @@ async fn main() -> Result<()> {
     let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
         .go(client)
         .await?
-        .body_as(JsonBody)?;
+        .body_as(JsonBody)
+        .await?;
 
     println!("posts: {posts:#?}");
 

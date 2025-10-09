@@ -1,9 +1,11 @@
 #![allow(unused_variables)]
+use async_trait::async_trait;
 use bytes::Bytes;
 
 use crate::{request::DeboaRequest, response::DeboaResponse, Result};
 
 /// Trait that represents the compressor.
+#[async_trait::async_trait]
 pub trait Compressor: Send + Sync + 'static {
     /// This method returns the name of encoding for this compressor.
     ///
@@ -22,20 +24,22 @@ pub trait Compressor: Send + Sync + 'static {
     ///
     /// * `Result<Bytes>` - The compressed body of the request.
     ///
-    fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes>;
+    async fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes>;
 }
 
+#[async_trait]
 impl<T: Compressor> Compressor for Box<T> {
     fn name(&self) -> String {
         self.as_ref().name()
     }
 
-    fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes> {
-        self.as_ref().compress_body(request)
+    async fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes> {
+        self.as_ref().compress_body(request).await
     }
 }
 
 /// Trait that represents the decompressor.
+#[async_trait]
 pub trait Decompressor: Send + Sync + 'static {
     /// This method register the encoding of the response.
     ///
@@ -54,17 +58,18 @@ pub trait Decompressor: Send + Sync + 'static {
     ///
     /// * `Result<()>` - The decompressed body of the response.
     ///
-    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
+    async fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
         Ok(())
     }
 }
 
+#[async_trait]
 impl<T: Decompressor> Decompressor for Box<T> {
     fn name(&self) -> String {
         self.as_ref().name()
     }
 
-    fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
-        self.as_ref().decompress_body(response)
+    async fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
+        self.as_ref().decompress_body(response).await
     }
 }

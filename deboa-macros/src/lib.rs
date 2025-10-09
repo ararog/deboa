@@ -35,14 +35,16 @@ macro_rules! get {
         $client
             .execute($url)
             .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+            .await?
     };
 
     ($url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute($url)
             .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+            .await?
     };
 
     ($url:expr, &mut $client:ident) => {
@@ -311,14 +313,16 @@ macro_rules! fetch {
         $client
             .execute($url)
             .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+            .await?
     };
 
     ($url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute($url)
             .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+            .await?
     };
 
     ($url:expr, &mut $client:ident) => {

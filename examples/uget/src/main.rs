@@ -242,12 +242,13 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         }
     }
 
-    let response = client.execute(request).await?;
+    let mut response = client.execute(request).await?;
 
     if let Some(save) = arg_save {
         let file = File::create(save);
         if let Ok(mut file) = file {
-            let result = file.write(response.raw_body());
+            let data = response.raw_body().await;
+            let result = file.write(&data);
             if let Err(e) = result {
                 return Err(DeboaError::Io {
                     message: format!("Failed to write to file: {}", e),
@@ -256,7 +257,8 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         }
     } else {
         let mut stdout = io::stdout();
-        let result = stdout.write(response.raw_body()).await;
+        let data = response.raw_body().await;
+        let result = stdout.write(&data).await;
         if let Err(e) = result {
             return Err(DeboaError::Io {
                 message: format!("Failed to write to stdout: {}", e),

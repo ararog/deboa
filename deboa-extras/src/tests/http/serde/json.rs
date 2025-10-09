@@ -20,13 +20,13 @@ fn test_set_json() -> Result<()> {
 async fn test_response_json() -> Result<()> {
     let data = sample_post();
 
-    let response = DeboaResponse::new(
+    let mut response = DeboaResponse::new(
         fake_url(),
         http::StatusCode::OK,
         http::HeaderMap::new(),
-        JSON_POST.as_ref(),
+        &JSON_POST[..],
     );
-    let response: Post = response.body_as(JsonBody)?;
+    let response: Post = response.body_as(JsonBody).await?;
 
     assert_eq!(response, data);
 

@@ -19,13 +19,13 @@ fn test_set_msgpack() -> Result<()> {
 async fn test_msgpack_response() -> Result<()> {
     let data = sample_post();
 
-    let response = DeboaResponse::new(
+    let mut response = DeboaResponse::new(
         fake_url(),
         http::StatusCode::OK,
         http::HeaderMap::new(),
-        &MSGPACK_POST.to_vec(),
+        &MSGPACK_POST[..],
     );
-    let response: Post = response.body_as(MsgPackBody)?;
+    let response: Post = response.body_as(MsgPackBody).await?;
 
     assert_eq!(response, data);
     Ok(())

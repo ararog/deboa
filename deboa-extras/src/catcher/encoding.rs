@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use deboa::{
     catcher::DeboaCatcher, fs::io::Decompressor, request::DeboaRequest, response::DeboaResponse,
     Result,
@@ -19,8 +20,9 @@ impl<D: Decompressor> EncodingCatcher<D> {
     }
 }
 
+#[async_trait]
 impl<D: Decompressor> DeboaCatcher for EncodingCatcher<D> {
-    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
+    async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
         let encodings = self
             .accept_encoding
             .values()
@@ -32,14 +34,20 @@ impl<D: Decompressor> DeboaCatcher for EncodingCatcher<D> {
         Ok(None)
     }
 
-    fn on_response(&self, response: &mut DeboaResponse) {
+    async fn on_response(&self, response: DeboaResponse) -> Result<DeboaResponse> {
         let response_headers = response.headers();
         let content_encoding = response_headers.get(header::CONTENT_ENCODING);
         if let Some(content_encoding) = content_encoding {
             let decompressor = self.accept_encoding.get(content_encoding.to_str().unwrap());
-            if let Some(decompressor) = decompressor {
-                let _ = decompressor.decompress_body(response);
+            if let Some(_decompressor) = decompressor {
+                //let body = decompressor.decompress_body(&mut response).await?;
+                //DeboaResponse::new(response.url(), response.status(), response.headers(), body);
+                Ok(response)
+            } else {
+                Ok(response)
             }
+        } else {
+            Ok(response)
         }
     }
 }

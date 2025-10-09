@@ -69,10 +69,9 @@ use std::fmt::Debug;
 
 use std::ops::Shl;
 
-use ::url::Url;
 use bytes::Bytes;
 use http::{header, HeaderValue, Request, Response};
-use http_body_util::{BodyExt, Full};
+use http_body_util::Full;
 use hyper::body::Incoming;
 
 use crate::cert::ClientCert;
@@ -83,6 +82,7 @@ use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
 use crate::errors::DeboaError;
 use crate::request::{DeboaRequest, IntoRequest};
 use crate::response::DeboaResponse;
+use crate::url::IntoUrl;
 
 pub mod cache;
 pub mod catcher;
@@ -437,19 +437,20 @@ impl Deboa {
     {
         let mut request = request.into_request()?;
         if let Some(catchers) = &self.catchers {
-            let mut response = catchers
-                .iter()
-                .filter_map(|catcher| catcher.on_request(request.as_mut()).unwrap());
+            let mut response = None;
+            for catcher in catchers {
+                response = catcher.on_request(request.as_mut()).await?;
+            }
 
-            if let Some(mut response) = response.next() {
-                catchers
-                    .iter()
-                    .for_each(|catcher| catcher.on_response(&mut response));
-                return Ok(response);
+            if let Some(response) = response {
+                let mut new_response = response;
+                for catcher in catchers {
+                    new_response = catcher.on_response(new_response).await?;
+                }
+                return Ok(new_response);
             }
         }
 
-        let url = request.url().clone();
         let mut retry_count: u32 = 0;
         let response = loop {
             let response = self.send_request(request.as_mut()).await;
@@ -486,12 +487,13 @@ impl Deboa {
             break Ok(response);
         };
 
-        let mut response = self.process_response(url, response?).await?;
+        let res_url = request.url().to_string();
+        let mut response = self.process_response(res_url, response?).await?;
 
         if let Some(catchers) = &self.catchers {
-            catchers
-                .iter()
-                .for_each(|catcher| catcher.on_response(&mut response));
+            for catcher in catchers {
+                response = catcher.on_response(response).await?;
+            }
         }
 
         Ok(response)
@@ -581,23 +583,21 @@ impl Deboa {
     ///
     /// * `Result<DeboaResponse>` - The response.
     ///
-    async fn process_response(
+    async fn process_response<U>(
         &self,
-        url: Url,
+        url: U,
         response: Response<Incoming>,
-    ) -> Result<DeboaResponse> {
-        let status_code = response.status();
-        let headers = response.headers().clone();
+    ) -> Result<DeboaResponse>
+    where
+        U: IntoUrl,
+    {
+        let (parts, body) = response.into_parts();
 
-        let result = response.collect().await;
-        if let Err(err) = result {
-            return Err(DeboaError::ProcessResponse {
-                message: err.to_string(),
-            });
-        }
-
-        let raw_body = result.unwrap().to_bytes().to_vec();
-
-        Ok(DeboaResponse::new(url, status_code, headers, &raw_body))
+        Ok(DeboaResponse::new(
+            url.into_url()?,
+            parts.status,
+            parts.headers,
+            body,
+        ))
     }
 }

@@ -1,5 +1,6 @@
 #![allow(unused_variables)]
 
+use async_trait::async_trait;
 use mockall::automock;
 
 use crate::{request::DeboaRequest, response::DeboaResponse, Result};
@@ -9,6 +10,7 @@ use crate::{request::DeboaRequest, response::DeboaResponse, Result};
 /// Trait that define the middleware pattern for Deboa.
 ///
 #[automock]
+#[async_trait]
 pub trait DeboaCatcher: Send + Sync + 'static {
     ///
     /// This method is called before the request is sent. Please note if this method returns a response,
@@ -22,7 +24,7 @@ pub trait DeboaCatcher: Send + Sync + 'static {
     ///
     /// * `Result<Option<DeboaResponse>>` - The response that was received.
     ///
-    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
+    async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
         Ok(None)
     }
 
@@ -33,15 +35,18 @@ pub trait DeboaCatcher: Send + Sync + 'static {
     ///
     /// * `response` - The response that was received.
     ///
-    fn on_response(&self, response: &mut DeboaResponse) {}
+    async fn on_response(&self, response: DeboaResponse) -> Result<DeboaResponse> {
+        Ok(response)
+    }
 }
 
+#[async_trait]
 impl<T: DeboaCatcher> DeboaCatcher for Box<T> {
-    fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
-        self.as_ref().on_request(request)
+    async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
+        self.as_ref().on_request(request).await
     }
 
-    fn on_response(&self, response: &mut DeboaResponse) {
-        self.as_ref().on_response(response);
+    async fn on_response(&self, response: DeboaResponse) -> Result<DeboaResponse> {
+        self.as_ref().on_response(response).await
     }
 }

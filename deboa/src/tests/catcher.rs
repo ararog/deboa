@@ -45,13 +45,10 @@ async fn test_catcher_response() {
         .returning(move |_| Ok(None));
     catcher_mock
         .expect_on_response()
-        .times(1)
-        .returning(move |res| {
-            res.set_raw_body(b"test");
-        });
+        .times(1);
 
     let client = Deboa::builder().catch(catcher_mock).build();
-    let response = DeboaRequest::get(server.url("/get").as_str())
+    let mut response = DeboaRequest::get(server.url("/get").as_str())
         .expect("Invalid URL")
         .go(client)
         .await
@@ -59,7 +56,7 @@ async fn test_catcher_response() {
 
     http_mock.assert();
 
-    assert_eq!(response.raw_body(), b"test");
+    assert_eq!(response.raw_body().await, b"test");
 }
 
 #[tokio::test]
@@ -86,11 +83,11 @@ async fn test_catcher_early_response() {
                 url.clone(),
                 StatusCode::OK,
                 headers.clone(),
-                b"test",
+                &b"test"[..],
             )))
         });
 
-    catcher_mock.expect_on_response().times(1).return_const(());
+    catcher_mock.expect_on_response().times(1);
 
     let client = Deboa::builder().catch(catcher_mock).build();
     let response = DeboaRequest::get(server.url("/get").as_str())
