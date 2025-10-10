@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use deboa::{Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
 
 #[derive(Debug, serde::Deserialize)]
@@ -10,7 +9,7 @@ pub struct Post {
 
 struct TestMonitor;
 
-#[async_trait]
+#[deboa::async_trait]
 impl DeboaCatcher for TestMonitor {
     async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
         println!("Request: {:?}", request.url());
