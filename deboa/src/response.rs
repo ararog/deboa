@@ -227,6 +227,17 @@ impl DeboaResponse {
         Ok(String::from_utf8_lossy(&self.raw_body().await).to_string())
     }
 
+    #[inline]
+    /// Allow get stream body at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Either<Incoming, Full<Bytes>>` - The stream body of the response.
+    ///
+    pub fn stream(&mut self) -> &mut Either<Incoming, Full<Bytes>> {
+        &mut self.body
+    }
+
     /// Allow save response body to file at any time.
     ///
     /// # Arguments
