@@ -84,6 +84,8 @@ use crate::request::{DeboaRequest, IntoRequest};
 use crate::response::DeboaResponse;
 use crate::url::IntoUrl;
 
+pub use async_trait::async_trait;
+
 pub mod cache;
 pub mod catcher;
 pub mod cert;

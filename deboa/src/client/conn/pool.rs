@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 use url::Url;
 
 #[cfg(feature = "http1")]
@@ -62,7 +62,7 @@ pub trait DeboaHttpConnectionPool {
     ///
     async fn create_connection<'a>(
         &'a mut self,
-        url: &Url,
+        url: Arc<Url>,
         protocol: &HttpVersion,
         client_cert: &Option<ClientCert>,
     ) -> Result<&'a mut DeboaConnection>;
@@ -83,7 +83,7 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
 
     async fn create_connection(
         &mut self,
-        url: &Url,
+        url: Arc<Url>,
         protocol: &HttpVersion,
         client_cert: &Option<ClientCert>,
     ) -> Result<&mut DeboaConnection> {
@@ -106,18 +106,17 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
             return Ok(self.connections.get_mut(&host_key).unwrap());
         }
 
-        let url = url.clone();
         let connection = match protocol {
             #[cfg(feature = "http1")]
             HttpVersion::Http1 => {
                 let connection =
-                    BaseHttpConnection::<Http1Request>::connect(&url, client_cert).await?;
+                    BaseHttpConnection::<Http1Request>::connect(url, client_cert).await?;
                 DeboaConnection::Http1(Box::new(connection))
             }
             #[cfg(feature = "http2")]
             HttpVersion::Http2 => {
                 let connection =
-                    BaseHttpConnection::<Http2Request>::connect(&url, client_cert).await?;
+                    BaseHttpConnection::<Http2Request>::connect(url, client_cert).await?;
                 DeboaConnection::Http2(Box::new(connection))
             }
         };

@@ -112,10 +112,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         })
         .detach();
 
-        Ok(BaseHttpConnection::<Http1Request> {
-            url: url.clone(),
-            sender,
-        })
+        Ok(BaseHttpConnection::<Http1Request> { url, sender })
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {

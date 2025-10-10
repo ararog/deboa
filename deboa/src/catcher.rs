@@ -7,14 +7,17 @@ use crate::{request::DeboaRequest, response::DeboaResponse, Result};
 
 /// DeboaCatcher
 ///
-/// Trait that define the middleware pattern for Deboa.
+/// Trait that define the middleware pattern for Deboa. Keep in mind that
+/// It is called before the request is sent and after the response is received.
+/// Use it with caution and keep number of catchers low for better performance.
 ///
 #[automock]
 #[async_trait]
 pub trait DeboaCatcher: Send + Sync + 'static {
     ///
     /// This method is called before the request is sent. Please note if this method returns a response,
-    /// the request will not be sent and the response will be returned.
+    /// the request will not be sent and the response will be returned. It is advised to use bare minimum
+    /// logic here to avoid performance issues.
     ///
     /// # Arguments
     ///

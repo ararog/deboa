@@ -33,9 +33,9 @@ impl IntoBody for Vec<u8> {
 }
 
 impl IntoBody for Bytes {
-  fn into_body(self) -> Either<Incoming, Full<Bytes>> {
-      Either::Right(Full::<Bytes>::new(self))
-  }
+    fn into_body(self) -> Either<Incoming, Full<Bytes>> {
+        Either::Right(Full::<Bytes>::new(self))
+    }
 }
 
 impl IntoBody for Full<Bytes> {
@@ -168,11 +168,11 @@ impl DeboaResponse {
         }
     }
 
-    /// Allow get raw body at any time.
+    /// Returns the response body as a vector of bytes, consuming body.
     ///
     /// # Returns
     ///
-    /// * `&[u8]` - The raw body of the response.
+    /// * `Vec<u8>` - The raw body of the response.
     ///
     #[inline]
     pub async fn raw_body(&mut self) -> Vec<u8> {
@@ -197,7 +197,7 @@ impl DeboaResponse {
         self.body = Either::Right(Full::<Bytes>::from(body));
     }
 
-    /// Allow get body at any time.
+    /// Returns the response body as a deserialized type, consuming body.
     ///
     /// # Arguments
     ///
@@ -216,7 +216,7 @@ impl DeboaResponse {
         Ok(result)
     }
 
-    /// Allow get text body at any time.
+    /// Returns the response body as a string, consuming body.
     ///
     /// # Returns
     ///
@@ -238,7 +238,7 @@ impl DeboaResponse {
         &mut self.body
     }
 
-    /// Allow save response body to file at any time.
+    /// Save response body to file, consuming body.
     ///
     /// # Arguments
     ///

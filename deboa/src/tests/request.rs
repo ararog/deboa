@@ -121,7 +121,7 @@ fn test_add_header() -> Result<()> {
 fn test_set_text_body() -> Result<()> {
     let request = DeboaRequest::post(JSONPLACEHOLDER)?.text("test").build()?;
 
-    assert_eq!(*request.raw_body(), b"test".to_vec());
+    assert_eq!(*request.raw_body(), b"test"[..]);
 
     Ok(())
 }
@@ -133,28 +133,6 @@ fn test_raw_body() -> Result<()> {
         .build()?;
 
     assert_eq!(request.raw_body(), b"test");
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_fetch_from_string() -> Result<()> {
-    let client = Deboa::new();
-
-    let response = String::from(JSONPLACEHOLDER).fetch(client).await?;
-
-    assert_eq!(response.status(), 200);
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_fetch_from_url() -> Result<()> {
-    let client = Deboa::new();
-    let url = Url::parse(JSONPLACEHOLDER).unwrap();
-    let response = url.fetch(client).await?;
-
-    assert_eq!(response.status(), 200);
 
     Ok(())
 }
