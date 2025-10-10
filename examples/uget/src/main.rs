@@ -1,5 +1,4 @@
-use std::io::{stdin, IsTerminal, Read, Write};
-
+use std::{cmp::min, io::{stdin, IsTerminal, Read, Write}};
 use clap::Parser;
 use deboa::{
     cert::ClientCert,
@@ -9,6 +8,8 @@ use deboa::{
     Deboa, Result,
 };
 use http::{header, HeaderName, Method};
+use http_body_util::BodyExt;
+use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use std::fs::File;
 use tokio::io::{self, AsyncWriteExt};
 
@@ -245,13 +246,59 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let mut response = client.execute(request).await?;
 
     if let Some(save) = arg_save {
+        let mut downloaded = 0u64;
+        let header_value = response.headers().get(header::CONTENT_LENGTH);
+        if header_value.is_none() {
+            return Err(DeboaError::ProcessResponse {
+                message: "Content-Length header is missing".to_string(),
+            });
+        }
+
+        let total_size = header_value.unwrap().to_str();
+        if let Err(e) = total_size {
+            return Err(DeboaError::ProcessResponse {
+                message: format!("Failed to read content-length: {}", e),
+            });
+        }
+
+        let total_size = total_size.unwrap().parse::<u64>();
+        if let Err(e) = total_size {
+            return Err(DeboaError::ProcessResponse {
+                message: format!("Failed to parse content-length: {}", e),
+            });
+        }
+
+        let total_size = total_size.unwrap();
+            
+        let pb = ProgressBar::new(total_size);
+        pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
+          .unwrap()
+          .with_key("eta", |state: &ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
+          .progress_chars("#>-"));
+
         let file = File::create(save);
         if let Ok(mut file) = file {
-            let data = response.raw_body().await;
-            let result = file.write(&data);
+            let stream = response.stream();
+            while let Some(frame) = stream.frame().await {
+                if let Ok(frame) = frame {  
+                    let data = frame.data_ref();
+                    if let Some(data) = data {
+                        let new = min(downloaded + data.len() as u64, total_size);
+                        downloaded = new;
+                        pb.set_position(new);
+                        let result = file.write(data);
+                        if let Err(e) = result {
+                            return Err(DeboaError::Io {
+                                message: format!("Failed to write to file: {}", e),
+                            });
+                        }
+                    }
+                }
+            }
+            let result = file.flush();
             if let Err(e) = result {
                 return Err(DeboaError::Io {
-                    message: format!("Failed to write to file: {}", e),
+                    message: format!("Failed to flush file: {}", e),
                 });
             }
         }
