@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use bytes::Bytes;
 use http_body_util::Full;
@@ -29,7 +31,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
     }
 
     async fn connect(
-        url: &Url,
+        url: Arc<Url>,
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Http2Request>> {
         let host = url.host().unwrap_or(Host::Domain("localhost"));
@@ -132,10 +134,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
             };
         });
 
-        Ok(BaseHttpConnection::<Http2Request> {
-            url: url.clone(),
-            sender,
-        })
+        Ok(BaseHttpConnection::<Http2Request> { url, sender })
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {

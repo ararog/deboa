@@ -61,23 +61,9 @@ pub trait Fetch {
 }
 
 #[async_trait]
-impl Fetch for Url {
-    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse> {
-        DeboaRequest::get(self.clone())?.go(client).await
-    }
-}
-
-#[async_trait]
 impl Fetch for &str {
     async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse> {
         DeboaRequest::get(*self)?.go(client).await
-    }
-}
-
-#[async_trait]
-impl Fetch for String {
-    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse> {
-        DeboaRequest::get(self.clone())?.go(client).await
     }
 }
 
@@ -167,11 +153,11 @@ pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// * `body` - The body to use.
 pub struct DeboaRequestBuilder {
     retries: u32,
-    url: Url,
+    url: Arc<Url>,
     headers: HeaderMap,
     cookies: Option<HashMap<String, DeboaCookie>>,
     method: http::Method,
-    body: Arc<Vec<u8>>,
+    body: Arc<[u8]>,
     form: Option<Form>,
 }
 
@@ -213,7 +199,7 @@ impl DeboaRequestBuilder {
     /// * `Self` - The request builder.
     ///
     pub fn raw_body(mut self, body: &[u8]) -> Self {
-        self.body = body.to_vec().into();
+        self.body = body.into();
         self
     }
 
@@ -309,7 +295,7 @@ impl DeboaRequestBuilder {
     /// * `Self` - The request builder.
     ///
     pub fn text(mut self, text: &str) -> Self {
-        self.body = text.as_bytes().to_vec().into();
+        self.body = text.as_bytes().into();
         self
     }
 
@@ -401,12 +387,12 @@ impl DeboaRequestBuilder {
 }
 
 pub struct DeboaRequest {
-    url: Url,
+    url: Arc<Url>,
     headers: HeaderMap,
     cookies: Option<HashMap<String, DeboaCookie>>,
     retries: u32,
     method: http::Method,
-    body: Arc<Vec<u8>>,
+    body: Arc<[u8]>,
 }
 
 impl Debug for DeboaRequest {
@@ -460,12 +446,12 @@ impl DeboaRequest {
         headers.insert(header::HOST, HeaderValue::from_str(authority).unwrap());
 
         Ok(DeboaRequestBuilder {
-            url,
+            url: url.into(),
             headers,
             cookies: None,
             retries: 0,
             method,
-            body: Arc::new(Vec::new()),
+            body: Arc::new([]),
             form: None,
         })
     }
@@ -625,7 +611,7 @@ impl DeboaRequest {
             self.add_header(HOST, parsed_url.authority());
         }
 
-        self.url = parsed_url;
+        self.url = parsed_url.into();
         Ok(self)
     }
 
@@ -636,8 +622,8 @@ impl DeboaRequest {
     /// * `Url` - The url.
     ///
     #[inline]
-    pub fn url(&self) -> &Url {
-        &self.url
+    pub fn url(&self) -> Arc<Url> {
+        Arc::clone(&self.url)
     }
 
     /// Allow get retries at any time.
@@ -840,7 +826,7 @@ impl DeboaRequest {
             Form::MultiPartForm(form) => (form.content_type(), form.build()),
         };
         self.add_header(header::CONTENT_TYPE, &content_type);
-        self.body = Arc::from(body.as_bytes().to_vec());
+        self.body = body.as_bytes().into();
         self
     }
 
@@ -855,7 +841,7 @@ impl DeboaRequest {
     /// * `&mut Self` - The request.
     ///
     pub fn set_text(&mut self, text: String) -> &mut Self {
-        self.body = text.as_bytes().to_vec().into();
+        self.body = text.as_bytes().into();
         self
     }
 
@@ -870,7 +856,7 @@ impl DeboaRequest {
     /// * `&mut Self` - The request.
     ///
     pub fn set_raw_body(&mut self, body: &[u8]) -> &mut Self {
-        self.body = body.to_vec().into();
+        self.body = body.into();
         self
     }
 
@@ -881,7 +867,7 @@ impl DeboaRequest {
     /// * `&Vec<u8>` - The raw body.
     ///
     #[inline]
-    pub fn raw_body(&self) -> &Vec<u8> {
+    pub fn raw_body(&self) -> &[u8] {
         &self.body
     }
 

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use bytes::Bytes;
 use http::{Request, Response, StatusCode};
@@ -29,7 +31,7 @@ pub enum DeboaConnection {
 /// * `url` - The url to connect.
 /// * `sender` - The sender to use.
 pub struct BaseHttpConnection<T> {
-    pub(crate) url: Url,
+    pub(crate) url: Arc<Url>,
     pub(crate) sender: T,
 }
 
@@ -59,7 +61,7 @@ pub trait DeboaHttpConnection {
     /// * `Result<BaseHttpConnection<Self::Sender>>` - The connection or error.
     ///
     async fn connect(
-        url: &Url,
+        url: Arc<Url>,
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Self::Sender>>;
 
@@ -115,7 +117,7 @@ pub trait DeboaHttpConnection {
             || status_code == StatusCode::TOO_MANY_REQUESTS
         {
             let body = response.collect().await;
-            let body = body.unwrap().to_bytes().to_vec();
+            let body = body.unwrap().to_bytes();
             return Err(DeboaError::Response {
                 status_code,
                 message: format!(

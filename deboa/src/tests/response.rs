@@ -49,7 +49,7 @@ async fn raw_body() -> Result<()> {
         fake_url(),
         http::StatusCode::OK,
         http::HeaderMap::new(),
-        SAMPLE_TEST.to_vec(),
+        SAMPLE_TEST,
     );
     assert_eq!(response.raw_body().await, SAMPLE_TEST);
     Ok(())
@@ -61,7 +61,7 @@ async fn test_text() -> Result<()> {
         fake_url(),
         http::StatusCode::OK,
         http::HeaderMap::new(),
-        SAMPLE_TEST.to_vec(),
+        SAMPLE_TEST,
     );
     assert_eq!(
         response.text().await,
@@ -76,7 +76,7 @@ async fn test_to_file() -> Result<()> {
         fake_url(),
         http::StatusCode::OK,
         http::HeaderMap::new(),
-        SAMPLE_TEST.to_vec(),
+        SAMPLE_TEST,
     );
     assert_eq!(response.to_file("test.txt").await, Ok(()));
     Ok(())

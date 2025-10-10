@@ -1,3 +1,4 @@
+use bytes::Bytes;
 use http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
 use httpmock::MockServer;
 
@@ -18,16 +19,14 @@ async fn test_catcher_request() {
         .build()
         .unwrap();
     mock.expect_on_request().returning(move |req| {
-        req.headers_mut().insert(
-            HeaderName::from_static("test"),
-            HeaderValue::from_str("test").unwrap(),
-        );
+        req.headers_mut()
+            .insert("test", HeaderValue::from_str("test").unwrap());
         Ok(None)
     });
 
-    let _ = mock.on_request(&mut request);
+    let _ = mock.on_request(&mut request).await;
     assert_eq!(
-        request.headers().get(HeaderName::from_static("test")),
+        request.headers().get("test"),
         Some(&HeaderValue::from_str("test").unwrap())
     );
 }
@@ -45,7 +44,11 @@ async fn test_catcher_response() {
         .returning(move |_| Ok(None));
     catcher_mock
         .expect_on_response()
-        .times(1);
+        .times(1)
+        .returning(move |res| {
+            res.set_raw_body(Bytes::from("test"));
+            Ok(())
+        });
 
     let client = Deboa::builder().catch(catcher_mock).build();
     let mut response = DeboaRequest::get(server.url("/get").as_str())
@@ -87,7 +90,10 @@ async fn test_catcher_early_response() {
             )))
         });
 
-    catcher_mock.expect_on_response().times(1);
+    catcher_mock
+        .expect_on_response()
+        .times(1)
+        .return_const(Ok(()));
 
     let client = Deboa::builder().catch(catcher_mock).build();
     let response = DeboaRequest::get(server.url("/get").as_str())

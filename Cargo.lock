@@ -711,7 +711,6 @@ dependencies = [
 name = "deboa-extras"
 version = "0.0.2-beta.1"
 dependencies = [
- "async-trait",
  "brotli",
  "bytes",
  "deboa",
