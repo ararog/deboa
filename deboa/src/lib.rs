@@ -445,7 +445,7 @@ impl Deboa {
             if let Some(response) = response {
                 let mut new_response = response;
                 for catcher in catchers {
-                    new_response = catcher.on_response(new_response).await?;
+                    catcher.on_response(new_response.as_mut()).await?;
                 }
                 return Ok(new_response);
             }
@@ -492,7 +492,7 @@ impl Deboa {
 
         if let Some(catchers) = &self.catchers {
             for catcher in catchers {
-                response = catcher.on_response(response).await?;
+                catcher.on_response(response.as_mut()).await?;
             }
         }
 

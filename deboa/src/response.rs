@@ -32,6 +32,12 @@ impl IntoBody for Vec<u8> {
     }
 }
 
+impl IntoBody for Bytes {
+  fn into_body(self) -> Either<Incoming, Full<Bytes>> {
+      Either::Right(Full::<Bytes>::new(self))
+  }
+}
+
 impl IntoBody for Full<Bytes> {
     fn into_body(self) -> Either<Incoming, Full<Bytes>> {
         Either::Right(self)
@@ -162,6 +168,35 @@ impl DeboaResponse {
         }
     }
 
+    /// Allow get raw body at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `&[u8]` - The raw body of the response.
+    ///
+    #[inline]
+    pub async fn raw_body(&mut self) -> Vec<u8> {
+        let mut data = Vec::<u8>::new();
+        while let Some(chunk) = self.body.frame().await {
+            let frame = chunk.unwrap();
+            if let Some(bytes) = frame.data_ref() {
+                data.extend_from_slice(bytes);
+            }
+        }
+        data
+    }
+
+    /// Allow set raw body at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `body` - The body to be set.
+    ///
+    #[inline]
+    pub fn set_raw_body(&mut self, body: Bytes) {
+        self.body = Either::Right(Full::<Bytes>::from(body));
+    }
+
     /// Allow get body at any time.
     ///
     /// # Arguments
@@ -179,24 +214,6 @@ impl DeboaResponse {
     ) -> Result<B> {
         let result = body_type.deserialize::<B>(self.raw_body().await)?;
         Ok(result)
-    }
-
-    /// Allow get raw body at any time.
-    ///
-    /// # Returns
-    ///
-    /// * `&[u8]` - The raw body of the response.
-    ///
-    #[inline]
-    pub async fn raw_body(&mut self) -> Vec<u8> {
-        let mut data = Vec::<u8>::new();
-        while let Some(chunk) = self.body.frame().await {
-            let frame = chunk.unwrap();
-            if let Some(bytes) = frame.data_ref() {
-                data.extend_from_slice(bytes);
-            }
-        }
-        data
     }
 
     /// Allow get text body at any time.
