@@ -1,4 +1,3 @@
-use std::{cmp::min, io::{stdin, IsTerminal, Read, Write}};
 use clap::Parser;
 use deboa::{
     cert::ClientCert,
@@ -11,6 +10,10 @@ use http::{header, HeaderName, Method};
 use http_body_util::BodyExt;
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use std::fs::File;
+use std::{
+    cmp::min,
+    io::{stdin, IsTerminal, Read, Write},
+};
 use tokio::io::{self, AsyncWriteExt};
 
 #[derive(Parser)]
@@ -269,7 +272,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         }
 
         let total_size = total_size.unwrap();
-            
+
         let pb = ProgressBar::new(total_size);
         pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
           .unwrap()
@@ -280,7 +283,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         if let Ok(mut file) = file {
             let stream = response.stream();
             while let Some(frame) = stream.frame().await {
-                if let Ok(frame) = frame {  
+                if let Ok(frame) = frame {
                     let data = frame.data_ref();
                     if let Some(data) = data {
                         let new = min(downloaded + data.len() as u64, total_size);
