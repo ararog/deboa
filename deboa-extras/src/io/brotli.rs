@@ -5,15 +5,15 @@ use brotli::CompressorWriter;
 use deboa::{
     errors::DeboaError,
     fs::io::{Compressor, Decompressor},
-    response::DeboaResponse,
     request::DeboaRequest,
+    response::DeboaResponse,
     Result,
 };
 
 #[derive(PartialEq)]
 pub struct BrotliCompressor;
 
-#[async_trait::async_trait]
+#[deboa::async_trait]
 impl Compressor for BrotliCompressor {
     fn name(&self) -> String {
         "br".to_string()
@@ -44,7 +44,7 @@ impl Compressor for BrotliCompressor {
 #[derive(PartialEq)]
 pub struct BrotliDecompressor;
 
-#[async_trait::async_trait]
+#[deboa::async_trait]
 impl Decompressor for BrotliDecompressor {
     fn name(&self) -> String {
         "br".to_string()

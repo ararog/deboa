@@ -10,7 +10,7 @@ fn test_set_json() -> Result<()> {
         .body_as(JsonBody, sample_post())?
         .build()?;
 
-    assert_eq!(*request.raw_body(), JSON_POST.to_vec());
+    assert_eq!(*request.raw_body(), JSON_POST[..]);
 
     Ok(())
 }

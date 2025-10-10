@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use deboa::{
     catcher::DeboaCatcher, errors::DeboaError, fs::io::Decompressor, request::DeboaRequest,
     response::DeboaResponse, Result,
@@ -20,7 +19,7 @@ impl<D: Decompressor> EncodingCatcher<D> {
     }
 }
 
-#[async_trait]
+#[deboa::async_trait]
 impl<D: Decompressor> DeboaCatcher for EncodingCatcher<D> {
     async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
         let encodings = self
