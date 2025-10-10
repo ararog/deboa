@@ -1,16 +1,19 @@
 use std::io::{Read, Write};
 
-use async_trait::async_trait;
 use bytes::{Buf, Bytes};
 use deboa::{
-    errors::DeboaError, fs::io::{Compressor, Decompressor}, request::DeboaRequest, response::DeboaResponse, Result
+    errors::DeboaError,
+    fs::io::{Compressor, Decompressor},
+    request::DeboaRequest,
+    response::DeboaResponse,
+    Result,
 };
 use flate2::{read::GzDecoder, write::GzEncoder};
 
 #[derive(PartialEq)]
 pub struct GzipCompressor;
 
-#[async_trait::async_trait]
+#[deboa::async_trait]
 impl Compressor for GzipCompressor {
     fn name(&self) -> String {
         "gzip".to_string()
@@ -41,7 +44,7 @@ impl Compressor for GzipCompressor {
 #[derive(PartialEq)]
 pub struct GzipDecompressor;
 
-#[async_trait]
+#[deboa::async_trait]
 impl Decompressor for GzipDecompressor {
     fn name(&self) -> String {
         "gzip".to_string()

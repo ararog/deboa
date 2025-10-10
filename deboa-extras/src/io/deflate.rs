@@ -4,15 +4,15 @@ use bytes::{Buf, Bytes};
 use deboa::{
     errors::DeboaError,
     fs::io::{Compressor, Decompressor},
-    response::DeboaResponse,
     request::DeboaRequest,
+    response::DeboaResponse,
     Result,
 };
 use flate2::{read::DeflateDecoder, write::DeflateEncoder};
 
 pub struct DeflateCompressor;
 
-#[async_trait::async_trait]
+#[deboa::async_trait]
 impl Compressor for DeflateCompressor {
     fn name(&self) -> String {
         "deflate".to_string()
@@ -36,14 +36,14 @@ impl Compressor for DeflateCompressor {
             });
         }
 
-        Ok(Bytes::from_owner(writer.get_ref().to_vec()))
+        Ok(Bytes::from(writer.get_ref().to_vec()))
     }
 }
 
 #[derive(PartialEq)]
 pub struct DeflateDecompressor;
 
-#[async_trait::async_trait]
+#[deboa::async_trait]
 impl Decompressor for DeflateDecompressor {
     fn name(&self) -> String {
         "deflate".to_string()

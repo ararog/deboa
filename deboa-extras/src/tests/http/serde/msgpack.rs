@@ -10,7 +10,7 @@ fn test_set_msgpack() -> Result<()> {
         .body_as(MsgPackBody, sample_post())?
         .build()?;
 
-    assert_eq!(*request.raw_body(), MSGPACK_POST.to_vec());
+    assert_eq!(*request.raw_body(), MSGPACK_POST[..]);
 
     Ok(())
 }

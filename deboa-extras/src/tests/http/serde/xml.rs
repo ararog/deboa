@@ -12,7 +12,7 @@ async fn test_set_xml() -> Result<()> {
         .body_as(XmlBody, sample_post())?
         .build()?;
 
-    assert_eq!(*request.raw_body(), XML_POST.to_vec());
+    assert_eq!(*request.raw_body(), XML_POST[..]);
 
     Ok(())
 }
