@@ -62,39 +62,80 @@ struct Args {
     url: String,
     #[arg(index = 2, required = false, help = "Allow set raw request body.")]
     body: Option<String>,
-    #[arg(short, long, help = "HTTP method to use.")]
+    #[arg(short, long, required = false, help = "HTTP method to use.")]
     method: Option<String>,
-    #[arg(short = 'f', long, help = "Set form field, format: key=value.")]
+    #[arg(
+        short = 'f',
+        long,
+        required = false,
+        help = "Set form field, format: key=value."
+    )]
     field: Option<Vec<String>>,
-    #[arg(short = 'H', long, help = "Set header field, format: key=value.")]
+    #[arg(
+        short = 'H',
+        long,
+        required = false,
+        help = "Set header field, format: key=value."
+    )]
     header: Option<Vec<String>>,
     #[arg(
         short = 'b',
         long,
+        required = false,
         help = "Set bearer auth token on Authorization header."
     )]
     bearer: Option<String>,
     #[arg(
         short = 'a',
         long,
+        required = false,
         help = "Set basic auth on Authorization header, format: username=password, it will be base64 encoded."
     )]
     basic: Option<String>,
-    #[arg(short = 's', long, help = "Set the file to save the response body.")]
+    #[arg(
+        short = 's',
+        long,
+        required = false,
+        num_args = 0..=1,
+        require_equals = true,
+        default_missing_value = "none",
+        help = "Set the file to save the response body."
+    )]
     save: Option<String>,
-    #[arg(short = 'p', long, help = "Set the part of multipart/form-data.")]
+    #[arg(
+        short = 'p',
+        long,
+        required = false,
+        help = "Set the part of multipart/form-data."
+    )]
     part: Option<Vec<String>>,
-    #[arg(short = 'c', long, help = "Set the certificate file to use.")]
+    #[arg(
+        short = 'c',
+        long,
+        required = false,
+        help = "Set the certificate file to use."
+    )]
     cert: Option<String>,
-    #[arg(short = 'k', long, help = "Set the certificate password.")]
+    #[arg(
+        short = 'k',
+        long,
+        required = false,
+        help = "Set the certificate password."
+    )]
     cert_pw: Option<String>,
     #[arg(
         short = 'v',
         long,
+        required = false,
         help = "Set the ca certificate file to use (pem format)."
     )]
     verify: Option<String>,
-    #[arg(short = 'P', long, help = "Print request or response.")]
+    #[arg(
+        short = 'P',
+        long,
+        required = false,
+        help = "Print request or response."
+    )]
     print: Option<String>,
 }
 
@@ -112,18 +153,18 @@ async fn main() {
 
 async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let mut arg_url = args.url;
-    let arg_method = args.method;
     let mut arg_body = args.body;
+    let arg_method = args.method;
     let arg_fields = args.field;
     let arg_header = args.header;
     let arg_bearer_auth = args.bearer;
     let arg_basic_auth = args.basic;
-    let arg_save = args.save;
     let arg_part = args.part;
     let arg_cert = args.cert;
     let arg_cert_pw = args.cert_pw;
     let arg_print = args.print;
     let arg_verify = args.verify;
+    let arg_save = args.save;
 
     if arg_cert.is_some() && arg_cert_pw.is_some() {
         let cert = arg_cert.unwrap();
@@ -248,7 +289,17 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
 
     let mut response = client.execute(request).await?;
 
-    if let Some(save) = arg_save {
+    if let Some(mut save) = arg_save {
+        if save == "none" {
+            save = response
+                .url()
+                .path()
+                .split('/')
+                .next_back()
+                .unwrap()
+                .to_string();
+        }
+
         let mut downloaded = 0u64;
         let header_value = response.headers().get(header::CONTENT_LENGTH);
         if header_value.is_none() {
