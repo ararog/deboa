@@ -4,8 +4,8 @@ use bytes::{Buf, Bytes};
 use deboa::{
     errors::DeboaError,
     fs::io::{Compressor, Decompressor},
-    request::DeboaRequest,
     response::DeboaResponse,
+    request::DeboaRequest,
     Result,
 };
 use flate2::{read::DeflateDecoder, write::DeflateEncoder};
@@ -50,8 +50,8 @@ impl Decompressor for DeflateDecompressor {
     }
 
     async fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
-        let binding = response.raw_body().await;
-        let mut reader = DeflateDecoder::new(binding.reader());
+        let body = response.raw_body().await;
+        let mut reader = DeflateDecoder::new(body.reader());
         let mut buffer = Vec::new();
         let result = reader.read_to_end(&mut buffer);
 
@@ -61,6 +61,7 @@ impl Decompressor for DeflateDecompressor {
             });
         }
 
+        response.set_raw_body(Bytes::from(buffer));
         Ok(())
     }
 }

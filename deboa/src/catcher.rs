@@ -25,7 +25,7 @@ pub trait DeboaCatcher: Send + Sync + 'static {
     /// * `Result<Option<DeboaResponse>>` - The response that was received.
     ///
     async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
-        Ok(None)
+        todo!("Not implemented")
     }
 
     ///
@@ -35,8 +35,8 @@ pub trait DeboaCatcher: Send + Sync + 'static {
     ///
     /// * `response` - The response that was received.
     ///
-    async fn on_response(&self, response: DeboaResponse) -> Result<DeboaResponse> {
-        Ok(response)
+    async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
+        todo!("Not implemented")
     }
 }
 
@@ -46,7 +46,7 @@ impl<T: DeboaCatcher> DeboaCatcher for Box<T> {
         self.as_ref().on_request(request).await
     }
 
-    async fn on_response(&self, response: DeboaResponse) -> Result<DeboaResponse> {
+    async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
         self.as_ref().on_response(response).await
     }
 }

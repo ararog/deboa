@@ -5,8 +5,8 @@ use brotli::CompressorWriter;
 use deboa::{
     errors::DeboaError,
     fs::io::{Compressor, Decompressor},
-    request::DeboaRequest,
     response::DeboaResponse,
+    request::DeboaRequest,
     Result,
 };
 
@@ -51,9 +51,9 @@ impl Decompressor for BrotliDecompressor {
     }
 
     async fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
-        let binding = response.raw_body().await;
-        let mut reader = brotli::Decompressor::new(binding.reader(), 0);
-        let mut buffer = Vec::new();
+        let body = response.raw_body().await;
+        let mut reader = brotli::Decompressor::new(body.reader(), 0);
+        let mut buffer = Vec::<u8>::new();
         let result = reader.read_to_end(&mut buffer);
 
         if let Err(e) = result {
@@ -62,6 +62,7 @@ impl Decompressor for BrotliDecompressor {
             });
         }
 
+        response.set_raw_body(Bytes::from(buffer));
         Ok(())
     }
 }

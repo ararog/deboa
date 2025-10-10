@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use deboa::{
-    catcher::DeboaCatcher, fs::io::Decompressor, request::DeboaRequest, response::DeboaResponse,
-    Result,
+    catcher::DeboaCatcher, errors::DeboaError, fs::io::Decompressor, request::DeboaRequest,
+    response::DeboaResponse, Result,
 };
 use http::header;
 use std::collections::HashMap;
@@ -34,20 +34,24 @@ impl<D: Decompressor> DeboaCatcher for EncodingCatcher<D> {
         Ok(None)
     }
 
-    async fn on_response(&self, response: DeboaResponse) -> Result<DeboaResponse> {
-        let response_headers = response.headers();
-        let content_encoding = response_headers.get(header::CONTENT_ENCODING);
-        if let Some(content_encoding) = content_encoding {
-            let decompressor = self.accept_encoding.get(content_encoding.to_str().unwrap());
-            if let Some(_decompressor) = decompressor {
-                //let body = decompressor.decompress_body(&mut response).await?;
-                //DeboaResponse::new(response.url(), response.status(), response.headers(), body);
-                Ok(response)
-            } else {
-                Ok(response)
-            }
-        } else {
-            Ok(response)
+    async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
+        let content_encoding = response.headers().get(header::CONTENT_ENCODING);
+        if content_encoding.is_none() {
+            return Err(DeboaError::Decompress {
+                message: "Content encoding not found".to_string(),
+            });
         }
+
+        let decompressor = self
+            .accept_encoding
+            .get(content_encoding.unwrap().to_str().unwrap());
+        if decompressor.is_none() {
+            return Err(DeboaError::Decompress {
+                message: "No decompressor found".to_string(),
+            });
+        }
+
+        decompressor.unwrap().decompress_body(response).await?;
+        Ok(())
     }
 }

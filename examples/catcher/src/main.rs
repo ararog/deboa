@@ -17,9 +17,9 @@ impl DeboaCatcher for TestMonitor {
         Ok(None)
     }
 
-    async fn on_response(&self, response: DeboaResponse) -> Result<DeboaResponse> {
+    async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
         println!("Response: {:?}", response.status());
-        Ok(response)
+        Ok(())
     }
 }
 
