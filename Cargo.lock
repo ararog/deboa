@@ -2582,7 +2582,7 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
 name = "uget"
-version = "0.0.5-beta.3"
+version = "0.0.5-beta.4"
 dependencies = [
  "assert_cmd",
  "clap",
