@@ -1,6 +1,23 @@
 # uget
 
-A minimal cli tool to make http requests. You want, you get!
+A minimal cli tool to make http requests.
+With uget, you can:
+
+* Make http requests
+* Download files
+* Upload files
+* Save response body to a file
+* Print request or response
+* Set headers, body, method, form fields, multipart form fields
+* Easily set bearer and basic auth
+* Client certificate and private key for mutual auth
+* Use custom CA certificate for verify
+* Use stdin as body
+
+You want, you get!
+
+![uget](uget.gif)
+
 
 ## Install
 
