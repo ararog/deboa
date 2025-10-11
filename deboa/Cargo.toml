@@ -1,6 +1,6 @@
 [package]
 name = "deboa"
-version = "0.0.6-beta.6"
+version = "0.0.6-beta.7"
 edition = "2021"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 repository = "https://github.com/ararog/deboa"
@@ -18,14 +18,14 @@ default = ["tokio-rt"]
 # runtimes
 tokio-rt = ["http1", "http2", "dep:tokio", "dep:tokio-native-tls"]
 smol-rt = [
-  "http1",
-  "http2",
-  "dep:async-native-tls",
-  "dep:smol",
-  "dep:smol-hyper",
-  "dep:async-executor",
-  "dep:smol-macros",
-  "dep:macro_rules_attribute",
+    "http1",
+    "http2",
+    "dep:async-native-tls",
+    "dep:smol",
+    "dep:smol-hyper",
+    "dep:async-executor",
+    "dep:smol-macros",
+    "dep:macro_rules_attribute",
 ]
 
 # protocols
@@ -59,7 +59,7 @@ mockall = "0.13.1"
 rand = "0.9.2"
 serde = { version = "1.0.217", features = ["derive"] }
 smol = { version = "2.0.2", optional = true }
-smol-hyper = { version = "0.1.0", optional = true, features = ["smol"]}
+smol-hyper = { version = "0.1.0", optional = true, features = ["smol"] }
 smol-macros = { version = "0.1.1", optional = true }
 strum_macros = "0.27.0"
 thiserror = "2.0.16"
@@ -70,16 +70,16 @@ url = "2.5.4"
 urlencoding = "2.1.3"
 
 [dev-dependencies]
-deboa-tests = { path = "../deboa-tests", version = "0.0.1" }
 criterion = { version = "0.7.0", features = [
   "html_reports",
   "async",
   "async_smol",
   "async_tokio"
 ] }
+deboa-tests = { path = "../deboa-tests", version = "0.0.1" }
 httpmock = { version = "0.8.1", features = ["http2"] }
-tokio = { version = "1.47.1" }
 smol = "2.0.2"
+tokio = { version = "1.47.1" }
 
 [[bench]]
 name = "deboa_benchmark"
