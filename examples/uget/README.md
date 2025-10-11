@@ -12,7 +12,8 @@ With uget, you can:
 * Easily set bearer and basic auth
 * Client certificate and private key for mutual auth
 * Use custom CA certificate for verify
-* Use stdin as body
+* Use stdin as body, or save response body to a file using stdout
+* Show progress bar for download
 
 You want, you get!
 
@@ -33,7 +34,7 @@ uget <url> <body> [OPTIONS]
 
 ## Example
 
-### GET
+### GET (will print to stdout and hide progress bar)
 ```sh
 uget https://example.com
 ```

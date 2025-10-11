@@ -12,9 +12,8 @@ use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use std::fs::File;
 use std::{
     cmp::min,
-    io::{stdin, IsTerminal, Read, Write},
+    io::{stdin, stdout, IsTerminal, Read, Write},
 };
-use tokio::io::{self, AsyncWriteExt};
 
 #[derive(Parser)]
 #[command(
@@ -133,10 +132,24 @@ struct Args {
     #[arg(
         short = 'P',
         long,
+        value_names = ["req", "res", "all", "none"],
+        num_args = 0..=4,
+        require_equals = true,
+        default_missing_value = "none",
         required = false,
         help = "Print request or response."
     )]
     print: Option<String>,
+    #[arg(
+        short = 'q',
+        long,
+        required = false,
+        num_args = 0..=4,
+        require_equals = true,        
+        default_missing_value = "true",
+        help = "Show progress bar."
+    )]
+    bar: Option<bool>,
 }
 
 #[tokio::main]
@@ -165,6 +178,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let arg_print = args.print;
     let arg_verify = args.verify;
     let arg_save = args.save;
+    let arg_bar = args.bar;
 
     if arg_cert.is_some() && arg_cert_pw.is_some() {
         let cert = arg_cert.unwrap();
@@ -280,15 +294,69 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let request = request.method(http_method);
     let request = request.build()?;
 
-    if let Some(print) = arg_print {
-        if print == "req" {
+    if let Some(print) = arg_print.as_ref() {
+        if print == "req" || print == "all" {
             println!("\n\n{} {}", request.method(), request.url());
-            println!("Headers: {:#?}", request.headers());
+            for (key, value) in request.headers() {
+                println!("{}: {:#?}", key, value);
+            }
         }
     }
 
     let mut response = client.execute(request).await?;
 
+    if let Some(print) = arg_print.as_ref() {
+        if print == "res" || print == "all" {
+            println!(
+                "\n\n{} {}",
+                response.status(),
+                response
+                    .status()
+                    .canonical_reason()
+                    .unwrap_or("<unknown status code>"),
+            );
+            for (key, value) in response.headers() {
+                println!("{}: {:#?}", key, value);
+            }
+        }
+    }
+
+    let mut downloaded = 0u64;
+    let header_value = response.headers().get(header::CONTENT_LENGTH);
+    if header_value.is_none() {
+        return Err(DeboaError::ProcessResponse {
+            message: "Content-Length header is missing".to_string(),
+        });
+    }
+
+    let total_size = header_value.unwrap().to_str();
+    if let Err(e) = total_size {
+        return Err(DeboaError::ProcessResponse {
+            message: format!("Failed to read content-length: {}", e),
+        });
+    }
+
+    let total_size = total_size.unwrap().parse::<u64>();
+    if let Err(e) = total_size {
+        return Err(DeboaError::ProcessResponse {
+            message: format!("Failed to parse content-length: {}", e),
+        });
+    }
+
+    let total_size = total_size.unwrap();
+
+    let mut pb = if arg_bar.unwrap_or(true) {
+       let pb = ProgressBar::new(total_size);
+        pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
+          .unwrap()
+          .with_key("eta", |state: &ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
+          .progress_chars("#>-"));
+        Some(pb)
+    }
+    else {
+        None
+    };
+    
     if let Some(mut save) = arg_save {
         if save == "none" {
             save = response
@@ -300,36 +368,6 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
                 .to_string();
         }
 
-        let mut downloaded = 0u64;
-        let header_value = response.headers().get(header::CONTENT_LENGTH);
-        if header_value.is_none() {
-            return Err(DeboaError::ProcessResponse {
-                message: "Content-Length header is missing".to_string(),
-            });
-        }
-
-        let total_size = header_value.unwrap().to_str();
-        if let Err(e) = total_size {
-            return Err(DeboaError::ProcessResponse {
-                message: format!("Failed to read content-length: {}", e),
-            });
-        }
-
-        let total_size = total_size.unwrap().parse::<u64>();
-        if let Err(e) = total_size {
-            return Err(DeboaError::ProcessResponse {
-                message: format!("Failed to parse content-length: {}", e),
-            });
-        }
-
-        let total_size = total_size.unwrap();
-
-        let pb = ProgressBar::new(total_size);
-        pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
-          .unwrap()
-          .with_key("eta", |state: &ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
-          .progress_chars("#>-"));
-
         let file = File::create(save);
         if let Ok(mut file) = file {
             let stream = response.stream();
@@ -339,7 +377,9 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
                     if let Some(data) = data {
                         let new = min(downloaded + data.len() as u64, total_size);
                         downloaded = new;
-                        pb.set_position(new);
+                        if let Some(pb) = &mut pb {
+                            pb.set_position(new);
+                        }
                         let result = file.write(data);
                         if let Err(e) = result {
                             return Err(DeboaError::Io {
@@ -357,12 +397,33 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
             }
         }
     } else {
-        let mut stdout = io::stdout();
-        let data = response.raw_body().await;
-        let result = stdout.write(&data).await;
+        let mut stdout = stdout();
+        let stream = response.stream();
+        while let Some(frame) = stream.frame().await {
+            if let Ok(frame) = frame {
+                let data = frame.data_ref();
+                if let Some(data) = data {
+                    let new = min(downloaded + data.len() as u64, total_size);
+                    downloaded = new;
+                    if ! stdout.is_terminal() {
+                        if let Some(pb) = &mut pb {
+                            pb.set_position(new);
+                        }
+                    }
+                    let result = stdout.write(data);
+                    if let Err(e) = result {
+                        return Err(DeboaError::Io {
+                            message: format!("Failed to write to stdout: {}", e),
+                        });
+                    }
+                }
+            }
+        }
+
+        let result = stdout.flush();
         if let Err(e) = result {
             return Err(DeboaError::Io {
-                message: format!("Failed to write to stdout: {}", e),
+                message: format!("Failed to flush stdout: {}", e),
             });
         }
     }
