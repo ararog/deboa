@@ -1,7 +1,7 @@
 [package]
 name = "vamo-macros"
 edition = "2021"
-version = "0.0.2-beta.1"
+version = "0.0.2-beta.2"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 description = "macros for vamo"
 license = "MIT"
@@ -16,11 +16,11 @@ rust-version = "1.64.0"
 proc-macro = true
 
 [dependencies]
-deboa = { path = "../deboa", version = "0.0.6-beta.5", features = ["http1"] }
-deboa-extras = { path = "../deboa-extras", version = "0.0.2-beta.1", features=["json"] }
-vamo = { path = "../vamo", version = "0.0.2-beta.1" }
+deboa = { path = "../deboa", version = "0.0.6-beta.7", features = ["http1"] }
+deboa-extras = { path = "../deboa-extras", version = "0.0.2-beta.2", features=["json"] }
+vamo = { path = "../vamo", version = "0.0.2-beta.2" }
 proc-macro2 = "1.0.101"
-serde = "1.0.219"
+serde = "1.0.228"
 syn = { version = "2.0", features = ["full"] }
 quote = "1.0.40"
 http = "1.3.1"
