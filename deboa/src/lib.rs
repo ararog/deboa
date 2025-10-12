@@ -65,7 +65,9 @@ compile_error!("Only one runtime feature can be enabled at a time.");
 #[cfg(not(any(feature = "http1", feature = "http2")))]
 compile_error!("At least one HTTP version feature must be enabled.");
 
-use std::fmt::Debug;
+pub(crate) const MAX_ERROR_MESSAGE_SIZE: usize = 50000;
+
+use std::fmt::{Debug, Display};
 
 use std::ops::Shl;
 
@@ -127,6 +129,15 @@ pub enum HttpVersion {
     Http1,
     #[cfg(feature = "http2")]
     Http2,
+}
+
+impl Display for HttpVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HttpVersion::Http1 => write!(f, "HTTP/1.1"),
+            HttpVersion::Http2 => write!(f, "HTTP/2"),
+        }
+    }
 }
 
 /// Struct that represents the Deboa builder.
@@ -595,11 +606,12 @@ impl Deboa {
     {
         let (parts, body) = response.into_parts();
 
-        Ok(DeboaResponse::new(
-            url.into_url()?,
-            parts.status,
-            parts.headers,
-            body,
-        ))
+        let response = DeboaResponse::builder(url.into_url()?)
+            .status(parts.status)
+            .headers(parts.headers)
+            .body(body)
+            .build();
+
+        Ok(response)
     }
 }

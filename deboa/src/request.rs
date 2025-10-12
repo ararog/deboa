@@ -648,7 +648,8 @@ impl DeboaRequest {
         &self.headers
     }
 
-    /// Allow get mutable headers
+
+    /// Return mutable headers
     ///
     /// # Returns
     ///

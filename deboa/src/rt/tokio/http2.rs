@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use bytes::Bytes;
 use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
+use http::version::Version;
 use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
@@ -28,6 +29,11 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
     #[inline]
     fn url(&self) -> &Url {
         &self.url
+    }
+
+    #[inline]
+    fn protocol(&self) -> Version {
+        Version::HTTP_2
     }
 
     async fn connect(
