@@ -1,4 +1,6 @@
 use clap::Parser;
+use colored::*;
+use colored_json::prelude::*;
 use deboa::{
     cert::ClientCert,
     errors::DeboaError,
@@ -132,9 +134,8 @@ struct Args {
     #[arg(
         short = 'P',
         long,
-        value_names = ["req", "res", "all", "none"],
-        num_args = 0..=4,
-        require_equals = true,
+        value_parser = ["req", "res", "all", "none"],
+        num_args = 0..=1,
         default_missing_value = "none",
         required = false,
         help = "Print request or response."
@@ -296,40 +297,59 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
 
     if let Some(print) = arg_print.as_ref() {
         if print == "req" || print == "all" {
-            println!("\n\n{} {}", request.method(), request.url());
+            println!("\n\n{} {}", request.method().to_string().blue(), request.url().to_string().white().bold());
             for (key, value) in request.headers() {
-                println!("{}: {:#?}", key, value);
+                println!("{}: {}", key.to_string().cyan(), value.to_str().unwrap().yellow());
             }
         }
     }
 
     let mut response = client.execute(request).await?;
+    let status = response.status();
+    let headers = response.headers();
 
     if let Some(print) = arg_print.as_ref() {
         if print == "res" || print == "all" {
             println!(
-                "\n\n{} {}",
-                response.status(),
-                response
-                    .status()
-                    .canonical_reason()
-                    .unwrap_or("<unknown status code>"),
+                "\n\n{} {} {}",
+                client.protocol().to_string().blue(),
+                status.as_str().to_string().white().bold(),
+                status.canonical_reason()
+                    .unwrap_or("<unknown status code>")
+                    .to_string().white().bold(),
             );
-            for (key, value) in response.headers() {
-                println!("{}: {:#?}", key, value);
+            for (key, value) in headers.iter() {
+                println!("{}: {}", key.to_string().cyan(), value.to_str().unwrap().yellow());
             }
         }
     }
 
     let mut downloaded = 0u64;
-    let header_value = response.headers().get(header::CONTENT_LENGTH);
-    if header_value.is_none() {
+
+    let content_type = headers.get(header::CONTENT_TYPE);
+    if content_type.is_none() {
+        return Err(DeboaError::ProcessResponse {
+            message: "Content-Type header is missing".to_string(),
+        });
+    }
+
+    let content_type = content_type.unwrap().to_str();
+    if let Err(e) = content_type {
+        return Err(DeboaError::ProcessResponse {
+            message: format!("Failed to read content-type: {}", e),
+        });
+    }
+    let content_type = content_type.unwrap();
+
+    let content_length = headers.get(header::CONTENT_LENGTH);
+
+    if content_length.is_none() {
         return Err(DeboaError::ProcessResponse {
             message: "Content-Length header is missing".to_string(),
         });
     }
 
-    let total_size = header_value.unwrap().to_str();
+    let total_size = content_length.unwrap().to_str();
     if let Err(e) = total_size {
         return Err(DeboaError::ProcessResponse {
             message: format!("Failed to read content-length: {}", e),
@@ -398,23 +418,42 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         }
     } else {
         let mut stdout = stdout();
-        let stream = response.stream();
-        while let Some(frame) = stream.frame().await {
-            if let Ok(frame) = frame {
-                let data = frame.data_ref();
-                if let Some(data) = data {
-                    let new = min(downloaded + data.len() as u64, total_size);
-                    downloaded = new;
-                    if ! stdout.is_terminal() {
-                        if let Some(pb) = &mut pb {
-                            pb.set_position(new);
-                        }
+        if total_size < 20000 {
+            let is_json = content_type.to_lowercase().contains("application/json");
+            let content = response.text().await?;
+            if stdout.is_terminal() {
+                if is_json {
+                    let content = content.to_colored_json(ColorMode::On);
+                    if let Ok(content) = content {
+                        println!("\n{}", content);
+                    } else {
+                        eprintln!("Failed to convert to colored JSON");
                     }
-                    let result = stdout.write(data);
-                    if let Err(e) = result {
-                        return Err(DeboaError::Io {
-                            message: format!("Failed to write to stdout: {}", e),
-                        });
+                } else {
+                    println!("\n{}", content);
+                }
+            } else {
+                println!("\n{}", content);
+            }
+        } else {
+            let stream = response.stream();
+            while let Some(frame) = stream.frame().await {
+                if let Ok(frame) = frame {
+                    let data = frame.data_ref();
+                    if let Some(data) = data {
+                        let new = min(downloaded + data.len() as u64, total_size);
+                        downloaded = new;
+                        if ! stdout.is_terminal() {
+                            if let Some(pb) = &mut pb {
+                                pb.set_position(new);
+                            }
+                        }
+                        let result = stdout.write(data);
+                        if let Err(e) = result {
+                            return Err(DeboaError::Io {
+                                message: format!("Failed to write to stdout: {}", e),
+                            });
+                        }
                     }
                 }
             }
