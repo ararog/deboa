@@ -2,12 +2,12 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use bytes::Bytes;
-use http::{Request, Response, StatusCode};
+use http::{Request, Response, StatusCode, Version};
 use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 use url::Url;
 
-use crate::{cert::ClientCert, errors::DeboaError, Result};
+use crate::{cert::ClientCert, errors::DeboaError, MAX_ERROR_MESSAGE_SIZE, Result};
 
 #[derive(Debug)]
 /// Enum that represents the connection type.
@@ -73,6 +73,14 @@ pub trait DeboaHttpConnection {
     ///
     fn url(&self) -> &Url;
 
+    /// Get connection protocol.
+    ///
+    /// # Returns
+    ///
+    /// * `Version` - The connection protocol.
+    ///
+    fn protocol(&self) -> Version;
+
     /// Send a request.
     ///
     /// # Arguments
@@ -116,14 +124,26 @@ pub trait DeboaHttpConnection {
         if (!status_code.is_success() && !status_code.is_redirection())
             || status_code == StatusCode::TOO_MANY_REQUESTS
         {
-            let body = response.collect().await;
-            let body = body.unwrap().to_bytes();
+            let mut body = response.into_body();
+            let mut error_message = Vec::new();
+            let mut downloaded = 0;
+            while let Some(chunk) = body.frame().await {
+                if let Ok(frame) = chunk {
+                    if let Some(data) = frame.data_ref() {
+                        if downloaded + data.len() > MAX_ERROR_MESSAGE_SIZE {
+                            break;
+                        }
+                        error_message.extend_from_slice(data);
+                        downloaded += data.len();
+                    }
+                }
+            }
             return Err(DeboaError::Response {
                 status_code,
                 message: format!(
                     "Could not process request ({}): {}",
                     status_code,
-                    String::from_utf8_lossy(&body)
+                    String::from_utf8_lossy(&error_message)
                 ),
             });
         }

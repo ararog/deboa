@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use bytes::Bytes;
 use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
+use http::version::Version;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
 use tokio_native_tls::native_tls::{Certificate, Identity, TlsConnector};
@@ -24,6 +25,11 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
     #[inline]
     fn url(&self) -> &Url {
         &self.url
+    }
+
+    #[inline]
+    fn protocol(&self) -> Version {
+        Version::HTTP_11
     }
 
     async fn connect(

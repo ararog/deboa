@@ -1,7 +1,7 @@
 use std::fs::write;
 use std::{fmt::Debug, sync::Arc};
 
-use http::header;
+use http::{header, HeaderMap};
 use http_body_util::{BodyExt, Either, Full};
 use hyper::body::{Bytes, Incoming};
 use serde::Deserialize;
@@ -41,6 +41,40 @@ impl IntoBody for Bytes {
 impl IntoBody for Full<Bytes> {
     fn into_body(self) -> Either<Incoming, Full<Bytes>> {
         Either::Right(self)
+    }
+}
+
+pub struct DeboaResponseBuilder {
+    url: Url,
+    status: http::StatusCode,
+    headers: Arc<http::HeaderMap>,
+    body: Either<Incoming, Full<Bytes>>,
+} 
+
+impl DeboaResponseBuilder {
+    
+    pub fn status(mut self, status: http::StatusCode) -> Self {
+        self.status = status;
+        self
+    }
+
+    pub fn headers(mut self, headers: http::HeaderMap) -> Self {
+        self.headers = headers.into();
+        self
+    }
+
+    pub fn body<B: IntoBody>(mut self, body: B) -> Self {
+        self.body = body.into_body();
+        self
+    }
+
+    pub fn build(self) -> DeboaResponse {
+        DeboaResponse {
+            url: self.url,
+            status: self.status,
+            headers: self.headers,
+            body: self.body,
+        }
     }
 }
 
@@ -103,6 +137,16 @@ impl DeboaResponse {
         }
     }
 
+    #[inline]
+    pub fn builder(url: Url) -> DeboaResponseBuilder {
+        DeboaResponseBuilder {
+            url,
+            status: http::StatusCode::OK,
+            headers: HeaderMap::new().into(),
+            body: Either::Right(Full::new(Bytes::new())),
+        }
+    }
+
     /// Allow get url at any time.
     ///
     /// # Returns
@@ -125,6 +169,17 @@ impl DeboaResponse {
         self.status
     }
 
+    /// Allow get mutable status code at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut http::StatusCode` - The status code of the response.
+    ///
+    #[inline]
+    pub fn status_mut(&mut self) -> &mut http::StatusCode {
+        &mut self.status
+    }
+
     /// Allow get headers at any time.
     ///
     /// # Returns
@@ -134,6 +189,17 @@ impl DeboaResponse {
     #[inline]
     pub fn headers(&self) -> &http::HeaderMap {
         &self.headers
+    }
+
+    /// Allow get mutable headers at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Arc<http::HeaderMap>` - The headers of the response.
+    ///
+    #[inline]
+    pub fn headers_mut(&mut self) -> &mut Arc<http::HeaderMap> {
+        &mut self.headers
     }
 
     /// Retrieves cookies from response headers. If cookies are not found, returns None.

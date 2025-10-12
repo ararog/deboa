@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use bytes::Bytes;
 use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
+use http::version::Version;
 use smol::net::TcpStream;
 use smol_hyper::rt::FuturesIo;
 use url::Url;
@@ -22,6 +23,11 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
     #[inline]
     fn url(&self) -> &Url {
         &self.url
+    }
+
+    #[inline]
+    fn protocol(&self) -> Version {
+        Version::HTTP_11
     }
 
     async fn connect(
