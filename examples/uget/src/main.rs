@@ -254,9 +254,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     };
 
     let request = if let Some(body) = arg_body {
-        request
-            .header(header::CONTENT_LENGTH, &body.len().to_string())
-            .text(&body)
+        request.text(&body)
     } else if let Some(fields) = arg_fields {
         let mut form = EncodedForm::builder();
         for field in fields {
@@ -326,47 +324,12 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
 
     let mut downloaded = 0u64;
 
-    let content_type = headers.get(header::CONTENT_TYPE);
-    if content_type.is_none() {
-        return Err(DeboaError::ProcessResponse {
-            message: "Content-Type header is missing".to_string(),
-        });
-    }
+    let content_type = response.content_type()?;
 
-    let content_type = content_type.unwrap().to_str();
-    if let Err(e) = content_type {
-        return Err(DeboaError::ProcessResponse {
-            message: format!("Failed to read content-type: {}", e),
-        });
-    }
-    let content_type = content_type.unwrap();
-
-    let content_length = headers.get(header::CONTENT_LENGTH);
-
-    if content_length.is_none() {
-        return Err(DeboaError::ProcessResponse {
-            message: "Content-Length header is missing".to_string(),
-        });
-    }
-
-    let total_size = content_length.unwrap().to_str();
-    if let Err(e) = total_size {
-        return Err(DeboaError::ProcessResponse {
-            message: format!("Failed to read content-length: {}", e),
-        });
-    }
-
-    let total_size = total_size.unwrap().parse::<u64>();
-    if let Err(e) = total_size {
-        return Err(DeboaError::ProcessResponse {
-            message: format!("Failed to parse content-length: {}", e),
-        });
-    }
-
-    let total_size = total_size.unwrap();
+    let content_length = response.content_length()?;
 
     let mut pb = if arg_bar.unwrap_or(true) {
-       let pb = ProgressBar::new(total_size);
+       let pb = ProgressBar::new(content_length);
         pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
           .unwrap()
           .with_key("eta", |state: &ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
@@ -395,7 +358,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
                 if let Ok(frame) = frame {
                     let data = frame.data_ref();
                     if let Some(data) = data {
-                        let new = min(downloaded + data.len() as u64, total_size);
+                        let new = min(downloaded + data.len() as u64, content_length);
                         downloaded = new;
                         if let Some(pb) = &mut pb {
                             pb.set_position(new);
@@ -418,7 +381,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         }
     } else {
         let mut stdout = stdout();
-        if total_size < 20000 {
+        if content_length < 20000 {
             let is_json = content_type.to_lowercase().contains("application/json");
             let content = response.text().await?;
             if stdout.is_terminal() {
@@ -441,7 +404,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
                 if let Ok(frame) = frame {
                     let data = frame.data_ref();
                     if let Some(data) = data {
-                        let new = min(downloaded + data.len() as u64, total_size);
+                        let new = min(downloaded + data.len() as u64, content_length);
                         downloaded = new;
                         if ! stdout.is_terminal() {
                             if let Some(pb) = &mut pb {
