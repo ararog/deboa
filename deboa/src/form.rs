@@ -145,7 +145,7 @@ impl MultiPartForm {
     ///
     /// * `&String` - The boundary.
     ///
-    fn boundary(&self) -> &String {
+    pub fn boundary(&self) -> &String {
         &self.boundary
     }
 }
@@ -192,7 +192,9 @@ impl DeboaForm for MultiPartForm {
                 form.push_str("\r\n");
                 form.push_str("\r\n");
                 form.push_str(value);
+                form.push_str("\r\n");
             }
+            
             form.push_str(boundary);
 
             if key != self.fields.last().unwrap().0 {
