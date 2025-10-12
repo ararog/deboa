@@ -648,7 +648,6 @@ impl DeboaRequest {
         &self.headers
     }
 
-
     /// Return mutable headers
     ///
     /// # Returns
@@ -704,9 +703,7 @@ impl DeboaRequest {
     ///
     pub fn add_bearer_auth(&mut self, token: &str) -> &mut Self {
         let auth = format!("Bearer {token}");
-        if !self.has_header(&header::AUTHORIZATION) {
-            self.add_header(header::AUTHORIZATION, &auth);
-        }
+        self.add_header(header::AUTHORIZATION, &auth);
         self
     }
 
@@ -726,9 +723,7 @@ impl DeboaRequest {
             "Basic {}",
             STANDARD.encode(format!("{username}:{password}"))
         );
-        if !self.has_header(&header::AUTHORIZATION) {
-            self.add_header(header::AUTHORIZATION, &auth);
-        }
+        self.add_header(header::AUTHORIZATION, &auth);
         self
     }
 
@@ -827,7 +822,7 @@ impl DeboaRequest {
             Form::MultiPartForm(form) => (form.content_type(), form.build()),
         };
         self.add_header(header::CONTENT_TYPE, &content_type);
-        self.body = body.as_bytes().into();
+        self.set_raw_body(body.as_bytes());
         self
     }
 
@@ -842,7 +837,7 @@ impl DeboaRequest {
     /// * `&mut Self` - The request.
     ///
     pub fn set_text(&mut self, text: String) -> &mut Self {
-        self.body = text.as_bytes().into();
+        self.set_raw_body(text.as_bytes());
         self
     }
 
@@ -857,6 +852,7 @@ impl DeboaRequest {
     /// * `&mut Self` - The request.
     ///
     pub fn set_raw_body(&mut self, body: &[u8]) -> &mut Self {
+        self.add_header(header::CONTENT_LENGTH, &body.len().to_string());
         self.body = body.into();
         self
     }
@@ -889,7 +885,8 @@ impl DeboaRequest {
         body: B,
     ) -> Result<&mut Self> {
         body_type.register_content_type(self);
-        self.body = body_type.serialize(body)?.into();
+        let body = body_type.serialize(body)?;
+        self.set_raw_body(&body);
         Ok(self)
     }
 }
