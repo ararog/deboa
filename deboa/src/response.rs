@@ -1,7 +1,7 @@
 use std::fs::write;
 use std::{fmt::Debug, sync::Arc};
 
-use http::{header, HeaderMap};
+use http::{header, HeaderMap, HeaderName};
 use http_body_util::{BodyExt, Either, Full};
 use hyper::body::{Bytes, Incoming};
 use serde::Deserialize;
@@ -202,6 +202,66 @@ impl DeboaResponse {
         &mut self.headers
     }
 
+    /// Allow get header value at any time.
+    /// It will return an error if the Content-Type header is missing or
+    /// has an invalid value.
+    /// 
+    /// # Arguments
+    ///
+    /// * `header` - The header name.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<String>` - The header value.
+    ///
+    #[inline]
+    fn header_value(&self, header: HeaderName) -> Result<String> {
+        let header_name = header.as_str();
+        let header_value = self.headers.get(header_name);
+        if header_value.is_none() {
+            return Err(DeboaError::InvalidHeader { message: "Header is missing".to_string()});
+        }
+        let header_value = header_value.unwrap();
+        let header_value = header_value.to_str();
+        if let Err(e) = header_value {
+            return Err(DeboaError::InvalidHeader { message: format!("Failed to read {}:: {}", header_name, e) });
+        }
+        Ok(header_value.unwrap().to_string())
+    }
+
+    /// Allow get the length of the response body.
+    /// It will return an error if the Content-Length header is missing or
+    /// has an invalid value or if it fails to parse the value.
+    /// 
+    /// # Returns
+    ///
+    /// * `Result<u64>` - The length of the response body.
+    ///
+    #[inline]
+    pub fn content_length(&self) -> Result<u64> {
+        let header = self.header_value(header::CONTENT_LENGTH)?;
+        let header = header.parse::<u64>();
+        if let Err(e) = header {
+            return Err(DeboaError::InvalidHeader { message: format!("Failed to parse content-length: {}", e) });
+        }
+        
+        Ok(header.unwrap())
+    }
+
+    /// Allow get the content type of the response body.
+    /// It will return an error if the Content-Type header is missing or
+    /// has an invalid value.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<String>` - The content type of the response body.
+    ///
+    #[inline]
+    pub fn content_type(&self) -> Result<String> {
+        let header = self.header_value(header::CONTENT_TYPE)?;
+        Ok(header)
+    }
+
     /// Retrieves cookies from response headers. If cookies are not found, returns None.
     /// Please note that this method will parse the cookies from the response headers.
     ///
@@ -235,6 +295,7 @@ impl DeboaResponse {
     }
 
     /// Returns the response body as a vector of bytes, consuming body.
+    /// Useful for small responses. For larger responses, consider using `stream`.
     ///
     /// # Returns
     ///
@@ -264,6 +325,7 @@ impl DeboaResponse {
     }
 
     /// Returns the response body as a deserialized type, consuming body.
+    /// Useful for small responses. For larger responses, consider using `stream`.
     ///
     /// # Arguments
     ///
@@ -283,6 +345,7 @@ impl DeboaResponse {
     }
 
     /// Returns the response body as a string, consuming body.
+    /// Useful for small responses. For larger responses, consider using `stream`.
     ///
     /// # Returns
     ///
@@ -305,6 +368,8 @@ impl DeboaResponse {
     }
 
     /// Save response body to file, consuming body.
+    /// Useful for small responses. For larger responses, consider using
+    /// ToFile trait available on stream feature of deboa-extras crate.
     ///
     /// # Arguments
     ///
