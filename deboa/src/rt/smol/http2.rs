@@ -1,9 +1,11 @@
+use std::sync::Arc;
+
 use async_native_tls::{Identity, TlsConnector};
 use async_trait::async_trait;
 use bytes::Bytes;
+use http::version::Version;
 use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
-use http::version::Version;
 use smol::net::TcpStream;
 use smol_hyper::rt::FuturesIo;
 use url::Url;
@@ -31,7 +33,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
     }
 
     async fn connect(
-        url: &Url,
+        url: Arc<Url>,
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
         let host = url.host().expect("uri has no host");
@@ -81,12 +83,9 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
                                 message: e.to_string(),
                             });
                         }
-                        TlsConnector::builder()
-                            .identity(identity.unwrap())
-                            .build()
-                            .unwrap()
+                        TlsConnector::new().identity(identity.unwrap())
                     } else {
-                        TlsConnector::builder().build().unwrap()
+                        TlsConnector::new()
                     };
                     let stream = connector.connect(&host.to_string(), stream).await;
 

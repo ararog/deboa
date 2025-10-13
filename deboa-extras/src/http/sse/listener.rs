@@ -21,7 +21,8 @@ impl EventListener for DeboaResponse {
         let header = self.headers().get(http::header::CONTENT_TYPE);
         if let Some(header) = header {
             if header == mime_typed::TextEventStream::MIME_STR {
-                while let Some(frame) = self.stream().frame().await {
+                let mut stream = self.stream();
+                while let Some(frame) = stream.frame().await {
                     let frame = frame.unwrap();
                     if let Some(event) = frame.data_ref() {
                         on_event(String::from_utf8_lossy(event).as_ref())?;

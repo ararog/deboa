@@ -8,7 +8,7 @@ use deboa::{
     request::DeboaRequest,
     Deboa, Result,
 };
-use http::{header, HeaderName, Method};
+use http::{HeaderName, Method};
 use http_body_util::BodyExt;
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use std::fs::File;

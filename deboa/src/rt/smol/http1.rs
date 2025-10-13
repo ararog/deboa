@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use async_native_tls::{Identity, TlsConnector};
 use async_trait::async_trait;
 use bytes::Bytes;
@@ -31,7 +33,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
     }
 
     async fn connect(
-        url: &Url,
+        url: Arc<Url>,
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
         let host = url.host().expect("uri has no host");
@@ -111,7 +113,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         let (sender, conn) = result.unwrap();
 
         smol::spawn(async move {
-            match conn.await {
+            match conn.with_upgrades().await {
                 Ok(_) => (),
                 Err(_err) => {}
             };

@@ -45,8 +45,9 @@ impl ToFile for DeboaResponse {
             return Err(deboa::errors::DeboaError::Io { message: err.to_string() });
         }
 
-        let mut file = file.unwrap(); 
-        while let Some(frame) = self.stream().frame().await {
+        let mut file = file.unwrap();
+        let mut stream = self.stream();
+        while let Some(frame) = stream.frame().await {
             let frame = frame.unwrap();
             if let Some(chunk) = frame.data_ref() {
                 if let Some(ref on_progress) = on_progress {

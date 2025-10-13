@@ -1,4 +1,5 @@
 use std::fs::write;
+use std::marker::PhantomData;
 use std::{fmt::Debug, sync::Arc};
 
 use http::{header, HeaderMap, HeaderName};
@@ -9,6 +10,56 @@ use serde::Deserialize;
 use crate::cookie::DeboaCookie;
 use crate::{client::serde::ResponseBody, errors::DeboaError, Result};
 use url::Url;
+
+pub enum DeboaBody {
+    Incoming(Incoming),
+    Full(Full<Bytes>),
+}
+
+pub trait ResponseState {}
+impl ResponseState for IncomingResponse {}
+impl ResponseState for UpgradeResponse {}
+
+pub struct BaseResponse<S: ResponseState> {
+    state: Box<S>,
+    marker: PhantomData<S>
+} 
+
+pub struct IncomingResponse {
+    url: Url,
+    status: http::StatusCode,
+    headers: Arc<http::HeaderMap>,
+    body: DeboaBody,
+}
+
+pub struct UpgradeResponse {
+    stream: String,
+}
+
+impl BaseResponse<IncomingResponse> {
+
+    fn url(&self) -> &Url {
+        &self.state.url
+    }
+
+    fn status(&self) -> http::StatusCode {
+        self.state.status
+    }
+
+    fn headers(&self) -> &http::HeaderMap {
+        &self.state.headers
+    }
+
+    fn body(&self) -> &DeboaBody {
+        &self.state.body
+    }
+}
+
+impl BaseResponse<UpgradeResponse> {
+    fn stream(&self) -> &String {
+        &self.state.stream
+    }
+}
 
 pub trait IntoBody {
     fn into_body(self) -> Either<Incoming, Full<Bytes>>;
@@ -49,10 +100,9 @@ pub struct DeboaResponseBuilder {
     status: http::StatusCode,
     headers: Arc<http::HeaderMap>,
     body: Either<Incoming, Full<Bytes>>,
-} 
+}
 
 impl DeboaResponseBuilder {
-    
     pub fn status(mut self, status: http::StatusCode) -> Self {
         self.status = status;
         self
@@ -205,7 +255,7 @@ impl DeboaResponse {
     /// Allow get header value at any time.
     /// It will return an error if the Content-Type header is missing or
     /// has an invalid value.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `header` - The header name.
@@ -219,12 +269,16 @@ impl DeboaResponse {
         let header_name = header.as_str();
         let header_value = self.headers.get(header_name);
         if header_value.is_none() {
-            return Err(DeboaError::InvalidHeader { message: "Header is missing".to_string()});
+            return Err(DeboaError::InvalidHeader {
+                message: "Header is missing".to_string(),
+            });
         }
         let header_value = header_value.unwrap();
         let header_value = header_value.to_str();
         if let Err(e) = header_value {
-            return Err(DeboaError::InvalidHeader { message: format!("Failed to read {}:: {}", header_name, e) });
+            return Err(DeboaError::InvalidHeader {
+                message: format!("Failed to read {}:: {}", header_name, e),
+            });
         }
         Ok(header_value.unwrap().to_string())
     }
@@ -232,7 +286,7 @@ impl DeboaResponse {
     /// Allow get the length of the response body.
     /// It will return an error if the Content-Length header is missing or
     /// has an invalid value or if it fails to parse the value.
-    /// 
+    ///
     /// # Returns
     ///
     /// * `Result<u64>` - The length of the response body.
@@ -242,9 +296,11 @@ impl DeboaResponse {
         let header = self.header_value(header::CONTENT_LENGTH)?;
         let header = header.parse::<u64>();
         if let Err(e) = header {
-            return Err(DeboaError::InvalidHeader { message: format!("Failed to parse content-length: {}", e) });
+            return Err(DeboaError::InvalidHeader {
+                message: format!("Failed to parse content-length: {}", e),
+            });
         }
-        
+
         Ok(header.unwrap())
     }
 
@@ -292,6 +348,17 @@ impl DeboaResponse {
         } else {
             Ok(Some(cookies))
         }
+    }
+
+    /// Allow get stream body at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `Either<Incoming, Full<Bytes>>` - The stream body of the response.
+    ///
+    #[inline]
+    pub fn stream(&mut self) -> &mut Either<Incoming, Full<Bytes>> {
+        &mut self.body
     }
 
     /// Returns the response body as a vector of bytes, consuming body.
@@ -353,18 +420,8 @@ impl DeboaResponse {
     ///
     #[inline]
     pub async fn text(&mut self) -> Result<String> {
-        Ok(String::from_utf8_lossy(&self.raw_body().await).to_string())
-    }
-
-    #[inline]
-    /// Allow get stream body at any time.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Either<Incoming, Full<Bytes>>` - The stream body of the response.
-    ///
-    pub fn stream(&mut self) -> &mut Either<Incoming, Full<Bytes>> {
-        &mut self.body
+        let body = self.raw_body().await;
+        Ok(String::from_utf8_lossy(&body).to_string())
     }
 
     /// Save response body to file, consuming body.
@@ -380,7 +437,8 @@ impl DeboaResponse {
     /// * `Result<()>` - The result or error.
     ///
     pub async fn to_file(&mut self, path: &str) -> Result<()> {
-        let result = write(path, &*self.raw_body().await);
+        let body = self.raw_body().await;
+        let result = write(path, body);
         if let Err(e) = result {
             return Err(DeboaError::Io {
                 message: e.to_string(),
