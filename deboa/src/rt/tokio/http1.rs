@@ -39,7 +39,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         let host = url.host().unwrap_or(Host::Domain("localhost"));
         let stream = {
             match url.scheme() {
-                "http" => {
+                "ws" | "http" => {
                     let stream = {
                         let port = url.port().unwrap_or(80);
                         TcpStream::connect((host.to_string(), port)).await
@@ -54,7 +54,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
 
                     TokioStream::Plain(stream.unwrap())
                 }
-                "https" => {
+                "wss" | "https" => {
                     let stream = {
                         let port = url.port().unwrap_or(443);
                         TcpStream::connect((host.to_string(), port)).await

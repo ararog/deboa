@@ -6,12 +6,12 @@ pub struct SSE {
     response: DeboaResponse,
 }
 
-pub trait IntoSSE {
-    fn into_sse(self) -> SSE;
+pub trait IntoStream {
+    fn into_stream(self) -> SSE;
 }
 
-impl IntoSSE for DeboaResponse {
-    fn into_sse(self) -> SSE {
+impl IntoStream for DeboaResponse {
+    fn into_stream(self) -> SSE {
         SSE { response: self }
     }
 }

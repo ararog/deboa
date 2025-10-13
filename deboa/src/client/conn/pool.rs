@@ -9,7 +9,7 @@ use crate::client::conn::http::Http2Request;
 
 use crate::{
     cert::ClientCert,
-    client::conn::http::{BaseHttpConnection, DeboaConnection},
+    client::conn::http::{BaseHttpConnection, DeboaConnection, DeboaHttpConnection},
     HttpVersion, Result,
 };
 
@@ -87,16 +87,14 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         protocol: &HttpVersion,
         client_cert: &Option<ClientCert>,
     ) -> Result<&mut DeboaConnection> {
-        use crate::client::conn::http::DeboaHttpConnection;
-
         let mut host = url.host_str().unwrap().to_string();
         if url.port().is_some() {
             let port = url.port().unwrap();
             host = format!("{}:{}", host, port);
         } else {
             match url.scheme() {
-                "http" => host = format!("{}:80", host),
-                "https" => host = format!("{}:443", host),
+                "http" | "ws" => host = format!("{}:80", host),
+                "https" | "wss" => host = format!("{}:443", host),
                 _ => panic!("Unsupported scheme: {}", url.scheme()),
             }
         }
