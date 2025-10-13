@@ -1,27 +1,30 @@
-use deboa::{async_trait, response::DeboaResponse, Result};
+use deboa::{response::DeboaResponse, Result};
 use http_body_util::BodyExt;
 use mime_typed::MimeStrExt;
 
-#[async_trait]
-pub trait EventListener : Send + Sync + 'static {
-    async fn poll_event<F>(self: Box<Self>, _on_event: F) -> Result<()>
-    where
-        F: FnMut(&str) -> Result<()> + Send + Sync + 'static,
-    {
-        unimplemented!()
+pub struct SSE {
+    response: DeboaResponse,
+}
+
+pub trait IntoSSE {
+    fn into_sse(self) -> SSE;
+}
+
+impl IntoSSE for DeboaResponse {
+    fn into_sse(self) -> SSE {
+        SSE { response: self }
     }
 }
 
-#[async_trait]
-impl EventListener for DeboaResponse {
-    async fn poll_event<F>(self: Box<Self>, mut on_event: F) -> Result<()>
+impl SSE {
+    pub async fn poll_event<F>(self, mut on_event: F) -> Result<()>
     where
         F: FnMut(&str) -> Result<()> + Send + Sync + 'static,
     {
-        let header = self.headers().get(http::header::CONTENT_TYPE);
+        let header = self.response.headers().get(http::header::CONTENT_TYPE);
         if let Some(header) = header {
             if header == mime_typed::TextEventStream::MIME_STR {
-                let mut stream = self.stream();
+                let mut stream = self.response.stream();
                 while let Some(frame) = stream.frame().await {
                     let frame = frame.unwrap();
                     if let Some(event) = frame.data_ref() {

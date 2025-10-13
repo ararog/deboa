@@ -82,11 +82,13 @@ async fn test_catcher_early_response() {
         .expect_on_request()
         .times(1)
         .returning(move |_| {
-            Ok(Some(DeboaResponse::builder(url.clone())
-                .status(StatusCode::OK)
-                .headers(headers.clone())
-                .body(&b"test"[..])
-                .build()))
+            Ok(Some(
+                DeboaResponse::builder(url.clone())
+                    .status(StatusCode::OK)
+                    .headers(headers.clone())
+                    .body(&b"test"[..])
+                    .build(),
+            ))
         });
 
     catcher_mock
