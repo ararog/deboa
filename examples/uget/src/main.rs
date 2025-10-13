@@ -146,7 +146,7 @@ struct Args {
         long,
         required = false,
         num_args = 0..=4,
-        require_equals = true,        
+        require_equals = true,
         default_missing_value = "true",
         help = "Show progress bar."
     )]
@@ -295,9 +295,17 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
 
     if let Some(print) = arg_print.as_ref() {
         if print == "req" || print == "all" {
-            println!("\n\n{} {}", request.method().to_string().blue(), request.url().to_string().white().bold());
+            println!(
+                "\n\n{} {}",
+                request.method().to_string().blue(),
+                request.url().to_string().white().bold()
+            );
             for (key, value) in request.headers() {
-                println!("{}: {}", key.to_string().cyan(), value.to_str().unwrap().yellow());
+                println!(
+                    "{}: {}",
+                    key.to_string().cyan(),
+                    value.to_str().unwrap().yellow()
+                );
             }
         }
     }
@@ -312,12 +320,19 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
                 "\n\n{} {} {}",
                 client.protocol().to_string().blue(),
                 status.as_str().to_string().white().bold(),
-                status.canonical_reason()
+                status
+                    .canonical_reason()
                     .unwrap_or("<unknown status code>")
-                    .to_string().white().bold(),
+                    .to_string()
+                    .white()
+                    .bold(),
             );
             for (key, value) in headers.iter() {
-                println!("{}: {}", key.to_string().cyan(), value.to_str().unwrap().yellow());
+                println!(
+                    "{}: {}",
+                    key.to_string().cyan(),
+                    value.to_str().unwrap().yellow()
+                );
             }
         }
     }
@@ -329,17 +344,16 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let content_length = response.content_length()?;
 
     let mut pb = if arg_bar.unwrap_or(true) {
-       let pb = ProgressBar::new(content_length);
+        let pb = ProgressBar::new(content_length);
         pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
           .unwrap()
           .with_key("eta", |state: &ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
           .progress_chars("#>-"));
         Some(pb)
-    }
-    else {
+    } else {
         None
     };
-    
+
     if let Some(mut save) = arg_save {
         if save == "none" {
             save = response
@@ -406,7 +420,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
                     if let Some(data) = data {
                         let new = min(downloaded + data.len() as u64, content_length);
                         downloaded = new;
-                        if ! stdout.is_terminal() {
+                        if !stdout.is_terminal() {
                             if let Some(pb) = &mut pb {
                                 pb.set_position(new);
                             }
