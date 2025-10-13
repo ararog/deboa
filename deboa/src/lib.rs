@@ -83,7 +83,7 @@ use crate::catcher::DeboaCatcher;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
 use crate::errors::DeboaError;
 use crate::request::{DeboaRequest, IntoRequest};
-use crate::response::DeboaResponse;
+use crate::response::{DeboaResponse, IntoBody};
 use crate::url::IntoUrl;
 
 pub use async_trait::async_trait;
@@ -604,14 +604,8 @@ impl Deboa {
     where
         U: IntoUrl,
     {
-        let (parts, body) = response.into_parts();
-
-        let response = DeboaResponse::builder(url.into_url()?)
-            .status(parts.status)
-            .headers(parts.headers)
-            .body(body)
-            .build();
-
+        let response = response.map(|body| body.into_body());
+        let response = DeboaResponse::new(url.into_url()?, response);
         Ok(response)
     }
 }

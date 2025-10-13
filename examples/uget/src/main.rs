@@ -353,7 +353,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
 
         let file = File::create(save);
         if let Ok(mut file) = file {
-            let stream = response.stream();
+            let mut stream = response.stream();
             while let Some(frame) = stream.frame().await {
                 if let Ok(frame) = frame {
                     let data = frame.data_ref();
@@ -399,7 +399,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
                 println!("\n{}", content);
             }
         } else {
-            let stream = response.stream();
+            let mut stream = response.stream();
             while let Some(frame) = stream.frame().await {
                 if let Ok(frame) = frame {
                     let data = frame.data_ref();

@@ -24,7 +24,7 @@ pub trait ToFile {
     /// let response = client.get("https://example.com/file").await?;
     /// response.to_file("file.txt", None).await?;
     /// ```
-    async fn to_file<P, EV>(&mut self, _path: P, _on_progress: Option<EV>) -> Result<()>
+    async fn to_file<P, EV>(self: Box<Self>, _path: P, _on_progress: Option<EV>) -> Result<()>
     where
         P: AsRef<Path> + Send,
         EV: Fn(u64) + Send + Sync + 'static,
@@ -35,7 +35,7 @@ pub trait ToFile {
 
 #[deboa::async_trait]
 impl ToFile for DeboaResponse {
-    async fn to_file<P, EV>(&mut self, path: P, on_progress: Option<EV>) -> Result<()>
+    async fn to_file<P, EV>(self: Box<DeboaResponse>, path: P, on_progress: Option<EV>) -> Result<()>
     where
         P: AsRef<Path> + Send,
         EV: Fn(u64) + Send + Sync + 'static,

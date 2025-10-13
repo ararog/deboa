@@ -21,12 +21,11 @@ async fn test_set_xml() -> Result<()> {
 async fn test_xml_response() -> Result<()> {
     let data = sample_post();
 
-    let mut response = DeboaResponse::new(
-        fake_url(),
-        http::StatusCode::OK,
-        http::HeaderMap::new(),
-        &XML_POST[..],
-    );
+    let mut response = DeboaResponse::builder(fake_url())
+        .status(http::StatusCode::OK)
+        .header(http::header::CONTENT_TYPE, "application/xml")
+        .body(&XML_POST[..])
+        .build();
 
     let response: Post = response.body_as(XmlBody).await?;
 

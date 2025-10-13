@@ -1,8 +1,7 @@
 use std::fs::write;
-use std::marker::PhantomData;
-use std::{fmt::Debug, sync::Arc};
+use std::{fmt::Debug};
 
-use http::{header, HeaderMap, HeaderName};
+use http::{header, HeaderName, HeaderValue, Response};
 use http_body_util::{BodyExt, Either, Full};
 use hyper::body::{Bytes, Incoming};
 use serde::Deserialize;
@@ -11,119 +10,75 @@ use crate::cookie::DeboaCookie;
 use crate::{client::serde::ResponseBody, errors::DeboaError, Result};
 use url::Url;
 
-pub enum DeboaBody {
-    Incoming(Incoming),
-    Full(Full<Bytes>),
-}
-
-pub trait ResponseState {}
-impl ResponseState for IncomingResponse {}
-impl ResponseState for UpgradeResponse {}
-
-pub struct BaseResponse<S: ResponseState> {
-    state: Box<S>,
-    marker: PhantomData<S>
-} 
-
-pub struct IncomingResponse {
-    url: Url,
-    status: http::StatusCode,
-    headers: Arc<http::HeaderMap>,
-    body: DeboaBody,
-}
-
-pub struct UpgradeResponse {
-    stream: String,
-}
-
-impl BaseResponse<IncomingResponse> {
-
-    fn url(&self) -> &Url {
-        &self.state.url
-    }
-
-    fn status(&self) -> http::StatusCode {
-        self.state.status
-    }
-
-    fn headers(&self) -> &http::HeaderMap {
-        &self.state.headers
-    }
-
-    fn body(&self) -> &DeboaBody {
-        &self.state.body
-    }
-}
-
-impl BaseResponse<UpgradeResponse> {
-    fn stream(&self) -> &String {
-        &self.state.stream
-    }
-}
+pub type DeboaBody = Either<Incoming, Full<Bytes>>;
 
 pub trait IntoBody {
-    fn into_body(self) -> Either<Incoming, Full<Bytes>>;
+    fn into_body(self) -> DeboaBody;
 }
 
 impl IntoBody for Incoming {
-    fn into_body(self) -> Either<Incoming, Full<Bytes>> {
-        Either::Left(self)
+    fn into_body(self) -> DeboaBody {
+        DeboaBody::Left(self)
     }
 }
 
 impl IntoBody for &[u8] {
-    fn into_body(self) -> Either<Incoming, Full<Bytes>> {
-        Either::Right(Full::<Bytes>::from(self.to_vec()))
+    fn into_body(self) -> DeboaBody {
+        DeboaBody::Right(Full::<Bytes>::from(self.to_vec()))
     }
 }
 
 impl IntoBody for Vec<u8> {
-    fn into_body(self) -> Either<Incoming, Full<Bytes>> {
-        Either::Right(Full::<Bytes>::from(self))
+    fn into_body(self) -> DeboaBody {
+        DeboaBody::Right(Full::<Bytes>::from(self))
     }
 }
 
 impl IntoBody for Bytes {
-    fn into_body(self) -> Either<Incoming, Full<Bytes>> {
-        Either::Right(Full::<Bytes>::new(self))
+    fn into_body(self) -> DeboaBody {
+        DeboaBody::Right(Full::<Bytes>::new(self))
     }
 }
 
 impl IntoBody for Full<Bytes> {
-    fn into_body(self) -> Either<Incoming, Full<Bytes>> {
-        Either::Right(self)
+    fn into_body(self) -> DeboaBody {
+        DeboaBody::Right(self)
     }
 }
 
 pub struct DeboaResponseBuilder {
     url: Url,
-    status: http::StatusCode,
-    headers: Arc<http::HeaderMap>,
-    body: Either<Incoming, Full<Bytes>>,
+    inner: Response<DeboaBody>,
 }
 
 impl DeboaResponseBuilder {
     pub fn status(mut self, status: http::StatusCode) -> Self {
-        self.status = status;
+        *self.inner.status_mut() = status;
         self
     }
 
     pub fn headers(mut self, headers: http::HeaderMap) -> Self {
-        self.headers = headers.into();
+        *self.inner.headers_mut() = headers;
+        self
+    }
+
+    pub fn header(mut self, name: HeaderName, value: &str) -> Self {
+        let header_value = HeaderValue::from_str(value);
+        if let Ok(header_value) = header_value {
+            self.inner.headers_mut().insert(name, header_value);
+        }
         self
     }
 
     pub fn body<B: IntoBody>(mut self, body: B) -> Self {
-        self.body = body.into_body();
+        *self.inner.body_mut() = body.into_body();
         self
     }
 
     pub fn build(self) -> DeboaResponse {
         DeboaResponse {
             url: self.url,
-            status: self.status,
-            headers: self.headers,
-            body: self.body,
+            inner: self.inner,
         }
     }
 }
@@ -137,18 +92,16 @@ impl DeboaResponseBuilder {
 /// * `body` - The body of the response.
 pub struct DeboaResponse {
     url: Url,
-    status: http::StatusCode,
-    headers: Arc<http::HeaderMap>,
-    body: Either<Incoming, Full<Bytes>>,
+    inner: Response<DeboaBody>,
 }
 
 impl Debug for DeboaResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("DeboaResponse")
             .field("url", &self.url)
-            .field("status", &self.status)
-            .field("headers", &self.headers)
-            .field("body", &self.body)
+            .field("status", &self.inner.status())
+            .field("headers", &self.inner.headers())
+            .field("body", &self.inner.body())
             .finish()
     }
 }
@@ -171,29 +124,17 @@ impl DeboaResponse {
     /// # Arguments
     ///
     /// * `url` - The url of the response.
-    /// * `status` - The status code of the response.
-    /// * `headers` - The headers of the response.
-    /// * `body` - The body of the response.
+    /// * `inner` - The inner response.
     ///
-    pub fn new<B>(url: Url, status: http::StatusCode, headers: http::HeaderMap, body: B) -> Self
-    where
-        B: IntoBody,
-    {
-        Self {
-            url,
-            status,
-            headers: headers.into(),
-            body: body.into_body(),
-        }
+    pub fn new(url: Url, inner: Response<DeboaBody>) -> Self {
+        Self { url, inner }
     }
 
     #[inline]
     pub fn builder(url: Url) -> DeboaResponseBuilder {
         DeboaResponseBuilder {
             url,
-            status: http::StatusCode::OK,
-            headers: HeaderMap::new().into(),
-            body: Either::Right(Full::new(Bytes::new())),
+            inner: Response::new(DeboaBody::Right(Full::<Bytes>::from(Bytes::new()))),
         }
     }
 
@@ -216,7 +157,7 @@ impl DeboaResponse {
     ///
     #[inline]
     pub fn status(&self) -> http::StatusCode {
-        self.status
+        self.inner.status()
     }
 
     /// Allow get mutable status code at any time.
@@ -227,7 +168,7 @@ impl DeboaResponse {
     ///
     #[inline]
     pub fn status_mut(&mut self) -> &mut http::StatusCode {
-        &mut self.status
+        self.inner.status_mut()
     }
 
     /// Allow get headers at any time.
@@ -238,7 +179,7 @@ impl DeboaResponse {
     ///
     #[inline]
     pub fn headers(&self) -> &http::HeaderMap {
-        &self.headers
+        self.inner.headers()
     }
 
     /// Allow get mutable headers at any time.
@@ -248,8 +189,8 @@ impl DeboaResponse {
     /// * `&mut Arc<http::HeaderMap>` - The headers of the response.
     ///
     #[inline]
-    pub fn headers_mut(&mut self) -> &mut Arc<http::HeaderMap> {
-        &mut self.headers
+    pub fn headers_mut(&mut self) -> &mut http::HeaderMap {
+        self.inner.headers_mut()
     }
 
     /// Allow get header value at any time.
@@ -267,7 +208,7 @@ impl DeboaResponse {
     #[inline]
     fn header_value(&self, header: HeaderName) -> Result<String> {
         let header_name = header.as_str();
-        let header_value = self.headers.get(header_name);
+        let header_value = self.headers().get(header_name);
         if header_value.is_none() {
             return Err(DeboaError::InvalidHeader {
                 message: "Header is missing".to_string(),
@@ -327,7 +268,7 @@ impl DeboaResponse {
     ///
     #[inline]
     pub fn cookies(&self) -> Result<Option<Vec<DeboaCookie>>> {
-        let view = self.headers.get_all(header::SET_COOKIE);
+        let view = self.headers().get_all(header::SET_COOKIE);
         let cookies = view
             .into_iter()
             .map(|cookie| {
@@ -357,8 +298,8 @@ impl DeboaResponse {
     /// * `Either<Incoming, Full<Bytes>>` - The stream body of the response.
     ///
     #[inline]
-    pub fn stream(&mut self) -> &mut Either<Incoming, Full<Bytes>> {
-        &mut self.body
+    pub fn stream(self) -> Either<Incoming, Full<Bytes>> {
+        self.inner.into_body()
     }
 
     /// Returns the response body as a vector of bytes, consuming body.
@@ -371,7 +312,7 @@ impl DeboaResponse {
     #[inline]
     pub async fn raw_body(&mut self) -> Vec<u8> {
         let mut data = Vec::<u8>::new();
-        while let Some(chunk) = self.body.frame().await {
+        while let Some(chunk) = self.inner.body_mut().frame().await {
             let frame = chunk.unwrap();
             if let Some(bytes) = frame.data_ref() {
                 data.extend_from_slice(bytes);
@@ -388,7 +329,7 @@ impl DeboaResponse {
     ///
     #[inline]
     pub fn set_raw_body(&mut self, body: Bytes) {
-        self.body = Either::Right(Full::<Bytes>::from(body));
+        *self.inner.body_mut() = Either::Right(Full::<Bytes>::from(body));
     }
 
     /// Returns the response body as a deserialized type, consuming body.

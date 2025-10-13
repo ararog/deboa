@@ -4,7 +4,7 @@ use mime_typed::MimeStrExt;
 
 #[async_trait]
 pub trait EventListener : Send + Sync + 'static {
-    async fn poll_event<F>(&mut self, _on_event: F) -> Result<()>
+    async fn poll_event<F>(self: Box<Self>, _on_event: F) -> Result<()>
     where
         F: FnMut(&str) -> Result<()> + Send + Sync + 'static,
     {
@@ -14,7 +14,7 @@ pub trait EventListener : Send + Sync + 'static {
 
 #[async_trait]
 impl EventListener for DeboaResponse {
-    async fn poll_event<F>(&mut self, mut on_event: F) -> Result<()>
+    async fn poll_event<F>(self: Box<Self>, mut on_event: F) -> Result<()>
     where
         F: FnMut(&str) -> Result<()> + Send + Sync + 'static,
     {
