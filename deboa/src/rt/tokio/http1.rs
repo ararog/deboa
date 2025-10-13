@@ -130,7 +130,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         let (sender, conn) = result.unwrap();
 
         tokio::spawn(async move {
-            match conn.await {
+            match conn.with_upgrades().await {
                 Ok(_) => (),
                 Err(_err) => {}
             };

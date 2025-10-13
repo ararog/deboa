@@ -57,12 +57,17 @@ pub trait Fetch {
     ///
     /// * `Result<DeboaResponse>` - The response.
     ///
-    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse>;
+    async fn fetch<T>(&self, client: T) -> Result<DeboaResponse>
+    where
+        T: AsMut<Deboa> + Send;
 }
 
 #[async_trait]
 impl Fetch for &str {
-    async fn fetch<T: AsMut<Deboa> + Send>(&self, client: T) -> Result<DeboaResponse> {
+    async fn fetch<T>(&self, client: T) -> Result<DeboaResponse>
+    where
+        T: AsMut<Deboa> + Send
+    {
         DeboaRequest::get(*self)?.go(client).await
     }
 }

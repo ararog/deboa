@@ -742,6 +742,7 @@ dependencies = [
  "httpmock",
  "mime",
  "mime_typed",
+ "rand",
  "rmp-serde",
  "serde",
  "serde-xml-rust",
