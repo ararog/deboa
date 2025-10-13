@@ -296,17 +296,6 @@ impl DeboaResponse {
         }
     }
 
-    /// Allow get stream body at any time.
-    ///
-    /// # Returns
-    ///
-    /// * `Either<Incoming, Full<Bytes>>` - The stream body of the response.
-    ///
-    #[inline]
-    pub fn stream(self) -> Either<Incoming, Full<Bytes>> {
-        self.inner.into_body()
-    }
-
     /// Returns the response body as a vector of bytes, consuming body.
     /// Useful for small responses. For larger responses, consider using `stream`.
     ///
@@ -337,6 +326,17 @@ impl DeboaResponse {
         *self.inner.body_mut() = Either::Right(Full::<Bytes>::from(body));
     }
 
+    /// Allow get stream body at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `Either<Incoming, Full<Bytes>>` - The stream body of the response.
+    ///
+    #[inline]
+    pub fn stream(self) -> Either<Incoming, Full<Bytes>> {
+        self.inner.into_body()
+    }
+
     /// Returns the response body as a deserialized type, consuming body.
     /// Useful for small responses. For larger responses, consider using `stream`.
     ///
@@ -350,7 +350,7 @@ impl DeboaResponse {
     ///
     #[inline]
     pub async fn body_as<T: ResponseBody, B: for<'a> Deserialize<'a>>(
-        &mut self,
+        mut self,
         body_type: T,
     ) -> Result<B> {
         let result = body_type.deserialize::<B>(self.raw_body().await)?;
@@ -365,7 +365,7 @@ impl DeboaResponse {
     /// * `Result<String>` - The text body or error.
     ///
     #[inline]
-    pub async fn text(&mut self) -> Result<String> {
+    pub async fn text(mut self) -> Result<String> {
         let body = self.raw_body().await;
         Ok(String::from_utf8_lossy(&body).to_string())
     }
@@ -382,7 +382,7 @@ impl DeboaResponse {
     ///
     /// * `Result<()>` - The result or error.
     ///
-    pub async fn to_file(&mut self, path: &str) -> Result<()> {
+    pub async fn to_file(mut self, path: &str) -> Result<()> {
         let body = self.raw_body().await;
         let result = write(path, body);
         if let Err(e) = result {
@@ -394,7 +394,7 @@ impl DeboaResponse {
     }
 
     #[cfg(feature = "tokio-rt")]
-    pub async fn update(self) -> Result<hyper_util::rt::TokioIo<hyper::upgrade::Upgraded>> {
+    pub async fn upgrade(self) -> Result<hyper_util::rt::TokioIo<hyper::upgrade::Upgraded>> {
         let upgrade = on(self.inner).await;
         if let Err(e) = upgrade {
             return Err(DeboaError::Io {
@@ -405,7 +405,7 @@ impl DeboaResponse {
     }
 
     #[cfg(feature = "smol-rt")]
-    pub async fn update(self) -> Result<FuturesIo<hyper::upgrade::Upgraded>> {
+    pub async fn upgrade(self) -> Result<FuturesIo<hyper::upgrade::Upgraded>> {
         let upgrade = on(self.inner).await;
         if let Err(e) = upgrade {
             return Err(DeboaError::Io {

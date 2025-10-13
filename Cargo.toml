@@ -13,7 +13,7 @@ members = [
     "examples/simple", 
     "examples/uget", 
     "vamo", 
-    "vamo-macros", "examples/sse", 
+    "vamo-macros", "examples/sse", "examples/chat", 
 ]
 
 [profile.release]

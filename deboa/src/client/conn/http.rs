@@ -121,7 +121,9 @@ pub trait DeboaHttpConnection {
 
         let response = response.unwrap();
         let status_code = response.status();
-        if (!status_code.is_success() && !status_code.is_redirection())
+        if (!status_code.is_success()
+            && !status_code.is_informational()
+            && !status_code.is_redirection())
             || status_code == StatusCode::TOO_MANY_REQUESTS
         {
             let mut body = response.into_body();

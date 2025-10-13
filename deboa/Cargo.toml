@@ -13,7 +13,7 @@ publish = true
 rust-version = "1.64.0"
 
 [features]
-default = ["smol-rt"]
+default = ["tokio-rt"]
 
 # runtimes
 tokio-rt = ["http1", "http2", "dep:tokio", "dep:tokio-native-tls"]

@@ -51,4 +51,7 @@ pub enum DeboaError {
 
     #[error("Failed to write file: {message}")]
     Io { message: String },
+
+    #[error("Failed to handle websocket message: {message}")]
+    WebSocket { message: String },
 }

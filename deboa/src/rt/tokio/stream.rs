@@ -9,7 +9,6 @@ use tokio::{
     net::TcpStream,
 };
 
-#[allow(clippy::large_enum_variant)]
 pub enum TokioStream {
     /// A plain TCP connection.
     Plain(TcpStream),
