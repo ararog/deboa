@@ -194,7 +194,7 @@ impl DeboaForm for MultiPartForm {
                 form.push_str(value);
                 form.push_str("\r\n");
             }
-            
+
             form.push_str(boundary);
 
             if key != self.fields.last().unwrap().0 {

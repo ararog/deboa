@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use bytes::Bytes;
+use http::version::Version;
 use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
-use http::version::Version;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
 use tokio_native_tls::native_tls::{Certificate, Identity, TlsConnector};

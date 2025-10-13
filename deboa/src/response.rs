@@ -1,10 +1,15 @@
+use std::fmt::Debug;
 use std::fs::write;
-use std::{fmt::Debug};
 
 use http::{header, HeaderName, HeaderValue, Response};
 use http_body_util::{BodyExt, Either, Full};
 use hyper::body::{Bytes, Incoming};
+use hyper::upgrade::on;
+#[cfg(feature = "tokio-rt")]
+use hyper_util::rt::TokioIo;
 use serde::Deserialize;
+#[cfg(feature = "smol-rt")]
+use smol_hyper::rt::FuturesIo;
 
 use crate::cookie::DeboaCookie;
 use crate::{client::serde::ResponseBody, errors::DeboaError, Result};
@@ -386,5 +391,27 @@ impl DeboaResponse {
             });
         }
         Ok(())
+    }
+
+    #[cfg(feature = "tokio-rt")]
+    pub async fn update(self) -> Result<hyper_util::rt::TokioIo<hyper::upgrade::Upgraded>> {
+        let upgrade = on(self.inner).await;
+        if let Err(e) = upgrade {
+            return Err(DeboaError::Io {
+                message: e.to_string(),
+            });
+        }
+        Ok(TokioIo::new(upgrade.unwrap()))
+    }
+
+    #[cfg(feature = "smol-rt")]
+    pub async fn update(self) -> Result<FuturesIo<hyper::upgrade::Upgraded>> {
+        let upgrade = on(self.inner).await;
+        if let Err(e) = upgrade {
+            return Err(DeboaError::Io {
+                message: e.to_string(),
+            });
+        }
+        Ok(FuturesIo::new(upgrade.unwrap()))
     }
 }
