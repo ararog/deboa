@@ -1,3 +1,5 @@
+use base64::engine::general_purpose::STANDARD;
+use base64::Engine;
 use deboa::{
     request::{DeboaRequest, DeboaRequestBuilder},
     url::IntoUrl,
@@ -11,7 +13,8 @@ pub trait WebsocketRequestBuilder {
 
 impl WebsocketRequestBuilder for DeboaRequestBuilder {
     fn websocket<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
-        let key = rand::random::<u128>().to_string();
+        let rnd: [u8; 16] = rand::random();
+        let key = STANDARD.encode(rnd);
         Ok(DeboaRequest::at(url, Method::GET)?
             .header(header::UPGRADE, "websocket")
             .header(header::CONNECTION, "Upgrade")
