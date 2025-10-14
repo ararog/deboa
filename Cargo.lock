@@ -761,6 +761,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "url",
+ "websocket-sans-io",
 ]
 
 [[package]]
@@ -1601,6 +1602,12 @@ dependencies = [
  "security-framework-sys",
  "tempfile",
 ]
+
+[[package]]
+name = "nonmax"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "610a5acd306ec67f907abe5567859a3c693fb9886eb1f012ab8f2a47bef3db51"
 
 [[package]]
 name = "num-conv"
@@ -2488,6 +2495,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "tinyvec"
+version = "1.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfa5fdc3bce6191a1dbc8c02d5c8bffcf557bafa17c124c5264a458f1b0613fa"
+
+[[package]]
 name = "titlecase"
 version = "3.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2846,6 +2859,16 @@ checksum = "5a6580f308b1fad9207618087a65c04e7a10bc77e02c8e84e9b00dd4b12fa0bb"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "websocket-sans-io"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa5439c933ff8343c918c8a7f7f853937bafb79217068276359cb335ef9cd23b"
+dependencies = [
+ "nonmax",
+ "tinyvec",
 ]
 
 [[package]]

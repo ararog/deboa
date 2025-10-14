@@ -13,12 +13,12 @@ async fn main() -> Result<()> {
 
     response.send_message("Hello, world!").await?;
 
-    response
-        .poll_message(|message| {
-            println!("Received message: {}", message);
-            Ok(())
-        })
-        .await?;
+    response.poll_message(on_message).await?;
 
+    Ok(())
+}
+
+async fn on_message(message: String) -> Result<()> {
+    println!("Received message: {}", message);
     Ok(())
 }
