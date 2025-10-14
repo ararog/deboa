@@ -741,6 +741,7 @@ dependencies = [
 name = "deboa-extras"
 version = "0.0.2-beta.2"
 dependencies = [
+ "base64",
  "brotli",
  "bytes",
  "deboa",
@@ -761,7 +762,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "url",
- "websocket-sans-io",
+ "ws-framer",
 ]
 
 [[package]]
@@ -1602,12 +1603,6 @@ dependencies = [
  "security-framework-sys",
  "tempfile",
 ]
-
-[[package]]
-name = "nonmax"
-version = "0.5.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "610a5acd306ec67f907abe5567859a3c693fb9886eb1f012ab8f2a47bef3db51"
 
 [[package]]
 name = "num-conv"
@@ -2495,12 +2490,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tinyvec"
-version = "1.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfa5fdc3bce6191a1dbc8c02d5c8bffcf557bafa17c124c5264a458f1b0613fa"
-
-[[package]]
 name = "titlecase"
 version = "3.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2862,16 +2851,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "websocket-sans-io"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa5439c933ff8343c918c8a7f7f853937bafb79217068276359cb335ef9cd23b"
-dependencies = [
- "nonmax",
- "tinyvec",
-]
-
-[[package]]
 name = "winapi-util"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3113,6 +3092,30 @@ name = "writeable"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea2f10b9bb0928dfb1b42b65e1f9e36f7f54dbdf08457afefb38afcdec4fa2bb"
+
+[[package]]
+name = "ws-framer"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75a918023503304dc681e5f014fc291f68fcdcc886993f9cc6fffc0a0cef329e"
+dependencies = [
+ "getrandom",
+ "httparse",
+ "itoa",
+ "ws-framer-macros",
+]
+
+[[package]]
+name = "ws-framer-macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67fe343b024b086505b3c647de6eae0c26235934cb9138a180e3ac5f97a6aeda"
+dependencies = [
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
+]
 
 [[package]]
 name = "xml-rs"

@@ -1,10 +1,10 @@
 use std::future::Future;
 
-use deboa::{errors::DeboaError, response::DeboaResponse, Result};
+use deboa::{response::DeboaResponse, Result};
 use hyper::upgrade::Upgraded;
 use hyper_util::rt::TokioIo;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use websocket_sans_io::{FrameInfo, Opcode, WebsocketFrameEvent};
+use ws_framer::{WsRxFramer, WsTxFramer};
 
 pub struct WebSocket {
     stream: TokioIo<Upgraded>,
@@ -26,19 +26,12 @@ impl IntoStream for DeboaResponse {
 
 impl WebSocket {
     pub async fn send_message(&mut self, message: &str) -> Result<()> {
-        let mut frame_encoder = websocket_sans_io::WebsocketFrameEncoder::new();
-        let header = frame_encoder.start_frame(&FrameInfo {
-            opcode: Opcode::Text,
-            payload_length: message.len() as websocket_sans_io::PayloadLength,
-            mask: Some(1234u32.to_be_bytes()),
-            fin: true,
-            reserved: 0,
-        });
-        if let Err(e) = self.stream.write(&header).await {
-            return Err(DeboaError::WebSocket {
-                message: e.to_string(),
-            });
-        }
+        let mut tx_buf = vec![0; 10240];
+        let mut tx_framer = WsTxFramer::new(true, &mut tx_buf);
+
+        let mut buf = Vec::new();
+        buf.extend_from_slice(tx_framer.text(message));
+        self.stream.write_all(&buf).await;
         Ok(())
     }
 
@@ -47,41 +40,21 @@ impl WebSocket {
         F: FnMut(String) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        let mut frame_decoder = websocket_sans_io::WebsocketFrameDecoder::new();
-        let mut result = Vec::<u8>::new();
-        let mut buf = [0u8; 1024];
-        'read_loop: loop {
-            let n = self.stream.read(&mut buf).await.unwrap();
-            let mut processed_offset = 0;
-            'decode_loop: loop {
-                let unprocessed_part_of_buf = &mut buf[processed_offset..n];
-                let ret = frame_decoder.add_data(unprocessed_part_of_buf).unwrap();
-                processed_offset += ret.consumed_bytes;
+        let mut rx_buf = vec![0; 10240];
+        let mut rx_framer = WsRxFramer::new(&mut rx_buf);
+        loop {
+            let read_n = self.stream.read(rx_framer.mut_buf()).await;
+            if read_n.is_err() {
+                break;
+            }
 
-                if ret.event.is_none() && ret.consumed_bytes == 0 {
-                    break 'decode_loop;
-                }
-
-                match ret.event {
-                    Some(WebsocketFrameEvent::PayloadChunk {
-                        original_opcode: Opcode::Text,
-                    }) => {
-                        result.extend_from_slice(&unprocessed_part_of_buf[0..ret.consumed_bytes]);
-                    }
-
-                    Some(WebsocketFrameEvent::End {
-                        frame_info: FrameInfo { fin: true, .. },
-                        original_opcode: Opcode::Text,
-                    }) => {
-                        break 'read_loop;
-                    }
-
-                    _ => (),
-                }
-
-                on_event(String::from_utf8_lossy(&result).to_string()).await?;
+            rx_framer.revolve_write_offset(read_n.unwrap());
+            let res = rx_framer.process_data();
+            if res.is_some() {
+                on_event(String::from_utf8_lossy(res.unwrap().data()).to_string()).await;
             }
         }
+
         Ok(())
     }
 }
