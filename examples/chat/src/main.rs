@@ -1,7 +1,10 @@
 use std::{io::stdin, thread::spawn};
 
-use deboa::{request::DeboaRequestBuilder, Deboa, Result};
-use deboa_extras::http::ws::{request::WebsocketRequestBuilder, response::{IntoStream, MessageHandler}};
+use deboa::{Deboa, Result, request::DeboaRequestBuilder};
+use deboa_extras::http::ws::{
+    request::WebsocketRequestBuilder,
+    response::{IntoStream, MessageHandler},
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -14,12 +17,12 @@ async fn main() -> Result<()> {
         .await;
 
     let mut handler = ChatHandler;
-      
+
     println!("Please enter some text:");
     let mut message = String::new(); // Create a mutable String to store the input
-    stdin().read_line(&mut message); 
+    stdin().read_line(&mut message);
     response.send_message(&message).await;
-    
+
     while let Ok(Some(message)) = response.read_message().await {
         handler.on_message(message);
     }
