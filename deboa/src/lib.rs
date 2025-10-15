@@ -98,7 +98,7 @@ pub mod form;
 pub mod fs;
 pub mod request;
 pub mod response;
-mod rt;
+pub mod rt;
 pub mod url;
 
 #[cfg(test)]
