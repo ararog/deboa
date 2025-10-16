@@ -1,4 +1,4 @@
-use std::{io::stdin, thread::spawn};
+use std::io::stdin;
 
 use deboa::{Deboa, Result, request::DeboaRequestBuilder};
 use deboa_extras::http::ws::{
@@ -10,7 +10,7 @@ use deboa_extras::http::ws::{
 async fn main() -> Result<()> {
     let mut client = Deboa::new();
 
-    let mut response = DeboaRequestBuilder::websocket("wss://echo.websocket.org")?
+    let response = DeboaRequestBuilder::websocket("wss://echo.websocket.org")?
         .go(&mut client)
         .await?
         .into_stream()
@@ -18,13 +18,33 @@ async fn main() -> Result<()> {
 
     let mut handler = ChatHandler;
 
-    println!("Please enter some text:");
-    let mut message = String::new(); // Create a mutable String to store the input
-    stdin().read_line(&mut message);
-    response.send_message(&message).await;
+    let (mut reader, mut writer) = response.split();
 
-    while let Ok(Some(message)) = response.read_message().await {
-        handler.on_message(message);
+    let reader_task = tokio::spawn(async move {
+        while let Ok(Some(message)) = reader.read_message().await {
+            handler.on_message(message);
+        }
+    });
+
+    loop {
+        println!("Please enter some text:");
+        let mut message = String::new(); // Create a mutable String to store the input
+        let result =  stdin().read_line(&mut message);
+        if result.is_err() {
+            break;
+        }
+
+        let result = writer.send_message(&message).await;
+        if result.is_err() {
+            break;
+        }
+    }
+
+    let result = reader_task.await;
+    if result.is_err() {
+        return Err(deboa::errors::DeboaError::WebSocket {
+            message: "Failed to read message".to_string(),
+        });
     }
 
     Ok(())
