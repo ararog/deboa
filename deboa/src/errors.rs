@@ -54,4 +54,7 @@ pub enum DeboaError {
 
     #[error("Failed to handle websocket message: {message}")]
     WebSocket { message: String },
+
+    #[error("Failed to handle sse message: {message}")]
+    SSE { message: String },
 }
