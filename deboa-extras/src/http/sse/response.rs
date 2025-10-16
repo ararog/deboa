@@ -16,10 +16,15 @@ impl IntoStream for DeboaResponse {
     }
 }
 
+#[deboa::async_trait]
+pub trait EventHandler {
+    async fn on_event(&mut self, event: &str) -> Result<()>;
+}
+
 impl SSE {
-    pub async fn poll_event<F>(self, mut on_event: F) -> Result<()>
+    pub async fn poll_event<E>(self, mut handler: E) -> Result<()>
     where
-        F: FnMut(&str) -> Result<()> + Send + Sync + 'static,
+        E: EventHandler + Send + Sync + 'static,
     {
         let header = self.response.headers().get(http::header::CONTENT_TYPE);
         if let Some(header) = header {
@@ -28,10 +33,20 @@ impl SSE {
                 while let Some(frame) = stream.frame().await {
                     let frame = frame.unwrap();
                     if let Some(event) = frame.data_ref() {
-                        on_event(String::from_utf8_lossy(event).as_ref())?;
+                        handler.on_event(String::from_utf8_lossy(event).as_ref()).await?;
                     }
                 }
             }
+            else {
+                return Err(deboa::errors::DeboaError::SSE {
+                    message: "Content type is not text/event-stream".to_string(),
+                });
+            }
+        } 
+        else {
+            return Err(deboa::errors::DeboaError::SSE {
+                message: "Missing content type".to_string(),
+            });
         }
 
         Ok(())
