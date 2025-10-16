@@ -1,7 +1,7 @@
 use deboa::{response::DeboaResponse, Result};
 use hyper::upgrade::Upgraded;
 use hyper_util::rt::TokioIo;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::{AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf};
 use ws_framer::{WsFrame, WsRxFramer, WsTxFramer};
 
 pub struct WebSocket {
@@ -29,18 +29,20 @@ pub trait MessageHandler: Send + Sync + 'static {
 }
 
 impl WebSocket {
-    pub async fn send_message(&mut self, message: &str) -> Result<()> {
-        let mut tx_buf = vec![0; 10240];
-        let mut tx_framer = WsTxFramer::new(true, &mut tx_buf);
 
-        let result = self.stream.write_all(tx_framer.text(message)).await;
-        if result.is_err() {
-            return Err(deboa::errors::DeboaError::WebSocket {
-                message: "Failed to send message".to_string(),
-            });
-        }
+    pub fn split(self) -> (WebSocketReader, WebSocketWriter) {
+        let (reader, writer) = tokio::io::split(self.stream);
+        (WebSocketReader { stream: reader }, WebSocketWriter { stream: writer })
+    }
+}
 
-        Ok(())
+pub struct WebSocketReader {
+    stream: ReadHalf<TokioIo<Upgraded>>,
+}
+
+impl WebSocketReader {
+    pub fn new(stream: ReadHalf<TokioIo<Upgraded>>) -> Self {
+        Self { stream }
     }
 
     pub async fn read_message(&mut self) -> Result<Option<String>> {
@@ -69,5 +71,29 @@ impl WebSocket {
         };
 
         Ok(message)
+    }
+}
+
+pub struct WebSocketWriter {
+    stream: WriteHalf<TokioIo<Upgraded>>,
+}
+
+impl WebSocketWriter {
+    pub fn new(stream: WriteHalf<TokioIo<Upgraded>>) -> Self {
+        Self { stream }
+    }
+
+    pub async fn send_message(&mut self, message: &str) -> Result<()> {
+        let mut tx_buf = vec![0; 10240];
+        let mut tx_framer = WsTxFramer::new(true, &mut tx_buf);
+
+        let result = self.stream.write_all(tx_framer.text(message)).await;
+        if result.is_err() {
+            return Err(deboa::errors::DeboaError::WebSocket {
+                message: "Failed to send message".to_string(),
+            });
+        }
+
+        Ok(())
     }
 }
