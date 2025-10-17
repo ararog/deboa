@@ -6,7 +6,21 @@ pub struct SSE {
     response: DeboaResponse,
 }
 
+
+/// Trait to convert a DeboaResponse into a SSE stream.
 pub trait IntoStream {
+    /// Converts a DeboaResponse into a SSE stream.
+    /// 
+    /// # Returns
+    /// 
+    /// A SSE struct.
+    /// 
+    /// # Examples
+    /// 
+    /// ``` compile_fail
+    /// let response = DeboaResponse::new();
+    /// let sse = response.into_stream();
+    /// ```
     fn into_stream(self) -> SSE;
 }
 
@@ -16,8 +30,25 @@ impl IntoStream for DeboaResponse {
     }
 }
 
+/// Trait to handle SSE events.
 #[deboa::async_trait]
 pub trait EventHandler {
+    /// Handles an SSE event.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `event` - A string slice that holds the event data.
+    /// 
+    /// # Returns
+    /// 
+    /// A Result indicating success or failure.
+    /// 
+    /// # Examples
+    /// 
+    /// ``` compile_fail
+    /// let handler = MyEventHandler;
+    /// let result = handler.on_event("event data");
+    /// ```
     async fn on_event(&mut self, event: &str) -> Result<()>;
 }
 

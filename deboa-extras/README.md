@@ -11,6 +11,7 @@ This crate provides additional features for Deboa like compression and serializa
 - compression (gzip, deflate and brotli)
 - serialization (json, xml, msgpack)
 - sse
+- websockets
 
 ## Usage
 
@@ -59,6 +60,66 @@ let response = post("https://jsonplaceholder.typicode.com/posts/1")?
   .await?;
 
 println!("Response Status Code: {}", response.status());
+```
+
+### SSE
+
+```rust
+use deboa::{Deboa, Result};
+use deboa_extras::http::sse::response::{EventHandler, IntoStream};
+
+let mut client = Deboa::new();
+
+let response = client.execute("https://sse.dev/test").await?.into_stream();
+
+let handler = SSEHandler;
+
+response.poll_event(handler).await?;
+
+println!("Connection closed");
+```
+
+Implement the event handler:
+
+```rust
+pub struct SSEHandler;
+
+#[deboa::async_trait]
+impl EventHandler for SSEHandler {
+    async fn on_event(&mut self, event: &str) -> Result<()> {
+        println!("event: {}", event);
+        Ok(())
+    }
+}
+```
+
+### Websockets
+
+```rust
+use deboa::{Deboa, Result, request::DeboaRequestBuilder};
+use deboa_extras::http::ws::{
+    protocol::{Message, MessageHandler, WebSocketRead, WebSocketWrite},
+    request::WebsocketRequestBuilder,
+    response::IntoStream,
+};
+
+let mut client = Deboa::new();
+
+let (tx, mut rx) = channel::<Message>(100);
+
+let handler = ChatHandler { tx: tx.clone() };
+
+let response = DeboaRequestBuilder::websocket("wss://echo.websocket.org")?
+    .go(&mut client)
+    .await?
+    .into_stream(handler)
+    .await;
+
+let (mut reader, mut writer) = response.split();
+
+while let Ok(()) = reader.read_message().await {
+    // Just keep checking messages
+}
 ```
 
 ## License
