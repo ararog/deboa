@@ -19,3 +19,14 @@ This example shows how to use deboa to make a simple GET request of posts from J
 ## Uget
 
 A minimal cli tool to make http requests. You want, you get!
+
+
+## Chat
+
+This example shows how to use deboa to make a simple chat client using websockets.
+
+
+## SSE
+
+This example shows how to use deboa to make a simple SSE client. You can use it to
+interact with a LLM API.

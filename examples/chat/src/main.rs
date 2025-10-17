@@ -1,4 +1,4 @@
-use std::io::stdin;
+use std::{io::stdin};
 
 use deboa::{Deboa, Result, request::DeboaRequestBuilder};
 use deboa_extras::http::ws::{
@@ -6,7 +6,7 @@ use deboa_extras::http::ws::{
     request::WebsocketRequestBuilder,
     response::IntoStream,
 };
-use tokio::sync::mpsc::{Sender, channel};
+use tokio::sync::{mpsc::{channel, Sender}};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -25,22 +25,22 @@ async fn main() -> Result<()> {
     let (mut reader, mut writer) = response.split();
 
     tokio::spawn(async move {
-        while let Ok(()) = reader.read_message().await {
-            // Just keep checking messages
+        if let Err(e) = reader.read_messages().await {
+            println!("Failed to read messages: {}", e);
         }
     });
 
     tokio::spawn(async move {
         while let Some(message) = rx.recv().await {
-            let result = writer.write_message(message).await;
-            if result.is_err() {
-                break;
-            }
+          if let Err(e) = writer.write_message(message).await {
+            println!("Failed to write message: {}", e);
+            break;
+          }
         }
     });
 
     loop {
-        println!("Please enter some text:");
+        println!("You: ");
         let mut message = String::new(); // Create a mutable String to store the input
         let result = stdin().read_line(&mut message);
         if result.is_err() {
@@ -81,7 +81,7 @@ impl MessageHandler for ChatHandler {
 
     async fn on_message(&mut self, message: Option<Message>) -> Result<()> {
         match message {
-            Some(Message::Text(data)) => println!("Received message: {}", data),
+            Some(Message::Text(data)) => print!("Server:\n{}\n", data),
             Some(Message::Binary(data)) => println!("Received binary message: {}", data.len()),
             Some(Message::Close(code, reason)) => {
                 println!("Connection closed: {} {}", code, reason)

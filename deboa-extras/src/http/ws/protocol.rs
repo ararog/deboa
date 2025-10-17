@@ -11,6 +11,7 @@ use ws_framer::{WsFrame, WsRxFramer, WsTxFramer};
 
 type Io = TokioIo<Upgraded>;
 
+/// WebSocket struct
 pub struct WebSocket<H>
 where
     H: MessageHandler,
@@ -19,25 +20,30 @@ where
     handler: Arc<Mutex<H>>,
 }
 
-#[deboa::async_trait]
-pub trait MessageHandler: Send + Sync + 'static {
-    async fn on_open(&mut self) -> Result<()>;
-    async fn on_message(&mut self, message: Option<Message>) -> Result<()>;
-    async fn on_error(&mut self) -> Result<()>;
-    async fn on_close(&mut self) -> Result<()>;
-}
-
 impl<H> WebSocket<H>
 where
     H: MessageHandler,
 {
-    pub fn new(stream: Io, handler: H) -> Self {
-        Self {
-            stream,
-            handler: Arc::new(Mutex::new(handler)),
-        }
+    /// new method
+    /// 
+    /// # Arguments
+    /// 
+    /// * `stream` - A string slice that holds the stream data.
+    /// 
+    /// # Returns
+    /// 
+    /// A WebSocket struct.
+    /// 
+    pub fn new(stream: Io, handler: Arc<Mutex<H>>) -> Self {
+        Self { stream, handler }
     }
 
+    /// split method
+    /// 
+    /// # Returns
+    /// 
+    /// A tuple of WebSocketReader and WebSocketWriter.
+    /// 
     pub fn split(
         self,
     ) -> (
@@ -70,7 +76,7 @@ where
 
     fn stream(&mut self) -> &mut T;
 
-    async fn read_message(&mut self) -> Result<()> {
+    async fn read_message(&mut self) -> Result<Option<Message>> {
         let mut rx_buf = vec![0; 10240];
         let mut rx_framer = WsRxFramer::new(&mut rx_buf);
         let stream = self.stream();
@@ -98,8 +104,18 @@ where
             None
         };
 
-        self.handler().lock().await.on_message(message).await?;
+        Ok(message)
+    }
 
+    async fn read_messages(&mut self) -> Result<()> {
+        loop {
+            let message = self.read_message().await?;
+            if message.is_none() {
+                break;
+            }
+
+            self.handler().lock().await.on_message(message).await?;
+        }
         Ok(())
     }
 }
@@ -173,6 +189,16 @@ where
     }
 }
 
+
+/// Message enum
+/// 
+/// # Variants
+/// 
+/// * `Text(String)` - A text message.
+/// * `Binary(Vec<u8>)` - A binary message.
+/// * `Close(u16, String)` - A close message.
+/// * `Ping(Vec<u8>)` - A ping message.
+/// * `Pong(Vec<u8>)` - A pong message.
 #[derive(Clone)]
 pub enum Message {
     Text(String),
@@ -247,5 +273,63 @@ where
 
     fn stream(&mut self) -> &mut T {
         &mut self.stream
+    }
+}
+
+/// MessageHandler trait
+#[deboa::async_trait]
+pub trait MessageHandler: Send + Sync + 'static {
+    /// on_open method
+    /// 
+    /// # Returns
+    /// 
+    /// A Result indicating success or failure.
+    /// 
+    async fn on_open(&mut self) -> Result<()>;
+    /// on_message method
+    /// 
+    /// # Arguments
+    /// 
+    /// * `message` - A string slice that holds the message data.
+    /// 
+    /// # Returns
+    /// 
+    /// A Result indicating success or failure.
+    /// 
+    async fn on_message(&mut self, message: Option<Message>) -> Result<()>;
+    /// on_error method
+    /// 
+    /// # Returns
+    /// 
+    /// A Result indicating success or failure.
+    /// 
+    async fn on_error(&mut self) -> Result<()>;
+    /// on_close method
+    /// 
+    /// # Returns
+    /// 
+    /// A Result indicating success or failure.
+    /// 
+    async fn on_close(&mut self) -> Result<()>;
+}
+
+pub struct EmptyHandler;
+
+#[deboa::async_trait]
+impl MessageHandler for EmptyHandler {
+    async fn on_open(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    async fn on_message(&mut self, _message: Option<Message>) -> Result<()> {
+        Ok(())
+    }
+
+    async fn on_error(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    async fn on_close(&mut self) -> Result<()> {
+        Ok(())
     }
 }
