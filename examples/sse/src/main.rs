@@ -9,9 +9,7 @@ async fn main() -> Result<()> {
 
     let handler = SSEHandler;
 
-    response
-        .poll_event(handler)
-        .await?;
+    response.poll_event(handler).await?;
 
     println!("Connection closed");
 

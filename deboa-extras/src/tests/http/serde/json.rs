@@ -20,7 +20,7 @@ fn test_set_json() -> Result<()> {
 async fn test_response_json() -> Result<()> {
     let data = sample_post();
 
-    let mut response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder(fake_url())
         .status(http::StatusCode::OK)
         .header(http::header::CONTENT_TYPE, "application/json")
         .body(&JSON_POST[..])

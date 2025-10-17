@@ -33,17 +33,17 @@ impl SSE {
                 while let Some(frame) = stream.frame().await {
                     let frame = frame.unwrap();
                     if let Some(event) = frame.data_ref() {
-                        handler.on_event(String::from_utf8_lossy(event).as_ref()).await?;
+                        handler
+                            .on_event(String::from_utf8_lossy(event).as_ref())
+                            .await?;
                     }
                 }
-            }
-            else {
+            } else {
                 return Err(deboa::errors::DeboaError::SSE {
                     message: "Content type is not text/event-stream".to_string(),
                 });
             }
-        } 
-        else {
+        } else {
             return Err(deboa::errors::DeboaError::SSE {
                 message: "Missing content type".to_string(),
             });
