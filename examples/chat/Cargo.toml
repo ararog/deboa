@@ -6,4 +6,4 @@ edition = "2024"
 [dependencies]
 deboa = { version = "0.0.6-beta.7", path = "../../deboa" }
 deboa-extras = { version = "0.0.2-beta.1", path = "../../deboa-extras" }
-tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread", "io-util", "io-std"] }
+tokio = { version = "1.47.2", features = ["macros", "rt-multi-thread", "io-util", "io-std"] }
