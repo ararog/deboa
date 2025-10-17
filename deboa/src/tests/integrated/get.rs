@@ -199,7 +199,7 @@ async fn do_get_by_query() -> Result<()> {
 
     let client = Deboa::new();
 
-    let mut response = DeboaRequest::get(server.url("/comments/1").as_str())?
+    let response = DeboaRequest::get(server.url("/comments/1").as_str())?
         .go(client)
         .await?;
 

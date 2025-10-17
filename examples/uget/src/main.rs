@@ -181,9 +181,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let arg_save = args.save;
     let arg_bar = args.bar;
 
-    if arg_cert.is_some() && arg_cert_pw.is_some() {
-        let cert = arg_cert.unwrap();
-        let cert_pw = arg_cert_pw.unwrap();
+    if let Some((cert, cert_pw)) = arg_cert.zip(arg_cert_pw) {
         client.set_client_cert(Some(ClientCert::new(cert, cert_pw, arg_verify)));
     }
 
@@ -310,7 +308,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         }
     }
 
-    let mut response = client.execute(request).await?;
+    let response = client.execute(request).await?;
     let status = response.status();
     let headers = response.headers();
 

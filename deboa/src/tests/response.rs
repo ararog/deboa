@@ -63,7 +63,7 @@ async fn raw_body() -> Result<()> {
 
 #[tokio::test]
 async fn test_text() -> Result<()> {
-    let mut response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder(fake_url())
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
@@ -77,7 +77,7 @@ async fn test_text() -> Result<()> {
 
 #[tokio::test]
 async fn test_to_file() -> Result<()> {
-    let mut response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder(fake_url())
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
