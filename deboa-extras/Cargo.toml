@@ -38,7 +38,7 @@ bytes = { version = "1.10.1", optional = true }
 deboa = { path = "../deboa", version = "0.0.6-beta.5", features = [
   "http1",
 ], optional = true }
-flate2 = { version = "1.1.2", optional = true }
+flate2 = { version = "1.1.4", optional = true }
 http = { version = "1.3.1", optional = true }
 http-body-util = { version = "0.1.3", optional = true }
 hyper = "1.7.0"
@@ -50,7 +50,7 @@ rmp-serde = { version = "1.3.0", optional = true }
 serde = { version = "1.0.217", features = ["derive"], optional = true }
 serde-xml-rust = { version = "0.6.0", optional = true }
 serde_json = { version = "1.0.138", optional = true }
-tokio = "1.47.1"
+tokio = "1.47.2"
 tokio-util = "0.7.11"
 url = "2.5.7"
 ws-framer = { version = "0.3.1", optional = true }
@@ -58,4 +58,4 @@ ws-framer = { version = "0.3.1", optional = true }
 [dev-dependencies]
 deboa-tests = { path = "../deboa-tests", version = "0.0.1" }
 httpmock = { version = "0.8.1", features = ["http2"] }
-tokio = { version = "1.47.1", features = ["rt-multi-thread"] }
+tokio = { version = "1.47.2", features = ["rt-multi-thread"] }
