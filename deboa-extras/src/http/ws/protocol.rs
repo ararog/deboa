@@ -1,79 +1,56 @@
-use std::sync::Arc;
-
 use deboa::Result;
 use hyper::upgrade::Upgraded;
 use hyper_util::rt::TokioIo;
-use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf},
-    sync::Mutex,
-};
+use tokio::io::{AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf};
 use ws_framer::{WsFrame, WsRxFramer, WsTxFramer};
 
 type Io = TokioIo<Upgraded>;
 
 /// WebSocket struct
-pub struct WebSocket<H>
-where
-    H: MessageHandler,
-{
+pub struct WebSocket {
     stream: Io,
-    handler: Arc<Mutex<H>>,
 }
 
-impl<H> WebSocket<H>
-where
-    H: MessageHandler,
-{
+impl WebSocket {
     /// new method
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `stream` - A string slice that holds the stream data.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A WebSocket struct.
-    /// 
-    pub fn new(stream: Io, handler: Arc<Mutex<H>>) -> Self {
-        Self { stream, handler }
+    ///
+    pub fn new(stream: Io) -> Self {
+        Self { stream }
     }
 
     /// split method
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A tuple of WebSocketReader and WebSocketWriter.
-    /// 
+    ///
     pub fn split(
         self,
     ) -> (
-        WebSocketReader<ReadHalf<Io>, H>,
-        WebSocketWriter<WriteHalf<Io>, H>,
+        WebSocketReader<ReadHalf<Io>>,
+        WebSocketWriter<WriteHalf<Io>>,
     ) {
         let (reader, writer) = tokio::io::split(self.stream);
-        let handler_reader = Arc::clone(&self.handler);
-        let handler_writer = Arc::clone(&self.handler);
         (
-            WebSocketReader {
-                stream: reader,
-                handler: handler_reader,
-            },
-            WebSocketWriter {
-                stream: writer,
-                handler: handler_writer,
-            },
+            WebSocketReader { stream: reader },
+            WebSocketWriter { stream: writer },
         )
     }
 }
 
 #[deboa::async_trait]
-pub trait WebSocketRead<T, H>
+pub trait WebSocketRead<T>
 where
     T: AsyncReadExt + Unpin + Send,
-    H: MessageHandler,
 {
-    fn handler(&mut self) -> Arc<Mutex<H>>;
-
     fn stream(&mut self) -> &mut T;
 
     async fn read_message(&mut self) -> Result<Option<Message>> {
@@ -106,28 +83,13 @@ where
 
         Ok(message)
     }
-
-    async fn read_messages(&mut self) -> Result<()> {
-        loop {
-            let message = self.read_message().await?;
-            if message.is_none() {
-                break;
-            }
-
-            self.handler().lock().await.on_message(message).await?;
-        }
-        Ok(())
-    }
 }
 
 #[deboa::async_trait]
-pub trait WebSocketWrite<T, H>
+pub trait WebSocketWrite<T>
 where
     T: AsyncWriteExt + Unpin + Send,
-    H: MessageHandler,
 {
-    fn handler(&mut self) -> Arc<Mutex<H>>;
-
     fn stream(&mut self) -> &mut T;
 
     async fn write_message(&mut self, message: Message) -> Result<()> {
@@ -189,11 +151,10 @@ where
     }
 }
 
-
 /// Message enum
-/// 
+///
 /// # Variants
-/// 
+///
 /// * `Text(String)` - A text message.
 /// * `Binary(Vec<u8>)` - A binary message.
 /// * `Close(u16, String)` - A close message.
@@ -208,128 +169,55 @@ pub enum Message {
     Pong(Vec<u8>),
 }
 
-pub struct WebSocketReader<T, H>
+pub struct WebSocketReader<T>
 where
     T: AsyncReadExt + Unpin + Send,
-    H: MessageHandler,
 {
     stream: T,
-    handler: Arc<Mutex<H>>,
 }
 
-impl<T, H> WebSocketReader<T, H>
+impl<T> WebSocketReader<T>
 where
     T: AsyncReadExt + Unpin + Send,
-    H: MessageHandler,
 {
-    pub fn new(stream: T, handler: Arc<Mutex<H>>) -> Self {
-        Self { stream, handler }
+    pub fn new(stream: T) -> Self {
+        Self { stream }
     }
 }
 
 #[deboa::async_trait]
-impl<T, H> WebSocketRead<T, H> for WebSocketReader<T, H>
+impl<T> WebSocketRead<T> for WebSocketReader<T>
 where
     T: AsyncReadExt + Unpin + Send,
-    H: MessageHandler,
 {
-    fn handler(&mut self) -> Arc<Mutex<H>> {
-        self.handler.clone()
-    }
-
     fn stream(&mut self) -> &mut T {
         &mut self.stream
     }
 }
 
-pub struct WebSocketWriter<T, H>
+pub struct WebSocketWriter<T>
 where
     T: AsyncWriteExt + Unpin + Send,
-    H: MessageHandler,
 {
     stream: T,
-    handler: Arc<Mutex<H>>,
 }
 
-impl<T, H> WebSocketWriter<T, H>
+impl<T> WebSocketWriter<T>
 where
     T: AsyncWriteExt + Unpin + Send,
-    H: MessageHandler,
 {
-    pub fn new(stream: T, handler: Arc<Mutex<H>>) -> Self {
-        Self { stream, handler }
+    pub fn new(stream: T) -> Self {
+        Self { stream }
     }
 }
 
 #[deboa::async_trait]
-impl<T, H> WebSocketWrite<T, H> for WebSocketWriter<T, H>
+impl<T> WebSocketWrite<T> for WebSocketWriter<T>
 where
     T: AsyncWriteExt + Unpin + Send,
-    H: MessageHandler,
 {
-    fn handler(&mut self) -> Arc<Mutex<H>> {
-        self.handler.clone()
-    }
-
     fn stream(&mut self) -> &mut T {
         &mut self.stream
     }
 }
 
-/// MessageHandler trait
-#[deboa::async_trait]
-pub trait MessageHandler: Send + Sync + 'static {
-    /// on_open method
-    /// 
-    /// # Returns
-    /// 
-    /// A Result indicating success or failure.
-    /// 
-    async fn on_open(&mut self) -> Result<()>;
-    /// on_message method
-    /// 
-    /// # Arguments
-    /// 
-    /// * `message` - A string slice that holds the message data.
-    /// 
-    /// # Returns
-    /// 
-    /// A Result indicating success or failure.
-    /// 
-    async fn on_message(&mut self, message: Option<Message>) -> Result<()>;
-    /// on_error method
-    /// 
-    /// # Returns
-    /// 
-    /// A Result indicating success or failure.
-    /// 
-    async fn on_error(&mut self) -> Result<()>;
-    /// on_close method
-    /// 
-    /// # Returns
-    /// 
-    /// A Result indicating success or failure.
-    /// 
-    async fn on_close(&mut self) -> Result<()>;
-}
-
-pub struct EmptyHandler;
-
-#[deboa::async_trait]
-impl MessageHandler for EmptyHandler {
-    async fn on_open(&mut self) -> Result<()> {
-        Ok(())
-    }
-
-    async fn on_message(&mut self, _message: Option<Message>) -> Result<()> {
-        Ok(())
-    }
-
-    async fn on_error(&mut self) -> Result<()> {
-        Ok(())
-    }
-
-    async fn on_close(&mut self) -> Result<()> {
-        Ok(())
-    }
-}
