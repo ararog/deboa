@@ -2,11 +2,11 @@ use std::{io::stdin};
 
 use deboa::{Deboa, Result, request::DeboaRequestBuilder};
 use deboa_extras::http::ws::{
-    protocol::{Message, MessageHandler, WebSocketRead, WebSocketWrite},
+    protocol::{Message, WebSocketRead, WebSocketWrite},
     request::WebsocketRequestBuilder,
     response::IntoStream,
 };
-use tokio::sync::{mpsc::{channel, Sender}};
+use tokio::sync::{mpsc::channel};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -14,28 +14,46 @@ async fn main() -> Result<()> {
 
     let (tx, mut rx) = channel::<Message>(100);
 
-    let handler = ChatHandler { tx: tx.clone() };
-
     let response = DeboaRequestBuilder::websocket("wss://echo.websocket.org")?
         .go(&mut client)
         .await?
-        .into_stream(handler)
+        .into_stream()
         .await;
 
     let (mut reader, mut writer) = response.split();
-
+    let sender = tx.clone();
     tokio::spawn(async move {
-        if let Err(e) = reader.read_messages().await {
-            println!("Failed to read messages: {}", e);
-        }
-    });
+        loop {
+            if let Ok(Some(message)) = reader.read_message().await {
+                match message {
+                    Message::Text(data) => print!("Server:\n{}\n", data),
+                    Message::Binary(data) => {
+                        println!("Received binary message: {}", data.len())
+                    }
+                    Message::Close(code, reason) => {
+                        println!("Connection closed: {} {}", code, reason)
+                    }
+                    Message::Ping(data) => {
+                        let result = sender.send(Message::Pong(data)).await;
+                        if result.is_err() {
+                            println!("Failed to send pong");
+                        }
+                    }
+                    Message::Pong(data) => println!("Received pong: {}", data.len()),
+                    _ => {}
+                }
+            } else {
+                break;
+            }
 
-    tokio::spawn(async move {
-        while let Some(message) = rx.recv().await {
-          if let Err(e) = writer.write_message(message).await {
-            println!("Failed to write message: {}", e);
-            break;
-          }
+            if let Some(message) = rx.recv().await {
+                if let Err(e) = writer.write_message(message).await {
+                    println!("Failed to write message: {}", e);
+                    break;
+                }
+            } else {
+                break;
+            }
         }
     });
 
@@ -66,46 +84,4 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
-}
-
-struct ChatHandler {
-    tx: Sender<Message>,
-}
-
-#[deboa::async_trait]
-impl MessageHandler for ChatHandler {
-    async fn on_open(&mut self) -> Result<()> {
-        println!("Connection opened");
-        Ok(())
-    }
-
-    async fn on_message(&mut self, message: Option<Message>) -> Result<()> {
-        match message {
-            Some(Message::Text(data)) => print!("Server:\n{}\n", data),
-            Some(Message::Binary(data)) => println!("Received binary message: {}", data.len()),
-            Some(Message::Close(code, reason)) => {
-                println!("Connection closed: {} {}", code, reason)
-            }
-            Some(Message::Ping(data)) => {
-                let result = self.tx.send(Message::Pong(data)).await;
-                if result.is_err() {
-                    println!("Failed to send pong");
-                }
-            }
-            Some(Message::Pong(data)) => println!("Received pong: {}", data.len()),
-            _ => {}
-        }
-
-        Ok(())
-    }
-
-    async fn on_error(&mut self) -> Result<()> {
-        println!("Connection error");
-        Ok(())
-    }
-
-    async fn on_close(&mut self) -> Result<()> {
-        println!("Connection closed");
-        Ok(())
-    }
 }
