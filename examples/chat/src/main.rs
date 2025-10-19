@@ -1,87 +1,129 @@
-use std::{io::stdin};
+mod echo;
 
-use deboa::{Deboa, Result, request::DeboaRequestBuilder};
-use deboa_extras::http::ws::{
-    protocol::{Message, WebSocketRead, WebSocketWrite},
-    request::WebsocketRequestBuilder,
-    response::IntoStream,
+use iced::widget::scrollable::Id;
+use iced::widget::{
+    button, center, column, row, scrollable, text, text_input,
 };
-use tokio::sync::{mpsc::channel};
+use iced::{Center, Element, Fill, Subscription, Task, color};
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    let mut client = Deboa::new();
+pub fn main() -> iced::Result {
+    iced::application("WebSocket", WebSocket::update, WebSocket::view)
+        .subscription(WebSocket::subscription)
+        .run()
+}
 
-    let (tx, mut rx) = channel::<Message>(100);
+#[derive(Default)]
+struct WebSocket {
+    messages: Vec<echo::Message>,
+    new_message: String,
+    state: State,
+}
 
-    let response = DeboaRequestBuilder::websocket("wss://echo.websocket.org")?
-        .go(&mut client)
-        .await?
-        .into_stream()
-        .await;
+#[derive(Debug, Clone)]
+enum Message {
+    NewMessageChanged(String),
+    Send(echo::Message),
+    Echo(echo::Event),
+}
 
-    let (mut reader, mut writer) = response.split();
-    let sender = tx.clone();
-    tokio::spawn(async move {
-        loop {
-            if let Ok(Some(message)) = reader.read_message().await {
-                match message {
-                    Message::Text(data) => print!("Server:\n{}\n", data),
-                    Message::Binary(data) => {
-                        println!("Received binary message: {}", data.len())
-                    }
-                    Message::Close(code, reason) => {
-                        println!("Connection closed: {} {}", code, reason)
-                    }
-                    Message::Ping(data) => {
-                        let result = sender.send(Message::Pong(data)).await;
-                        if result.is_err() {
-                            println!("Failed to send pong");
-                        }
-                    }
-                    Message::Pong(data) => println!("Received pong: {}", data.len()),
-                    _ => {}
+impl WebSocket {
+    fn update(&mut self, message: Message) -> Task<Message> {
+        match message {
+            Message::NewMessageChanged(new_message) => {
+                self.new_message = new_message;
+
+                Task::none()
+            }
+            Message::Send(message) => match &mut self.state {
+                State::Connected(connection) => {
+                    self.messages.push(echo::Message::User(format!("User: {}", self.new_message.clone())));
+                  
+                    self.new_message.clear();
+
+                    connection.send(message);
+
+                    Task::none()
                 }
-            } else {
-                break;
-            }
+                State::Disconnected => Task::none(),
+            },
+            Message::Echo(event) => match event {
+                echo::Event::Connected(connection) => {
+                    self.state = State::Connected(connection);
 
-            if let Some(message) = rx.recv().await {
-                if let Err(e) = writer.write_message(message).await {
-                    println!("Failed to write message: {}", e);
-                    break;
+                    self.messages.push(echo::Message::connected());
+
+                    Task::none()
                 }
-            } else {
-                break;
-            }
-        }
-    });
+                echo::Event::Disconnected => {
+                    self.state = State::Disconnected;
 
-    loop {
-        println!("You: ");
-        let mut message = String::new(); // Create a mutable String to store the input
-        let result = stdin().read_line(&mut message);
-        if result.is_err() {
-            break;
-        }
+                    self.messages.push(echo::Message::disconnected());
 
-        if message.trim() == "exit" {
-            let result = tx
-                .send(Message::Close(1000, "Normal Closure".to_string()))
-                .await;
-            if result.is_err() {
-                return Err(deboa::errors::DeboaError::WebSocket {
-                    message: "Failed to send close connection".to_string(),
-                });
-            }
-            break;
-        }
+                    Task::none()
+                }
+                echo::Event::MessageReceived(message) => {
+                    self.messages.push(message);
 
-        let result = tx.send(Message::Text(message)).await;
-        if result.is_err() {
-            break;
+                    Task::none()
+                }
+            },
         }
     }
 
-    Ok(())
+    fn subscription(&self) -> Subscription<Message> {
+        Subscription::run(echo::connect).map(Message::Echo)
+    }
+
+    fn view(&self) -> Element<'_, Message> {
+        let message_log: Element<_> = if self.messages.is_empty() {
+            center(
+                text("Your messages will appear here...")
+                    .color(color!(0x888888)),
+            )
+            .into()
+        } else {
+            scrollable(
+                column(self.messages.iter().map(text).map(Element::from))
+                    .spacing(10),
+            )
+            .id(Id::new(MESSAGE_LOG))
+            .height(Fill)
+            .width(Fill)
+            .spacing(10)
+            .into()
+        };
+
+        let new_message_input = {
+            let mut input = text_input("Type a message...", &self.new_message)
+                .on_input(Message::NewMessageChanged)
+                .padding(10);
+
+            let mut button = button(text("Send").height(40).align_y(Center))
+                .padding([0, 20]);
+
+            if matches!(self.state, State::Connected(_))
+                && let Some(message) = echo::Message::new(&self.new_message)
+            {
+                input = input.on_submit(Message::Send(message.clone()));
+                button = button.on_press(Message::Send(message));
+            }
+
+            row![input, button].spacing(10).align_y(Center)
+        };
+
+        column![message_log, new_message_input]
+            .height(Fill)
+            .padding(20)
+            .spacing(10)
+            .into()
+    }
 }
+
+#[derive(Default)]
+enum State {
+    #[default]
+    Disconnected,
+    Connected(echo::Connection),
+}
+
+const MESSAGE_LOG: &str = "message_log";
