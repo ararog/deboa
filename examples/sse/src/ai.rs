@@ -1,6 +1,6 @@
 use deboa::{Deboa, request::DeboaRequest, response::DeboaResponse};
 use deboa_extras::http::serde::json::JsonBody;
-use futures::{channel::mpsc, select};
+use futures::channel::mpsc;
 use http::header;
 use serde::{Deserialize, Serialize};
 use sipper::{Never, Sipper, StreamExt, sipper};
@@ -14,22 +14,16 @@ pub fn ai() -> impl Sipper<Never, Event> {
         let mut client = Deboa::new();
         output.send(Event::Connected(Connection(sender))).await;
         loop {
-            select! {
-                event = receiver.select_next_some() => {
-                    match event {
-                        Message::User(message) => {
-                            let response = make_request(&mut client, message.as_str()).await;
-                            let mut stream = response.unwrap().stream();
-                            while let Some(message) = stream.next().await {
-                                if let Ok(frame) = message {
-                                    output
-                                        .send(Event::MessageReceived(Message::User(
-                                            String::from_utf8_lossy(frame.as_ref()).to_string(),
-                                        )))
-                                        .await
-                                }
-                            }
-                        }
+            if let Some(Message::User(message)) = receiver.next().await {
+                let response = make_request(&mut client, message.as_str()).await;
+                let mut stream = response.unwrap().stream();
+                while let Some(message) = stream.next().await {
+                    if let Ok(frame) = message {
+                        let text_message = String::from_utf8_lossy(frame.as_ref()).to_string();
+                        let message = Message::new(&text_message).expect("Invalid message");
+                        output
+                            .send(Event::MessageReceived(message))
+                            .await
                     }
                 }
             }
@@ -87,7 +81,9 @@ pub struct Connection(mpsc::Sender<Message>);
 
 impl Connection {
     pub fn send(&mut self, message: Message) {
-        self.0.try_send(message).expect("Send message to echo server");
+        self.0
+            .try_send(message)
+            .expect("Send message to echo server");
     }
 }
 
