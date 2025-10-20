@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::fs::write;
 
 use http::{header, HeaderName, HeaderValue, Response};
-use http_body_util::{BodyExt, Either, Full};
+use http_body_util::{BodyDataStream, BodyExt, Either, Full};
 use hyper::body::{Bytes, Incoming};
 use hyper::upgrade::on;
 #[cfg(feature = "tokio-rt")]
@@ -333,8 +333,8 @@ impl DeboaResponse {
     /// * `Either<Incoming, Full<Bytes>>` - The stream body of the response.
     ///
     #[inline]
-    pub fn stream(self) -> Either<Incoming, Full<Bytes>> {
-        self.inner.into_body()
+    pub fn stream(self) -> BodyDataStream<http::Response<DeboaBody>> {
+        self.inner.into_data_stream()
     }
 
     /// Returns the response body as a deserialized type, consuming body.

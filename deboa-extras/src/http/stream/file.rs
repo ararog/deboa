@@ -1,5 +1,5 @@
 use deboa::{errors::DeboaError, response::DeboaResponse, Result};
-use http_body_util::BodyExt;
+use futures::StreamExt;
 use std::{fs::File, io::Write, path::Path};
 
 pub struct ToFile {
@@ -31,13 +31,12 @@ impl ToFile {
 
         let mut file = file.unwrap();
         let mut stream = self.response.stream();
-        while let Some(frame) = stream.frame().await {
-            let frame = frame.unwrap();
-            if let Some(chunk) = frame.data_ref() {
+        while let Some(frame) = stream.next().await {
+            if let Ok(chunk) = frame {
                 if let Some(ref on_progress) = on_progress {
                     on_progress(chunk.len() as u64);
                 }
-                if let Err(err) = file.write(chunk) {
+                if let Err(err) = file.write(chunk.as_ref()) {
                     return Err(DeboaError::Io {
                         message: err.to_string(),
                     });

@@ -8,6 +8,7 @@ use deboa::{
     request::DeboaRequest,
     Deboa, Result,
 };
+use futures_util::StreamExt;
 use http::{HeaderName, Method};
 use http_body_util::BodyExt;
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
@@ -366,21 +367,18 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         let file = File::create(save);
         if let Ok(mut file) = file {
             let mut stream = response.stream();
-            while let Some(frame) = stream.frame().await {
+            while let Some(frame) = stream.next().await {
                 if let Ok(frame) = frame {
-                    let data = frame.data_ref();
-                    if let Some(data) = data {
-                        let new = min(downloaded + data.len() as u64, content_length);
-                        downloaded = new;
-                        if let Some(pb) = &mut pb {
-                            pb.set_position(new);
-                        }
-                        let result = file.write(data);
-                        if let Err(e) = result {
-                            return Err(DeboaError::Io {
-                                message: format!("Failed to write to file: {}", e),
-                            });
-                        }
+                    let new = min(downloaded + frame.len() as u64, content_length);
+                    downloaded = new;
+                    if let Some(pb) = &mut pb {
+                        pb.set_position(new);
+                    }
+                    let result = file.write(&frame);
+                    if let Err(e) = result {
+                        return Err(DeboaError::Io {
+                            message: format!("Failed to write to file: {}", e),
+                        });
                     }
                 }
             }
@@ -412,23 +410,20 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
             }
         } else {
             let mut stream = response.stream();
-            while let Some(frame) = stream.frame().await {
+            while let Some(frame) = stream.next().await {
                 if let Ok(frame) = frame {
-                    let data = frame.data_ref();
-                    if let Some(data) = data {
-                        let new = min(downloaded + data.len() as u64, content_length);
-                        downloaded = new;
-                        if !stdout.is_terminal() {
-                            if let Some(pb) = &mut pb {
-                                pb.set_position(new);
-                            }
+                    let new = min(downloaded + frame.len() as u64, content_length);
+                    downloaded = new;
+                    if !stdout.is_terminal() {
+                        if let Some(pb) = &mut pb {
+                            pb.set_position(new);
                         }
-                        let result = stdout.write(data);
-                        if let Err(e) = result {
-                            return Err(DeboaError::Io {
-                                message: format!("Failed to write to stdout: {}", e),
-                            });
-                        }
+                    }
+                    let result = stdout.write(&frame);
+                    if let Err(e) = result {
+                        return Err(DeboaError::Io {
+                            message: format!("Failed to write to stdout: {}", e),
+                        });
                     }
                 }
             }
