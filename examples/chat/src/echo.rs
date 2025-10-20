@@ -4,11 +4,11 @@ use deboa_extras::http::ws::{
     request::WebsocketRequestBuilder,
     response::IntoStream,
 };
+use iced::futures;
 use iced::widget::text;
-use iced::{futures};
 
 use futures::channel::mpsc;
-use sipper::{sipper, Never, Sipper, StreamExt};
+use sipper::{Never, Sipper, StreamExt, sipper};
 
 use std::fmt;
 
@@ -57,8 +57,10 @@ pub fn connect() -> impl Sipper<Never, Event> {
                     Some(message) => {
                         if let protocol::Message::Text(message) = message {
                             output
-                                .send(Event::MessageReceived(Message::User(format!("Server: {}", message).to_string())))
-                            .await;
+                                .send(Event::MessageReceived(Message::User(
+                                    format!("Server: {}", message).to_string(),
+                                )))
+                                .await;
                         }
                     }
                     None => {

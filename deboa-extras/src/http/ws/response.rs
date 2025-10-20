@@ -1,5 +1,5 @@
 use crate::http::ws::protocol::{DeboaWebSocket, UpgradedIo, WebSocket};
-use deboa::{Result, response::DeboaResponse};
+use deboa::{response::DeboaResponse, Result};
 
 #[deboa::async_trait]
 pub trait IntoStream {

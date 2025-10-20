@@ -1,5 +1,5 @@
 use deboa::{response::DeboaResponse, Result};
-use futures::{StreamExt};
+use futures::StreamExt;
 pub use http_body_util::BodyExt;
 use mime_typed::MimeStrExt;
 
