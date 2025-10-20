@@ -49,6 +49,11 @@ pub struct EventHandler {
 
 impl EventHandler {
     /// Constructs a new instance of [`EventHandler`] and spawns a new thread to handle events.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of [`EventHandler`].
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         let (sender, receiver) = mpsc::unbounded_channel();
         let event_task = EventTask::new(sender.clone());

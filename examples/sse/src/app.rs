@@ -19,7 +19,7 @@ pub struct App {
     pub http_client: Deboa,
     pub input: Input,
     pub input_mode: InputMode,
-    pub messages: Vec<String>,
+    pub messages: Vec<PromptMessage>,
     pub running: bool,
     pub events: EventHandler,
 }
@@ -51,7 +51,10 @@ impl App {
                 LocalEvent::Tick => self.tick(),
                 LocalEvent::Crossterm(event) => self.handle_key_events(event).await,
                 LocalEvent::App(app_event) => match app_event {
-                    AppEvent::MessageReceived(message) => self.messages.push(message),
+                    AppEvent::MessageReceived(message) => self.messages.push(PromptMessage {
+                        role: "assistant".to_string(),
+                        content: message,
+                    }),
                     AppEvent::Quit => self.quit(),
                 },
             }
@@ -106,19 +109,31 @@ impl App {
 
     pub async fn push_message(&mut self) {
         let message = self.input.value_and_reset();
-        self.messages.push(message.clone());
+        self.messages.push(PromptMessage {
+            role: "user".to_string(),
+            content: message,
+        });
 
-        let response = self.make_request(message.as_str()).await;
+        let response = self.make_request().await;
+        if let Err(_message) = response {
+            //self.events.send(AppEvent::MessageReceived(message));
+            return;
+        }
+
         let mut stream = response.unwrap().stream();
         while let Some(message) = stream.next().await {
             if let Ok(frame) = message {
                 let text_message = String::from_utf8_lossy(frame.as_ref()).to_string();
-                self.events.send(AppEvent::MessageReceived(text_message));
+                let model_response: ModelResponse = serde_json::from_str(&text_message).unwrap();
+                self.messages.push(PromptMessage {
+                    role: "assistant".to_string(),
+                    content: model_response.choices[0].message.content.clone(),
+                });
             }
         }
     }
 
-    async fn make_request(&mut self, message: &str) -> Result<DeboaResponse, String> {
+    async fn make_request(&mut self) -> Result<DeboaResponse, String> {
         let response = DeboaRequest::post("https://api.openai.com/v1/chat/completions")
             .unwrap()
             .bearer_auth(API_KEY)
@@ -127,10 +142,7 @@ impl App {
                 JsonBody,
                 &Prompt {
                     model: "gpt-3.5-turbo".to_string(),
-                    messages: vec![PromptMessage {
-                        role: "user".to_string(),
-                        content: message.to_string(),
-                    }],
+                    messages: self.messages.clone(),
                 },
             )
             .unwrap()
@@ -138,7 +150,7 @@ impl App {
             .await;
 
         if let Err(message) = response {
-            println!("Failed to connect to echo server: {}", message);
+            println!("Error while making request to LLM: {}", message);
             Err(message.to_string())
         } else {
             Ok(response.unwrap())
@@ -152,8 +164,23 @@ pub struct Prompt {
     pub messages: Vec<PromptMessage>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PromptMessage {
     pub role: String,
+    pub content: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ModelResponse {
+    pub choices: Vec<ModelResponseChoice>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ModelResponseChoice {
+    pub message: ModelResponseMessage,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ModelResponseMessage {
     pub content: String,
 }
