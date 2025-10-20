@@ -1,8 +1,8 @@
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
-    style::{Color, Style},
-    text::Line,
+    style::{Color, Style, Stylize},
+    text::{Line, Text},
     widgets::{Block, Borders, List, Paragraph, Widget},
 };
 
@@ -25,13 +25,20 @@ impl Widget for &App {
             .title(title.centered())
             .borders(Borders::ALL);
 
-        let list = List::new(
-            self.messages
-                .iter()
-                .map(|message| Line::from(message.as_str()))
-                .collect::<Vec<_>>(),
-        )
-        .block(block);
+        let items = self
+            .messages
+            .iter()
+            .map(|message| {
+                let text = Text::from(message.content.clone());
+                if message.role == "user" {
+                    text.fg(Color::Blue).left_aligned()
+                } else {
+                    text.fg(Color::LightGreen).right_aligned()
+                }
+            })
+            .collect::<Vec<Text>>();
+
+        let list = List::new(items).block(block);
 
         list.render(messages_area, buf);
 
