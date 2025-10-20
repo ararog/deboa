@@ -1239,7 +1239,7 @@ checksum = "7046468a81e6a002061c01e6a7c83139daf91b11c30e66795b13217c2d885c8b"
 
 [[package]]
 name = "deboa"
-version = "0.0.6-beta.7"
+version = "0.0.6-beta.8"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -1296,7 +1296,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-extras"
-version = "0.0.2-beta.2"
+version = "0.0.2-beta.3"
 dependencies = [
  "base64",
  "brotli",
@@ -1304,6 +1304,8 @@ dependencies = [
  "deboa",
  "deboa-tests",
  "flate2",
+ "futures",
+ "futures-util",
  "http",
  "http-body-util",
  "httpmock",
@@ -1327,7 +1329,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-macros"
-version = "0.0.4-beta.2"
+version = "0.0.4-beta.3"
 dependencies = [
  "deboa",
  "deboa-bora",
@@ -4575,9 +4577,15 @@ dependencies = [
  "crossterm 0.29.0",
  "deboa",
  "deboa-extras",
+ "futures",
+ "http",
  "ratatui",
  "ratatui-elm",
+ "serde",
+ "serde_json",
+ "sipper",
  "tokio",
+ "tui-input",
 ]
 
 [[package]]
@@ -5057,6 +5065,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2df906b07856748fa3f6e0ad0cbaa047052d4a7dd609e231c4f72cee8c36f31"
 
 [[package]]
+name = "tui-input"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "911e93158bf80bbc94bad533b2b16e3d711e1132d69a6a6980c3920a63422c19"
+dependencies = [
+ "ratatui",
+ "unicode-width 0.2.0",
+]
+
+[[package]]
 name = "typed-builder"
 version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5095,13 +5113,14 @@ dependencies = [
 
 [[package]]
 name = "uget"
-version = "0.0.5-beta.4"
+version = "0.0.5-beta.5"
 dependencies = [
  "assert_cmd",
  "clap",
  "colored",
  "colored_json",
  "deboa",
+ "futures-util",
  "http",
  "http-body-util",
  "indicatif",
