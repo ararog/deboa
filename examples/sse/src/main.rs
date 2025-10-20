@@ -8,9 +8,9 @@ use ratatui::{
 };
 
 use ratatui_elm::{Task, Update};
-use tui_input::Input;
-
-use crate::ai::{Message, ai};
+#[allow(unused_imports)]
+use tui_input::{backend::crossterm::EventHandler, Input};
+use crate::ai::{ai, Message};
 
 mod ai;
 
@@ -19,6 +19,7 @@ pub struct Model {
     input: Input,
     input_mode: InputMode,
     messages: Vec<String>,
+    connection: Option<ai::Connection>,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -30,26 +31,75 @@ enum InputMode {
 
 fn main() {
     ratatui_elm::App::new(update, view)
+        .subscription(ai())
         .run()
         .unwrap();
 }
 
 fn update(state: &mut Model, event: Update<ai::Event>) -> (Task<ai::Event>, bool) {
-    let task = match event {
-        Update::Terminal(Event::Key(e)) => match e.code {
-            KeyCode::Char('q') | KeyCode::Esc => Task::Quit,
-            _ => Task::None,
-        },
+    let (task, should_render) = match event {
+        Update::Terminal(term_event) => {
+            let _event = term_event.clone();
+            if let Event::Key(key_event) = term_event {
+                match state.input_mode {
+                    InputMode::Normal => match key_event.code {
+                        KeyCode::Char('e') => {
+                            start_editing(state);
+                            (Task::None, true)
+                        }
+                        KeyCode::Char('q') => (Task::Quit, false), // exit
+                        _ => (Task::None, false),
+                    },
+                    InputMode::Editing => match key_event.code {
+                        KeyCode::Enter => {
+                            push_message(state);
+                            (Task::None, true)
+                        }
+                        KeyCode::Esc => {
+                            stop_editing(state);
+                            (Task::None, true)
+                        }
+                        _ => {
+                            //state.input.handle_event(&term_event);
+                            (Task::None, true)
+                        }
+                    },
+                }
+            } else {
+                (Task::None, false)
+            }
+        }
+        #[allow(clippy::collapsible_match)]
         Update::Message::<ai::Event>(message) => match message {
             ai::Event::MessageReceived(Message::User(message)) => {
                 state.messages.push(message);
-                Task::None
+                (Task::None, true)
             }
-            _ => Task::None,
+            ai::Event::Connected(conn) => {
+                state.messages.push("Connected to AI server".to_string());
+                state.connection = Some(conn);
+                (Task::None, true)
+            }
+            _ => (Task::None, false),
         },
-        _ => Task::None,
+        _ => (Task::None, false),
     };
-    (task, false)
+    (task, should_render)
+}
+
+fn start_editing(state: &mut Model) {
+    state.input_mode = InputMode::Editing
+}
+
+fn stop_editing(state: &mut Model) {
+    state.input_mode = InputMode::Normal
+}
+
+fn push_message(state: &mut Model) {
+    state.messages.push(state.input.value_and_reset());
+    if let Some(conn) = &mut state.connection {
+        conn.send(Message::User(state.messages.last().unwrap().clone()));
+    }
 }
 
 fn view(state: &mut Model, frame: &mut ratatui::Frame) {
