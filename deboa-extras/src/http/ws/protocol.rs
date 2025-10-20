@@ -319,16 +319,26 @@ impl WebSocketWrite for WebSocketWriter<WriteHalf<UpgradedIo>> {
         let mut tx_framer = WsTxFramer::new(true, &mut tx_buf);
 
         let result = match message {
-            Message::Text(data) => self.stream.write_all(tx_framer.frame(WsFrame::Text(&data))).await,
+            Message::Text(data) => {
+                self.stream
+                    .write_all(tx_framer.frame(WsFrame::Text(&data)))
+                    .await
+            }
             Message::Binary(data) => {
-                self.stream.write_all(tx_framer.frame(WsFrame::Binary(&data)))
+                self.stream
+                    .write_all(tx_framer.frame(WsFrame::Binary(&data)))
                     .await
             }
             Message::Close(code, reason) => {
-                self.stream.write_all(tx_framer.frame(WsFrame::Close(code, &reason)))
+                self.stream
+                    .write_all(tx_framer.frame(WsFrame::Close(code, &reason)))
                     .await
             }
-            Message::Ping(data) => self.stream.write_all(tx_framer.frame(WsFrame::Ping(&data))).await,
+            Message::Ping(data) => {
+                self.stream
+                    .write_all(tx_framer.frame(WsFrame::Ping(&data)))
+                    .await
+            }
             _ => Ok(()),
         };
 
