@@ -7,7 +7,7 @@ use deboa::{Deboa, request::DeboaRequest, response::DeboaResponse};
 use deboa_extras::http::serde::json::JsonBody;
 use futures::StreamExt;
 use http::header;
-use ratatui::{DefaultTerminal, crossterm::event::KeyCode};
+use ratatui::{crossterm::event::KeyCode, layout::Rect, DefaultTerminal};
 use serde::{Deserialize, Serialize};
 use tui_input::{Input, backend::crossterm::EventHandler as _};
 
@@ -22,6 +22,7 @@ pub struct App {
     pub messages: Vec<PromptMessage>,
     pub running: bool,
     pub events: EventHandler,
+    pub frame: Rect,
 }
 
 impl Default for App {
@@ -33,6 +34,7 @@ impl Default for App {
             messages: Vec::new(),
             running: true,
             events: EventHandler::new(),
+            frame: Rect::default(),
         }
     }
 }
@@ -46,7 +48,10 @@ impl App {
     /// Run the application's main loop.
     pub async fn run(mut self, mut terminal: DefaultTerminal) -> color_eyre::Result<()> {
         while self.running {
-            terminal.draw(|frame| frame.render_widget(&self, frame.area()))?;
+            terminal.draw(|frame| {
+                frame.render_widget(&self, frame.area());
+                self.frame = frame.area();
+            })?;
             match self.events.next().await? {
                 LocalEvent::Tick => self.tick(),
                 LocalEvent::Crossterm(event) => self.handle_key_events(event).await,
@@ -121,16 +126,32 @@ impl App {
         }
 
         let mut stream = response.unwrap().stream();
+        let mut text = Vec::new();
         while let Some(message) = stream.next().await {
             if let Ok(frame) = message {
                 let text_message = String::from_utf8_lossy(frame.as_ref()).to_string();
-                let model_response: ModelResponse = serde_json::from_str(&text_message).unwrap();
-                self.messages.push(PromptMessage {
-                    role: "assistant".to_string(),
-                    content: model_response.choices[0].message.content.clone(),
-                });
+                let lines = text_message.lines();
+                for line in lines {
+                    if let Some(stripped) = line.strip_prefix("data: ") {
+                        if stripped == "[DONE]" {
+                            break;
+                        }
+
+                        let result = serde_json::from_str::<ModelResponse>(stripped);
+                        #[allow(clippy::collapsible_if)]
+                        if let Ok(model_response) = result {
+                            let delta = &model_response.choices[0].delta;
+                            text.push(delta.content.clone())
+                        }
+                    }
+                }
             }
         }
+        let content = text.join("");
+        self.messages.push(PromptMessage {
+            role: "assistant".to_string(),
+            content: textwrap::fill(&content, self.frame.width as usize - 2),
+        });        
     }
 
     async fn make_request(&mut self) -> Result<DeboaResponse, String> {
@@ -143,6 +164,7 @@ impl App {
                 &Prompt {
                     model: "gpt-3.5-turbo".to_string(),
                     messages: self.messages.clone(),
+                    stream: true,
                 },
             )
             .unwrap()
@@ -162,6 +184,7 @@ impl App {
 pub struct Prompt {
     pub model: String,
     pub messages: Vec<PromptMessage>,
+    pub stream: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -177,10 +200,11 @@ pub struct ModelResponse {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ModelResponseChoice {
-    pub message: ModelResponseMessage,
+    pub delta: ModelResponseDelta,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ModelResponseMessage {
+pub struct ModelResponseDelta {
     pub content: String,
 }
+

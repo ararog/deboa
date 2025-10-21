@@ -29,7 +29,8 @@ impl Widget for &App {
             .messages
             .iter()
             .map(|message| {
-                let text = Text::from(message.content.clone());
+                let content = message.content.clone();
+                let text = Text::from(content);
                 if message.role == "user" {
                     text.fg(Color::Blue).left_aligned()
                 } else {
