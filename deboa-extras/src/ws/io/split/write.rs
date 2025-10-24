@@ -3,7 +3,7 @@ use ws_framer::{WsFrame, WsTxFramer};
 
 use crate::ws::{io::socket::UpgradedIo, protocol::Message};
 
-use deboa::Result;
+use deboa::{errors::{DeboaError, WebSocketError}, Result};
 
 #[deboa::async_trait]
 pub trait WebSocketWrite {
@@ -65,9 +65,9 @@ impl WebSocketWrite for WebSocketWriter<WriteHalf<UpgradedIo>> {
         };
 
         if result.is_err() {
-            return Err(deboa::errors::DeboaError::WebSocket {
+            return Err(DeboaError::WebSocket(WebSocketError::SendMessage {
                 message: "Failed to send frame".to_string(),
-            });
+            }));
         }
 
         Ok(())

@@ -215,14 +215,14 @@ impl DeboaResponse {
         let header_name = header.as_str();
         let header_value = self.headers().get(header_name);
         if header_value.is_none() {
-            return Err(DeboaError::InvalidHeader {
+            return Err(DeboaError::Header {
                 message: "Header is missing".to_string(),
             });
         }
         let header_value = header_value.unwrap();
         let header_value = header_value.to_str();
         if let Err(e) = header_value {
-            return Err(DeboaError::InvalidHeader {
+            return Err(DeboaError::Header {
                 message: format!("Failed to read {}:: {}", header_name, e),
             });
         }
@@ -242,7 +242,7 @@ impl DeboaResponse {
         let header = self.header_value(header::CONTENT_LENGTH)?;
         let header = header.parse::<u64>();
         if let Err(e) = header {
-            return Err(DeboaError::InvalidHeader {
+            return Err(DeboaError::Header {
                 message: format!("Failed to parse content-length: {}", e),
             });
         }
