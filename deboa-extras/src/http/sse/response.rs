@@ -17,8 +17,16 @@ pub trait IntoEventStream {
     /// # Examples
     ///
     /// ``` compile_fail
-    /// let response = DeboaResponse::new();
-    /// let sse = response.into_event_stream();
+    /// use deboa::{Deboa, Result};
+    /// use deboa_extras::http::sse::response::{IntoEventStream};
+    ///
+    /// let mut client = Deboa::new();
+    ///
+    /// let response = client.execute("https://sse.dev/test").await?.into_event_stream();
+    /// 
+    /// while let Some(event) = response.next().await {
+    ///     println!("event: {}", event);
+    /// }
     /// ```
     fn into_event_stream(self) -> Result<ServerEventStream>;
 }

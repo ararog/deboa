@@ -66,31 +66,19 @@ println!("Response Status Code: {}", response.status());
 
 ```rust
 use deboa::{Deboa, Result};
-use deboa_extras::http::sse::response::{EventHandler, IntoStream};
+use deboa_extras::http::sse::response::{IntoEventStream};
 
 let mut client = Deboa::new();
 
-let response = client.execute("https://sse.dev/test").await?.into_stream();
+let response = client.execute("https://sse.dev/test").await?.into_event_stream();
 
-let handler = SSEHandler;
-
-response.poll_event(handler).await?;
+// Poll events, until the connection is closed
+// please note that this is a blocking call
+while let Some(event) = response.next().await {
+    println!("event: {}", event);
+}
 
 println!("Connection closed");
-```
-
-Implement the event handler:
-
-```rust
-pub struct SSEHandler;
-
-#[deboa::async_trait]
-impl EventHandler for SSEHandler {
-    async fn on_event(&mut self, event: &str) -> Result<()> {
-        println!("event: {}", event);
-        Ok(())
-    }
-}
 ```
 
 ### Websockets

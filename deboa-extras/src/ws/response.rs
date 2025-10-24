@@ -17,8 +17,19 @@ pub trait IntoWebSocket {
     /// # Example
     /// 
     /// ``` compile_fail
-    /// let response = DeboaResponse::new(200);
+    /// use deboa::{Deboa, Result, request::{IntoUrl, DeboaRequestBuilder}};
+    /// use deboa_extras::http::ws::request::{WebsocketRequestBuilder};
+    /// 
+    /// let mut client = Deboa::new();
+    /// let builder = DeboaRequestBuilder::websocket("ws://example.com").unwrap();
+    /// let response = builder.go(&mut client).await.unwrap();
     /// let websocket = response.into_websocket().unwrap();
+    /// 
+    /// loop {
+    ///     if let Ok(Some(message)) = websocket.read_message().await {
+    ///         println!("message: {}", message);
+    ///     }
+    /// }
     /// ```
     async fn into_websocket(self) -> Result<WebSocket<UpgradedIo>>;
 }
