@@ -130,8 +130,8 @@ impl App {
         if let Ok(stream) = response {
             let mut stream = stream.into_event_stream().unwrap();
             while let Some(Ok(events)) = stream.next().await {
-                for event in events {
-                    let result = serde_json::from_str::<ModelResponse>(event.data());
+                for data in events.data() {
+                    let result = serde_json::from_str::<ModelResponse>(data);
                     #[allow(clippy::collapsible_if)]
                     if let Ok(model_response) = result {
                         let delta = &model_response.choices[0].delta;
