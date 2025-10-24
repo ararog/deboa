@@ -4,8 +4,5 @@ pub mod serde;
 #[cfg(feature = "sse")]
 pub mod sse;
 
-#[cfg(feature = "stream")]
-pub mod stream;
-
-#[cfg(feature = "websockets")]
-pub mod ws;
+#[cfg(feature = "utils")]
+pub mod utils;

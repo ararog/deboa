@@ -4,7 +4,7 @@ use crate::{
 };
 use crossterm::event::Event;
 use deboa::{Deboa, request::DeboaRequest, response::DeboaResponse};
-use deboa_extras::http::serde::json::JsonBody;
+use deboa_extras::http::{serde::json::JsonBody, sse::response::{IntoEventStream}};
 use futures::StreamExt;
 use http::header;
 use ratatui::{crossterm::event::KeyCode, layout::Rect, DefaultTerminal};
@@ -125,24 +125,17 @@ impl App {
             return;
         }
 
-        let mut stream = response.unwrap().stream();
         let mut text = Vec::new();
-        while let Some(message) = stream.next().await {
-            if let Ok(frame) = message {
-                let text_message = String::from_utf8_lossy(frame.as_ref()).to_string();
-                let lines = text_message.lines();
-                for line in lines {
-                    if let Some(stripped) = line.strip_prefix("data: ") {
-                        if stripped == "[DONE]" {
-                            break;
-                        }
-
-                        let result = serde_json::from_str::<ModelResponse>(stripped);
-                        #[allow(clippy::collapsible_if)]
-                        if let Ok(model_response) = result {
-                            let delta = &model_response.choices[0].delta;
-                            text.push(delta.content.clone())
-                        }
+        let response = response;
+        if let Ok(stream) = response {
+            let mut stream = stream.into_event_stream().unwrap();
+            while let Some(Ok(events)) = stream.next().await {
+                for event in events {
+                    let result = serde_json::from_str::<ModelResponse>(event.data());
+                    #[allow(clippy::collapsible_if)]
+                    if let Ok(model_response) = result {
+                        let delta = &model_response.choices[0].delta;
+                        text.push(delta.content.clone())
                     }
                 }
             }

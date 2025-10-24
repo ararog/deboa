@@ -13,9 +13,9 @@ publish = true
 rust-version = "1.64.0"
 
 [features]
-default = ["serialization", "compression", "sse", "stream", "websockets", "tokio"]
+default = ["serialization", "compression", "sse", "utils", "websockets", "tokio"]
 sse = ["dep:http-body-util", "dep:deboa"]
-stream = ["dep:deboa"]
+utils = ["dep:deboa"]
 websockets = ["dep:deboa", "dep:base64", "dep:rand", "dep:ws-framer"]
 # serialization
 serialization_all = ["json", "xml", "msgpack"]

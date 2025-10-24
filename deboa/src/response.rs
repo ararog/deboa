@@ -296,6 +296,17 @@ impl DeboaResponse {
         }
     }
 
+    /// Allow get inner response body at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `DeboaBody` - The inner response body.
+    ///
+    #[inline]
+    pub fn inner_body(self) -> DeboaBody {
+        self.inner.into_body()
+    }
+
     /// Returns the response body as a vector of bytes, consuming body.
     /// Useful for small responses. For larger responses, consider using `stream`.
     ///
