@@ -1,6 +1,9 @@
 use deboa::{Deboa, request::DeboaRequestBuilder};
 use deboa_extras::ws::{
-    io::split::{read::WebSocketRead, write::WebSocketWrite}, protocol::{self}, request::WebsocketRequestBuilder, response::IntoWebSocket
+    io::split::{read::WebSocketRead, write::WebSocketWrite},
+    protocol::{self},
+    request::WebsocketRequestBuilder,
+    response::IntoWebSocket,
 };
 use iced::futures;
 use iced::widget::text;
