@@ -3,7 +3,6 @@ use std::{
     task::{Context, Poll},
 };
 
-use bytes::Bytes;
 use futures::{ready, Stream};
 use hyper::body::Body;
 use pin_project_lite::pin_project;
