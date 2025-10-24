@@ -10,7 +10,6 @@ use deboa::{
 };
 use futures_util::StreamExt;
 use http::{HeaderName, Method};
-use http_body_util::BodyExt;
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use std::fs::File;
 use std::{
