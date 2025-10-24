@@ -4,7 +4,7 @@ use std::{
     task::{Context, Poll},
 };
 
-use deboa::Result;
+use deboa::{errors::{DeboaError, WebSocketError}, Result};
 use hyper::upgrade::Upgraded;
 #[cfg(feature = "tokio")]
 use hyper_util::rt::TokioIo;
@@ -141,9 +141,9 @@ impl WebSocketRead for WebSocket<UpgradedIo> {
 
         let bytes_read = self.stream.read(rx_framer.mut_buf()).await;
         if bytes_read.is_err() {
-            return Err(deboa::errors::DeboaError::WebSocket {
+            return Err(DeboaError::WebSocket(WebSocketError::ReceiveMessage {
                 message: "Failed to read message".to_string(),
-            });
+            }));
         }
 
         let bytes_read = bytes_read.unwrap();
@@ -189,9 +189,9 @@ impl WebSocketWrite for WebSocket<UpgradedIo> {
         };
 
         if result.is_err() {
-            return Err(deboa::errors::DeboaError::WebSocket {
+            return Err(DeboaError::WebSocket(WebSocketError::SendMessage {
                 message: "Failed to send frame".to_string(),
-            });
+            }));
         }
 
         Ok(())

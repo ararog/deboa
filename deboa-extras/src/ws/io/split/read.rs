@@ -3,7 +3,7 @@ use ws_framer::{WsFrame, WsRxFramer};
 
 use crate::ws::{io::socket::UpgradedIo, protocol::Message};
 
-use deboa::Result;
+use deboa::{errors::{DeboaError, WebSocketError}, Result};
 
 #[deboa::async_trait]
 pub trait WebSocketRead {
@@ -28,9 +28,9 @@ impl WebSocketRead for WebSocketReader<ReadHalf<UpgradedIo>> {
 
         let bytes_read = self.stream.read(rx_framer.mut_buf()).await;
         if bytes_read.is_err() {
-            return Err(deboa::errors::DeboaError::WebSocket {
+            return Err(DeboaError::WebSocket(WebSocketError::ReceiveMessage {
                 message: "Failed to read message".to_string(),
-            });
+            }));
         }
 
         let bytes_read = bytes_read.unwrap();

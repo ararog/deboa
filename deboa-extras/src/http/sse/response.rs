@@ -27,7 +27,7 @@ impl IntoEventStream for DeboaResponse {
     fn into_event_stream(self) -> Result<ServerEventStream> {
         let header = self.headers().get(http::header::CONTENT_TYPE);
         if header.is_none() {
-            return Err(DeboaError::SSE {
+            return Err(DeboaError::Header {
                 message: "Missing content type".to_string(),
             });
         }
@@ -35,7 +35,7 @@ impl IntoEventStream for DeboaResponse {
         let header = header.unwrap();
 
         if header != mime_typed::TextEventStream::MIME_STR {
-            return Err(DeboaError::SSE {
+            return Err(DeboaError::Header {
                 message: "Content type is not text/event-stream".to_string(),
             });
         }

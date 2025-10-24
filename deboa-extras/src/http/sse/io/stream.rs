@@ -10,7 +10,7 @@ use pin_project_lite::pin_project;
 
 use crate::http::sse::event::ServerEvent;
 
-use deboa::response::DeboaBody;
+use deboa::{errors::{DeboaError, SSEError}, response::DeboaBody};
 use deboa::Result;
 
 pin_project! {
@@ -56,9 +56,9 @@ impl Stream for ServerEventStream {
                     Ok(bytes) => Poll::Ready(Some(parse_event(&bytes))),
                     Err(_) => continue,
                 },
-                Some(Err(err)) => Poll::Ready(Some(Err(deboa::errors::DeboaError::SSE {
+                Some(Err(err)) => Poll::Ready(Some(Err(DeboaError::SSE(SSEError::ReceiveEvent {
                     message: err.to_string(),
-                }))),
+                })))),
                 None => Poll::Ready(None),
             };
         }
