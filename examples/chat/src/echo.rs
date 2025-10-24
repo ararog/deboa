@@ -1,8 +1,6 @@
 use deboa::{Deboa, request::DeboaRequestBuilder};
-use deboa_extras::http::ws::{
-    protocol::{self, WebSocketRead, WebSocketWrite},
-    request::WebsocketRequestBuilder,
-    response::IntoStream,
+use deboa_extras::ws::{
+    io::split::{read::WebSocketRead, write::WebSocketWrite}, protocol::{self}, request::WebsocketRequestBuilder, response::IntoWebSocket
 };
 use iced::futures;
 use iced::widget::text;
@@ -27,7 +25,7 @@ pub fn connect() -> impl Sipper<Never, Event> {
                 continue;
             }
 
-            let (mut websocket, mut input) = match response.unwrap().into_stream().await {
+            let (mut websocket, mut input) = match response.unwrap().into_websocket().await {
                 Ok(websocket) => {
                     let (sender, receiver) = mpsc::channel(100);
 

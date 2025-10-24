@@ -23,29 +23,13 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, ReadBuf, Rea
 
 use ws_framer::{WsFrame, WsRxFramer, WsTxFramer};
 
+use crate::ws::{io::split::{read::{WebSocketRead, WebSocketReader}, write::{WebSocketWrite, WebSocketWriter}}, protocol::Message};
+
 #[cfg(feature = "tokio")]
 pub type UpgradedIo = TokioIo<Upgraded>;
 
 #[cfg(feature = "smol")]
 pub type UpgradedIo = FuturesIo<Upgraded>;
-
-/// Message enum
-///
-/// # Variants
-///
-/// * `Text(String)` - A text message.
-/// * `Binary(Vec<u8>)` - A binary message.
-/// * `Close(u16, String)` - A close message.
-/// * `Ping(Vec<u8>)` - A ping message.
-/// * `Pong(Vec<u8>)` - A pong message.
-#[derive(Clone)]
-pub enum Message {
-    Text(String),
-    Binary(Vec<u8>),
-    Close(u16, String),
-    Ping(Vec<u8>),
-    Pong(Vec<u8>),
-}
 
 pub trait DeboaWebSocket {
     type Stream;
@@ -93,8 +77,8 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
     fn split(self) -> (Self::Reader, Self::Writer) {
         let (reader, writer) = split(self.stream);
         (
-            Self::Reader { stream: reader },
-            Self::Writer { stream: writer },
+            Self::Reader::new(reader),
+            Self::Writer::new(writer),
         )
     }
 }
@@ -201,144 +185,6 @@ impl WebSocketWrite for WebSocket<UpgradedIo> {
                     .await
             }
             Message::Ping(data) => self.write_all(tx_framer.frame(WsFrame::Ping(&data))).await,
-            _ => Ok(()),
-        };
-
-        if result.is_err() {
-            return Err(deboa::errors::DeboaError::WebSocket {
-                message: "Failed to send frame".to_string(),
-            });
-        }
-
-        Ok(())
-    }
-
-    async fn send_close(&mut self, code: u16, reason: &str) -> Result<()> {
-        self.write_message(Message::Close(code, reason.to_string()))
-            .await
-    }
-
-    async fn send_text(&mut self, message: &str) -> Result<()> {
-        self.write_message(Message::Text(message.to_string())).await
-    }
-
-    async fn send_binary(&mut self, message: &[u8]) -> Result<()> {
-        self.write_message(Message::Binary(message.to_vec())).await
-    }
-
-    async fn send_ping(&mut self, message: &[u8]) -> Result<()> {
-        self.write_message(Message::Ping(message.to_vec())).await
-    }
-
-    async fn send_pong(&mut self, message: &[u8]) -> Result<()> {
-        self.write_message(Message::Pong(message.to_vec())).await
-    }
-}
-
-#[deboa::async_trait]
-pub trait WebSocketWrite {
-    type Stream;
-
-    async fn write_message(&mut self, message: Message) -> Result<()>;
-
-    async fn send_close(&mut self, code: u16, reason: &str) -> Result<()>;
-
-    async fn send_text(&mut self, message: &str) -> Result<()>;
-
-    async fn send_binary(&mut self, message: &[u8]) -> Result<()>;
-
-    async fn send_ping(&mut self, message: &[u8]) -> Result<()>;
-
-    async fn send_pong(&mut self, message: &[u8]) -> Result<()>;
-}
-
-pub struct WebSocketReader<T> {
-    stream: T,
-}
-
-impl WebSocketReader<ReadHalf<UpgradedIo>> {
-    pub fn new(stream: ReadHalf<UpgradedIo>) -> Self {
-        Self { stream }
-    }
-}
-
-#[deboa::async_trait]
-impl WebSocketRead for WebSocketReader<ReadHalf<UpgradedIo>> {
-    async fn read_message(&mut self) -> Result<Option<Message>> {
-        let mut rx_buf = vec![0; 10240];
-        let mut rx_framer = WsRxFramer::new(&mut rx_buf);
-
-        let bytes_read = self.stream.read(rx_framer.mut_buf()).await;
-        if bytes_read.is_err() {
-            return Err(deboa::errors::DeboaError::WebSocket {
-                message: "Failed to read message".to_string(),
-            });
-        }
-
-        let bytes_read = bytes_read.unwrap();
-        rx_framer.revolve_write_offset(bytes_read);
-        let res = rx_framer.process_data();
-        let message = if let Some(frame) = res {
-            #[allow(clippy::collapsible_match)]
-            match frame {
-                WsFrame::Text(data) => Some(Message::Text(data.to_string())),
-                WsFrame::Binary(data) => Some(Message::Binary(data.to_vec())),
-                WsFrame::Close(code, reason) => Some(Message::Close(code, reason.to_string())),
-                WsFrame::Ping(data) => Some(Message::Ping(data.to_vec())),
-                _ => None,
-            }
-        } else {
-            None
-        };
-
-        Ok(message)
-    }
-}
-
-#[deboa::async_trait]
-pub trait WebSocketRead {
-    async fn read_message(&mut self) -> Result<Option<Message>>;
-}
-
-pub struct WebSocketWriter<T> {
-    stream: T,
-}
-
-impl WebSocketWriter<WriteHalf<UpgradedIo>> {
-    pub fn new(stream: WriteHalf<UpgradedIo>) -> Self {
-        Self { stream }
-    }
-}
-
-#[deboa::async_trait]
-impl WebSocketWrite for WebSocketWriter<WriteHalf<UpgradedIo>> {
-    type Stream = WriteHalf<UpgradedIo>;
-
-    async fn write_message(&mut self, message: Message) -> Result<()> {
-        let mut tx_buf = vec![0; 10240];
-        let mut tx_framer = WsTxFramer::new(true, &mut tx_buf);
-
-        let result = match message {
-            Message::Text(data) => {
-                self.stream
-                    .write_all(tx_framer.frame(WsFrame::Text(&data)))
-                    .await
-            }
-            Message::Binary(data) => {
-                self.stream
-                    .write_all(tx_framer.frame(WsFrame::Binary(&data)))
-                    .await
-            }
-            Message::Close(code, reason) => {
-                self.stream
-                    .write_all(tx_framer.frame(WsFrame::Close(code, &reason)))
-                    .await
-            }
-            Message::Ping(data) => {
-                self.stream
-                    .write_all(tx_framer.frame(WsFrame::Ping(&data)))
-                    .await
-            }
             _ => Ok(()),
         };
 
