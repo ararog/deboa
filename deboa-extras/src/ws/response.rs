@@ -5,26 +5,26 @@ use deboa::{response::DeboaResponse, Result};
 #[deboa::async_trait]
 pub trait IntoWebSocket {
     /// Converts a DeboaResponse into a WebSocket
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `self` - The DeboaResponse to convert
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A Result containing the WebSocket
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ``` compile_fail
     /// use deboa::{Deboa, Result, request::{IntoUrl, DeboaRequestBuilder}};
     /// use deboa_extras::http::ws::request::{WebsocketRequestBuilder};
-    /// 
+    ///
     /// let mut client = Deboa::new();
     /// let builder = DeboaRequestBuilder::websocket("ws://example.com").unwrap();
     /// let response = builder.go(&mut client).await.unwrap();
     /// let websocket = response.into_websocket().unwrap();
-    /// 
+    ///
     /// loop {
     ///     if let Ok(Some(message)) = websocket.read_message().await {
     ///         println!("message: {}", message);

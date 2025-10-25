@@ -11,7 +11,12 @@ pub struct ServerEvent {
 
 impl ServerEvent {
     pub fn new() -> Self {
-        Self { id: None, event: None, data: Vec::new(), retry: None }
+        Self {
+            id: None,
+            event: None,
+            data: Vec::new(),
+            retry: None,
+        }
     }
 
     pub fn id(&self) -> &Option<String> {

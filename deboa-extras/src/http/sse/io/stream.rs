@@ -9,8 +9,11 @@ use pin_project_lite::pin_project;
 
 use crate::http::sse::event::ServerEvent;
 
-use deboa::{errors::{DeboaError, SSEError}, response::DeboaBody};
 use deboa::Result;
+use deboa::{
+    errors::{DeboaError, SSEError},
+    response::DeboaBody,
+};
 
 pin_project! {
     /// A data stream created from a [`Body`].

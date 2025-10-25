@@ -10,21 +10,21 @@ use http::{header, Method};
 /// Trait for building websocket requests
 pub trait WebsocketRequestBuilder {
     /// Creates a websocket request
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `url` - The URL to connect to
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A Result containing the DeboaRequestBuilder
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ``` compile_fail
     /// use deboa::{Deboa, Result, request::{IntoUrl, DeboaRequestBuilder}};
     /// use deboa_extras::http::ws::request::{WebsocketRequestBuilder};
-    /// 
+    ///
     /// let mut client = Deboa::new();
     /// let request = DeboaRequestBuilder::websocket("ws://example.com").unwrap();
     /// let response = request.go(&mut client).await.unwrap();
