@@ -1266,7 +1266,7 @@ checksum = "7046468a81e6a002061c01e6a7c83139daf91b11c30e66795b13217c2d885c8b"
 
 [[package]]
 name = "deboa"
-version = "0.0.6-beta.9"
+version = "0.0.6"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -1304,7 +1304,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-bora"
-version = "0.0.3-beta.3"
+version = "0.0.3"
 dependencies = [
  "deboa",
  "deboa-extras",
@@ -1323,7 +1323,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-extras"
-version = "0.0.2-beta.4"
+version = "0.0.2"
 dependencies = [
  "base64",
  "brotli",
@@ -1357,7 +1357,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-macros"
-version = "0.0.4-beta.4"
+version = "0.0.4"
 dependencies = [
  "deboa",
  "deboa-bora",
@@ -5179,7 +5179,7 @@ dependencies = [
 
 [[package]]
 name = "uget"
-version = "0.0.5-beta.6"
+version = "0.0.5"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -5315,7 +5315,7 @@ checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
 
 [[package]]
 name = "vamo"
-version = "0.0.2-beta.3"
+version = "0.0.2"
 dependencies = [
  "deboa",
  "deboa-extras",
@@ -5329,7 +5329,7 @@ dependencies = [
 
 [[package]]
 name = "vamo-macros"
-version = "0.0.2-beta.3"
+version = "0.0.2"
 dependencies = [
  "deboa",
  "deboa-extras",
