@@ -2,9 +2,7 @@ use deboa::{errors::DeboaError, response::DeboaResponse, Result};
 pub use http_body_util::BodyExt;
 use mime_typed::MimeStrExt;
 
-use crate::http::sse::{
-    io::stream::ServerEventStream,
-};
+use crate::http::sse::io::stream::ServerEventStream;
 
 /// Trait to convert a DeboaResponse into a SSE stream.
 pub trait IntoEventStream {
@@ -23,7 +21,7 @@ pub trait IntoEventStream {
     /// let mut client = Deboa::new();
     ///
     /// let response = client.execute("https://sse.dev/test").await?.into_event_stream();
-    /// 
+    ///
     /// while let Some(event) = response.next().await {
     ///     println!("event: {}", event);
     /// }

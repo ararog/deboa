@@ -85,27 +85,22 @@ println!("Connection closed");
 
 ```rust
 use deboa::{Deboa, Result, request::DeboaRequestBuilder};
-use deboa_extras::http::ws::{
-    protocol::{Message, MessageHandler, WebSocketRead, WebSocketWrite},
+use deboa_extras::ws::{
+    io::socket::DeboaWebSocket,
+    protocol::{self},
     request::WebsocketRequestBuilder,
-    response::IntoStream,
+    response::IntoWebSocket,
 };
 
 let mut client = Deboa::new();
 
-let (tx, mut rx) = channel::<Message>(100);
-
-let handler = ChatHandler { tx: tx.clone() };
-
-let response = DeboaRequestBuilder::websocket("wss://echo.websocket.org")?
+let websocket = DeboaRequestBuilder::websocket("wss://echo.websocket.org")?
     .go(&mut client)
     .await?
-    .into_stream(handler)
+    .into_websocket()
     .await;
 
-let (mut reader, mut writer) = response.split();
-
-while let Ok(()) = reader.read_message().await {
+while let Ok(()) = websocket.read_message().await {
     // Just keep checking messages
 }
 ```

@@ -53,10 +53,10 @@ pub enum DeboaError {
     Io { message: String },
 
     #[error("Websocket error: {0}")]
-    WebSocket (#[from] WebSocketError),
+    WebSocket(#[from] WebSocketError),
 
     #[error("SSE error: {0}")]
-    SSE (#[from] SSEError),
+    SSE(#[from] SSEError),
 }
 
 #[derive(Debug, Clone, Error, PartialEq)]

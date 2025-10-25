@@ -1,6 +1,6 @@
 use deboa::{Deboa, request::DeboaRequestBuilder};
 use deboa_extras::ws::{
-    io::split::{read::WebSocketRead, write::WebSocketWrite},
+    io::socket::DeboaWebSocket,
     protocol::{self},
     request::WebsocketRequestBuilder,
     response::IntoWebSocket,
@@ -10,6 +10,7 @@ use iced::widget::text;
 
 use futures::channel::mpsc;
 use sipper::{Never, Sipper, StreamExt, sipper};
+use tokio::select;
 
 use std::fmt;
 
@@ -46,37 +47,41 @@ pub fn connect() -> impl Sipper<Never, Event> {
             };
 
             loop {
-                let result = websocket.read_message().await;
-                if let Err(message) = result {
-                    println!("Failed to read message from echo server: {}", message);
+                select! {
+                    outgoing_message = websocket.read_message() => {
+                        if let Err(message) = outgoing_message {
+                            println!("Failed to read message from echo server: {}", message);
 
-                    output.send(Event::Disconnected).await;
-                    break;
-                }
+                            output.send(Event::Disconnected).await;
+                            break;
+                        }
 
-                match result.unwrap() {
-                    Some(message) => {
-                        if let protocol::Message::Text(message) = message {
-                            output
-                                .send(Event::MessageReceived(Message::User(
-                                    format!("Server: {}", message).to_string(),
-                                )))
-                                .await;
+                        match outgoing_message.unwrap() {
+                            Some(message) => {
+                                if let protocol::Message::Text(message) = message {
+                                    output
+                                        .send(Event::MessageReceived(Message::User(
+                                            format!("Server: {}", message).to_string(),
+                                        )))
+                                        .await;
+                                }
+                            }
+                            None => {
+                                output.send(Event::Disconnected).await;
+                                break;
+                            }
                         }
                     }
-                    None => {
-                        output.send(Event::Disconnected).await;
-                        break;
-                    }
-                }
-
-                if let Some(message) = input.next().await {
-                    let result = websocket
-                        .write_message(protocol::Message::Text(message.to_string()))
-                        .await;
-                    if result.is_err() {
-                        output.send(Event::Disconnected).await;
-                        break;
+                    incoming_message = input.next() => {
+                        if let Some(message) = incoming_message {
+                            let result = websocket
+                              .write_message(protocol::Message::Text(message.to_string()))
+                              .await;
+                            if result.is_err() {
+                                output.send(Event::Disconnected).await;
+                                break;
+                            }
+                        }
                     }
                 }
             }

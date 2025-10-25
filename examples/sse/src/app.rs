@@ -4,10 +4,10 @@ use crate::{
 };
 use crossterm::event::Event;
 use deboa::{Deboa, request::DeboaRequest, response::DeboaResponse};
-use deboa_extras::http::{serde::json::JsonBody, sse::response::{IntoEventStream}};
+use deboa_extras::http::{serde::json::JsonBody, sse::response::IntoEventStream};
 use futures::StreamExt;
 use http::header;
-use ratatui::{crossterm::event::KeyCode, layout::Rect, DefaultTerminal};
+use ratatui::{DefaultTerminal, crossterm::event::KeyCode, layout::Rect};
 use serde::{Deserialize, Serialize};
 use tui_input::{Input, backend::crossterm::EventHandler as _};
 
@@ -144,7 +144,7 @@ impl App {
         self.messages.push(PromptMessage {
             role: "assistant".to_string(),
             content: textwrap::fill(&content, self.frame.width as usize - 2),
-        });        
+        });
     }
 
     async fn make_request(&mut self) -> Result<DeboaResponse, String> {
@@ -200,4 +200,3 @@ pub struct ModelResponseChoice {
 pub struct ModelResponseDelta {
     pub content: String,
 }
-
