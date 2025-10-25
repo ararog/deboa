@@ -1,6 +1,6 @@
 [package]
 name = "uget"
-version = "0.0.5-beta.6"
+version = "0.0.5"
 edition = "2021"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 repository = "https://github.com/ararog/deboa"
@@ -17,7 +17,7 @@ assert_cmd = "2.0.13"
 clap = { version = "4.5.50", features = ["derive"] }
 colored = "2.2.0"
 colored_json = "5.0.0"
-deboa = { path = "../../deboa", version = "0.0.6-beta.9" }
+deboa = { path = "../../deboa", version = "0.0.6" }
 futures-util = "0.3.31"
 http = "1.3.1"
 http-body-util = "0.1.3"

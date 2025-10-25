@@ -1,7 +1,7 @@
 [package]
 name = "deboa-macros"
 edition = "2021"
-version = "0.0.4-beta.4"
+version = "0.0.4"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 description = "macros for deboa"
 license = "MIT"
@@ -20,9 +20,9 @@ xml = ["deboa-extras/xml"]
 msgpack = ["deboa-extras/msgpack"]
 
 [dependencies]
-deboa = { path = "../deboa", version = "0.0.6-beta.9", features = ["http1"] }
-deboa-bora = { path = "../deboa-bora", version = "0.0.3-beta.3" }
-deboa-extras = { path = "../deboa-extras", version = "0.0.2-beta.4", features = ["json"] }
+deboa = { path = "../deboa", version = "0.0.6", features = ["http1"] }
+deboa-bora = { path = "../deboa-bora", version = "0.0.3" }
+deboa-extras = { path = "../deboa-extras", version = "0.0.2", features = ["json"] }
 serde = "1.0.228"
 
 [dev-dependencies]

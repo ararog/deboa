@@ -40,9 +40,19 @@ impl IntoEventStream for DeboaResponse {
 
         let header = header.unwrap();
 
-        if header != mime_typed::TextEventStream::MIME_STR {
+        let message = "Content type is not text/event-stream".to_string();
+
+        let header = header.to_str();
+
+        if let Err(_error) = header {
             return Err(DeboaError::Header {
-                message: "Content type is not text/event-stream".to_string(),
+                message,
+            });
+        }
+
+        if !header.unwrap().contains(mime_typed::TextEventStream::MIME_STR) {
+            return Err(DeboaError::Header {
+                message,
             });
         }
 
