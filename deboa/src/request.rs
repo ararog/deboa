@@ -353,7 +353,7 @@ impl DeboaRequestBuilder {
         )
     }
 
-    /// Build the request.
+    /// Build the request. Consuming the builder.
     ///
     /// # Returns
     ///
@@ -376,7 +376,7 @@ impl DeboaRequestBuilder {
         Ok(request)
     }
 
-    /// Send the request.
+    /// Send the request. Consuming the builder.
     ///
     /// # Arguments
     ///

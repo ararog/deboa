@@ -57,16 +57,47 @@ pub struct DeboaResponseBuilder {
 }
 
 impl DeboaResponseBuilder {
+    /// Allow set response status at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `status` - The new status.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The response builder.
+    ///
     pub fn status(mut self, status: http::StatusCode) -> Self {
         *self.inner.status_mut() = status;
         self
     }
 
+    /// Allow set response headers at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `headers` - The new headers.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The response builder.
+    ///
     pub fn headers(mut self, headers: http::HeaderMap) -> Self {
         *self.inner.headers_mut() = headers;
         self
     }
 
+    /// Allow set response header at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The header name.
+    /// * `value` - The header value.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The response builder.
+    ///
     pub fn header(mut self, name: HeaderName, value: &str) -> Self {
         let header_value = HeaderValue::from_str(value);
         if let Ok(header_value) = header_value {
@@ -75,11 +106,27 @@ impl DeboaResponseBuilder {
         self
     }
 
+    /// Allow set response body at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `body` - The new body.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The response builder.
+    ///
     pub fn body<B: IntoBody>(mut self, body: B) -> Self {
         *self.inner.body_mut() = body.into_body();
         self
     }
 
+    /// Build the response. Consuming the builder.
+    ///
+    /// # Returns
+    ///
+    /// * `DeboaResponse` - The response.
+    ///
     pub fn build(self) -> DeboaResponse {
         DeboaResponse {
             url: self.url,
@@ -191,7 +238,7 @@ impl DeboaResponse {
     ///
     /// # Returns
     ///
-    /// * `&mut Arc<http::HeaderMap>` - The headers of the response.
+    /// * `&mut http::HeaderMap` - The headers of the response.
     ///
     #[inline]
     pub fn headers_mut(&mut self) -> &mut http::HeaderMap {
