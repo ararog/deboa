@@ -386,7 +386,10 @@ impl DeboaRequestBuilder {
     ///
     /// * `Result<DeboaResponse>` - The response.
     ///
-    pub async fn go<T: AsMut<Deboa>>(self, mut client: T) -> Result<DeboaResponse> {
+    pub async fn go<T>(self, mut client: T) -> Result<DeboaResponse>
+    where
+        T: AsMut<Deboa>,
+    {
         client.as_mut().execute(self.build()?).await
     }
 }
