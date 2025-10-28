@@ -1,5 +1,5 @@
 use bytes::Bytes;
-use deboa::Result;
+use crate::errors::DeboaExtrasError;
 
 #[derive(Debug)]
 pub struct ServerEvent {
@@ -39,7 +39,7 @@ impl ServerEvent {
         &self.retry
     }
 
-    pub fn parse(data: &Bytes) -> Result<ServerEvent> {
+    pub fn parse(data: &Bytes) -> Result<ServerEvent, DeboaExtrasError> {
         let data = String::from_utf8_lossy(data.as_ref());
         let text_message = data;
         let lines = text_message.lines();
