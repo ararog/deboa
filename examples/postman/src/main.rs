@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use deboa::{Result, request::DeboaRequest};
+use deboa::{Result, request::DeboaRequest, response::DeboaResponse};
 use http::header;
 use vamo::Vamo;
 
@@ -19,6 +19,10 @@ impl DeboaCatcher for AuthCatcher {
     ) -> Result<Option<deboa::response::DeboaResponse>> {
         request.add_header(header::AUTHORIZATION, "Bearer token");
         Ok(None)
+    }
+
+    async fn on_response(&self, _response: &mut DeboaResponse) -> Result<()> {
+        Ok(())
     }
 }
 

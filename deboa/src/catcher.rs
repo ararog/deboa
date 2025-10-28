@@ -27,9 +27,7 @@ pub trait DeboaCatcher: Send + Sync + 'static {
     ///
     /// * `Result<Option<DeboaResponse>>` - The response that was received.
     ///
-    async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
-        todo!("Not implemented")
-    }
+    async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>>;
 
     ///
     /// This method is called after the response is received.
@@ -38,9 +36,7 @@ pub trait DeboaCatcher: Send + Sync + 'static {
     ///
     /// * `response` - The response that was received.
     ///
-    async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
-        todo!("Not implemented")
-    }
+    async fn on_response(&self, response: &mut DeboaResponse) -> Result<()>;
 }
 
 #[async_trait]
