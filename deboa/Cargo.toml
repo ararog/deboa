@@ -77,7 +77,9 @@ criterion = { version = "0.7.0", features = [
   "async_tokio"
 ] }
 deboa-tests = { path = "../deboa-tests", version = "0.0.1" }
+futures-util = "0.3.31"
 httpmock = { version = "0.8.2", features = ["http2"] }
+multer = "3.1.0"
 smol = "2.0.2"
 tokio = { version = "1.47.2" }
 
