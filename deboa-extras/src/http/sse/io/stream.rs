@@ -7,11 +7,9 @@ use futures::{ready, Stream};
 use hyper::body::Body;
 use pin_project_lite::pin_project;
 
-use crate::http::sse::event::ServerEvent;
+use crate::{errors::{DeboaExtrasError, SSEError}, http::sse::event::ServerEvent};
 
-use deboa::Result;
 use deboa::{
-    errors::{DeboaError, SSEError},
     response::DeboaBody,
 };
 
@@ -31,7 +29,7 @@ impl ServerEventStream {
 }
 
 impl Stream for ServerEventStream {
-    type Item = Result<ServerEvent>;
+    type Item = Result<ServerEvent, DeboaExtrasError>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         loop {
@@ -46,7 +44,7 @@ impl Stream for ServerEventStream {
                     }
                     Err(_) => continue,
                 },
-                Some(Err(err)) => Poll::Ready(Some(Err(DeboaError::SSE(SSEError::ReceiveEvent {
+                Some(Err(err)) => Poll::Ready(Some(Err(DeboaExtrasError::SSE(SSEError::ReceiveEvent {
                     message: err.to_string(),
                 })))),
                 None => Poll::Ready(None),
