@@ -3,7 +3,7 @@ use std::io::{Read, Write};
 
 use brotli::CompressorWriter;
 use deboa::{
-    errors::DeboaError,
+    errors::{DeboaError, IoError},
     fs::io::{Compressor, Decompressor},
     request::DeboaRequest,
     response::DeboaResponse,
@@ -24,17 +24,17 @@ impl Compressor for BrotliCompressor {
         let result = writer.write_all(request.raw_body().as_ref());
 
         if let Err(e) = result {
-            return Err(DeboaError::Compress {
+            return Err(DeboaError::Io(IoError::Compress {
                 message: e.to_string(),
-            });
+            }));
         }
 
         let result = writer.flush();
 
         if let Err(e) = result {
-            return Err(DeboaError::Compress {
+            return Err(DeboaError::Io(IoError::Compress {
                 message: e.to_string(),
-            });
+            }));
         }
 
         Ok(Bytes::from(writer.into_inner()))
@@ -57,9 +57,9 @@ impl Decompressor for BrotliDecompressor {
         let result = reader.read_to_end(&mut buffer);
 
         if let Err(e) = result {
-            return Err(DeboaError::Decompress {
+            return Err(DeboaError::Io(IoError::Decompress {
                 message: e.to_string(),
-            });
+            }));
         }
 
         response.set_raw_body(Bytes::from(buffer));
