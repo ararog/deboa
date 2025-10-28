@@ -4,10 +4,6 @@ use std::{
     task::{Context, Poll},
 };
 
-use deboa::{
-    errors::{DeboaError, WebSocketError},
-    Result,
-};
 use pin_project_lite::pin_project;
 
 use hyper::upgrade::Upgraded;
@@ -23,7 +19,7 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, ReadBuf};
 
 use ws_framer::{WsFrame, WsRxFramer, WsTxFramer};
 
-use crate::ws::protocol::Message;
+use crate::{errors::{DeboaExtrasError, WebSocketError}, ws::protocol::Message};
 
 #[cfg(feature = "tokio")]
 pub type UpgradedIo = TokioIo<Upgraded>;
@@ -36,13 +32,13 @@ pub trait DeboaWebSocket {
     type Stream;
 
     fn new(stream: Self::Stream) -> Self;
-    async fn read_message(&mut self) -> Result<Option<Message>>;
-    async fn write_message(&mut self, message: Message) -> Result<()>;
-    async fn send_close(&mut self, code: u16, reason: &str) -> Result<()>;
-    async fn send_text(&mut self, message: &str) -> Result<()>;
-    async fn send_binary(&mut self, message: &[u8]) -> Result<()>;
-    async fn send_ping(&mut self, message: &[u8]) -> Result<()>;
-    async fn send_pong(&mut self, message: &[u8]) -> Result<()>;
+    async fn read_message(&mut self) -> Result<Option<Message>, DeboaExtrasError>;
+    async fn write_message(&mut self, message: Message) -> Result<(), DeboaExtrasError>;
+    async fn send_close(&mut self, code: u16, reason: &str) -> Result<(), DeboaExtrasError>;
+    async fn send_text(&mut self, message: &str) -> Result<(), DeboaExtrasError>;
+    async fn send_binary(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError>;
+    async fn send_ping(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError>;
+    async fn send_pong(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError>;
 }
 
 pin_project! {
@@ -72,13 +68,13 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
         Self { stream }
     }
 
-    async fn read_message(&mut self) -> Result<Option<Message>> {
+    async fn read_message(&mut self) -> Result<Option<Message>, DeboaExtrasError> {
         let mut rx_buf = vec![0; 10240];
         let mut rx_framer = WsRxFramer::new(&mut rx_buf);
 
         let bytes_read = self.stream.read(rx_framer.mut_buf()).await;
         if bytes_read.is_err() {
-            return Err(DeboaError::WebSocket(WebSocketError::ReceiveMessage {
+            return Err(DeboaExtrasError::WebSocket(WebSocketError::ReceiveMessage {
                 message: "Failed to read message".to_string(),
             }));
         }
@@ -102,7 +98,7 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
         Ok(message)
     }
 
-    async fn write_message(&mut self, message: Message) -> Result<()> {
+    async fn write_message(&mut self, message: Message) -> Result<(), DeboaExtrasError> {
         let mut tx_buf = vec![0; 10240];
         let mut tx_framer = WsTxFramer::new(true, &mut tx_buf);
 
@@ -121,7 +117,7 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
         };
 
         if result.is_err() {
-            return Err(DeboaError::WebSocket(WebSocketError::SendMessage {
+            return Err(DeboaExtrasError::WebSocket(WebSocketError::SendMessage {
                 message: "Failed to send frame".to_string(),
             }));
         }
@@ -129,24 +125,24 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
         Ok(())
     }
 
-    async fn send_close(&mut self, code: u16, reason: &str) -> Result<()> {
+    async fn send_close(&mut self, code: u16, reason: &str) -> Result<(), DeboaExtrasError> {
         self.write_message(Message::Close(code, reason.to_string()))
             .await
     }
 
-    async fn send_text(&mut self, message: &str) -> Result<()> {
+    async fn send_text(&mut self, message: &str) -> Result<(), DeboaExtrasError> {
         self.write_message(Message::Text(message.to_string())).await
     }
 
-    async fn send_binary(&mut self, message: &[u8]) -> Result<()> {
+    async fn send_binary(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError> {
         self.write_message(Message::Binary(message.to_vec())).await
     }
 
-    async fn send_ping(&mut self, message: &[u8]) -> Result<()> {
+    async fn send_ping(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError> {
         self.write_message(Message::Ping(message.to_vec())).await
     }
 
-    async fn send_pong(&mut self, message: &[u8]) -> Result<()> {
+    async fn send_pong(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError> {
         self.write_message(Message::Pong(message.to_vec())).await
     }
 }
