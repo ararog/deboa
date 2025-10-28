@@ -25,7 +25,7 @@ msgpack = ["deboa-extras/msgpack"]
 deboa = { path = "../deboa", version = "0.0.6", features = ["http1"] }
 vamo = { path = "../vamo", version = "0.0.2" }
 deboa-extras = { path = "../deboa-extras", version = "0.0.2", features = ["json"] }
-proc-macro2 = "1.0.101"
+proc-macro2 = "1.0.103"
 tokio = { version = "1.47.2", features = ["rt-multi-thread"] }
 serde = "1.0.228"
 syn = "2.0.106"
