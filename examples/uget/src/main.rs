@@ -3,7 +3,7 @@ use colored::*;
 use colored_json::prelude::*;
 use deboa::{
     cert::ClientCert,
-    errors::DeboaError,
+    errors::{DeboaError, IoError},
     form::{DeboaForm, EncodedForm, MultiPartForm},
     request::DeboaRequest,
     Deboa, Result,
@@ -190,9 +190,9 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         let mut stdin_body = String::new();
         let result = stdin.read_to_string(&mut stdin_body);
         if let Err(e) = result {
-            return Err(DeboaError::Io {
+            return Err(DeboaError::Io(IoError::Stdin {
                 message: format!("Failed to read from stdin: {}", e),
-            });
+            }));
         }
         arg_body = Some(stdin_body);
     }
@@ -375,17 +375,17 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
                     }
                     let result = file.write(&frame);
                     if let Err(e) = result {
-                        return Err(DeboaError::Io {
+                        return Err(DeboaError::Io(IoError::File {
                             message: format!("Failed to write to file: {}", e),
-                        });
+                        }));
                     }
                 }
             }
             let result = file.flush();
             if let Err(e) = result {
-                return Err(DeboaError::Io {
+                return Err(DeboaError::Io(IoError::File {
                     message: format!("Failed to flush file: {}", e),
-                });
+                }));
             }
         }
     } else {
@@ -420,9 +420,9 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
                     }
                     let result = stdout.write(&frame);
                     if let Err(e) = result {
-                        return Err(DeboaError::Io {
+                        return Err(DeboaError::Io(IoError::Stdout {
                             message: format!("Failed to write to stdout: {}", e),
-                        });
+                        }));
                     }
                 }
             }
@@ -430,9 +430,9 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
 
         let result = stdout.flush();
         if let Err(e) = result {
-            return Err(DeboaError::Io {
+            return Err(DeboaError::Io(IoError::Stdout {
                 message: format!("Failed to flush stdout: {}", e),
-            });
+            }));
         }
     }
 
