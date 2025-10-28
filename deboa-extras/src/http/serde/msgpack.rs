@@ -1,6 +1,6 @@
 use deboa::{
     client::serde::{RequestBody, ResponseBody},
-    errors::DeboaError,
+    errors::{DeboaError, ContentError},
     request::DeboaRequest,
     Result,
 };
@@ -19,9 +19,9 @@ impl RequestBody for MsgPackBody {
     fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>> {
         let result = rmp_serde::to_vec(&data);
         if let Err(error) = result {
-            return Err(DeboaError::Serialization {
+            return Err(DeboaError::Content(ContentError::Serialization {
                 message: error.to_string(),
-            });
+            }));
         }
 
         Ok(result.unwrap())
@@ -37,9 +37,9 @@ impl ResponseBody for MsgPackBody {
 
         match json {
             Ok(deserialized_body) => Ok(deserialized_body),
-            Err(err) => Err(DeboaError::Deserialization {
+            Err(err) => Err(DeboaError::Content(ContentError::Deserialization {
                 message: err.to_string(),
-            }),
+            })),
         }
     }
 }

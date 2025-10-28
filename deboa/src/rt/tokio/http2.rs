@@ -14,6 +14,7 @@ use tokio_native_tls::native_tls::TlsConnector;
 use url::{Host, Url};
 
 use crate::client::conn::http::DeboaHttpConnection;
+use crate::errors::ConnectionError;
 use crate::rt::tokio::stream::TokioStream;
 use crate::{
     cert::ClientCert,
@@ -50,10 +51,10 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
                     };
 
                     if let Err(e) = stream {
-                        return Err(DeboaError::Connection {
+                        return Err(DeboaError::Connection(ConnectionError::Tcp {
                             host: host.to_string(),
                             message: e.to_string(),
-                        });
+                        }));
                     }
 
                     TokioStream::Plain(stream.unwrap())
@@ -65,10 +66,10 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
                     };
 
                     if let Err(e) = stream {
-                        return Err(DeboaError::Connection {
+                        return Err(DeboaError::Connection(ConnectionError::Tcp {
                             host: host.to_string(),
                             message: e.to_string(),
-                        });
+                        }));
                     }
 
                     let socket = stream.unwrap();
@@ -105,19 +106,19 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
                     let stream = connector.connect(&host.to_string(), socket).await;
 
                     if let Err(e) = stream {
-                        return Err(DeboaError::Connection {
+                        return Err(DeboaError::Connection(ConnectionError::Tls {
                             host: host.to_string(),
                             message: e.to_string(),
-                        });
+                        }));
                     }
 
                     let stream = stream.unwrap();
                     TokioStream::Tls(stream)
                 }
                 scheme => {
-                    return Err(DeboaError::UnsupportedScheme {
+                    return Err(DeboaError::Connection(ConnectionError::UnsupportedScheme {
                         message: format!("unsupported scheme: {scheme:?}"),
-                    });
+                    }));
                 }
             }
         };
@@ -125,10 +126,10 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
         let result = handshake(TokioExecutor::new(), TokioIo::new(stream)).await;
 
         if let Err(err) = result {
-            return Err(DeboaError::Connection {
+            return Err(DeboaError::Connection(ConnectionError::Handshake {
                 host: host.to_string(),
                 message: err.to_string(),
-            });
+            }));
         }
 
         let (sender, conn) = result.unwrap();

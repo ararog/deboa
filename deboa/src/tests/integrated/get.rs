@@ -1,3 +1,4 @@
+use crate::errors::ConnectionError;
 #[cfg(test)]
 use crate::{
     errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Deboa, HttpVersion, Result,
@@ -156,7 +157,7 @@ async fn do_get_invalid_server() -> Result<()> {
     assert!(response.is_err());
     assert_eq!(
         response.unwrap_err(),
-        DeboaError::Connection {
+        DeboaError::Connection(ConnectionError::Tcp {
             host: "invalid-server.com".to_string(),
             #[cfg(target_os = "linux")]
             message: "failed to lookup address information: Name or service not known".to_string(),
@@ -164,7 +165,7 @@ async fn do_get_invalid_server() -> Result<()> {
             message:
                 "failed to lookup address information: nodename nor servname provided, or not known"
                     .to_string(),
-        }
+        })
     );
 
     Ok(())
