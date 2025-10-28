@@ -113,7 +113,7 @@ impl MultiPartForm {
         let boundary = Alphanumeric.sample_string(&mut rand::rng(), 10);
         Self {
             fields: IndexMap::new(),
-            boundary: format!("-----DeboaFormBdry{}", boundary),
+            boundary: format!("DeboaFormBdry{}", boundary),
         }
     }
 
@@ -163,6 +163,8 @@ impl DeboaForm for MultiPartForm {
     fn build(&self) -> String {
         let mut form = String::new();
         let boundary = self.boundary();
+        form.push_str("--");
+        form.push_str(boundary);
         form.push_str("\r\n");
         for (key, value) in &self.fields {
             if Path::is_file(value.as_ref()) {
@@ -195,12 +197,13 @@ impl DeboaForm for MultiPartForm {
                 form.push_str("\r\n");
             }
 
+            form.push_str("--");
             form.push_str(boundary);
 
             if key != self.fields.last().unwrap().0 {
                 form.push_str("\r\n");
             } else {
-                form.push_str("--");
+                form.push_str("--\r\n");
             }
         }
         form
