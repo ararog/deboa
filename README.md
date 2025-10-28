@@ -10,12 +10,12 @@ Built using [hyper](https://github.com/hyperium/hyper).
 
 ## Attention
 
-This release has a major api change. Please check the [migration guide](https://github.com/ararog/deboa/blob/main/MIGRATION_GUIDE.md) for more information. Keep in mind API for 0.0.5 is subject to change in alpha releases. Proper deprecation will be added in the next stable release.
+This release has a major api change. Please check the [migration guide](https://github.com/ararog/deboa/blob/main/MIGRATION_GUIDE.md) for more information. Keep in mind API for prior to 0.1.0 is subject to change. Proper deprecation will be added in the next stable release.
 
 ## Install
 
 ```rust
-deboa = { version = "0.0.5-beta.3", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
 ```
 
 ## Runtimes
