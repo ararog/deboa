@@ -61,7 +61,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                     };
 
                     if let Err(e) = stream {
-                        return Err(DeboaError::Connection(ConnectionError::Tcp {  
+                        return Err(DeboaError::Connection(ConnectionError::Tcp {
                             host: host.to_string(),
                             message: e.to_string(),
                         }));

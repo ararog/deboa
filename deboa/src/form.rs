@@ -1,10 +1,11 @@
 use std::path::Path;
 
-use base64::{engine::general_purpose::STANDARD, Engine as _};
+use bytes::{Bytes, BytesMut};
 use indexmap::IndexMap;
 use rand::distr::{Alphanumeric, SampleString};
 use urlencoding::encode;
 
+const CRLF: &[u8] = b"\r\n";
 /// Trait to allow create a form.
 pub trait DeboaForm {
     /// Get the content type of the form.
@@ -30,9 +31,9 @@ pub trait DeboaForm {
     ///
     /// # Returns
     ///
-    /// * `String` - The encoded form.
+    /// * `Bytes` - The encoded form.
     ///
-    fn build(&self) -> String;
+    fn build(self) -> Bytes;
 }
 
 /// Enum that represents the form.
@@ -41,6 +42,7 @@ pub trait DeboaForm {
 ///
 /// * `EncodedForm` - The encoded form.
 /// * `MultiPartForm` - The multi part form.
+#[derive(Debug)]
 pub enum Form {
     EncodedForm(EncodedForm),
     MultiPartForm(MultiPartForm),
@@ -58,7 +60,7 @@ impl From<MultiPartForm> for Form {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EncodedForm {
     fields: IndexMap<String, String>,
 }
@@ -87,16 +89,18 @@ impl DeboaForm for EncodedForm {
         self
     }
 
-    fn build(&self) -> String {
+    fn build(self) -> Bytes {
         self.fields
             .iter()
             .map(|(key, value)| format!("{}={}", key, encode(value)))
             .collect::<Vec<String>>()
             .join("&")
+            .into_bytes()
+            .into()
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MultiPartForm {
     fields: IndexMap<String, String>,
     boundary: String,
@@ -128,7 +132,7 @@ impl MultiPartForm {
     ///
     /// * `&mut Self` - The form.
     ///
-    pub fn file<F>(&mut self, key: &str, value: F) -> &mut Self
+    pub fn file<F>(mut self, key: &str, value: F) -> Self
     where
         F: AsRef<std::path::Path>,
     {
@@ -143,10 +147,10 @@ impl MultiPartForm {
     ///
     /// # Returns
     ///
-    /// * `&String` - The boundary.
+    /// * `String` - The boundary.
     ///
-    pub fn boundary(&self) -> &String {
-        &self.boundary
+    pub fn boundary(&self) -> String {
+        self.boundary.to_string()
     }
 }
 
@@ -160,12 +164,12 @@ impl DeboaForm for MultiPartForm {
         self
     }
 
-    fn build(&self) -> String {
-        let mut form = String::new();
-        let boundary = self.boundary();
-        form.push_str("--");
-        form.push_str(boundary);
-        form.push_str("\r\n");
+    fn build(self) -> Bytes {
+        let mut form = BytesMut::new();
+        let boundary = &self.boundary;
+        form.extend_from_slice(b"--");
+        form.extend_from_slice(boundary.as_bytes());
+        form.extend_from_slice(CRLF);
         for (key, value) in &self.fields {
             if Path::is_file(value.as_ref()) {
                 let kind = minimime::lookup_by_filename(value);
@@ -174,38 +178,43 @@ impl DeboaForm for MultiPartForm {
                     let file_name = path.file_name();
                     let file_content = std::fs::read(value).unwrap();
                     if file_name.is_some() {
-                        form.push_str(&format!(
-                            "Content-Disposition: file; form-data=\"{}\"; filename=\"{}\"",
-                            key,
-                            file_name.unwrap().to_str().unwrap()
-                        ));
-                        form.push_str("\r\n");
-                        form.push_str(&format!("Content-Type: {}\r\n", kind.content_type));
-                        form.push_str("\r\n");
-                        if kind.is_binary() {
-                            form.push_str(&STANDARD.encode(&file_content));
-                        } else {
-                            form.push_str(&String::from_utf8_lossy(&file_content));
-                        }
+                        form.extend_from_slice(
+                            &format!(
+                                "Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"",
+                                key,
+                                file_name.unwrap().to_str().unwrap()
+                            )
+                            .into_bytes(),
+                        );
+                        form.extend_from_slice(CRLF);
+                        form.extend_from_slice(
+                            &format!("Content-Type: {}\r\n", kind.content_type).into_bytes(),
+                        );
+                        form.extend_from_slice(CRLF);
+                        form.extend_from_slice(&file_content);
+                        form.extend_from_slice(CRLF);
                     }
                 }
             } else {
-                form.push_str(&format!("Content-Disposition: form-data; name=\"{}\"", key));
-                form.push_str("\r\n");
-                form.push_str("\r\n");
-                form.push_str(value);
-                form.push_str("\r\n");
+                form.extend_from_slice(
+                    &format!("Content-Disposition: form-data; name=\"{}\"", key).into_bytes(),
+                );
+                form.extend_from_slice(CRLF);
+                form.extend_from_slice(CRLF);
+                form.extend_from_slice(value.as_bytes());
+                form.extend_from_slice(CRLF);
             }
 
-            form.push_str("--");
-            form.push_str(boundary);
+            form.extend_from_slice(b"--");
+            form.extend_from_slice(boundary.as_bytes());
 
             if key != self.fields.last().unwrap().0 {
-                form.push_str("\r\n");
+                form.extend_from_slice(CRLF);
             } else {
-                form.push_str("--\r\n");
+                form.extend_from_slice(b"--\r\n");
             }
         }
-        form
+
+        form.into()
     }
 }

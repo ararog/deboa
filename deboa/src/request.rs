@@ -830,7 +830,7 @@ impl DeboaRequest {
             Form::MultiPartForm(form) => (form.content_type(), form.build()),
         };
         self.add_header(header::CONTENT_TYPE, &content_type);
-        self.set_raw_body(body.as_bytes());
+        self.set_raw_body(&body);
         self
     }
 

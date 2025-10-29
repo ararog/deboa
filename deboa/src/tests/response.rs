@@ -1,3 +1,5 @@
+use std::fs::remove_file;
+
 use crate::{
     cookie::DeboaCookie,
     response::{DeboaBody, DeboaResponse},
@@ -77,11 +79,13 @@ async fn test_text() -> Result<()> {
 
 #[tokio::test]
 async fn test_to_file() -> Result<()> {
+    let output_file = "test.txt";
     let response = DeboaResponse::builder(fake_url())
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
         .build();
-    assert_eq!(response.to_file("test.txt").await, Ok(()));
+    assert_eq!(response.to_file(output_file).await, Ok(()));
+    remove_file(output_file).unwrap();
     Ok(())
 }
