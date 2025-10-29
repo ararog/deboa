@@ -19,7 +19,10 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, ReadBuf};
 
 use ws_framer::{WsFrame, WsRxFramer, WsTxFramer};
 
-use crate::{errors::{DeboaExtrasError, WebSocketError}, ws::protocol::Message};
+use crate::{
+    errors::{DeboaExtrasError, WebSocketError},
+    ws::protocol::Message,
+};
 
 #[cfg(feature = "tokio")]
 pub type UpgradedIo = TokioIo<Upgraded>;
@@ -74,9 +77,11 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
 
         let bytes_read = self.stream.read(rx_framer.mut_buf()).await;
         if bytes_read.is_err() {
-            return Err(DeboaExtrasError::WebSocket(WebSocketError::ReceiveMessage {
-                message: "Failed to read message".to_string(),
-            }));
+            return Err(DeboaExtrasError::WebSocket(
+                WebSocketError::ReceiveMessage {
+                    message: "Failed to read message".to_string(),
+                },
+            ));
         }
 
         let bytes_read = bytes_read.unwrap();

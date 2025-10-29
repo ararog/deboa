@@ -1,5 +1,7 @@
 use deboa::{
-    client::serde::{RequestBody, ResponseBody}, errors::{ContentError, DeboaError}, request::DeboaRequest
+    client::serde::{RequestBody, ResponseBody},
+    errors::{ContentError, DeboaError},
+    request::DeboaRequest,
 };
 use http::header;
 use mime_typed::Json;

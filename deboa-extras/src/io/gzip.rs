@@ -2,7 +2,11 @@ use std::io::{Read, Write};
 
 use bytes::{Buf, Bytes};
 use deboa::{
-    Result, errors::{DeboaError, IoError}, fs::io::{Compressor, Decompressor}, request::DeboaRequest, response::DeboaResponse
+    errors::{DeboaError, IoError},
+    fs::io::{Compressor, Decompressor},
+    request::DeboaRequest,
+    response::DeboaResponse,
+    Result,
 };
 use flate2::{read::GzDecoder, write::GzEncoder};
 

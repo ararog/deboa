@@ -1,5 +1,10 @@
 use deboa::{
-    Result, catcher::DeboaCatcher, errors::{DeboaError, IoError}, fs::io::Decompressor, request::DeboaRequest, response::DeboaResponse
+    catcher::DeboaCatcher,
+    errors::{DeboaError, IoError},
+    fs::io::Decompressor,
+    request::DeboaRequest,
+    response::DeboaResponse,
+    Result,
 };
 use http::header;
 use std::collections::HashMap;

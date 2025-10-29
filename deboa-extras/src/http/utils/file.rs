@@ -1,4 +1,8 @@
-use deboa::{Result, errors::{DeboaError, IoError}, response::DeboaResponse};
+use deboa::{
+    errors::{DeboaError, IoError},
+    response::DeboaResponse,
+    Result,
+};
 use futures::StreamExt;
 use std::{fs::File, io::Write, path::Path};
 
@@ -24,7 +28,7 @@ impl ToFile {
     {
         let file = File::create(path.as_ref());
         if let Err(err) = file {
-            return Err(DeboaError::Io (IoError::File {
+            return Err(DeboaError::Io(IoError::File {
                 message: err.to_string(),
             }));
         }
@@ -37,7 +41,7 @@ impl ToFile {
                     on_progress(chunk.len() as u64);
                 }
                 if let Err(err) = file.write(chunk.as_ref()) {
-                    return Err(DeboaError::Io (IoError::File {
+                    return Err(DeboaError::Io(IoError::File {
                         message: err.to_string(),
                     }));
                 }
@@ -45,7 +49,7 @@ impl ToFile {
         }
 
         if let Err(err) = file.flush() {
-            return Err(DeboaError::Io (IoError::File {
+            return Err(DeboaError::Io(IoError::File {
                 message: err.to_string(),
             }));
         }
