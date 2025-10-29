@@ -12,7 +12,7 @@ use serde::Deserialize;
 use smol_hyper::rt::FuturesIo;
 
 use crate::cookie::DeboaCookie;
-use crate::errors::{IoError, ConnectionError};
+use crate::errors::{ConnectionError, IoError};
 use crate::{client::serde::ResponseBody, errors::DeboaError, Result};
 use url::Url;
 

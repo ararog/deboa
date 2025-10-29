@@ -56,7 +56,7 @@ pub enum ConnectionError {
     Upgrade { message: String },
 
     #[error("Unsupported scheme: {message}")]
-    UnsupportedScheme { message: String },  
+    UnsupportedScheme { message: String },
 }
 
 #[derive(Debug, Clone, Error, PartialEq)]
@@ -65,13 +65,13 @@ pub enum ContentError {
     Serialization { message: String },
 
     #[error("Failed to deserialize data: {message}")]
-    Deserialization { message: String },   
+    Deserialization { message: String },
 }
 
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum IoError {
     #[error("Failed to write file: {message}")]
-    File { message: String }, 
+    File { message: String },
 
     #[error("Failed to compress data: {message}")]
     Compress { message: String },
@@ -88,4 +88,3 @@ pub enum IoError {
     #[error("Failed to read from stdin: {message}")]
     Stdin { message: String },
 }
-    

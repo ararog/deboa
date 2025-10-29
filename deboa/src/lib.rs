@@ -449,6 +449,7 @@ impl Deboa {
         R: IntoRequest,
     {
         let mut request = request.into_request()?;
+
         if let Some(catchers) = &self.catchers {
             let mut response = None;
             for catcher in catchers {
