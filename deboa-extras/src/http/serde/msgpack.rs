@@ -1,6 +1,6 @@
 use deboa::{
     client::serde::{RequestBody, ResponseBody},
-    errors::{DeboaError, ContentError},
+    errors::{ContentError, DeboaError},
     request::DeboaRequest,
     Result,
 };

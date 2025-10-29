@@ -45,15 +45,14 @@ impl IntoEventStream for DeboaResponse {
         let header = header.to_str();
 
         if let Err(_error) = header {
-            return Err(DeboaError::Header {
-                message,
-            });
+            return Err(DeboaError::Header { message });
         }
 
-        if !header.unwrap().contains(mime_typed::TextEventStream::MIME_STR) {
-            return Err(DeboaError::Header {
-                message,
-            });
+        if !header
+            .unwrap()
+            .contains(mime_typed::TextEventStream::MIME_STR)
+        {
+            return Err(DeboaError::Header { message });
         }
 
         Ok(ServerEventStream::new(self.inner_body()))
