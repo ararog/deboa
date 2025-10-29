@@ -7,11 +7,12 @@ use futures::{ready, Stream};
 use hyper::body::Body;
 use pin_project_lite::pin_project;
 
-use crate::{errors::{DeboaExtrasError, SSEError}, http::sse::event::ServerEvent};
-
-use deboa::{
-    response::DeboaBody,
+use crate::{
+    errors::{DeboaExtrasError, SSEError},
+    http::sse::event::ServerEvent,
 };
+
+use deboa::response::DeboaBody;
 
 pin_project! {
     /// A data stream created from a [`Body`].
@@ -44,9 +45,11 @@ impl Stream for ServerEventStream {
                     }
                     Err(_) => continue,
                 },
-                Some(Err(err)) => Poll::Ready(Some(Err(DeboaExtrasError::SSE(SSEError::ReceiveEvent {
-                    message: err.to_string(),
-                })))),
+                Some(Err(err)) => {
+                    Poll::Ready(Some(Err(DeboaExtrasError::SSE(SSEError::ReceiveEvent {
+                        message: err.to_string(),
+                    }))))
+                }
                 None => Poll::Ready(None),
             };
         }

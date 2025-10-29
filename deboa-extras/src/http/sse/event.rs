@@ -1,5 +1,5 @@
-use bytes::Bytes;
 use crate::errors::DeboaExtrasError;
+use bytes::Bytes;
 
 #[derive(Debug)]
 pub struct ServerEvent {
