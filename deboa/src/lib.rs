@@ -129,13 +129,19 @@ pub enum HttpVersion {
     Http1,
     #[cfg(feature = "http2")]
     Http2,
+    #[cfg(feature = "http3")]
+    Http3,
 }
 
 impl Display for HttpVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            #[cfg(feature = "http1")]
             HttpVersion::Http1 => write!(f, "HTTP/1.1"),
+            #[cfg(feature = "http2")]
             HttpVersion::Http2 => write!(f, "HTTP/2"),
+            #[cfg(feature = "http3")]
+            HttpVersion::Http3 => write!(f, "HTTP/3"),
         }
     }
 }
