@@ -431,7 +431,7 @@ impl DeboaResponse {
 
     /// Save response body to file, consuming body.
     /// Useful for small responses. For larger responses, consider using
-    /// ToFile trait available on stream feature of deboa-extras crate.
+    /// ToFile trait available on utils feature of deboa-extras crate.
     ///
     /// # Arguments
     ///
