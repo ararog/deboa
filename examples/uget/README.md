@@ -14,6 +14,8 @@ With uget, you can:
 * Use custom CA certificate for verify
 * Use stdin as body, or save response body to a file using stdout
 * Show progress bar for download
+* Resume download from a previous one
+* Allow enter password for auth from stdin
 
 You want, you get!
 

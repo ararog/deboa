@@ -5417,6 +5417,7 @@ dependencies = [
  "indicatif",
  "mime",
  "tokio",
+ "url",
 ]
 
 [[package]]

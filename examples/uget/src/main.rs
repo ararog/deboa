@@ -11,11 +11,12 @@ use deboa::{
 use futures_util::StreamExt;
 use http::{HeaderName, Method};
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
-use std::fs::File;
 use std::{
     cmp::min,
     io::{stdin, stdout, IsTerminal, Read, Write},
 };
+use std::{fs::File, path::Path, sync::Arc};
+use url::Url;
 
 #[derive(Parser)]
 #[command(
@@ -56,6 +57,8 @@ Options:
                      Set the ca certificate file to use (pem format).
     -P, --print  <PRINT>
                      Print request or response.
+    -r, --resume <RESUME>
+                     Resume download from a previous one.
 "#
 )]
 struct Args {
@@ -151,6 +154,13 @@ struct Args {
         help = "Show progress bar."
     )]
     bar: Option<bool>,
+    #[arg(
+        short = 'r',
+        long,
+        required = false,
+        help = "Resume download from a previous one."
+    )]
+    resume: Option<bool>,
 }
 
 #[tokio::main]
@@ -180,6 +190,7 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     let arg_verify = args.verify;
     let arg_save = args.save;
     let arg_bar = args.bar;
+    let arg_resume = args.resume;
 
     if let Some((cert, cert_pw)) = arg_cert.zip(arg_cert_pw) {
         client.set_client_cert(Some(ClientCert::new(cert, cert_pw, arg_verify)));
@@ -229,9 +240,26 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         }
     }
 
-    let http_method = method.unwrap();
-    let request = DeboaRequest::to(arg_url.as_ref())?;
+    let url = Url::parse(&arg_url);
+    if let Err(e) = url {
+        return Err(DeboaError::UrlParse {
+            message: e.to_string(),
+        });
+    }
 
+    let url = url.unwrap();
+
+    let request = DeboaRequest::to(url.clone())?;
+    let mut expected_size = 0;
+    if arg_resume.is_some() && arg_resume.unwrap() {
+        let request = request.method(http::Method::HEAD);
+        let response = client.execute(request.build()?).await?;
+        let content_length = response.content_length()?;
+        expected_size = content_length;
+    }
+
+    let http_method = method.unwrap();
+    let request = DeboaRequest::to(url.clone())?;
     let request = if let Some(header) = arg_header {
         header.iter().fold(request, |request, header| {
             let pairs = header.split_once(':');
@@ -247,6 +275,29 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
             };
             request
         })
+    } else {
+        request
+    };
+
+    let saved_file_name = get_file_from_url(&url)?;
+    let saved_file = Path::new(&saved_file_name);
+    let request = if saved_file.exists() {
+        let actual_size = saved_file.metadata();
+        if let Err(e) = actual_size {
+            return Err(DeboaError::Io(IoError::File {
+                message: format!("Failed to get file metadata: {}", e),
+            }));
+        }
+
+        let actual_size = actual_size.unwrap().len();
+        if expected_size > actual_size {
+            request.header(
+                http::header::RANGE,
+                format!("bytes={}-{}", actual_size, expected_size).as_str(),
+            )
+        } else {
+            request
+        }
     } else {
         request
     };
@@ -283,7 +334,18 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
 
     let request = if let Some(basic_auth) = arg_basic_auth {
         let (username, password) = basic_auth.split_once(':').unwrap();
-        request.basic_auth(username, password)
+        if password.is_empty() && stdin.is_terminal() {
+            let mut password = String::new();
+            println!("Enter password: ");
+            if stdin.read_line(&mut password).is_ok() {
+                request.basic_auth(username, password.trim())
+            } else {
+                eprintln!("Password not provided, exiting.");
+                std::process::exit(1);
+            }
+        } else {
+            request.basic_auth(username, password)
+        }
     } else {
         request
     };
@@ -352,18 +414,12 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         None
     };
 
-    if let Some(mut save) = arg_save {
-        if save == "none" {
-            save = response
-                .url()
-                .path()
-                .split('/')
-                .next_back()
-                .unwrap()
-                .to_string();
+    if let Some(mut file_to_save) = arg_save {
+        if file_to_save == "none" {
+            file_to_save = get_file_from_url(response.url())?;
         }
 
-        let file = File::create(save);
+        let file = File::create(file_to_save);
         if let Ok(mut file) = file {
             let mut stream = response.stream();
             while let Some(frame) = stream.next().await {
@@ -437,4 +493,8 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn get_file_from_url(url: &url::Url) -> Result<String> {
+    Ok(url.path().split('/').next_back().unwrap().to_string())
 }
