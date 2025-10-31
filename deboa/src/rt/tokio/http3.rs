@@ -10,8 +10,8 @@ use hyper::{body::Incoming, Request, Response};
 use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
 use quinn::Endpoint;
-use tokio::net::TcpStream;
 use tokio::net::lookup_host;
+use tokio::net::TcpStream;
 use tokio_native_tls::native_tls::Certificate;
 use tokio_native_tls::native_tls::Identity;
 use tokio_native_tls::native_tls::TlsConnector;
@@ -49,7 +49,6 @@ impl DeboaHttpConnection for BaseHttpConnection<Http3Request> {
         let stream = {
             match url.scheme() {
                 "http" => {
-
                     let port = url.port().unwrap_or(80);
                     let addr = lookup_host(format!("{}:{}", host, port))
                         .await?
