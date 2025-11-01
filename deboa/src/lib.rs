@@ -129,13 +129,19 @@ pub enum HttpVersion {
     Http1,
     #[cfg(feature = "http2")]
     Http2,
+    #[cfg(feature = "http3")]
+    Http3,
 }
 
 impl Display for HttpVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            #[cfg(feature = "http1")]
             HttpVersion::Http1 => write!(f, "HTTP/1.1"),
+            #[cfg(feature = "http2")]
             HttpVersion::Http2 => write!(f, "HTTP/2"),
+            #[cfg(feature = "http3")]
+            HttpVersion::Http3 => write!(f, "HTTP/3"),
         }
     }
 }
@@ -449,6 +455,7 @@ impl Deboa {
         R: IntoRequest,
     {
         let mut request = request.into_request()?;
+
         if let Some(catchers) = &self.catchers {
             let mut response = None;
             for catcher in catchers {
@@ -565,11 +572,11 @@ impl Deboa {
 
         let request = builder.body(Full::new(Bytes::from(request.as_ref().raw_body().to_vec())));
         if let Err(err) = request {
-            return Err(DeboaError::Request {
+            return Err(DeboaError::Request(errors::RequestError::Send {
                 url: url.to_string(),
                 method: method.to_string(),
                 message: err.to_string(),
-            });
+            }));
         }
 
         let request = request.unwrap();

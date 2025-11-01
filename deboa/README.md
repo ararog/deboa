@@ -23,11 +23,12 @@ This release has a major api change. Please check the [migration guide](https://
 - comprehensive error handling
 - runtime compatibility (tokio and smol)
 - http1/2 support 
+- http3 support (soon)
 
 ## Install
 
 ```rust
-deboa = { version = "0.0.5", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
 ```
 
 ## Crate features
@@ -36,6 +37,7 @@ deboa = { version = "0.0.5", features = ["http1", "tokio-rt"] }
 - smol-rt
 - http1 (default)
 - http2
+- http3 (soon)
 
 ## Usage
 

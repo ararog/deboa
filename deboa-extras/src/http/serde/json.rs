@@ -1,8 +1,7 @@
 use deboa::{
     client::serde::{RequestBody, ResponseBody},
-    errors::DeboaError,
+    errors::{ContentError, DeboaError},
     request::DeboaRequest,
-    Result,
 };
 use http::header;
 use mime_typed::Json;
@@ -16,12 +15,12 @@ impl RequestBody for JsonBody {
         request.add_header(header::ACCEPT, Json.to_string().as_str());
     }
 
-    fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>> {
+    fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>, DeboaError> {
         let result = serde_json::to_vec(&data);
         if let Err(error) = result {
-            return Err(DeboaError::Serialization {
+            return Err(DeboaError::Content(ContentError::Serialization {
                 message: error.to_string(),
-            });
+            }));
         }
 
         Ok(result.unwrap())
@@ -29,7 +28,7 @@ impl RequestBody for JsonBody {
 }
 
 impl ResponseBody for JsonBody {
-    fn deserialize<T: for<'a> Deserialize<'a>>(&self, body: Vec<u8>) -> Result<T> {
+    fn deserialize<T: for<'a> Deserialize<'a>>(&self, body: Vec<u8>) -> Result<T, DeboaError> {
         let binding = body;
         let body = binding.as_ref();
 
@@ -37,9 +36,9 @@ impl ResponseBody for JsonBody {
 
         match json {
             Ok(deserialized_body) => Ok(deserialized_body),
-            Err(err) => Err(DeboaError::Deserialization {
+            Err(err) => Err(DeboaError::Content(ContentError::Deserialization {
                 message: err.to_string(),
-            }),
+            })),
         }
     }
 }

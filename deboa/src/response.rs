@@ -12,6 +12,7 @@ use serde::Deserialize;
 use smol_hyper::rt::FuturesIo;
 
 use crate::cookie::DeboaCookie;
+use crate::errors::{ConnectionError, IoError};
 use crate::{client::serde::ResponseBody, errors::DeboaError, Result};
 use url::Url;
 
@@ -430,7 +431,7 @@ impl DeboaResponse {
 
     /// Save response body to file, consuming body.
     /// Useful for small responses. For larger responses, consider using
-    /// ToFile trait available on stream feature of deboa-extras crate.
+    /// ToFile trait available on utils feature of deboa-extras crate.
     ///
     /// # Arguments
     ///
@@ -444,9 +445,9 @@ impl DeboaResponse {
         let body = self.raw_body().await;
         let result = write(path, body);
         if let Err(e) = result {
-            return Err(DeboaError::Io {
+            return Err(DeboaError::Io(IoError::File {
                 message: e.to_string(),
-            });
+            }));
         }
         Ok(())
     }
@@ -454,16 +455,16 @@ impl DeboaResponse {
     #[cfg(feature = "tokio-rt")]
     pub async fn upgrade(self) -> Result<hyper_util::rt::TokioIo<hyper::upgrade::Upgraded>> {
         if self.inner.version() != http::Version::HTTP_11 {
-            return Err(DeboaError::Io {
+            return Err(DeboaError::Connection(ConnectionError::Upgrade {
                 message: "Upgrade is only supported for HTTP/1.1".to_string(),
-            });
+            }));
         }
 
         let upgrade = on(self.inner).await;
         if let Err(e) = upgrade {
-            return Err(DeboaError::Io {
+            return Err(DeboaError::Connection(ConnectionError::Upgrade {
                 message: e.to_string(),
-            });
+            }));
         }
         Ok(TokioIo::new(upgrade.unwrap()))
     }

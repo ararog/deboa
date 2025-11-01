@@ -13,7 +13,7 @@ use url::Url;
 use crate::{
     client::serde::RequestBody,
     cookie::DeboaCookie,
-    errors::DeboaError,
+    errors::{DeboaError, RequestError},
     form::{DeboaForm, Form},
     response::DeboaResponse,
     url::IntoUrl,
@@ -443,9 +443,9 @@ impl DeboaRequest {
     pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
-            return Err(DeboaError::UrlParse {
+            return Err(DeboaError::Request(RequestError::UrlParse {
                 message: e.to_string(),
-            });
+            }));
         }
 
         let url = parsed_url.unwrap();
@@ -608,9 +608,9 @@ impl DeboaRequest {
     pub fn set_url<T: IntoUrl>(&mut self, url: T) -> Result<&mut Self> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
-            return Err(DeboaError::UrlParse {
+            return Err(DeboaError::Request(RequestError::UrlParse {
                 message: e.to_string(),
-            });
+            }));
         }
 
         let parsed_url = parsed_url.unwrap();
@@ -830,7 +830,7 @@ impl DeboaRequest {
             Form::MultiPartForm(form) => (form.content_type(), form.build()),
         };
         self.add_header(header::CONTENT_TYPE, &content_type);
-        self.set_raw_body(body.as_bytes());
+        self.set_raw_body(&body);
         self
     }
 

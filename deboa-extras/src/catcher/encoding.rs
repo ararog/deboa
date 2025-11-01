@@ -1,6 +1,10 @@
 use deboa::{
-    catcher::DeboaCatcher, errors::DeboaError, fs::io::Decompressor, request::DeboaRequest,
-    response::DeboaResponse, Result,
+    catcher::DeboaCatcher,
+    errors::{DeboaError, IoError},
+    fs::io::Decompressor,
+    request::DeboaRequest,
+    response::DeboaResponse,
+    Result,
 };
 use http::header;
 use std::collections::HashMap;
@@ -36,18 +40,18 @@ impl<D: Decompressor> DeboaCatcher for EncodingCatcher<D> {
     async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
         let content_encoding = response.headers().get(header::CONTENT_ENCODING);
         if content_encoding.is_none() {
-            return Err(DeboaError::Decompress {
+            return Err(DeboaError::Io(IoError::Decompress {
                 message: "Content encoding not found".to_string(),
-            });
+            }));
         }
 
         let decompressor = self
             .accept_encoding
             .get(content_encoding.unwrap().to_str().unwrap());
         if decompressor.is_none() {
-            return Err(DeboaError::Decompress {
+            return Err(DeboaError::Io(IoError::Decompress {
                 message: "No decompressor found".to_string(),
-            });
+            }));
         }
 
         decompressor.unwrap().decompress_body(response).await?;

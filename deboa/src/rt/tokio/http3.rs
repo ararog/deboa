@@ -1,12 +1,16 @@
+use std::fmt::format;
 use std::sync::Arc;
 
 use async_trait::async_trait;
 use bytes::Bytes;
+use h3_quinn::Connection as QuinnConnection;
 use http::version::Version;
 use http_body_util::Full;
-use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
+use hyper::{body::Incoming, Request, Response};
 use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
+use quinn::Endpoint;
+use tokio::net::lookup_host;
 use tokio::net::TcpStream;
 use tokio_native_tls::native_tls::Certificate;
 use tokio_native_tls::native_tls::Identity;
@@ -18,14 +22,14 @@ use crate::errors::ConnectionError;
 use crate::rt::tokio::stream::TokioStream;
 use crate::{
     cert::ClientCert,
-    client::conn::http::{BaseHttpConnection, Http2Request},
+    client::conn::http::{BaseHttpConnection, Http3Request},
     errors::DeboaError,
     Result,
 };
 
 #[async_trait]
-impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
-    type Sender = Http2Request;
+impl DeboaHttpConnection for BaseHttpConnection<Http3Request> {
+    type Sender = Http3Request;
 
     #[inline]
     fn url(&self) -> &Url {
@@ -34,28 +38,35 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
 
     #[inline]
     fn protocol(&self) -> Version {
-        Version::HTTP_2
+        Version::HTTP_3
     }
 
     async fn connect(
         url: Arc<Url>,
         client_cert: &Option<ClientCert>,
-    ) -> Result<BaseHttpConnection<Http2Request>> {
+    ) -> Result<BaseHttpConnection<Http3Request>> {
         let host = url.host().unwrap_or(Host::Domain("localhost"));
         let stream = {
             match url.scheme() {
                 "http" => {
-                    let stream = {
-                        let port = url.port().unwrap_or(80);
-                        TcpStream::connect((host.to_string(), port)).await
-                    };
+                    let port = url.port().unwrap_or(80);
+                    let addr = lookup_host(format!("{}:{}", host, port))
+                        .await?
+                        .next()
+                        .ok_or("dns found no addresses")?;
 
-                    if let Err(e) = stream {
+                    let mut endpoint = Endpoint::client(addr);
+
+                    if let Err(e) = endpoint {
                         return Err(DeboaError::Connection(ConnectionError::Tcp {
                             host: host.to_string(),
                             message: e.to_string(),
                         }));
                     }
+
+                    let conn = endpoint.unwrap().connect(addr, &host.to_string())?.await?;
+
+                    let quinn_conn = QuinnConnection::new(conn);
 
                     TokioStream::Plain(stream.unwrap())
                 }
@@ -141,7 +152,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
             };
         });
 
-        Ok(BaseHttpConnection::<Http2Request> { url, sender })
+        Ok(BaseHttpConnection::<Http3Request> { url, sender })
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {

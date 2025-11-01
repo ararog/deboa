@@ -6,8 +6,8 @@ edition = "2024"
 [dependencies]
 color-eyre = "0.6.5"
 crossterm = { version = "0.28.1", features = ["event-stream"] }
-deboa = { version = "0.0.6-beta.7", path = "../../deboa" }
-deboa-extras = { version = "0.0.2-beta.1", path = "../../deboa-extras" }
+deboa = { path = "../../deboa" }
+deboa-extras = { path = "../../deboa-extras" }
 eyre = "0.6.12"
 futures = "0.3.31"
 http = "1.3.1"

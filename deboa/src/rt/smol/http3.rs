@@ -1,25 +1,20 @@
 use std::sync::Arc;
 
+use async_native_tls::{Identity, TlsConnector};
 use async_trait::async_trait;
 use bytes::Bytes;
 use http::version::Version;
 use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
-use hyper_util::rt::TokioExecutor;
-use hyper_util::rt::TokioIo;
-use tokio::net::TcpStream;
-use tokio_native_tls::native_tls::Certificate;
-use tokio_native_tls::native_tls::Identity;
-use tokio_native_tls::native_tls::TlsConnector;
-use url::{Host, Url};
+use smol::net::TcpStream;
+use smol_hyper::rt::FuturesIo;
+use url::Url;
 
-use crate::client::conn::http::DeboaHttpConnection;
-use crate::errors::ConnectionError;
-use crate::rt::tokio::stream::TokioStream;
 use crate::{
     cert::ClientCert,
-    client::conn::http::{BaseHttpConnection, Http2Request},
+    client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http2Request},
     errors::DeboaError,
+    rt::smol::{executor::SmolExecutor, stream::SmolStream},
     Result,
 };
 
@@ -34,15 +29,15 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
 
     #[inline]
     fn protocol(&self) -> Version {
-        Version::HTTP_2
+        Version::HTTP_3
     }
 
     async fn connect(
         url: Arc<Url>,
         client_cert: &Option<ClientCert>,
-    ) -> Result<BaseHttpConnection<Http2Request>> {
-        let host = url.host().unwrap_or(Host::Domain("localhost"));
-        let stream = {
+    ) -> Result<BaseHttpConnection<Self::Sender>> {
+        let host = url.host().expect("uri has no host");
+        let io = {
             match url.scheme() {
                 "http" => {
                     let stream = {
@@ -51,30 +46,31 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
                     };
 
                     if let Err(e) = stream {
-                        return Err(DeboaError::Connection(ConnectionError::Tcp {
+                        return Err(DeboaError::Connection {
                             host: host.to_string(),
                             message: e.to_string(),
-                        }));
+                        });
                     }
 
-                    TokioStream::Plain(stream.unwrap())
+                    let stream = stream.unwrap();
+                    SmolStream::Plain(stream)
                 }
                 "https" => {
+                    // In case of HTTPS, establish a secure TLS connection first.
                     let stream = {
                         let port = url.port().unwrap_or(443);
                         TcpStream::connect((host.to_string(), port)).await
                     };
 
                     if let Err(e) = stream {
-                        return Err(DeboaError::Connection(ConnectionError::Tcp {
+                        return Err(DeboaError::Connection {
                             host: host.to_string(),
                             message: e.to_string(),
-                        }));
+                        });
                     }
 
-                    let socket = stream.unwrap();
-                    let mut builder = TlsConnector::builder();
-                    if let Some(client_cert) = client_cert {
+                    let stream = stream.unwrap();
+                    let connector = if let Some(client_cert) = client_cert {
                         let file = std::fs::read(client_cert.cert());
                         if let Err(e) = file {
                             return Err(DeboaError::ClientCert {
@@ -87,61 +83,43 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
                                 message: e.to_string(),
                             });
                         }
-                        builder.identity(identity.unwrap());
-
-                        if let Some(ca) = client_cert.ca() {
-                            let pem = std::fs::read(ca);
-                            if let Err(e) = pem {
-                                return Err(DeboaError::ClientCert {
-                                    message: e.to_string(),
-                                });
-                            }
-                            let cert = Certificate::from_pem(&pem.unwrap());
-                            builder.add_root_certificate(cert.unwrap());
-                        }
-                    }
-
-                    let connector = builder.build().unwrap();
-                    let connector = tokio_native_tls::TlsConnector::from(connector);
-                    let stream = connector.connect(&host.to_string(), socket).await;
+                        TlsConnector::new().identity(identity.unwrap())
+                    } else {
+                        TlsConnector::new()
+                    };
+                    let stream = connector.connect(&host.to_string(), stream).await;
 
                     if let Err(e) = stream {
-                        return Err(DeboaError::Connection(ConnectionError::Tls {
+                        return Err(DeboaError::Connection {
                             host: host.to_string(),
                             message: e.to_string(),
-                        }));
+                        });
                     }
 
                     let stream = stream.unwrap();
-                    TokioStream::Tls(stream)
+                    SmolStream::Tls(stream)
                 }
                 scheme => {
-                    return Err(DeboaError::Connection(ConnectionError::UnsupportedScheme {
+                    return Err(DeboaError::UnsupportedScheme {
                         message: format!("unsupported scheme: {scheme:?}"),
-                    }));
+                    });
                 }
             }
         };
 
-        let result = handshake(TokioExecutor::new(), TokioIo::new(stream)).await;
-
-        if let Err(err) = result {
-            return Err(DeboaError::Connection(ConnectionError::Handshake {
-                host: host.to_string(),
-                message: err.to_string(),
-            }));
-        }
+        let result = handshake(SmolExecutor::new(), FuturesIo::new(io)).await;
 
         let (sender, conn) = result.unwrap();
 
-        tokio::spawn(async move {
+        smol::spawn(async move {
             match conn.await {
                 Ok(_) => (),
                 Err(_err) => {}
             };
-        });
+        })
+        .detach();
 
-        Ok(BaseHttpConnection::<Http2Request> { url, sender })
+        Ok(BaseHttpConnection::<Self::Sender> { url, sender })
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {
