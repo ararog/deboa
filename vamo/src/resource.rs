@@ -1,4 +1,4 @@
-use deboa::{client::serde::RequestBody, errors::DeboaError, request::DeboaRequest, Result};
+use deboa::{Result, client::serde::RequestBody, errors::{DeboaError, RequestError}, request::DeboaRequest};
 use serde::Serialize;
 use std::str::FromStr;
 use url::Url;
@@ -60,16 +60,16 @@ pub trait Resource {
     fn add_path(&self, path: &str) -> Result<Url> {
         let url = Url::from_str("http://deboa");
         if let Err(e) = url {
-            return Err(DeboaError::UrlParse {
+            return Err(DeboaError::Request(RequestError::UrlParse {
                 message: e.to_string(),
-            });
+            }));
         }
         let final_path = path.replace("{}", &self.id());
         let full_url = url.unwrap().join(&final_path);
         if let Err(e) = full_url {
-            return Err(DeboaError::UrlParse {
+            return Err(DeboaError::Request(RequestError::UrlParse {
                 message: e.to_string(),
-            });
+            }));
         }
         Ok(full_url.unwrap())
     }
