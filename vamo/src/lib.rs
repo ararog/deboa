@@ -1,5 +1,9 @@
 use deboa::{
-    Deboa, Result, errors::{DeboaError, RequestError}, request::{DeboaRequest, DeboaRequestBuilder}, response::DeboaResponse, url::IntoUrl
+    errors::{DeboaError, RequestError},
+    request::{DeboaRequest, DeboaRequestBuilder},
+    response::DeboaResponse,
+    url::IntoUrl,
+    Deboa, Result,
 };
 use url::Url;
 

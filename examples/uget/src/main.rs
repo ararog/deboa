@@ -2,7 +2,12 @@ use clap::Parser;
 use colored::*;
 use colored_json::prelude::*;
 use deboa::{
-    Deboa, HttpVersion, Result, cert::ClientCert, errors::{DeboaError, IoError, RequestError}, form::{DeboaForm, EncodedForm, MultiPartForm}, request::{DeboaRequest, DeboaRequestBuilder}, response::DeboaResponse
+    cert::ClientCert,
+    errors::{DeboaError, IoError, RequestError},
+    form::{DeboaForm, EncodedForm, MultiPartForm},
+    request::{DeboaRequest, DeboaRequestBuilder},
+    response::DeboaResponse,
+    Deboa, HttpVersion, Result,
 };
 use futures_util::StreamExt;
 use http::{HeaderName, Method};
