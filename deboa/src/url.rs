@@ -1,6 +1,6 @@
 use url::Url;
 
-use crate::{DeboaError, Result, errors::RequestError};
+use crate::{errors::RequestError, DeboaError, Result};
 
 /// Trait to convert a value into a Url.
 pub trait IntoUrl {

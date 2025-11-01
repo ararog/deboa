@@ -1,4 +1,9 @@
-use deboa::{Result, client::serde::RequestBody, errors::{DeboaError, RequestError}, request::DeboaRequest};
+use deboa::{
+    client::serde::RequestBody,
+    errors::{DeboaError, RequestError},
+    request::DeboaRequest,
+    Result,
+};
 use serde::Serialize;
 use std::str::FromStr;
 use url::Url;

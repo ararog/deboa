@@ -11,7 +11,13 @@ use serde::Serialize;
 use url::Url;
 
 use crate::{
-    Deboa, Result, client::serde::RequestBody, cookie::DeboaCookie, errors::{DeboaError, RequestError}, form::{DeboaForm, Form}, response::DeboaResponse, url::IntoUrl
+    client::serde::RequestBody,
+    cookie::DeboaCookie,
+    errors::{DeboaError, RequestError},
+    form::{DeboaForm, Form},
+    response::DeboaResponse,
+    url::IntoUrl,
+    Deboa, Result,
 };
 
 pub trait IntoRequest {

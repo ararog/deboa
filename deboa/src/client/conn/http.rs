@@ -7,7 +7,11 @@ use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 use url::Url;
 
-use crate::{MAX_ERROR_MESSAGE_SIZE, Result, cert::ClientCert, errors::{DeboaError, RequestError, ResponseError}};
+use crate::{
+    cert::ClientCert,
+    errors::{DeboaError, RequestError, ResponseError},
+    Result, MAX_ERROR_MESSAGE_SIZE,
+};
 
 #[derive(Debug)]
 /// Enum that represents the connection type.
