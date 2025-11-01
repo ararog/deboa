@@ -1,6 +1,6 @@
 use url::Url;
 
-use crate::{DeboaError, Result};
+use crate::{DeboaError, Result, errors::RequestError};
 
 /// Trait to convert a value into a Url.
 pub trait IntoUrl {
@@ -22,17 +22,17 @@ pub trait IntoUrl {
         Self: AsRef<str>,
     {
         if !self.as_ref().starts_with("http") && !self.as_ref().starts_with("ws") {
-            return Err(DeboaError::UrlParse {
+            return Err(DeboaError::Request(RequestError::UrlParse {
                 message: "Scheme must be http or https or ws or wss".to_string(),
-            });
+            }));
         }
 
         let url = Url::parse(self.as_ref());
 
         if url.is_err() {
-            return Err(DeboaError::UrlParse {
+            return Err(DeboaError::Request(RequestError::UrlParse {
                 message: "Failed to parse url".to_string(),
-            });
+            }));
         }
 
         Ok(url.unwrap())

@@ -11,13 +11,7 @@ use serde::Serialize;
 use url::Url;
 
 use crate::{
-    client::serde::RequestBody,
-    cookie::DeboaCookie,
-    errors::DeboaError,
-    form::{DeboaForm, Form},
-    response::DeboaResponse,
-    url::IntoUrl,
-    Deboa, Result,
+    Deboa, Result, client::serde::RequestBody, cookie::DeboaCookie, errors::{DeboaError, RequestError}, form::{DeboaForm, Form}, response::DeboaResponse, url::IntoUrl
 };
 
 pub trait IntoRequest {
@@ -443,9 +437,9 @@ impl DeboaRequest {
     pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
-            return Err(DeboaError::UrlParse {
+            return Err(DeboaError::Request(RequestError::UrlParse {
                 message: e.to_string(),
-            });
+            }));
         }
 
         let url = parsed_url.unwrap();
@@ -608,9 +602,9 @@ impl DeboaRequest {
     pub fn set_url<T: IntoUrl>(&mut self, url: T) -> Result<&mut Self> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
-            return Err(DeboaError::UrlParse {
+            return Err(DeboaError::Request(RequestError::UrlParse {
                 message: e.to_string(),
-            });
+            }));
         }
 
         let parsed_url = parsed_url.unwrap();

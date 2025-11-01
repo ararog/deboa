@@ -7,7 +7,7 @@ use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 use url::Url;
 
-use crate::{cert::ClientCert, errors::DeboaError, Result, MAX_ERROR_MESSAGE_SIZE};
+use crate::{MAX_ERROR_MESSAGE_SIZE, Result, cert::ClientCert, errors::{DeboaError, RequestError, ResponseError}};
 
 #[derive(Debug)]
 /// Enum that represents the connection type.
@@ -112,11 +112,11 @@ pub trait DeboaHttpConnection {
         response: std::result::Result<Response<Incoming>, hyper::Error>,
     ) -> Result<Response<Incoming>> {
         if let Err(err) = response {
-            return Err(DeboaError::Request {
+            return Err(DeboaError::Request(RequestError::Send {
                 url: url.to_string(),
                 method: method.to_string(),
                 message: err.to_string(),
-            });
+            }));
         }
 
         let response = response.unwrap();
@@ -140,14 +140,14 @@ pub trait DeboaHttpConnection {
                     }
                 }
             }
-            return Err(DeboaError::Response {
+            return Err(DeboaError::Response(ResponseError::Receive {
                 status_code,
                 message: format!(
                     "Could not process request ({}): {}",
                     status_code,
                     String::from_utf8_lossy(&error_message)
                 ),
-            });
+            }));
         }
 
         Ok(response)
