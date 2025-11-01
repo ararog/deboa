@@ -1,4 +1,4 @@
-use crate::errors::ConnectionError;
+use crate::errors::{ConnectionError, ResponseError};
 #[cfg(test)]
 use crate::{
     errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Deboa, HttpVersion, Result,
@@ -119,10 +119,10 @@ async fn do_get_not_found() -> Result<()> {
     assert!(response.is_err());
     assert_eq!(
         response.unwrap_err(),
-        DeboaError::Response {
+        DeboaError::Response(ResponseError::Receive {
             status_code: StatusCode::NOT_FOUND,
             message: "Could not process request (404 Not Found): ping".to_string()
-        }
+        })
     );
 
     Ok(())
@@ -256,10 +256,10 @@ async fn do_get_by_query_with_retries() -> Result<()> {
     if let Err(err) = response {
         assert_eq!(
             err,
-            DeboaError::Response {
+            DeboaError::Response(ResponseError::Receive {
                 status_code: StatusCode::BAD_GATEWAY,
                 message: "Could not process request (502 Bad Gateway): ping".to_string(),
-            },
+            }),
         );
     }
 

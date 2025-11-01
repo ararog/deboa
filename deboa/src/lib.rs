@@ -572,11 +572,11 @@ impl Deboa {
 
         let request = builder.body(Full::new(Bytes::from(request.as_ref().raw_body().to_vec())));
         if let Err(err) = request {
-            return Err(DeboaError::Request {
+            return Err(DeboaError::Request(errors::RequestError::Send {
                 url: url.to_string(),
                 method: method.to_string(),
                 message: err.to_string(),
-            });
+            }));
         }
 
         let request = request.unwrap();

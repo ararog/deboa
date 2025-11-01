@@ -15,30 +15,48 @@ pub enum DeboaError {
     #[error("Connection error: {0}")]
     Connection(#[from] ConnectionError),
 
-    #[error("Failed to send request: {method} {url}: {message}")]
-    Request {
-        url: String,
-        method: String,
-        message: String,
-    },
+    #[error("Request error: {0}")]
+    Request(#[from] RequestError),
 
-    #[error("Failed to receive response: {status_code}: {message}")]
-    Response {
-        status_code: StatusCode,
-        message: String,
-    },
-
-    #[error("Failed to process response: {message}")]
-    ProcessResponse { message: String },
-
-    #[error("Failed to parse url: {message}")]
-    UrlParse { message: String },
+    #[error("Response error: {0}")]
+    Response(#[from] ResponseError),
 
     #[error("Content error: {0}")]
     Content(#[from] ContentError),
 
     #[error("Io error: {0}")]
     Io(#[from] IoError),
+}
+
+#[derive(Debug, Clone, Error, PartialEq)]
+pub enum RequestError {
+    #[error("Failed to send request: {method} {url}: {message}")]
+    Send {
+        url: String,
+        method: String,
+        message: String,
+    },
+
+    #[error("Failed to prepare request: {message}")]
+    Prepare { message: String },
+
+    #[error("Failed to parse url: {message}")]
+    UrlParse { message: String },
+
+    #[error("Failed to parse method: {message}")]
+    MethodParse { message: String },
+}
+
+#[derive(Debug, Clone, Error, PartialEq)]
+pub enum ResponseError {
+    #[error("Failed to receive response: {status_code}: {message}")]
+    Receive {
+        status_code: StatusCode,
+        message: String,
+    },
+
+    #[error("Failed to process response: {message}")]
+    Process { message: String },
 }
 
 #[derive(Debug, Clone, Error, PartialEq)]
