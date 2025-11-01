@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-deboa = { version = "0.0.6-beta.7", path = "../../deboa" }
-deboa-extras = { version = "0.0.2-beta.1", path = "../../deboa-extras" }
+deboa = { path = "../../deboa" }
+deboa-extras = { path = "../../deboa-extras" }
 iced = { version = "0.13.1", features = ["tokio", "debug"] }
 sipper = "0.1.0"
 tokio = { version = "1.47.2", features = ["macros", "rt-multi-thread", "io-util", "io-std"] }
