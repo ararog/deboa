@@ -585,7 +585,7 @@ impl Deboa {
             .pool
             .create_connection(url, &self.protocol, &self.client_cert)
             .await?;
-        match *conn {
+        match conn {
             #[cfg(feature = "http1")]
             DeboaConnection::Http1(ref mut conn) => conn.send_request(request).await,
             #[cfg(feature = "http2")]

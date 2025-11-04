@@ -3,7 +3,7 @@ use colored::*;
 use colored_json::prelude::*;
 use deboa::{
     cert::ClientCert,
-    errors::{DeboaError, IoError, RequestError},
+    errors::{DeboaError, IoError, RequestError, ResponseError},
     form::{DeboaForm, EncodedForm, MultiPartForm},
     request::{DeboaRequest, DeboaRequestBuilder},
     response::DeboaResponse,
@@ -307,7 +307,38 @@ async fn handle_request(args: Args, client: &mut Deboa) -> Result<()> {
         print_request(&request, print);
     }
 
-    let response = client.execute(request).await?;
+    let response = client.execute(request).await;
+    if let Err(e) = response {
+        match e {
+            DeboaError::Response(inner_error) => match inner_error {
+                ResponseError::Process { message } => {
+                    print!("{}", message);
+                    return Ok(());
+                }
+                ResponseError::Receive {
+                    status_code: _,
+                    message,
+                } => {
+                    print!("{}", message);
+                    return Ok(());
+                }
+            },
+            DeboaError::Request(inner_error) => match inner_error {
+                RequestError::Send {
+                    message,
+                    url: _,
+                    method: _,
+                } => {
+                    print!("{}", message);
+                    return Ok(());
+                }
+                _ => todo!(),
+            },
+            _ => todo!(),
+        }
+    }
+
+    let response = response.unwrap();
 
     if let Some(print) = arg_print.as_ref() {
         print_response(&response, print, client.protocol());

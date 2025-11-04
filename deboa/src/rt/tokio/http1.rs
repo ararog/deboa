@@ -145,7 +145,6 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {
         let method = request.method().to_string();
         let result = self.sender.send_request(request).await;
-
         self.process_response(&self.url, &method, result).await
     }
 }
