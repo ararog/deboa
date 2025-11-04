@@ -14,7 +14,7 @@ rust-version = "1.70.0"
 
 [dependencies]
 assert_cmd = "2.0.13"
-clap = { version = "4.5.50", features = ["derive"] }
+clap = { version = "4.5.51", features = ["derive"] }
 colored = "2.2.0"
 colored_json = "5.0.0"
 deboa = { path = "../../deboa", version = "0.0.6" }
