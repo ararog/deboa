@@ -6,7 +6,7 @@ use crate::{
 
 use deboa_tests::utils::setup_server;
 
-use http::StatusCode;
+use http::{StatusCode, header};
 use httpmock::MockServer;
 
 #[cfg(feature = "smol-rt")]
@@ -277,4 +277,50 @@ async fn test_get_by_query_with_retries() -> Result<()> {
 #[apply(test!)]
 async fn test_get_by_query_with_retries() {
     let _ = do_get_by_query_with_retries().await;
+}
+
+async fn do_get_with_redirect() -> Result<()> {
+    let server = MockServer::start();
+
+    let http_mock_red = server.mock(|when, then| {
+        when.method(httpmock::Method::GET).path("/comments/one");
+        then.status::<u16>(StatusCode::MOVED_PERMANENTLY.into())
+            .header(header::LOCATION.as_str(), server.url("/comments/1"));
+    });
+
+    let http_mock_tgt = server.mock(|when, then| {
+        when.method(httpmock::Method::GET).path("/comments/1");
+        then.status::<u16>(StatusCode::OK.into())
+            .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
+            .body("ping");
+    });
+
+    let client = Deboa::new();
+
+    let response = DeboaRequest::get(server.url("/comments/one").as_str())?
+        .go(client)
+        .await?;
+
+    http_mock_red.assert();
+    http_mock_tgt.assert();
+
+    assert_eq!(
+        response.status(),
+        StatusCode::OK
+    );
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio-rt")]
+#[tokio::test]
+async fn test_get_with_redirect() -> Result<()> {
+    do_get_with_redirect().await?;
+    Ok(())
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_get_with_redirect() {
+    let _ = do_get_with_redirect().await;
 }
