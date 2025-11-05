@@ -75,7 +75,7 @@ let response: Vec<Post> = get!("https://jsonplaceholder.typicode.com/posts", Jso
 let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &mut client);
 
 // delete macro
-let response = delete!("https://jsonplaceholder.typicode.com/posts", &mut client);
+let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &mut client);
 
 ```
 

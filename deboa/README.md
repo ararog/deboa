@@ -18,9 +18,11 @@ This release has a major api change. Please check the [migration guide](https://
 - pluggable catchers (interceptors)
 - pluggable compression (gzip, deflate, br)
 - pluggable serialization (json, xml, msgpack)
-- bora macro to easily create api clients
 - cookies support
+- urlencoded and multipart forms
 - comprehensive error handling
+- response streaming
+- upgrade support (websocket, etc.)
 - runtime compatibility (tokio and smol)
 - http1/2 support 
 - http3 support (soon)
