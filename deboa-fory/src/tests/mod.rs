@@ -4,7 +4,9 @@ use fory::{Fory, ForyObject};
 use http::header;
 use httpmock::{Method, MockServer};
 
-const FORY_PERSON: [u8; 15] = [2, 255, 143, 2, 30, 255, 34, 74, 111, 104, 110, 32, 68, 111, 101];
+const FORY_PERSON: [u8; 15] = [
+    2, 255, 143, 2, 30, 255, 34, 74, 111, 104, 110, 32, 68, 111, 101,
+];
 
 #[derive(ForyObject)]
 struct Person {
