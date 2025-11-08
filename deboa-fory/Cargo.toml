@@ -1,6 +1,6 @@
 [package]
 name = "deboa-fory"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 repository = "https://github.com/ararog/deboa"
@@ -12,10 +12,10 @@ keywords = ["http", "networking", "rest", "serializer", "fory"]
 rust-version = "1.70.0"
 
 [dependencies]
-fory = "0.13.1"
 deboa = { path = "../deboa", version = "0.0.7", features = ["http1", "tokio-rt"] }
-http = "1.3.1"
+fory = "0.13.1"
 fory-core = "0.13.1"
+http = "1.3.1"
  
 [dev-dependencies]
 httpmock = "0.8.1"
