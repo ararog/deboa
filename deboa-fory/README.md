@@ -23,7 +23,7 @@ let person = Person {
     age: 30,
 };
 
-let request = post(server.url(path))?
+let request = post("http://localhost:8080/persons")?
     .body_as_fory(&fory, person)?;
 
 let response: Person = request
