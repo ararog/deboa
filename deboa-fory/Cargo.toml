@@ -1,0 +1,22 @@
+[package]
+name = "deboa-fory"
+version = "0.1.0"
+edition = "2021"
+authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
+repository = "https://github.com/ararog/deboa"
+homepage = "https://github.com/ararog/deboa"
+description = "Apache Fory serializer support for Deboa"
+readme = "README.md"
+license = "MIT"
+keywords = ["http", "networking", "rest", "serializer", "fory"]
+rust-version = "1.70.0"
+
+[dependencies]
+fory = "0.13.1"
+deboa = { path = "../deboa", version = "0.0.7", features = ["http1", "tokio-rt"] }
+http = "1.3.1"
+fory-core = "0.13.1"
+ 
+[dev-dependencies]
+httpmock = "0.8.1"
+tokio = { version = "1.47.2", features = ["macros"] }
