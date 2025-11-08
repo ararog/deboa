@@ -13,4 +13,4 @@ fn test_url_invalid() {
     let url_str = "invalid_url";
     let url = url_str.parse_url();
     assert!(url.is_err());
-} 
+}

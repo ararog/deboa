@@ -7,4 +7,3 @@ fn test_cert_init() {
     assert_eq!(cert.pw(), "pw");
     assert_eq!(cert.ca(), None);
 }
-    

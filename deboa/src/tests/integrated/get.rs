@@ -6,7 +6,7 @@ use crate::{
 
 use deboa_tests::utils::setup_server;
 
-use http::{StatusCode, header};
+use http::{header, StatusCode};
 use httpmock::MockServer;
 
 #[cfg(feature = "smol-rt")]
@@ -304,10 +304,7 @@ async fn do_get_with_redirect() -> Result<()> {
     http_mock_red.assert();
     http_mock_tgt.assert();
 
-    assert_eq!(
-        response.status(),
-        StatusCode::OK
-    );
+    assert_eq!(response.status(), StatusCode::OK);
 
     Ok(())
 }
