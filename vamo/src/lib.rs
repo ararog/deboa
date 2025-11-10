@@ -88,6 +88,20 @@ impl Vamo {
     ///
     /// A Result containing a DeboaRequestBuilder.
     ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use vamo::Vamo;
+    /// use deboa_extras::http::serde::json::JsonBody;
+    ///
+    /// let vamo = Vamo::new("https://api.example.com")?;
+    /// let request = vamo.get("/users/1")?.build()?;
+    /// let response = request
+    ///   .go(vamo)
+    ///   .await?
+    ///   .body_as(JsonBody)
+    ///   .await?;
+    /// ```
     pub fn get(&self, path: &str) -> Result<DeboaRequestBuilder> {
         DeboaRequest::get(self.url(path)?.as_str())
     }
@@ -102,6 +116,18 @@ impl Vamo {
     ///
     /// A Result containing a DeboaRequestBuilder.
     ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use vamo::Vamo;
+    /// use deboa_extras::http::serde::json::JsonBody;
+    ///
+    /// let vamo = Vamo::new("https://api.example.com")?;
+    /// let request = vamo.post("/users")?.body_as(JsonBody).build()?;
+    /// let response = request
+    ///   .go(vamo)
+    ///   .await?;
+    /// ```
     pub fn post(&self, path: &str) -> Result<DeboaRequestBuilder> {
         DeboaRequest::post(self.url(path)?.as_str())
     }
@@ -116,6 +142,18 @@ impl Vamo {
     ///
     /// A Result containing a DeboaRequestBuilder.
     ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use vamo::Vamo;
+    /// use deboa_extras::http::serde::json::JsonBody;
+    ///
+    /// let vamo = Vamo::new("https://api.example.com")?;
+    /// let request = vamo.put("/users/1")?.body_as(JsonBody).build()?;
+    /// let response = request
+    ///   .go(vamo)
+    ///   .await?;
+    /// ```
     pub fn put(&self, path: &str) -> Result<DeboaRequestBuilder> {
         DeboaRequest::put(self.url(path)?.as_str())
     }
@@ -130,6 +168,18 @@ impl Vamo {
     ///
     /// A Result containing a DeboaRequestBuilder.
     ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use vamo::Vamo;
+    /// use deboa_extras::http::serde::json::JsonBody;
+    ///
+    /// let vamo = Vamo::new("https://api.example.com")?;
+    /// let request = vamo.patch("/users/1")?.body_as(JsonBody).build()?;
+    /// let response = request
+    ///   .go(vamo)
+    ///   .await?;
+    /// ```
     pub fn patch(&self, path: &str) -> Result<DeboaRequestBuilder> {
         DeboaRequest::patch(self.url(path)?.as_str())
     }
@@ -143,7 +193,16 @@ impl Vamo {
     /// # Returns
     ///
     /// A Result containing a DeboaRequestBuilder.
+    /// 
+    /// # Examples
     ///
+    /// ``` compile_fail
+    /// use vamo::Vamo;
+    ///
+    /// let vamo = Vamo::new("https://api.example.com")?;
+    /// let request = vamo.delete("/users/1")?.build()?;
+    /// let response = request.go(vamo).await?;
+    /// ```
     pub fn delete(&self, path: &str) -> Result<DeboaRequestBuilder> {
         DeboaRequest::delete(self.url(path)?.as_str())
     }
@@ -157,7 +216,20 @@ impl Vamo {
     /// # Returns
     ///
     /// A Result containing the DeboaResponse.
+    /// 
+    /// # Examples
     ///
+    /// ``` compile_fail
+    /// use vamo::Vamo;
+    ///
+    /// let vamo = Vamo::new("https://api.example.com")?;
+    /// let request = vamo.get("/users")?.build()?;
+    /// let response = request
+    ///   .go(vamo)
+    ///   .await?
+    ///   .text()
+    ///   .await?;
+    /// ```
     pub async fn go(&mut self, mut request: DeboaRequest) -> Result<DeboaResponse> {
         let mut url = self.base_url.to_string();
         url.push_str(request.url().path());
