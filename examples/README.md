@@ -16,15 +16,9 @@ This example shows how to use bora to quickly create a REST API client based on 
 
 This example shows how to use deboa to make a simple GET request of posts from JSONPlaceholder.
 
-## Uget
-
-A minimal cli tool to make http requests. You want, you get!
-
-
 ## Chat
 
 This example shows how to use deboa to make a simple chat client using websockets.
-
 
 ## SSE
 
