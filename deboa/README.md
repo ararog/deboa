@@ -31,6 +31,7 @@ This release has a major api change. Please check the [migration guide](https://
 
 ```rust
 deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
+http = "1.3.1"
 ```
 
 ## Crate features
@@ -44,50 +45,68 @@ deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
 ## Usage
 
 ```rust
-use deboa::{Deboa, request::get};
-use deboa_extras::http::serde::json::JsonBody;
+use deboa::{
+    Deboa, Result, request::{DeboaRequest, Fetch, get}
+};
+use deboa_extras::http::{self, serde::json::JsonBody};
+
+use ::http::Method;
+
+#[derive(Debug, serde::Deserialize)]
+pub struct Post {
+    pub id: u64,
+    pub title: String,
+    pub body: String,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
-  let client = Deboa::new();
+    let mut client = Deboa::new();
 
-  /* 
-  You can also use the Fetch trait to issue requests
-  
-  let posts: Vec<Post> = "https://jsonplaceholder.typicode.com/posts"
-    .fetch(client)
-    .await?
-    .body_as(JsonBody)?;    
+    /*
 
-  or use at, from (defaults to GET) and to (defaults to POST) methods:
+    // You can also use the Fetch trait to issue requests
 
-  let posts: Vec<Post> = at("https://jsonplaceholder.typicode.com/posts", http::Method::GET)?
-    .go(client)
-    .await?
-    .body_as(JsonBody)?;
+    let posts: Vec<Post> = "https://jsonplaceholder.typicode.com/posts"
+      .fetch(client)
+      .await?
+      .body_as(JsonBody)
+      .await?;
 
-  shifleft? Yes sir! Defaults to GET, but you can change it, same for headers.
+    // or use at, from (defaults to GET) and to (defaults to POST) methods:
 
-  let request = client << "https://jsonplaceholder.typicode.com/posts";
-  let posts: Vec<Post> = client.execute(request)
-    .await?
-    .body_as(JsonBody)?;
+    let posts: Vec<Post> = DeboaRequest::at("https://jsonplaceholder.typicode.com/posts", Method::GET)?
+      .go(client)
+      .await?
+      .body_as(JsonBody)
+      .await?;
 
-  or simply:
+    // shifleft? Yes sir! Defaults to GET, but you can change it, same for headers.
+ 
+    let request = &client << "https://jsonplaceholder.typicode.com/posts";
+    let posts: Vec<Post> = client.execute(request)
+      .await?
+      .body_as(JsonBody)
+      .await?;
 
-  let response = client.execute("https://jsonplaceholder.typicode.com/posts")
-    .await?;
-  let posts: Vec<Post> = response.body_as(JsonBody)?;
-  */
+    // or simply:
 
-  let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
-    .go(client)
-    .await?
-    .body_as(JsonBody)?;
+    let response = client
+        .execute("https://jsonplaceholder.typicode.com/posts")
+        .await?;
+    let posts: Vec<Post> = response.body_as(JsonBody).await?;
 
-  println!("posts: {:#?}", posts);
+    */
 
-  Ok(())
+    let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
+      .go(client)
+      .await?
+      .body_as(JsonBody)
+      .await?;
+
+    println!("posts: {:#?}", posts);
+
+    Ok(())
 }
 ```
 
