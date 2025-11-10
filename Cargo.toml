@@ -6,14 +6,16 @@ members = [
     "deboa",
     "deboa-bora",
     "deboa-extras",
+    "deboa-fory", 
     "deboa-macros",
     "examples/blog", 
+    "examples/chat", 
     "examples/postman", 
     "examples/catcher",
+    "examples/sse", 
     "examples/simple", 
-    "examples/uget", 
     "vamo", 
-    "vamo-macros", "examples/sse", "examples/chat", "deboa-fory", 
+    "vamo-macros", 
 ]
 
 [profile.release]

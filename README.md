@@ -45,7 +45,8 @@ async fn main() -> Result<()> {
     .header(header::CONTENT_TYPE, "application/json")
     .go(client)
     .await?
-    .body_as(JsonBody)?;
+    .body_as(JsonBody)
+    .await?;
 
   println!("posts: {:#?}", posts);
 

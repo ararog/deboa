@@ -1,6 +1,6 @@
 use crate::{request::DeboaRequest, request::Fetch, Deboa, Result};
 
-use deboa_tests::utils::JSONPLACEHOLDER;
+use deboa_tests::{utils::JSONPLACEHOLDER};
 use http::{header, HeaderValue};
 use url::Url;
 
@@ -139,9 +139,9 @@ fn test_raw_body() -> Result<()> {
 
 #[tokio::test]
 async fn test_fetch_from_str() -> Result<()> {
-    let client = Deboa::new();
-    let response = JSONPLACEHOLDER.fetch(client).await?;
+    let mut client = Deboa::new();
 
+    let response = JSONPLACEHOLDER.fetch(&mut client).await?;
     assert_eq!(response.status(), 200);
 
     Ok(())

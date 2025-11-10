@@ -57,6 +57,17 @@ pub trait Fetch {
     ///
     /// * `Result<DeboaResponse>` - The response.
     ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use deboa::{Deboa, request::Fetch};
+    ///
+    /// let mut client = Deboa::new();
+    ///
+    /// let response = "https://jsonplaceholder.typicode.com".fetch(&mut client).await?;
+    /// assert_eq!(response.status(), 200);
+    /// ```
+    ///
     async fn fetch<T>(&self, client: T) -> Result<DeboaResponse>
     where
         T: AsMut<Deboa> + Send;
@@ -82,6 +93,18 @@ impl Fetch for &str {
 ///
 /// * `Result<DeboaRequestBuilder>` - The request builder.
 ///
+/// # Examples
+///
+/// ``` compile_fail
+/// use deboa::{Deboa, request::get};
+///
+/// let mut client = Deboa::new();
+///
+/// let request = get("https://jsonplaceholder.typicode.com").unwrap();
+/// let response = request.go(&mut client).await?;
+/// assert_eq!(response.status(), 200);
+/// ```
+///
 #[inline]
 pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
     DeboaRequest::get(url)
@@ -96,6 +119,20 @@ pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// # Returns
 ///
 /// * `Result<DeboaRequestBuilder>` - The request builder.
+///
+/// # Examples
+///
+/// ``` compile_fail
+/// use deboa::{Deboa, request::post};
+///
+/// let mut client = Deboa::new();
+///
+/// let request = post("https://jsonplaceholder.typicode.com/posts")?
+///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
+///   .build()?;
+/// let response = request.go(&mut client).await?;
+/// assert_eq!(response.status(), 201);
+/// ```
 ///
 #[inline]
 pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
@@ -233,6 +270,20 @@ impl DeboaRequestBuilder {
     /// # Returns
     ///
     /// * `Self` - The request builder.
+    ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use deboa::request::post;
+    /// use http::header;
+    ///
+    /// let request = post("https://jsonplaceholder.typicode.com/posts")?
+    ///   .header(header::CONTENT_TYPE, "application/json")
+    ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
+    ///   .build()?;
+    /// let response = request.go(&mut client).await?;
+    /// assert_eq!(response.status(), 201);
+    /// ```
     ///
     pub fn header(mut self, key: HeaderName, value: &str) -> Self {
         self.headers
@@ -439,6 +490,19 @@ impl DeboaRequest {
     /// # Returns
     ///
     /// * `DeboaRequestBuilder` - The request builder.
+    ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use deboa::request::post;
+    ///
+    /// let request = at("https://jsonplaceholder.typicode.com/posts", http::Method::POST)?
+    ///   .header("Content-Type", "application/json")
+    ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
+    ///   .build()?;
+    /// let response = request.go(&mut client).await?;
+    /// assert_eq!(response.status(), 201);
+    /// ```
     ///
     pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
         let parsed_url = url.into_url();
