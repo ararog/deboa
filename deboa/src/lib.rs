@@ -8,7 +8,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = "0.0.5"
+//! deboa = "0.0.8"
 //! ```
 //!
 //! <small>Note that development versions, tagged with `-dev`, are not published
@@ -48,14 +48,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = { version = "0.0.5", features = ["tokio_rt", "http1", "http2"] }
+//! deboa = { version = "0.0.8", features = ["tokio_rt", "http1", "http2"] }
 //! ```
 //!
 //! Conversely, HTTP/2 can be disabled:
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = { version = "0.0.5", default-features = false }
+//! deboa = { version = "0.0.8", default-features = false }
 //! ```
 //!
 
@@ -450,6 +450,15 @@ impl Deboa {
     ///
     /// * `Result<DeboaResponse>` - The response.
     ///
+    /// # Examples
+    ///
+    /// ```compile_fail
+    /// use deboa::{Deboa, DeboaResponse};
+    ///
+    /// let mut deboa = Deboa::new();
+    /// let response = deboa.execute("https://httpbin.org/get").await?;
+    /// assert_eq!(response.status(), 200);
+    /// ```
     pub async fn execute<R>(&mut self, request: R) -> Result<DeboaResponse>
     where
         R: IntoRequest,
