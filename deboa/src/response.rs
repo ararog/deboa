@@ -406,6 +406,16 @@ impl DeboaResponse {
     /// # Returns
     ///
     /// * `Result<B>` - The body or error.
+    /// 
+    /// # Examples
+    ///
+    /// ```compile_fail
+    /// use deboa::request::get;
+    /// use deboa_extras::http::serde::json::JsonBody;
+    /// 
+    /// let response = get("https://jsonplaceholder.typicode.com/posts")?.go(client).await?;
+    /// let posts: Vec<Post> = response.body_as(JsonBody).await?;
+    /// ```
     ///
     #[inline]
     pub async fn body_as<T: ResponseBody, B: for<'a> Deserialize<'a>>(
@@ -422,6 +432,15 @@ impl DeboaResponse {
     /// # Returns
     ///
     /// * `Result<String>` - The text body or error.
+    ///
+    /// # Examples
+    ///
+    /// ```compile_fail
+    /// use deboa::request::get;
+    /// 
+    /// let response = get("https://jsonplaceholder.typicode.com/posts")?.go(client).await?;
+    /// let text = response.text().await?;
+    /// ```
     ///
     #[inline]
     pub async fn text(mut self) -> Result<String> {
@@ -440,6 +459,15 @@ impl DeboaResponse {
     /// # Returns
     ///
     /// * `Result<()>` - The result or error.
+    /// 
+    /// # Examples
+    ///
+    /// ```compile_fail
+    /// use deboa::request::get;
+    /// 
+    /// let response = get("https://jsonplaceholder.typicode.com/posts")?.go(client).await?;
+    /// response.to_file("posts.json").await?;
+    /// ```
     ///
     pub async fn to_file(mut self, path: &str) -> Result<()> {
         let body = self.raw_body().await;
