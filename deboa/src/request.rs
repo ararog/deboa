@@ -149,6 +149,19 @@ pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 ///
 /// * `Result<DeboaRequestBuilder>` - The request builder.
 ///
+/// # Examples
+///
+/// ``` compile_fail
+/// use deboa::{Deboa, request::put};
+///
+/// let mut client = Deboa::new();
+///
+/// let request = put("https://jsonplaceholder.typicode.com/posts/1")?
+///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
+///   .build()?;
+/// let response = request.go(&mut client).await?;
+/// assert_eq!(response.status(), 200);
+/// ```
 #[inline]
 pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
     DeboaRequest::put(url)
@@ -164,6 +177,17 @@ pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 ///
 /// * `Result<DeboaRequestBuilder>` - The request builder.
 ///
+/// # Examples
+///
+/// ``` compile_fail
+/// use deboa::{Deboa, request::delete};
+///
+/// let mut client = Deboa::new();
+///
+/// let request = delete("https://jsonplaceholder.typicode.com/posts/1")?.build()?;
+/// let response = request.go(&mut client).await?;
+/// assert_eq!(response.status(), 200);
+/// ```
 #[inline]
 pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
     DeboaRequest::delete(url)
@@ -179,6 +203,19 @@ pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 ///
 /// * `Result<DeboaRequestBuilder>` - The request builder.
 ///
+/// # Examples
+///
+/// ``` compile_fail
+/// use deboa::{Deboa, request::patch};
+///
+/// let mut client = Deboa::new();
+///
+/// let request = patch("https://jsonplaceholder.typicode.com/posts/1")?
+///   .raw_body(b"{\"title\": \"foo\"}")
+///   .build()?;
+/// let response = request.go(&mut client).await?;
+/// assert_eq!(response.status(), 200);
+/// ```
 #[inline]
 pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
     DeboaRequest::patch(url)
@@ -325,7 +362,9 @@ impl DeboaRequestBuilder {
         self
     }
 
-    /// Set multipart form of the request.
+    /// Set multipart form of the request. 
+    /// Content-Type will be set to `multipart/form-data` or `application/x-www-form-urlencoded` 
+    /// based on the enum variant.
     ///
     /// # Arguments
     ///
@@ -335,6 +374,22 @@ impl DeboaRequestBuilder {
     ///
     /// * `Self` - The request builder.
     ///
+    /// # Examples
+    ///
+    /// ```compile_fail
+    /// use deboa::request::post;
+    /// use deboa::form::MultiPartForm;
+    ///
+    /// let mut form = MultiPartForm::builder();
+    /// form.field("name", "deboa");
+    /// form.field("version", "0.0.1");
+    ///
+    /// let request = post("https://jsonplaceholder.typicode.com/posts")?
+    ///   .form(form.into())
+    ///   .build()?;
+    /// let response = request.go(&mut client).await?;
+    /// assert_eq!(response.status(), 201);
+    /// ```
     pub fn form(mut self, form: Form) -> Self {
         self.form = Some(form);
         self
@@ -350,6 +405,18 @@ impl DeboaRequestBuilder {
     ///
     /// * `Self` - The request builder.
     ///
+    /// # Examples
+    ///
+    /// ```compile_fail
+    /// use deboa::request::post;
+    ///
+    /// let request = post("https://jsonplaceholder.typicode.com/posts")?
+    ///   .header(header::CONTENT_TYPE, "application/json")
+    ///   .text("text")
+    ///   .build()?;
+    /// let response = request.go(&mut client).await?;
+    /// assert_eq!(response.status(), 201);
+    /// ```
     pub fn text(mut self, text: &str) -> Self {
         self.body = text.as_bytes().into();
         self
@@ -377,6 +444,23 @@ impl DeboaRequestBuilder {
     ///
     /// * `token` - The token.
     ///
+    /// # Returns
+    ///
+    /// * `Self` - The request builder.
+    ///
+    /// # Examples
+    ///
+    /// ```compile_fail
+    /// use deboa::request::post;
+    ///
+    /// let request = post("https://jsonplaceholder.typicode.com/posts")?
+    ///   .header(header::CONTENT_TYPE, "application/json")
+    ///   .bearer_auth("token")
+    ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
+    ///   .build()?;
+    /// let response = request.go(&mut client).await?;
+    /// assert_eq!(response.status(), 201);
+    /// ```
     #[inline]
     pub fn bearer_auth(self, token: &str) -> Self {
         self.header(header::AUTHORIZATION, format!("Bearer {token}").as_str())
@@ -393,6 +477,19 @@ impl DeboaRequestBuilder {
     ///
     /// * `Self` - The request builder.
     ///
+    /// # Examples
+    ///
+    /// ```compile_fail
+    /// use deboa::request::post;
+    ///
+    /// let request = post("https://jsonplaceholder.typicode.com/posts")?
+    ///   .header(header::CONTENT_TYPE, "application/json")
+    ///   .basic_auth("username", "password")
+    ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
+    ///   .build()?;
+    /// let response = request.go(&mut client).await?;
+    /// assert_eq!(response.status(), 201);
+    /// ```
     pub fn basic_auth(self, username: &str, password: &str) -> Self {
         self.header(
             header::AUTHORIZATION,
@@ -437,6 +534,18 @@ impl DeboaRequestBuilder {
     ///
     /// * `Result<DeboaResponse>` - The response.
     ///
+    /// # Examples
+    ///
+    /// ```compile_fail
+    /// use deboa::request::post;
+    ///
+    /// let request = post("https://jsonplaceholder.typicode.com/posts")?
+    ///   .header(header::CONTENT_TYPE, "application/json")
+    ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
+    ///   .build()?;
+    /// let response = request.go(&mut client).await?;
+    /// assert_eq!(response.status(), 201);
+    /// ```
     pub async fn go<T>(self, mut client: T) -> Result<DeboaResponse>
     where
         T: AsMut<Deboa>,

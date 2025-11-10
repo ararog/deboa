@@ -65,6 +65,28 @@ pub struct EncodedForm {
     fields: IndexMap<String, String>,
 }
 
+/// Implement the builder pattern for EncodedForm.
+/// 
+/// # Returns
+///
+/// * `Self` - The encoded form.
+///
+/// # Examples
+///
+/// ```compile_fail
+/// use deboa::form::MultiPartForm;
+///
+/// let mut client = Deboa::new();
+/// let mut form = MultiPartForm::builder();
+/// form.field("name", "deboa");
+/// form.field("version", "0.0.1");
+/// 
+/// let request = DeboaRequest::post("https://example.com/register")?
+///     .form(form.into())
+///     .build()?;
+///
+/// let mut response = client.execute(request).await?;
+/// ```
 impl EncodedForm {
     /// Create a new encoded form.
     ///
@@ -106,6 +128,28 @@ pub struct MultiPartForm {
     boundary: String,
 }
 
+/// Implement the builder pattern for MultiPartForm.
+/// 
+/// # Returns
+///
+/// * `Self` - The multi part form.
+///
+/// # Examples
+///
+/// ```compile_fail
+/// use deboa::form::MultiPartForm;
+///
+/// let mut client = Deboa::new();
+/// let mut form = MultiPartForm::builder();
+/// form.field("name", "deboa");
+/// form.field("version", "0.0.1");
+/// 
+/// let request = DeboaRequest::post("https://example.com/register")?
+///     .form(form.into())
+///     .build()?;
+///
+/// let mut response = client.execute(request).await?;
+/// ```
 impl MultiPartForm {
     /// Create a new multi part form.
     ///
