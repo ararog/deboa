@@ -1,3 +1,60 @@
+//! # Resource Module
+//!
+//! This module provides traits and implementations for working with RESTful resources
+//! in the `vamo` HTTP client. It simplifies the process of creating, reading, updating,
+//! and deleting resources by providing a type-safe, trait-based interface.
+//!
+//! ## Features
+//!
+//! - **Resource Trait**: Define RESTful resources with customizable endpoints
+//! - **Request Builders**: Generate HTTP requests for CRUD operations
+//! - **Type Safety**: Compile-time checking of request/response types
+//! - **URL Handling**: Automatic path parameter substitution
+//!
+//! ## Usage
+//!
+//! The `Resource` trait should be implemented for types that represent API resources.
+//! The `vamo-macros` crate provides a derive macro that can automatically implement
+//! this trait for your types.
+//!
+//! ## Example
+//!
+//! ```rust,compile_fail
+//! use serde::{Serialize, Deserialize};
+//! use vamo::resource::Resource;
+//! use deboa::client::serde::RequestBody;
+//! use deboa_extras::http::serde::json::JsonBody;
+//!
+//! #[derive(Debug, Serialize, Deserialize)]
+//! struct User {//!     id: Option<u64>,
+//!     name: String,
+//!     email: String,
+//! }
+//!
+//! impl Resource for User {
+//!     fn id(&self) -> String {
+//!         self.id.map(|id| id.to_string()).unwrap_or_default()
+//!     }
+//!
+//!     fn post_path(&self) -> &str { "/users" }
+//!     fn delete_path(&self) -> &str { "/users/{}" }
+//!     fn put_path(&self) -> &str { "/users/{}" }
+//!     fn patch_path(&self) -> &str { "/users/{}" }
+//!     
+//!     fn body_type(&self) -> impl RequestBody {
+//!         JsonBody
+//!     }
+//! }
+//! ```
+//!
+//! ## Request Traits
+//!
+//! The module provides several traits for creating different types of HTTP requests:
+//! - `AsPostRequest`: Create POST requests for creating resources
+//! - `AsDeleteRequest`: Create DELETE requests for removing resources
+//! - `AsPutRequest`: Create PUT requests for full updates
+//! - `AsPatchRequest`: Create PATCH requests for partial updates
+
 use deboa::{
     client::serde::RequestBody,
     errors::{DeboaError, RequestError},

@@ -1,3 +1,82 @@
+//! # Deboa Macros
+//!
+//! This crate provides procedural macros for the `deboa` HTTP client to simplify
+//! common HTTP request patterns with a more concise syntax.
+//!
+//! ## Features
+//!
+//! - **Request Macros**: Shortcut macros for common HTTP methods (GET, POST, PUT, PATCH, DELETE)
+//! - **Type Safety**: Compile-time type checking for request/response bodies
+//! - **Async Support**: Seamless integration with async/await syntax
+//! - **Multiple Serialization Formats**: Support for JSON, XML, and MessagePack out of the box
+//!
+//! ## Available Macros
+//!
+//! - `get!`: Make a GET request
+//! - `post!`: Make a POST request with a body
+//! - `put!`: Make a PUT request with a body
+//! - `patch!`: Make a PATCH request with a body
+//! - `delete!`: Make a DELETE request
+//! - `fetch!`: Generic request macro that takes a method parameter
+//!
+//! ## Examples
+//!
+//! ### Basic GET Request
+//! ```compile_fail
+//! use deboa::Deboa;
+//! use deboa_extras::http::serde::json::JsonBody;
+//!
+//! #[derive(serde::Deserialize)]
+//! struct Post {
+//!     id: u32,
+//!     title: String,
+//!     body: String,
+//!     userId: u32,
+//! }
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let mut client = Deboa::new();
+//!     let post: Post = get!("https://jsonplaceholder.typicode.com/posts/1", &mut client, JsonBody, Post);
+//!     println!("Post title: {}", post.title);
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### POST with JSON Body
+//! ```compile_fail
+//! use deboa::Deboa;
+//! use deboa_extras::http::serde::json::JsonBody;
+//! use serde::Serialize;
+//!
+//! #[derive(Serialize)]
+//! struct NewPost {
+//!     title: String,
+//!     body: String,
+//!     userId: u32,
+//! }
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let mut client = Deboa::new();
+//!     let new_post = NewPost {
+//!         title: "Hello World".into(),
+//!         body: "This is a test post".into(),
+//!         userId: 1,
+//!     };
+//!     let response: serde_json::Value = post!(
+//!         new_post,
+//!         JsonBody,
+//!         "https://jsonplaceholder.typicode.com/posts",
+//!         &mut client,
+//!         JsonBody,
+//!         serde_json::Value
+//!     );
+//!     println!("Created post with ID: {}", response["id"]);
+//!     Ok(())
+//! }
+//! ```
+
 pub use deboa_bora::bora;
 
 #[macro_export]

@@ -136,13 +136,58 @@ impl DeboaResponseBuilder {
     }
 }
 
-/// Struct that represents the response.
+/// Represents an HTTP response received from a server.
+///
+/// `DeboaResponse` provides methods to access and manipulate the response status,
+/// headers, and body. It supports various ways to consume the response body,
+/// including streaming and buffered access.
+///
+/// # Examples
+///
+/// ## Basic Usage
+///
+/// ```no_run
+/// use deboa::request::get;
+///
+/// # #[tokio::main]
+/// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let mut client = deboa::Deboa::new();
+/// let response = get("https://httpbin.org/get")?.go(&mut client).await?;
+///
+/// println!("Status: {}", response.status());
+/// println!("Headers: {:?}", response.headers());
+/// println!("Body: {}", response.text().await?);
+/// # Ok(()) }
+/// ```
+///
+/// ## JSON Deserialization
+///
+/// ```no_run
+/// use deboa::request::get;
+/// use serde::Deserialize;
+///
+/// #[derive(Debug, Deserialize)]
+/// struct Data {
+///     origin: String,
+///     url: String,
+/// }
+///
+/// # #[tokio::main]
+/// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let mut client = deboa::Deboa::new();
+/// let response = get("https://httpbin.org/get")?.go(&mut client).await?;
+/// let data: Data = response.body_as(deboa::client::serde::json::JsonBody).await?;
+/// println!("Origin: {}", data.origin);
+/// # Ok(()) }
+/// ```
 ///
 /// # Fields
 ///
-/// * `status` - The status code of the response.
-/// * `headers` - The headers of the response.
-/// * `body` - The body of the response.
+/// * `url` - The URL that the response came from
+/// * `inner` - The underlying HTTP response
+/// * `status` - The HTTP status code
+/// * `headers` - The response headers
+/// * `body` - The response body (can be streamed or buffered)
 pub struct DeboaResponse {
     url: Url,
     inner: Response<DeboaBody>,
@@ -406,13 +451,13 @@ impl DeboaResponse {
     /// # Returns
     ///
     /// * `Result<B>` - The body or error.
-    /// 
+    ///
     /// # Examples
     ///
     /// ```compile_fail
     /// use deboa::request::get;
     /// use deboa_extras::http::serde::json::JsonBody;
-    /// 
+    ///
     /// let response = get("https://jsonplaceholder.typicode.com/posts")?.go(client).await?;
     /// let posts: Vec<Post> = response.body_as(JsonBody).await?;
     /// ```
@@ -437,7 +482,7 @@ impl DeboaResponse {
     ///
     /// ```compile_fail
     /// use deboa::request::get;
-    /// 
+    ///
     /// let response = get("https://jsonplaceholder.typicode.com/posts")?.go(client).await?;
     /// let text = response.text().await?;
     /// ```
@@ -459,12 +504,12 @@ impl DeboaResponse {
     /// # Returns
     ///
     /// * `Result<()>` - The result or error.
-    /// 
+    ///
     /// # Examples
     ///
     /// ```compile_fail
     /// use deboa::request::get;
-    /// 
+    ///
     /// let response = get("https://jsonplaceholder.typicode.com/posts")?.go(client).await?;
     /// response.to_file("posts.json").await?;
     /// ```

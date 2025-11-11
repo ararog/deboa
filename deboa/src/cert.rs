@@ -1,3 +1,38 @@
+//! Client certificate handling for secure connections.
+//!
+//! This module provides the `ClientCert` struct for working with client certificates
+//! in HTTPS connections, enabling mutual TLS (mTLS) authentication.
+
+/// Represents a client certificate and its associated data for mutual TLS authentication.
+///
+/// `ClientCert` encapsulates the client certificate, its password, and an optional
+/// certificate authority (CA) certificate. It's used to authenticate the client
+/// to the server during the TLS handshake.
+///
+/// # Examples
+///
+/// ```compile_fail
+/// use deboa::cert::ClientCert;
+///
+/// // Create a new client certificate without a CA
+/// let cert = ClientCert::new(
+///     "/path/to/cert.p12".to_string(),
+///     "cert-password".to_string(),
+///     None
+/// );
+///
+/// // Create a client certificate with a CA
+/// let cert_with_ca = ClientCert::new(
+///     "/path/to/cert.p12".to_string(),
+///     "cert-password".to_string(),
+///     Some("/path/to/ca.pem".to_string())
+/// );
+///
+/// // Access certificate properties
+/// println!("Certificate path: {}", cert.cert());
+/// println!("CA path: {:?}", cert.ca());
+/// ```
+#[derive(Debug, Clone)]
 pub struct ClientCert {
     cert: String,
     pw: String,

@@ -146,15 +146,38 @@ impl Display for HttpVersion {
     }
 }
 
-/// Struct that represents the Deboa builder.
+/// A builder for configuring and creating a new `Deboa` client instance.
 ///
-/// # Fields
+/// This builder allows you to configure various aspects of the HTTP client before
+/// constructing it. You can set timeouts, configure protocols, add error handlers,
+/// and more.
 ///
-/// * `retries` - The number of retries.
-/// * `connection_timeout` - The connection timeout.
-/// * `request_timeout` - The request timeout.
-/// * `catchers` - The catchers.
-/// * `protocol` - The protocol to use.
+/// # Examples
+///
+/// ``` compile_fail
+/// use deboa::{Deboa, HttpVersion};
+/// use std::time::Duration;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///   let client = deboa::Deboa::builder()
+///     .connection_timeout(30)  // 30 seconds
+///     .request_timeout(10)     // 10 seconds
+///     .protocol(HttpVersion::Http2)  // Use HTTP/2
+///     .build();
+///
+///   // Use the client to make requests...
+///   Ok(())
+/// }
+/// ```
+///
+/// # Default Configuration
+///
+/// - Connection timeout: 30 seconds
+/// - Request timeout: 30 seconds
+/// - Protocol: HTTP/1.1
+/// - No client certificates
+/// - No custom error catchers
 pub struct DeboaBuilder {
     connection_timeout: u64,
     request_timeout: u64,
@@ -164,45 +187,141 @@ pub struct DeboaBuilder {
 }
 
 impl DeboaBuilder {
-    /// Allow set request connection timeout at any time.
+    /// Sets the maximum duration to wait when connecting to a server.
+    ///
+    /// This timeout affects the initial TCP connection establishment. If the server
+    /// doesn't respond within this duration, the connection will fail with a timeout error.
     ///
     /// # Arguments
     ///
-    /// * `connection_timeout` - The new connection timeout.
+    /// * `connection_timeout` - The timeout in seconds.
     ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use deboa::Deboa;
+    /// let builder = Deboa::builder()
+    ///     .connection_timeout(10);  // 10 seconds
+    /// ```
+    ///
+    /// # Note
+    /// A value of 0 means no timeout (not recommended in production).
     pub fn connection_timeout(mut self, connection_timeout: u64) -> Self {
         self.connection_timeout = connection_timeout;
         self
     }
 
-    /// Allow set request request timeout at any time.
+    /// Sets the maximum duration for the entire HTTP request/response cycle.
+    ///
+    /// This includes connection time, request writing, server processing, and response reading.
+    /// If the entire operation takes longer than this duration, it will be aborted.
     ///
     /// # Arguments
     ///
-    /// * `request_timeout` - The new request timeout.
+    /// * `request_timeout` - The timeout in seconds.
     ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use deboa::Deboa;
+    /// let builder = Deboa::builder()
+    ///     .request_timeout(30);  // 30 seconds
+    /// ```
+    ///
+    /// # Note
+    /// A value of 0 means no timeout (not recommended in production).
     pub fn request_timeout(mut self, request_timeout: u64) -> Self {
         self.request_timeout = request_timeout;
         self
     }
 
-    /// Allow set client certificate at any time.
+    /// Configures a client certificate for mutual TLS authentication.
+    ///
+    /// This is used when the server requires client certificate authentication.
+    /// The certificate should be in PEM format and include both the certificate
+    /// and private key.
     ///
     /// # Arguments
     ///
-    /// * `client_cert` - The client certificate.
+    /// * `client_cert` - The client certificate configuration.
     ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use deboa::{Deboa, ClientCert};
+    ///
+    /// #[tokio::main]
+    ///
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let cert = ClientCert::from_pem_file("client.pem")?;
+    ///     let builder = Deboa::builder()
+    ///         .client_cert(cert);
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn client_cert(mut self, client_cert: ClientCert) -> Self {
         self.client_cert = Some(client_cert);
         self
     }
 
-    /// Allow add catcher at any time.
+    /// Adds an error handler for specific types of errors.
+    ///
+    /// Catchers are called when an error occurs during request execution.
+    /// They can be used to implement custom error handling logic, such as
+    /// automatic retries, logging, or error transformation.
     ///
     /// # Arguments
     ///
-    /// * `catcher` - The catcher to be added.
+    /// * `catcher` - A function or closure that handles specific error types.
     ///
+    /// # Examples
+    ///
+    /// ## Basic Error Logging
+    ///
+    /// ``` compile_fail
+    /// use deboa::Deboa;
+    /// use std::error::Error;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn Error>> {
+    ///     let builder = Deboa::builder()
+    ///         .catch(|e: std::io::Error| {
+    ///             eprintln!("Network error: {}", e);
+    ///             Ok(())  // Continue execution
+    ///         });
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// ## Automatic Retries
+    ///
+    /// ``` compile_fail
+    /// use deboa::Deboa;
+    /// use std::error::Error;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn Error>> {
+    ///     let builder = Deboa::builder()
+    ///         .catch(|e: std::io::Error| {
+    ///             if e.kind() == std::io::ErrorKind::TimedOut {
+    ///                 eprintln!("Request timed out, will retry...");
+    ///                 // Return error to trigger retry logic
+    ///             Err(Box::new(e))
+    ///         } else {
+    ///             // For other errors, continue with the error
+    ///             Ok(())
+    ///         }
+    ///     });
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// # Notes
+    /// - Multiple catchers can be added for different error types
+    /// - Catchers are called in the order they are added
+    /// - If a catcher returns `Ok(())`, error handling continues to the next catcher
+    /// - If a catcher returns `Err(e)`, error propagation stops and the error is returned
+    /// - The default error handler will be called if no catcher handles the error
     pub fn catch<C: DeboaCatcher>(mut self, catcher: C) -> Self {
         if let Some(catchers) = &mut self.catchers {
             catchers.push(Box::new(catcher));
@@ -212,23 +331,62 @@ impl DeboaBuilder {
         self
     }
 
-    /// Allow set request protocol at any time.
+    /// Sets the HTTP protocol version to use for requests.
+    ///
+    /// By default, the client will use HTTP/1.1. You can choose to use HTTP/2
+    /// for better performance, especially for multiple requests to the same server.
     ///
     /// # Arguments
     ///
-    /// * `protocol` - The new protocol.
+    /// * `protocol` - The HTTP protocol version to use.
     ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use deboa::{Deboa, HttpVersion};
+    ///
+    /// let builder = Deboa::builder()
+    ///     .protocol(HttpVersion::Http2);  // Use HTTP/2
+    /// ```
+    ///
+    /// # Note
+    /// The actual protocol version used may be negotiated with the server
+    /// during the TLS handshake.
     pub fn protocol(mut self, protocol: HttpVersion) -> Self {
         self.protocol = protocol;
         self
     }
 
-    /// Allow build Deboa instance.
+    /// Constructs a new `Deboa` client with the configured settings.
+    ///
+    /// This consumes the builder and returns a new `Deboa` instance that can
+    /// be used to make HTTP requests.
     ///
     /// # Returns
     ///
-    /// * `Deboa` - The new Deboa instance.
+    /// A new `Deboa` client instance.
     ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use deboa::Deboa;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///   let client = Deboa::builder()
+    ///     .connection_timeout(10)
+    ///     .request_timeout(30)
+    ///     .build();
+    ///
+    ///   // client is now ready to make requests
+    ///   Ok(())
+    /// }
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This method may panic if the underlying HTTP client cannot be created
+    /// with the specified configuration.
     pub fn build(self) -> Deboa {
         Deboa {
             connection_timeout: self.connection_timeout,
@@ -241,16 +399,51 @@ impl DeboaBuilder {
     }
 }
 
-/// Struct that represents the Deboa instance.
+/// The main HTTP client for making requests.
 ///
-/// # Fields
+/// `Deboa` is a flexible and efficient HTTP client that supports both synchronous
+/// and asynchronous operations. It provides a builder pattern for configuration
+/// and supports features like connection pooling, timeouts, and custom error handling.
 ///
-/// * `connection_timeout` - The connection timeout.
-/// * `request_timeout` - The request timeout.
-/// * `catchers` - The catchers.
-/// * `protocol` - The protocol to use.
-/// * `pool` - The connection pool.
-//
+/// # Features
+///
+/// - Connection pooling for better performance
+/// - Configurable timeouts
+/// - Custom error handling with catchers
+/// - Support for multiple HTTP protocols (HTTP/1.1, HTTP/2)
+/// - Thread-safe and `Send` + `Sync`
+///
+/// # Examples
+///
+/// ## Basic Usage
+///
+/// ``` compile_fail
+/// use deboa::Deboa;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///   // Create a new client with default settings
+///   let client = Deboa::new();
+///
+///   // Or configure with custom settings
+///   let client = Deboa::builder()
+///     .connection_timeout(10)  // 10 seconds
+///     .request_timeout(30)     // 30 seconds
+///     .build();
+///   Ok(())
+/// }
+/// ```
+///
+/// # Thread Safety
+///
+/// `Deboa` implements `Send` and `Sync`, making it safe to share between threads.
+/// The connection pool is managed internally and optimized for concurrent access.
+///
+/// # Performance
+///
+/// - Connection pooling reduces latency for repeated requests to the same host
+/// - Automatic connection reuse when possible
+/// - Configurable timeouts prevent hanging requests
 pub struct Deboa {
     connection_timeout: u64,
     request_timeout: u64,
@@ -283,12 +476,40 @@ impl Debug for Deboa {
 }
 
 impl Deboa {
-    /// Allow create a new Deboa instance.
+    /// Creates a new `Deboa` instance with default settings.
+    ///
+    /// This is equivalent to calling `Deboa::builder().build()` and provides
+    /// a quick way to get started with sensible defaults.
+    ///
+    /// # Default Configuration
+    ///
+    /// - Connection timeout: 30 seconds
+    /// - Request timeout: 30 seconds
+    /// - Protocol: HTTP/1.1
+    /// - No client certificates
+    /// - No custom error catchers
     ///
     /// # Returns
     ///
-    /// * `Deboa` - The new Deboa instance.
+    /// A new `Deboa` instance with default settings.
     ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use deboa::Deboa;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///   let client = Deboa::new();
+    ///   // client is ready to make requests
+    ///   Ok(())
+    /// }
+    /// ```
+    ///
+    /// # See Also
+    ///
+    /// - [`Deboa::builder()`] for custom configuration
+    /// - [`Deboa::default()`] for the same functionality via the `Default` trait
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Deboa {
@@ -421,12 +642,62 @@ impl Deboa {
         self
     }
 
-    /// Allow add catcher at any time.
+    /// Adds an error handler for specific types of errors.
+    ///
+    /// Catchers are called when an error occurs during request execution.
+    /// They can be used to implement custom error handling logic, such as
+    /// automatic retries, logging, or error transformation.
     ///
     /// # Arguments
     ///
-    /// * `catcher` - The catcher to be added.
+    /// * `catcher` - A function or closure that handles specific error types.
     ///
+    /// # Examples
+    ///
+    /// ## Basic Error Logging
+    ///
+    /// ```no_run
+    /// use deboa::Deboa;
+    /// use std::error::Error;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn Error>> {
+    /// let builder = Deboa::builder()
+    ///     .catch(|e: std::io::Error| {
+    ///         eprintln!("Network error: {}", e);
+    ///         Ok(())  // Continue execution
+    ///     });
+    /// # Ok(()) }
+    /// ```
+    ///
+    /// ## Automatic Retries
+    ///
+    /// ```no_run
+    /// use deboa::Deboa;
+    /// use std::error::Error;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn Error>> {
+    /// let builder = Deboa::builder()
+    ///     .catch(|e: std::io::Error| {
+    ///         if e.kind() == std::io::ErrorKind::TimedOut {
+    ///             eprintln!("Request timed out, will retry...");
+    ///             // Return error to trigger retry logic
+    ///             Err(Box::new(e))
+    ///         } else {
+    ///             // For other errors, continue with the error
+    ///             Ok(())
+    ///         }
+    ///     });
+    /// # Ok(()) }
+    /// ```
+    ///
+    /// # Notes
+    /// - Multiple catchers can be added for different error types
+    /// - Catchers are called in the order they are added
+    /// - If a catcher returns `Ok(())`, error handling continues to the next catcher
+    /// - If a catcher returns `Err(e)`, error propagation stops and the error is returned
+    /// - The default error handler will be called if no catcher handles the error
     /// # Returns
     ///
     /// * `&mut Self` - The Deboa instance.
@@ -440,25 +711,89 @@ impl Deboa {
         self
     }
 
-    /// Allow execute a request.
+    /// Executes an HTTP request and returns the response.
+    ///
+    /// This is the primary method for making HTTP requests. It handles the entire
+    /// request/response lifecycle, including retries, error handling, and response processing.
     ///
     /// # Arguments
     ///
-    /// * `request` - The request to be executed.
+    /// * `request` - The request to execute. This can be:
+    ///   - A string URL (for GET requests)
+    ///   - A `DeboaRequest` instance (for more control)
+    ///   - Any type that implements `IntoRequest`
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaResponse>` - The response.
+    /// A `Result` containing either:
+    /// - `Ok(DeboaResponse)` - The successful HTTP response
+    /// - `Err(DeboaError)` - If the request fails or encounters an error
     ///
     /// # Examples
     ///
-    /// ```compile_fail
-    /// use deboa::{Deboa, DeboaResponse};
+    /// ## Simple GET Request
     ///
-    /// let mut deboa = Deboa::new();
-    /// let response = deboa.execute("https://httpbin.org/get").await?;
-    /// assert_eq!(response.status(), 200);
+    /// ```compile_fail
+    /// use deboa::Deboa;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///   let mut client = Deboa::new();
+    ///   let response = client.execute("https://httpbin.org/get").await?;
+    ///   println!("Status: {}", response.status());
+    ///   println!("Body: {}", response.text().await?);
+    ///   Ok(())
+    /// }
     /// ```
+    ///
+    /// ## POST Request with JSON Body
+    ///
+    /// ```compile_fail
+    /// use deboa::{Deboa, request::post};
+    /// use serde_json::json;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///   let mut client = Deboa::new();
+    ///   let response = client
+    ///     .execute(
+    ///         post("https://httpbin.org/post")
+    ///             .json(&json!({ "key": "value" }))?
+    ///     )
+    ///     .await?;
+    ///   Ok(())
+    /// }
+    /// ```
+    ///
+    /// # Error Handling
+    ///
+    /// The method will automatically handle:
+    /// - Network errors
+    /// - Timeouts (if configured)
+    /// - Invalid responses
+    /// - Status code errors (unless configured otherwise)
+    ///
+    /// # Retries
+    ///
+    /// By default, failed requests are not automatically retried. To enable retries:
+    ///
+    /// ```compile_fail
+    /// use deboa::{Deboa, request::get};
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///   let mut client = Deboa::new();
+    ///   let request = get("https://example.com").retries(3); // Retry up to 3 times
+    ///   let response = client.execute(request).await?;
+    ///   Ok(())
+    /// }
+    /// ```
+    ///
+    /// # Performance
+    ///
+    /// - Uses connection pooling for better performance
+    /// - Automatically reuses connections when possible
+    /// - Supports HTTP/1.1 and HTTP/2
     pub async fn execute<R>(&mut self, request: R) -> Result<DeboaResponse>
     where
         R: IntoRequest,

@@ -1,0 +1,86 @@
+title: Deboa
+baseurl: "/deboa" # the subpath of your site, e.g. /blog
+url: "https://ararog.github.io" # the base hostname & protocol for your site
+
+theme: jekyll-theme-cayman
+
+# Build settings
+markdown: kramdown
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-feed
+
+# Exclude from processing.
+# The following items will not be processed, by default. Create a custom list
+# to override the default setting.
+# exclude:
+#   - Gemfile
+#   - Gemfile.lock
+#   - node_modules
+#   - vendor
+
+# Navigation
+navigation:
+  - text: "Home"
+    url: "/"
+  - text: "Crates"
+    children:
+      - text: "deboa"
+        url: "/deboa/"
+      - text: "deboa-extras"
+        url: "/deboa-extras/"
+      - text: "deboa-bora"
+        url: "/deboa-bora/"
+      - text: "deboa-fory"
+        url: "/deboa-fory/"
+      - text: "deboa-macros"
+        url: "/deboa-macros/"
+      - text: "vamo"
+        url: "/vamo/"
+      - text: "vamo-macros"
+        url: "/vamo-macros/"
+  - text: "Examples"
+    url: "/examples/"
+  - text: "API Reference"
+    url: "https://docs.rs/deboa"
+  - text: "GitHub"
+    url: "https://github.com/ararog/deboa"
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+      toc: true
+      toc_sticky: true
+      sidebar:
+        nav: "navigation"
+
+# Theme settings
+theme_config:
+  # Default layout, can be overridden in pages
+  default_layout: page
+  # Enable or disable the site search
+  search: true
+  # Header text alignment (left, center, right)
+  header_text_align: left
+  # Show breadcrumbs
+  breadcrumbs: true
+  # Show post date
+  show_date: true
+  # Show author
+  show_author: true
+  # Show social links
+  show_social: true
+  # Show related posts
+  related_posts: true
+  # Show post tags
+  show_tags: true
+  # Show post categories
+  show_categories: true
+  # Show post excerpt on index pages
+  show_excerpts: true
+  # Show post content on index pages
+  show_content: false
