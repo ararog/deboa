@@ -1,5 +1,5 @@
 use deboa::{
-    request::{get, Fetch},
+    request::{get, FetchWith},
     Deboa, Result,
 };
 use deboa_extras::http::serde::json::JsonBody;
@@ -18,7 +18,7 @@ async fn main() -> Result<()> {
     let url = format!("https://jsonplaceholder.typicode.com/posts/{}", 1);
     let response: Post = url
         .as_str()
-        .fetch(&mut client)
+        .fetch_with(&mut client)
         .await?
         .body_as(JsonBody)
         .await?;
@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
     println!("post: {response:#?}");
 
     let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
-        .go(&mut client)
+        .with(&mut client)
         .await?
         .body_as(JsonBody)
         .await?;

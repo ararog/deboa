@@ -48,6 +48,7 @@ impl IntoRequest for Url {
     }
 }
 
+#[deprecated(note = "Use FetchWith trait instead", since = "0.0.8")]
 /// Trait to allow make a get request from different types.
 #[async_trait]
 pub trait Fetch {
@@ -64,7 +65,9 @@ pub trait Fetch {
     ///
     /// let mut client = Deboa::new();
     ///
-    /// let response = "https://jsonplaceholder.typicode.com".fetch(&mut client).await?;
+    /// let response = "https://jsonplaceholder.typicode.com"
+    ///   .fetch(&mut client)
+    ///   .await?;
     /// assert_eq!(response.status(), 200);
     /// ```
     ///
@@ -74,12 +77,50 @@ pub trait Fetch {
 }
 
 #[async_trait]
+#[allow(deprecated)]
 impl Fetch for &str {
     async fn fetch<T>(&self, client: T) -> Result<DeboaResponse>
     where
         T: AsMut<Deboa> + Send,
     {
         DeboaRequest::get(*self)?.go(client).await
+    }
+}
+
+/// Trait to allow make a get request from different types.
+#[async_trait]
+pub trait FetchWith {
+    /// Fetch the request.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<DeboaResponse>` - The response.
+    ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use deboa::{Deboa, request::FetchWith};
+    ///
+    /// let mut client = Deboa::new();
+    ///
+    /// let response = "https://jsonplaceholder.typicode.com"
+    ///   .fetch_with(&mut client)
+    ///   .await?;
+    /// assert_eq!(response.status(), 200);
+    /// ```
+    ///
+    async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
+    where
+        T: AsMut<Deboa> + Send;
+}
+
+#[async_trait]
+impl FetchWith for &str {
+    async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
+    where
+        T: AsMut<Deboa> + Send,
+    {
+        DeboaRequest::get(*self)?.with(client).await
     }
 }
 
@@ -546,7 +587,37 @@ impl DeboaRequestBuilder {
     /// let response = request.go(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
+    #[deprecated(note = "Use with method instead", since = "0.0.8")]
     pub async fn go<T>(self, mut client: T) -> Result<DeboaResponse>
+    where
+        T: AsMut<Deboa>,
+    {
+        client.as_mut().execute(self.build()?).await
+    }
+
+    /// Send the request. Consuming the builder.
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - The client to be used.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<DeboaResponse>` - The response.
+    ///
+    /// # Examples
+    ///
+    /// ```compile_fail
+    /// use deboa::request::post;
+    ///
+    /// let request = post("https://jsonplaceholder.typicode.com/posts")?
+    ///   .header(header::CONTENT_TYPE, "application/json")
+    ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
+    ///   .build()?;
+    /// let response = request.with(&mut client).await?;
+    /// assert_eq!(response.status(), 201);
+    /// ```
+    pub async fn with<T>(self, mut client: T) -> Result<DeboaResponse>
     where
         T: AsMut<Deboa>,
     {

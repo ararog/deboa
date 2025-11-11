@@ -46,7 +46,7 @@ http = "1.3.1"
 
 ```rust
 use deboa::{
-    Deboa, Result, request::{DeboaRequest, Fetch, get}
+    Deboa, Result, request::{DeboaRequest, FetchWith, get}
 };
 use deboa_extras::http::{self, serde::json::JsonBody};
 
@@ -68,7 +68,7 @@ async fn main() -> Result<()> {
     // You can also use the Fetch trait to issue requests
 
     let posts: Vec<Post> = "https://jsonplaceholder.typicode.com/posts"
-      .fetch(client)
+      .fetch_with(client)
       .await?
       .body_as(JsonBody)
       .await?;
@@ -76,7 +76,7 @@ async fn main() -> Result<()> {
     // or use at, from (defaults to GET) and to (defaults to POST) methods:
 
     let posts: Vec<Post> = DeboaRequest::at("https://jsonplaceholder.typicode.com/posts", Method::GET)?
-      .go(client)
+      .with(client)
       .await?
       .body_as(JsonBody)
       .await?;
@@ -91,15 +91,16 @@ async fn main() -> Result<()> {
 
     // or simply:
 
-    let response = client
-        .execute("https://jsonplaceholder.typicode.com/posts")
-        .await?;
-    let posts: Vec<Post> = response.body_as(JsonBody).await?;
+    let posts: Vec<Post> = client
+      .execute("https://jsonplaceholder.typicode.com/posts")
+      .await?
+      .body_as(JsonBody)
+      .await?;
 
     */
 
     let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
-      .go(client)
+      .with(client)
       .await?
       .body_as(JsonBody)
       .await?;
