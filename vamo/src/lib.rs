@@ -1,3 +1,82 @@
+//! # Vamo: A High-Level HTTP Client for Deboa
+//!
+//! `vamo` provides a more ergonomic, high-level API on top of the `deboa` HTTP client,
+//! making it easier to work with RESTful APIs and other HTTP services.
+//!
+//! ## Features
+//!
+//! - **Simplified API**: Chainable methods for building and sending requests
+//! - **Base URL Management**: Automatically handles URL construction
+//! - **Resource-Oriented**: Work with API resources in a more natural way
+//! - **Seamless Integration**: Fully compatible with `deboa` and `deboa-extras`
+//!
+//! ## Getting Started
+//!
+//! Add `vamo` to your `Cargo.toml`:
+//!
+//! ```toml
+//! [dependencies]
+//! vamo = { version = "0.1", path = "../vamo" }
+//! deboa = { version = "0.1", path = ".." }
+//! deboa-extras = { version = "0.1", path = "../deboa-extras" }
+//! ```
+//!
+//! ## Basic Usage
+//!
+//! ```compile_fail
+//! use vamo::Vamo;
+//! use deboa_extras::http::serde::json::JsonBody;
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!   // Create a new Vamo client with a base URL
+//!   let mut vamo = Vamo::new("https://api.example.com")?;
+//!
+//!   // Make a GET request
+//!   let user: serde_json::Value = vamo
+//!     .get("/users/1")?
+//!     .go(&mut vamo)
+//!     .await?
+//!     .body_as(JsonBody)
+//!     .await?;
+//!
+//!   println!("User: {:?}", user);
+//!   Ok(())
+//! }
+//! ```
+//!
+//! ## Working with Resources
+//!
+//! ```compile_fail
+//! use vamo::{Vamo, resource::Resource};
+//! use serde::{Deserialize, Serialize};
+//!
+//! #[derive(Debug, Serialize, Deserialize)]
+//! struct User {
+//!     id: Option<u64>,
+//!     name: String,
+//!     email: String,
+//! }
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!   let mut vamo = Vamo::new("https://api.example.com")?;
+//!   let users = Resource::new("/users", &mut vamo);
+//!
+//!   // List all users
+//!   let all_users: Vec<User> = users.list().await?;
+//!
+//!   // Create a new user
+//!   let new_user = User {
+//!     id: None,
+//!     name: "John Doe".to_string(),
+//!     email: "john@example.com".to_string(),
+//!   };
+//!   let created: User = users.create(&new_user).await?;
+//!   Ok(())
+//! }
+//! ```
+
 use deboa::{
     errors::{DeboaError, RequestError},
     request::{DeboaRequest, DeboaRequestBuilder},
@@ -193,7 +272,7 @@ impl Vamo {
     /// # Returns
     ///
     /// A Result containing a DeboaRequestBuilder.
-    /// 
+    ///
     /// # Examples
     ///
     /// ``` compile_fail
@@ -216,7 +295,7 @@ impl Vamo {
     /// # Returns
     ///
     /// A Result containing the DeboaResponse.
-    /// 
+    ///
     /// # Examples
     ///
     /// ``` compile_fail

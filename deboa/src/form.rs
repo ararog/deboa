@@ -6,7 +6,41 @@ use rand::distr::{Alphanumeric, SampleString};
 use urlencoding::encode;
 
 const CRLF: &[u8] = b"\r\n";
-/// Trait to allow create a form.
+/// A trait for building and encoding form data for HTTP requests.
+///
+/// This trait provides a common interface for different types of form data,
+/// including URL-encoded forms and multipart forms. It allows adding form fields
+/// and building the final encoded representation.
+///
+/// # Implementations
+///
+/// - `EncodedForm`: For `application/x-www-form-urlencoded` form data
+/// - `MultiPartForm`: For `multipart/form-data` form data, including file uploads
+///
+/// # Examples
+///
+/// ## URL-encoded Form
+///
+/// ```compile_fail
+/// use deboa::form::EncodedForm;
+///
+/// let mut form = EncodedForm::builder()
+///     .field("username", "user123")
+///     .field("password", "s3cr3t");
+///
+/// let encoded = form.build();
+/// ```
+///
+/// ## Multipart Form with File
+///
+/// ```compile_fail
+/// use deboa::form::MultiPartForm;
+///
+/// let form = MultiPartForm::builder()
+///     .field("name", "deboa")
+///     .field("version", "1.0.0")
+///     .file("avatar", "/path/to/avatar.jpg");
+/// ```
 pub trait DeboaForm {
     /// Get the content type of the form.
     ///
@@ -66,7 +100,7 @@ pub struct EncodedForm {
 }
 
 /// Implement the builder pattern for EncodedForm.
-/// 
+///
 /// # Returns
 ///
 /// * `Self` - The encoded form.
@@ -80,7 +114,7 @@ pub struct EncodedForm {
 /// let mut form = MultiPartForm::builder();
 /// form.field("name", "deboa");
 /// form.field("version", "0.0.1");
-/// 
+///
 /// let request = DeboaRequest::post("https://example.com/register")?
 ///     .form(form.into())
 ///     .build()?;
@@ -129,7 +163,7 @@ pub struct MultiPartForm {
 }
 
 /// Implement the builder pattern for MultiPartForm.
-/// 
+///
 /// # Returns
 ///
 /// * `Self` - The multi part form.
@@ -143,7 +177,7 @@ pub struct MultiPartForm {
 /// let mut form = MultiPartForm::builder();
 /// form.field("name", "deboa");
 /// form.field("version", "0.0.1");
-/// 
+///
 /// let request = DeboaRequest::post("https://example.com/register")?
 ///     .form(form.into())
 ///     .build()?;

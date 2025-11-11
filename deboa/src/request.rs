@@ -262,15 +262,36 @@ pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
     DeboaRequest::patch(url)
 }
 
-/// Struct that represents the request builder.
+/// A builder for constructing HTTP requests with various configurations.
+///
+/// `DeboaRequestBuilder` provides a fluent interface for building and customizing
+/// HTTP requests. It supports setting headers, cookies, request bodies, and more.
+///
+/// # Examples
+///
+/// ```no_run
+/// use deboa::request::post;
+/// use http::header;
+///
+/// # #[tokio::main]
+/// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let request = post("https://httpbin.org/post")?
+///     .header(header::CONTENT_TYPE, "application/json")
+///     .header(header::ACCEPT, "application/json")
+///     .text(r#"{"key":"value"}"#)
+///     .build()?;
+/// # Ok(()) }
+/// ```
 ///
 /// # Fields
 ///
-/// * `url` - The url to connect.
-/// * `headers` - The headers to use.
-/// * `cookies` - The cookies to use.
-/// * `method` - The method to use.
-/// * `body` - The body to use.
+/// * `retries` - Number of retry attempts for failed requests
+/// * `url` - The target URL for the request
+/// * `headers` - HTTP headers to include in the request
+/// * `cookies` - Optional cookies to include in the request
+/// * `method` - The HTTP method (GET, POST, etc.)
+/// * `body` - The request body as raw bytes
+/// * `form` - Optional form data for form submissions
 pub struct DeboaRequestBuilder {
     retries: u32,
     url: Arc<Url>,
@@ -403,8 +424,8 @@ impl DeboaRequestBuilder {
         self
     }
 
-    /// Set multipart form of the request. 
-    /// Content-Type will be set to `multipart/form-data` or `application/x-www-form-urlencoded` 
+    /// Set multipart form of the request.
+    /// Content-Type will be set to `multipart/form-data` or `application/x-www-form-urlencoded`
     /// based on the enum variant.
     ///
     /// # Arguments

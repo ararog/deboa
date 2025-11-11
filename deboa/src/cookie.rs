@@ -1,9 +1,73 @@
+//! HTTP Cookie handling for the Deboa HTTP client.
+//!
+//! This module provides the `DeboaCookie` struct for working with HTTP cookies,
+//! including parsing from headers and building cookie strings.
+//!
+//! # Features
+//!
+//! - Parse cookies from `Set-Cookie` headers
+//! - Build cookies with various attributes (expiry, domain, path, etc.)
+//! - Convert to/from the `cookie` crate's `Cookie` type
+//! - Secure and HttpOnly flags support
+//!
+//! # Examples
+//!
+//! ## Creating a new cookie
+//!
+//! ```compile_fail
+//! use deboa::cookie::DeboaCookie;
+//! use cookie::time::Duration;
+//!
+//! // Create a simple session cookie
+//! let mut cookie = DeboaCookie::new("session_id", "abc123");
+//!
+//! // Set additional attributes
+//! cookie
+//!     .set_path("/")
+//!     .set_domain("example.com")
+//!     .set_http_only(true)
+//!     .set_secure(true);
+//! ```
+//!
+//! ## Parsing from a Set-Cookie header
+//!
+//! ```compile_fail
+//! use deboa::cookie::DeboaCookie;
+//!
+//! let header = "session_id=abc123; Path=/; Domain=example.com; Secure; HttpOnly";
+//! let cookie = DeboaCookie::parse_from_header(header).unwrap();
+//!
+//! assert_eq!(cookie.name(), "session_id");
+//! assert_eq!(cookie.value(), "abc123");
+//! assert_eq!(cookie.path(), Some(&"/".to_string()));
+//! assert_eq!(cookie.secure(), Some(true));
+//! ```
+
 use std::fmt;
 
 use cookie::{Cookie, Expiration};
 
 use crate::{errors::DeboaError, Result};
 
+/// Represents an HTTP cookie with all its attributes.
+///
+/// `DeboaCookie` provides a builder-style API for creating and manipulating
+/// HTTP cookies. It can be converted to/from the `cookie` crate's `Cookie` type
+/// and can be parsed from `Set-Cookie` headers.
+///
+/// # Examples
+///
+/// ```compile_fail
+/// use deboa::cookie::DeboaCookie;
+///
+/// // Create a new cookie
+/// let cookie = DeboaCookie::new("user_id", "12345")
+///     .set_path("/")
+///     .set_http_only(true);
+///
+/// // Convert to a cookie string
+/// println!("Cookie: {}", cookie);
+/// ```
 #[derive(Clone, PartialEq)]
 pub struct DeboaCookie {
     name: String,

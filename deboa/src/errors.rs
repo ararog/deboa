@@ -1,6 +1,59 @@
+//! Error types for the Deboa HTTP client.
+//!
+//! This module contains the error types used throughout the Deboa HTTP client.
+//! The main error type is `DeboaError`, which can represent various kinds of errors
+//! that might occur during HTTP requests and responses.
+//!
+//! # Error Types
+//!
+//! - `DeboaError`: The main error type that can represent any error that occurs in Deboa
+//! - `RequestError`: Errors that occur while building or sending HTTP requests
+//! - `ResponseError`: Errors that occur while processing HTTP responses
+//! - `ConnectionError`: Errors that occur during network connections
+//! - `ContentError`: Errors related to content serialization/deserialization
+//! - `IoError`: I/O related errors
+//!
+//! # Examples
+//!
+//! ## Handling Errors
+//!
+//! ```compile_fail
+//! use deboa::{Deboa, request::get};
+//! use deboa::errors::DeboaError;
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!   let mut client = Deboa::new();
+//!
+//!   match get("https://example.com").and_then(|req| req.go(&mut client)) {
+//!     Ok(response) => {
+//!         // Handle successful response
+//!     },
+//!     Err(DeboaError::Connection(e)) => {
+//!         // Handle connection errors
+//!         eprintln!("Connection failed: {}", e);
+//!     },
+//!     Err(DeboaError::Request(e)) => {
+//!         // Handle request errors
+//!         eprintln!("Request failed: {}", e);
+//!     },
+//!     Err(e) => {
+//!         // Handle other errors
+//!         eprintln!("Error: {}", e);
+//!     }
+//!   }
+//!   Ok(())
+//! }
+//! ```
+
 use http::StatusCode;
 use thiserror::Error;
 
+/// The main error type for the Deboa HTTP client.
+///
+/// This enum represents all possible errors that can occur when making HTTP requests
+/// with Deboa. It uses the `thiserror` crate to provide detailed error messages
+/// and source information.
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum DeboaError {
     #[error("Invalid cookie header: {message}")]

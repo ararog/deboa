@@ -1,92 +1,88 @@
-# deboa
+---
+layout: default
+title: Deboa - A Rust HTTP Client
+nav_order: 1
+description: "A straightforward, non-opinionated, developer-centric HTTP client library for Rust"
+permalink: /
+---
 
-[![crates.io](https://img.shields.io/crates/v/deboa?style=flat-square)](https://crates.io/crates/deboa) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) [![Documentation](https://docs.rs/deboa/badge.svg)](https://docs.rs/deboa/latest/deboa)
+# Deboa
 
-## Description
+[![crates.io](https://img.shields.io/crates/v/deboa?style=flat-square)](https://crates.io/crates/deboa) 
+[![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) 
+[![Documentation](https://docs.rs/deboa/badge.svg)](https://docs.rs/deboa/latest/deboa)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**deboa** is a straightforward, non opinionated, developer-centric HTTP client library for Rust. It offers a rich array of modern features—from flexible authentication and serialization formats to runtime compatibility and middleware support—while maintaining simplicity and ease of use. It’s especially well-suited for Rust projects that require a lightweight, efficient HTTP client without sacrificing control or extensibility.
+A straightforward, non-opinionated, developer-centric HTTP client library for Rust. Built on top of [hyper](https://github.com/hyperium/hyper).
 
-Built using [hyper](https://github.com/hyperium/hyper).
+## Features
 
-## Attention
+- **Async/Await** - Built with Rust's async/await syntax
+- **Flexible** - Supports both HTTP/1.1 and HTTP/2
+- **Extensible** - Middleware support for custom functionality
+- **Runtime Agnostic** - Works with tokio and smol runtimes
+- **Type-safe** - Strong typing for requests and responses
 
-This release has a major api change. Please check the [migration guide](https://github.com/ararog/deboa/blob/main/MIGRATION_GUIDE.md) for more information. Keep in mind API for prior to 0.1.0 is subject to change. Proper deprecation will be added in the next stable release.
+## Quick Start
 
-## Install
+Add to your `Cargo.toml`:
 
-```rust
+```toml
+[dependencies]
 deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
 ```
 
-## Runtimes
-
-- [tokio](https://github.com/tokio-rs/tokio)
-- [smol](https://github.com/smol-rs/smol)
-
-## Crate features
-
-- tokio-rt (default)
-- smol-rt
-- http1 (default)
-- http2
-
-## Usage
+Basic usage:
 
 ```rust
-use deboa::{Deboa, errors::DeboaError, request::get};
-use deboa_extras::http::serde::json::JsonBody;
+use deboa::{Deboa, request::get};
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+struct Post {
+    id: u64,
+    title: String,
+    body: String,
+}
 
 #[tokio::main]
-async fn main() -> Result<()> {
-  // Create a new Deboa instance, set timeouts, catches and protocol.
-  let client = Deboa::new();
-
-  let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
-    .header(header::CONTENT_TYPE, "application/json")
-    .go(client)
-    .await?
-    .body_as(JsonBody)?;
-
-  println!("posts: {:#?}", posts);
-
-  Ok(())
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Deboa::new();
+    
+    let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")
+        .go(&client)
+        .await?
+        .body_as_json()?;
+    
+    println!("First post: {}", posts[0].title);
+    Ok(())
 }
 ```
 
-## Subprojects
+## Crates
 
-### deboa-bora
+| Crate | Description | Documentation |
+|-------|-------------|---------------|
+| [deboa](./deboa) | Core HTTP client library | [![docs.rs](https://img.shields.io/docsrs/deboa/latest)](https://docs.rs/deboa) |
+| [deboa-extras](./deboa-extras) | Additional functionality and middleware | [![docs.rs](https://img.shields.io/docsrs/deboa-extras/latest)](https://docs.rs/deboa-extras) |
+| [deboa-bora](./deboa-bora) | Macro for easy REST client generation | [![docs.rs](https://img.shields.io/docsrs/deboa-bora/latest)](https://docs.rs/deboa-bora) |
+| [deboa-macros](./deboa-macros) | Procedural macros for Deboa | [![docs.rs](https://img.shields.io/docsrs/deboa-macros/latest)](https://docs.rs/deboa-macros) |
+| [vamo](./vamo) | DRY REST client wrapper | [![docs.rs](https://img.shields.io/docsrs/vamo/latest)](https://docs.rs/vamo) |
+| [vamo-macros](./vamo-macros) | Macros for Vamo | [![docs.rs](https://img.shields.io/docsrs/vamo-macros/latest)](https://docs.rs/vamo-macros) |
 
-A crate with bora macro, for easy rest client generation.
+## Examples
 
-### deboa-extras
+Check out the [examples](./examples) directory for complete examples of how to use Deboa in your projects.
 
-Pluggable compression/decompression, serializers and catchers.
+## Documentation
 
-### deboa-macros
-
-A crate with set of convenience macros.
-
-### deboa-tests
-
-A crate with testing utilities.
-
-### examples
-
-Examples of how to use deboa.
-
-### vamo
-
-Nice wrapper on top of deboa for dry rest client.
-
-### vamo-macros
-
-Vamo macros is a collection of macros to make possible
-use structs as resources to be sent over vamo as client.
+- [API Reference](https://docs.rs/deboa)
+- [Migration Guide](./MIGRATION_GUIDE.md)
+- [Contributing Guide](./CONTRIBUTING.md)
 
 ## License
 
-MIT
+This project is licensed under the [MIT License](./LICENSE.md).
 
 ## Author
 

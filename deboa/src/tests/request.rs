@@ -1,6 +1,6 @@
 use crate::{request::DeboaRequest, request::Fetch, Deboa, Result};
 
-use deboa_tests::{utils::JSONPLACEHOLDER};
+use deboa_tests::utils::JSONPLACEHOLDER;
 use http::{header, HeaderValue};
 use url::Url;
 
