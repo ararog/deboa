@@ -33,10 +33,11 @@
 //! use deboa_extras::http::serde::json::JsonBody;
 //!
 //! #[derive(Debug, Serialize, Deserialize, Resource)]
+//! #[get("/posts/:id")]
 //! #[post("/posts")]
-//! #[put("/posts/{}")]
-//! #[patch("/posts/{}")]
-//! #[delete("/posts/{}")]
+//! #[put("/posts/:id")]
+//! #[patch("/posts/:id")]
+//! #[delete("/posts/:id")]
 //! #[body_type(JsonBody)]
 //! struct Post {
 //!     #[rid]
@@ -117,12 +118,13 @@ fn extract_ident(attr: &Attribute) -> Option<Ident> {
     Some(ident.unwrap())
 }
 
-#[proc_macro_derive(Resource, attributes(rid, post, put, patch, delete, body_type))]
+#[proc_macro_derive(Resource, attributes(rid, get, post, put, patch, delete, body_type))]
 /// Derive macro for the Resource trait.
 ///
 /// # Attributes
 ///
 /// * `rid` - The id of the resource.
+/// * `get` - The get path of the resource.
 /// * `post` - The post path of the resource.
 /// * `put` - The put path of the resource.
 /// * `patch` - The patch path of the resource.
@@ -135,10 +137,11 @@ fn extract_ident(attr: &Attribute) -> Option<Ident> {
 /// use deboa_extras::http::serde::json::JsonBody;
 ///
 /// #[derive(Resource)]
+/// #[get("/posts/:id")]
 /// #[post("/posts")]
-/// #[put("/posts/{}")]
-/// #[patch("/posts/{}")]
-/// #[delete("/posts/{}")]
+/// #[put("/posts/:id")]
+/// #[patch("/posts/:id")]
+/// #[delete("/posts/:id")]
 /// #[body_type(JsonBody)]
 /// struct MyResource {
 ///     #[rid("id")]
@@ -162,13 +165,16 @@ pub fn resource(input: TokenStream) -> TokenStream {
     }
 
     // Extract literals from attributes
+    let mut get_path: Option<String> = None;
     let mut post_path: Option<String> = None;
     let mut put_path: Option<String> = None;
     let mut patch_path: Option<String> = None;
     let mut delete_path: Option<String> = None;
     let mut body_type: Option<Ident> = None;
     for attr in ast.attrs {
-        if attr.path().is_ident("post") {
+        if attr.path().is_ident("get") {
+            get_path = extract_path(&attr);
+        } else if attr.path().is_ident("post") {
             post_path = extract_path(&attr);
         } else if attr.path().is_ident("put") {
             put_path = extract_path(&attr);
@@ -179,6 +185,10 @@ pub fn resource(input: TokenStream) -> TokenStream {
         } else if attr.path().is_ident("body_type") {
             body_type = extract_ident(&attr);
         }
+    }
+
+    if get_path.is_none() {
+        panic!("missing path for get");
     }
 
     if post_path.is_none() {
@@ -205,6 +215,10 @@ pub fn resource(input: TokenStream) -> TokenStream {
         impl vamo::resource::Resource for #name {
             fn id(&self) -> String {
                 self.#rid_field.to_string()
+            }
+
+            fn get_path(&self) -> &str {
+                #get_path
             }
 
             fn post_path(&self) -> &str {

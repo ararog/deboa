@@ -19,14 +19,15 @@
 //!
 //! ## Example
 //!
-//! ```rust,compile_fail
+//! ```rust,ignore
 //! use serde::{Serialize, Deserialize};
 //! use vamo::resource::Resource;
-//! use deboa::client::serde::RequestBody;
+//! use deboa::{Result, client::serde::RequestBody};
 //! use deboa_extras::http::serde::json::JsonBody;
 //!
 //! #[derive(Debug, Serialize, Deserialize)]
-//! struct User {//!     id: Option<u64>,
+//! struct User {
+//!     id: Option<u64>,
 //!     name: String,
 //!     email: String,
 //! }
@@ -36,34 +37,19 @@
 //!         self.id.map(|id| id.to_string()).unwrap_or_default()
 //!     }
 //!
+//!     fn get_path(&self) -> &str { "/users/:id" }
 //!     fn post_path(&self) -> &str { "/users" }
-//!     fn delete_path(&self) -> &str { "/users/{}" }
-//!     fn put_path(&self) -> &str { "/users/{}" }
-//!     fn patch_path(&self) -> &str { "/users/{}" }
+//!     fn delete_path(&self) -> &str { "/users/:id" }
+//!     fn put_path(&self) -> &str { "/users/:id" }
+//!     fn patch_path(&self) -> &str { "/users/:id" }
 //!     
 //!     fn body_type(&self) -> impl RequestBody {
 //!         JsonBody
 //!     }
 //! }
 //! ```
-//!
-//! ## Request Traits
-//!
-//! The module provides several traits for creating different types of HTTP requests:
-//! - `AsPostRequest`: Create POST requests for creating resources
-//! - `AsDeleteRequest`: Create DELETE requests for removing resources
-//! - `AsPutRequest`: Create PUT requests for full updates
-//! - `AsPatchRequest`: Create PATCH requests for partial updates
-
-use deboa::{
-    client::serde::RequestBody,
-    errors::{DeboaError, RequestError},
-    request::DeboaRequest,
-    Result,
-};
+use deboa::{client::serde::RequestBody, Result};
 use serde::Serialize;
-use std::str::FromStr;
-use url::Url;
 
 /// Trait to be implemented by resources.
 pub trait Resource {
@@ -74,6 +60,13 @@ pub trait Resource {
     /// * `String` - The id of the resource.
     ///
     fn id(&self) -> String;
+    /// Returns the get path of the resource.
+    ///
+    /// # Returns
+    ///
+    /// * `&str` - The get path of the resource.
+    ///
+    fn get_path(&self) -> &str;
     /// Returns the post path of the resource.
     ///
     /// # Returns
@@ -119,94 +112,92 @@ pub trait Resource {
     ///
     /// * `Result<Url>` - The url with the path added.
     ///
-    fn add_path(&self, path: &str) -> Result<Url> {
-        let url = Url::from_str("http://deboa");
-        if let Err(e) = url {
-            return Err(DeboaError::Request(RequestError::UrlParse {
-                message: e.to_string(),
-            }));
-        }
-        let final_path = path.replace("{}", &self.id());
-        let full_url = url.unwrap().join(&final_path);
-        if let Err(e) = full_url {
-            return Err(DeboaError::Request(RequestError::UrlParse {
-                message: e.to_string(),
-            }));
-        }
-        Ok(full_url.unwrap())
+    fn add_path(&self, path: &str) -> String {
+        path.replace(":id", &self.id())
     }
 }
 
-/// Trait to be implemented by resources to be used as post request.s
-pub trait AsPostRequest<T: Resource> {
-    /// Returns the post request.
+/// Trait which allow http methods on resources
+pub trait ResourceMethod<R>
+where
+    R: Resource + Serialize,
+{
+    /// Post a resource to REST endpoint
+    ///
+    /// # Arguments
+    ///
+    /// * `resource` - The resource to be posted.
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaRequest>` - The post request.
+    /// * `Result<&mut Self>` - The result of the post operation.
+    /// 
+    /// # Example
     ///
-    fn as_post_request(&self) -> Result<DeboaRequest>;
-}
-
-impl<T: Resource + Serialize> AsPostRequest<T> for T {
-    fn as_post_request(&self) -> Result<DeboaRequest> {
-        DeboaRequest::post(self.add_path(self.post_path())?)?
-            .body_as(self.body_type(), self)?
-            .build()
-    }
-}
-
-/// Trait to be implemented by resources to be used as delete request.s
-pub trait AsDeleteRequest<T: Resource> {
-    /// Returns the delete request.
+    /// ```rust,compile_fail
+    /// use vamo::{Vamo, resource::{Resource, ResourceMethod}};
+    /// 
+    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// // Assuming Post is a Resource
+    /// let mut post = Post {
+    ///     id: 1,
+    ///     title: "Some title".to_string(),
+    ///     body: "Some body".to_string(),
+    ///     user_id: 1,
+    /// };
+    /// let response = vamo.post_resource(&mut post)?.send().await?;
+    /// ```
+    fn post_resource(&mut self, resource: &mut R) -> Result<&mut Self>;
+    /// Put a resource to REST endpoint
     ///
-    /// # Returns
+    /// # Arguments
     ///
-    /// * `Result<DeboaRequest>` - The delete request.
-    ///
-    fn as_delete_request(&self) -> Result<DeboaRequest>;
-}
-
-impl<T: Resource + Serialize> AsDeleteRequest<T> for T {
-    fn as_delete_request(&self) -> Result<DeboaRequest> {
-        DeboaRequest::delete(self.add_path(self.delete_path())?)?.build()
-    }
-}
-
-/// Trait to be implemented by resources to be used as put request.s
-pub trait AsPutRequest<T: Resource> {
-    /// Returns the put request.
+    /// * `resource` - The resource to be put.
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaRequest>` - The put request.
+    /// * `Result<&mut Self>` - The result of the put operation.
     ///
-    fn as_put_request(&self) -> Result<DeboaRequest>;
-}
-
-impl<T: Resource + Serialize> AsPutRequest<T> for T {
-    fn as_put_request(&self) -> Result<DeboaRequest> {
-        DeboaRequest::put(self.add_path(self.put_path())?)?
-            .body_as(self.body_type(), self)?
-            .build()
-    }
-}
-
-/// Trait to be implemented by resources to be used as patch request.s
-pub trait AsPatchRequest<T: Resource> {
-    /// Returns the patch request.
+    /// # Example
+    ///
+    /// ```rust,compile_fail
+    /// use vamo::{Vamo, resource::{Resource, ResourceMethod}};
+    /// 
+    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// // Assuming Post is a Resource
+    /// let mut post = Post {
+    ///     id: 1,
+    ///     title: "Some title".to_string(),
+    ///     body: "Some body".to_string(),
+    ///     user_id: 1,
+    /// };
+    /// let response = vamo.put_resource(&mut post)?.send().await?;
+    /// ```
+    fn put_resource(&mut self, resource: &mut R) -> Result<&mut Self>;
+    /// Patch a resource to REST endpoint
+    ///
+    /// # Arguments
+    ///
+    /// * `resource` - The resource to be patched.
     ///
     /// # Returns
     ///
-    /// * `Result<DeboaRequest>` - The patch request.
+    /// * `Result<&mut Self>` - The result of the patch operation.
     ///
-    fn as_patch_request(&self) -> Result<DeboaRequest>;
-}
-
-impl<T: Resource + Serialize> AsPatchRequest<T> for T {
-    fn as_patch_request(&self) -> Result<DeboaRequest> {
-        DeboaRequest::patch(self.add_path(self.patch_path())?)?
-            .body_as(self.body_type(), self)?
-            .build()
-    }
+    /// # Example
+    ///
+    /// ```rust,compile_fail
+    /// use vamo::{Vamo, resource::{Resource, ResourceMethod}};
+    /// 
+    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// // Assuming Post is a Resource
+    /// let mut post = Post {
+    ///     id: 1,
+    ///     title: "Some title".to_string(),
+    ///     body: "Some body".to_string(),
+    ///     user_id: 1,
+    /// };
+    /// let response = vamo.patch_resource(&mut post)?.send().await?;
+    /// ```
+    fn patch_resource(&mut self, resource: &mut R) -> Result<&mut Self>;
 }
