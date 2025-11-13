@@ -38,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     // Make a GET request
     let response = get("https://httpbin.org/get")
-        .go(&client)
+        .send_with(&client)
         .await?;
         
     println!("Status: {}", response.status());
@@ -55,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```rust
 let response = deboa::get("https://api.example.com/data")
     .header("Accept", "application/json")
-    .go(&client)
+    .send_with(&client)
     .await?;
 ```
 
@@ -68,7 +68,7 @@ let data = json!({ "name": "John Doe", "age": 30 });
 
 let response = deboa::post("https://api.example.com/users")
     .json(&data)?
-    .go(&client)
+    .send_with(&client)
     .await?;
 ```
 
@@ -84,7 +84,7 @@ struct User {
 
 // Parse JSON response into a struct
 let user: User = deboa::get("https://api.example.com/users/1")
-    .go(&client)
+    .send_with(&client)
     .await?
     .body_as_json()?;
 
@@ -127,7 +127,7 @@ let client = deboa::Deboa::builder()
 Deoba provides comprehensive error handling through the `deboa::Error` type:
 
 ```rust
-match deboa::get("https://api.example.com/data").go(&client).await {
+match deboa::get("https://api.example.com/data").send_with(&client).await {
     Ok(response) => {
         // Handle successful response
     }

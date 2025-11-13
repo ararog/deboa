@@ -18,6 +18,8 @@ struct Person {
 let mut fory = Fory::default();
 let _ = fory.register::<Person>(1);
 
+let mut client = Deboa::new();
+
 let person = Person {
     name: "John Doe".to_string(),
     age: 30,
@@ -27,7 +29,7 @@ let request = post("http://localhost:8080/persons")?
     .body_as_fory(&fory, person)?;
 
 let response: Person = request
-    .go(client)
+    .send_with(&mut client)
     .await?
     .body_as_fory(&fory)
     .await?;

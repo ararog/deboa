@@ -33,7 +33,7 @@
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!   let mut client = deboa::Deboa::new();
 //!   let sse = SseRequest::get("https://example.com/events")?;
-//!   let mut stream = sse.go(&mut client).await?;
+//!   let mut stream = sse.send_with(&mut client).await?;
 //!
 //!   while let Some(event) = stream.next().await {
 //!     match event {
@@ -54,7 +54,7 @@
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!   let mut client = deboa::Deboa::new();
-//!   let (mut ws, _) = WebSocketRequest::connect("wss://echo.websocket.org").go(&mut client).await?;
+//!   let (mut ws, _) = WebSocketRequest::connect("wss://echo.websocket.org").send_with(&mut client).await?;
 //!
 //!   // Send a message
 //!   ws.send("Hello, WebSocket!".into()).await?;

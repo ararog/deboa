@@ -50,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Deboa::new();
     
     let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")
-        .go(&client)
+        .send_with(&client)
         .await?
         .body_as_json()?;
     

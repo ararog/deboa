@@ -35,7 +35,7 @@
 //!   // Make a GET request
 //!   let user: serde_json::Value = vamo
 //!     .get("/users/1")?
-//!     .go(&mut vamo)
+//!     .send_with(&mut vamo)
 //!     .await?
 //!     .body_as(JsonBody)
 //!     .await?;
