@@ -64,15 +64,13 @@
 //!         body: "This is a test post".into(),
 //!         userId: 1,
 //!     };
-//!     let response: serde_json::Value = post!(
+//!     let response = post!(
 //!         new_post,
 //!         JsonBody,
 //!         "https://jsonplaceholder.typicode.com/posts",
-//!         &mut client,
-//!         JsonBody,
-//!         serde_json::Value
+//!         &mut client
 //!     );
-//!     println!("Created post with ID: {}", response["id"]);
+//!     println!(200, response.status());
 //!     Ok(())
 //! }
 //! ```

@@ -314,7 +314,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
     });
 
     let ts = quote! {
-        use vamo::{Vamo as Client, resource::RequestPath};
+        use vamo::{Vamo as Client};
         use deboa::{response::DeboaResponse, Result};
         #imports
 
