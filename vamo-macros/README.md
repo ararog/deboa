@@ -11,10 +11,11 @@ use vamo_macros::Resource;
 use vamo::{Vamo, ResourceMethod};
 
 #[derive(Resource)]
+#[get("/users/:id")]
 #[post("/users")]
-#[put("/users/{}")]
-#[patch("/users/{}")]
-#[delete("/users/{}")]
+#[put("/users/:id")]
+#[patch("/users/:id")]
+#[delete("/users/:id")]
 #[body_type(JsonBody)]
 pub struct User {
     #[rid]
