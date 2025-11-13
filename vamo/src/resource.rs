@@ -121,7 +121,32 @@ pub trait Resource {
 pub trait ResourceMethod<R>
 where
     R: Resource + Serialize,
-{
+{   /// Get a resource from REST endpoint
+    ///
+    /// # Arguments
+    ///
+    /// * `resource` - The resource to be retrieved.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<&mut Self>` - The result of the get operation.
+    ///
+    /// # Example
+    ///
+    /// ```rust,compile_fail
+    /// use vamo::{Vamo, resource::{Resource, ResourceMethod}};
+    ///
+    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// // Assuming Post is a Resource
+    /// let mut post = Post {
+    ///     id: 1,
+    ///     title: "Some title".to_string(),
+    ///     body: "Some body".to_string(),
+    ///     user_id: 1,
+    /// };
+    /// let response = vamo.get_resource(&mut post)?.send().await?;
+    /// ```
+    fn get_resource(&mut self, resource: &mut R) -> Result<&mut Self>;
     /// Post a resource to REST endpoint
     ///
     /// # Arguments
@@ -200,4 +225,30 @@ where
     /// let response = vamo.patch_resource(&mut post)?.send().await?;
     /// ```
     fn patch_resource(&mut self, resource: &mut R) -> Result<&mut Self>;
+    /// Delete a resource to REST endpoint
+    ///
+    /// # Arguments
+    ///
+    /// * `resource` - The resource to be deleted.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<&mut Self>` - The result of the delete operation.
+    ///
+    /// # Example
+    ///
+    /// ```rust,compile_fail
+    /// use vamo::{Vamo, resource::{Resource, ResourceMethod}};
+    ///
+    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// // Assuming Post is a Resource
+    /// let mut post = Post {
+    ///     id: 1,
+    ///     title: "Some title".to_string(),
+    ///     body: "Some body".to_string(),
+    ///     user_id: 1,
+    /// };
+    /// let response = vamo.delete_resource(&mut post)?.send().await?;
+    /// ```
+    fn delete_resource(&mut self, resource: &mut R) -> Result<&mut Self>;
 }
