@@ -17,10 +17,10 @@ use std::fmt;
 pub fn connect() -> impl Sipper<Never, Event> {
     sipper(async |mut output| {
         loop {
-            let mut client = Deboa::new();
+            let client = Deboa::new();
             let response = DeboaRequestBuilder::websocket("wss://echo.websocket.org")
                 .unwrap()
-                .go(&mut client)
+                .with(client)
                 .await;
 
             if let Err(message) = response {

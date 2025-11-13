@@ -1,5 +1,4 @@
 use deboa_macros::bora;
-use vamo::Vamo;
 
 #[derive(Debug, serde::Deserialize)]
 #[allow(dead_code)]
