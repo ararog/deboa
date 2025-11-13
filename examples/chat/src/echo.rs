@@ -20,7 +20,7 @@ pub fn connect() -> impl Sipper<Never, Event> {
             let client = Deboa::new();
             let response = DeboaRequestBuilder::websocket("wss://echo.websocket.org")
                 .unwrap()
-                .with(client)
+                .send_with(client)
                 .await;
 
             if let Err(message) = response {

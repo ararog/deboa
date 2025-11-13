@@ -29,7 +29,7 @@ async fn main() -> Result<()> {
     let client = Deboa::builder().catch(TestMonitor).build();
 
     let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com")?
-        .with(client)
+        .send_with(client)
         .await?;
 
     Ok(())

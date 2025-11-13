@@ -8,7 +8,7 @@ use structs as resources to be sent over vamo as client.
 
 ```rust
 use vamo_macros::Resource;
-use vamo::{resource::AsPostRequest, Vamo};
+use vamo::{Vamo, ResourceMethod};
 
 #[derive(Resource)]
 #[post("/users")]
@@ -23,7 +23,7 @@ pub struct User {
 }
 
 let mut vamo = Vamo::new("https://api.example.com")?;
-let response = vamo.go(user.as_post_request()?).await?;
+let response = vamo.post_resource(user).await?;
 ```
 
 ## Features

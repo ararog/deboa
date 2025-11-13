@@ -53,7 +53,7 @@ async fn test_catcher_response() {
     let client = Deboa::builder().catch(catcher_mock).build();
     let mut response = DeboaRequest::get(server.url("/get").as_str())
         .expect("Invalid URL")
-        .with(client)
+        .send_with(client)
         .await
         .unwrap();
 
@@ -99,7 +99,7 @@ async fn test_catcher_early_response() {
     let client = Deboa::builder().catch(catcher_mock).build();
     let response = DeboaRequest::get(server.url("/get").as_str())
         .expect("Invalid URL")
-        .with(client)
+        .send_with(client)
         .await
         .unwrap();
 

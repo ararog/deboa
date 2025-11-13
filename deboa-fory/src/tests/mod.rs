@@ -41,7 +41,7 @@ async fn test_fory_post_request() -> Result<(), DeboaError> {
 
     let request = post(server.url(path))?.body_as_fory(&fory, person)?;
 
-    let response: Person = request.with(client).await?.body_as_fory(&fory).await?;
+    let response: Person = request.send_with(client).await?.body_as_fory(&fory).await?;
 
     mock.assert();
 
