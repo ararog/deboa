@@ -26,3 +26,18 @@ pub fn setup_server<'a>(
             .body("ping");
     })
 }
+
+pub fn setup_server_with_body<'a>(
+    server: &'a MockServer,
+    path: &'a str,
+    method: Method,
+    status: StatusCode,
+    body: &'a str,
+) -> httpmock::Mock<'a> {
+    server.mock(|when, then| {
+        when.method(method).path(path).body(body);
+        then.status::<u16>(status.into())
+            .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
+            .body("ping");
+    })
+}

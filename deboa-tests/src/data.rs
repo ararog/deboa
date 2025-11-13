@@ -4,9 +4,14 @@ pub const MSGPACK_POST: [u8; 23] = [
     147, 1, 164, 84, 101, 115, 116, 175, 83, 111, 109, 101, 32, 116, 101, 115, 116, 32, 116, 111,
     32, 100, 111,
 ];
+
 pub const XML_POST: &[u8; 108] = b"<?xml version=\"1.0\" encoding=\"UTF-8\"?><Post><id>1</id><title>Test</title><body>Some test to do</body></Post>";
+pub const XML_STR_POST: &str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Post><id>1</id><title>Test</title><body>Some test to do</body></Post>";
+pub const XML_STR_PATCH: &str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Post><id>1</id><title>Test</title><body>Some test to do</body></Post>";
 
 pub const JSON_POST: &[u8; 48] = b"{\"id\":1,\"title\":\"Test\",\"body\":\"Some test to do\"}";
+pub const JSON_STR_POST: &str = "{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}";
+pub const JSON_STR_PATCH: &str = "{\"id\":1,\"title\":\"Some other title\"}";
 
 pub const BROTLI_COMPRESSED: &[u8; 15] = &[
     11, 5, 128, 108, 111, 114, 101, 109, 32, 105, 112, 115, 117, 109, 3,
