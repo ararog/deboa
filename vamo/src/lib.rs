@@ -206,6 +206,12 @@ impl Vamo {
 }
 
 impl<R: Resource + Serialize> ResourceMethod<R> for Vamo {
+    fn get_resource(&mut self, resource: &mut R) -> Result<&mut Self> {
+        self.path = resource.add_path(resource.get_path());
+        self.method = Method::GET;
+        Ok(self)
+    }
+    
     fn post_resource(&mut self, resource: &mut R) -> Result<&mut Self> {
         self.path = resource.post_path().to_string();
         self.method = Method::POST;
@@ -224,6 +230,12 @@ impl<R: Resource + Serialize> ResourceMethod<R> for Vamo {
         self.path = resource.add_path(resource.patch_path());
         self.method = Method::PATCH;
         self.body = resource.body_type().serialize(&resource)?.into();
+        Ok(self)
+    }
+
+    fn delete_resource(&mut self, resource: &mut R) -> Result<&mut Self> {
+        self.path = resource.add_path(resource.delete_path());
+        self.method = Method::DELETE;
         Ok(self)
     }
 }
