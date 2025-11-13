@@ -62,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     // Send the request
     let user: User = http_request
-        .go(&client)
+        .send_with(&client)
         .await?
         .body()?;
     
@@ -134,7 +134,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = deboa::Deboa::new();
     let response = deboa::post("https://api.example.com/login")
         .body(form_data)
-        .go(&client)
+        .send_with(&client)
         .await?;
     
     println!("Login response: {}", response.status());
@@ -167,7 +167,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = deboa::Deboa::new();
     let response = deboa::post("https://api.example.com/posts")
         .body(post.into_body()?)
-        .go(&client)
+        .send_with(&client)
         .await?;
     
     println!("Created post: {}", response.status());
