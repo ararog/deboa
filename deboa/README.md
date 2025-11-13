@@ -76,7 +76,7 @@ async fn main() -> Result<()> {
     // or use at, from (defaults to GET) and to (defaults to POST) methods:
 
     let posts: Vec<Post> = DeboaRequest::at("https://jsonplaceholder.typicode.com/posts", Method::GET)?
-      .with(client)
+      .send_with(client)
       .await?
       .body_as(JsonBody)
       .await?;
@@ -100,7 +100,7 @@ async fn main() -> Result<()> {
     */
 
     let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
-      .with(client)
+      .send_with(client)
       .await?
       .body_as(JsonBody)
       .await?;

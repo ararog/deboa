@@ -83,7 +83,7 @@ impl Fetch for &str {
     where
         T: AsMut<Deboa> + Send,
     {
-        DeboaRequest::get(*self)?.go(client).await
+        DeboaRequest::get(*self)?.send_with(client).await
     }
 }
 
@@ -120,7 +120,7 @@ impl FetchWith for &str {
     where
         T: AsMut<Deboa> + Send,
     {
-        DeboaRequest::get(*self)?.with(client).await
+        DeboaRequest::get(*self)?.send_with(client).await
     }
 }
 
@@ -142,7 +142,7 @@ impl FetchWith for &str {
 /// let mut client = Deboa::new();
 ///
 /// let request = get("https://jsonplaceholder.typicode.com").unwrap();
-/// let response = request.go(&mut client).await?;
+/// let response = request.send_with(&mut client).await?;
 /// assert_eq!(response.status(), 200);
 /// ```
 ///
@@ -171,7 +171,7 @@ pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// let request = post("https://jsonplaceholder.typicode.com/posts")?
 ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
 ///   .build()?;
-/// let response = request.go(&mut client).await?;
+/// let response = request.send_with(&mut client).await?;
 /// assert_eq!(response.status(), 201);
 /// ```
 ///
@@ -200,7 +200,7 @@ pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// let request = put("https://jsonplaceholder.typicode.com/posts/1")?
 ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
 ///   .build()?;
-/// let response = request.go(&mut client).await?;
+/// let response = request.send_with(&mut client).await?;
 /// assert_eq!(response.status(), 200);
 /// ```
 #[inline]
@@ -226,7 +226,7 @@ pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// let mut client = Deboa::new();
 ///
 /// let request = delete("https://jsonplaceholder.typicode.com/posts/1")?.build()?;
-/// let response = request.go(&mut client).await?;
+/// let response = request.send_with(&mut client).await?;
 /// assert_eq!(response.status(), 200);
 /// ```
 #[inline]
@@ -254,7 +254,7 @@ pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// let request = patch("https://jsonplaceholder.typicode.com/posts/1")?
 ///   .raw_body(b"{\"title\": \"foo\"}")
 ///   .build()?;
-/// let response = request.go(&mut client).await?;
+/// let response = request.send_with(&mut client).await?;
 /// assert_eq!(response.status(), 200);
 /// ```
 #[inline]
@@ -608,7 +608,7 @@ impl DeboaRequestBuilder {
     /// let response = request.go(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
-    #[deprecated(note = "Use with method instead", since = "0.0.8")]
+    #[deprecated(note = "Use `send_with` method instead", since = "0.0.8")]
     pub async fn go<T>(self, mut client: T) -> Result<DeboaResponse>
     where
         T: AsMut<Deboa>,
@@ -635,10 +635,10 @@ impl DeboaRequestBuilder {
     ///   .header(header::CONTENT_TYPE, "application/json")
     ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
     ///   .build()?;
-    /// let response = request.with(&mut client).await?;
+    /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
-    pub async fn with<T>(self, mut client: T) -> Result<DeboaResponse>
+    pub async fn send_with<T>(self, mut client: T) -> Result<DeboaResponse>
     where
         T: AsMut<Deboa>,
     {

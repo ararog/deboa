@@ -733,7 +733,7 @@ impl Deboa {
     ///
     /// ## Simple GET Request
     ///
-    /// ```rust
+    /// ```rust,no_run
     /// use deboa::Deboa;
     ///
     /// #[tokio::main]

@@ -161,7 +161,7 @@ impl App {
                 },
             )
             .unwrap()
-            .with(&mut self.http_client)
+            .send_with(&mut self.http_client)
             .await;
 
         if let Err(message) = response {
