@@ -34,14 +34,14 @@ fn impl_function(
     if res_body_type.eq(unit_type) {
         quote! {
             pub async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type> {
-                self.api.#deboa_method(format!(#api_path).as_ref())?.go(self.api.client()).await?;
+                self.api.#deboa_method(format!(#api_path).as_ref()).send().await?;
                 Ok(())
             }
         }
     } else {
         quote! {
             pub async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type> {
-                self.api.#deboa_method(format!(#api_path).as_ref())?.go(self.api.client()).set_body_as(#format_module, body)?.await?.body_as(#format_module).await?
+                self.api.#deboa_method(format!(#api_path).as_ref()).set_body_as(#format_module, body)?.send().await?.body_as(#format_module).await?
             }
         }
     }
@@ -89,7 +89,6 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                     }
                     GetFieldEnum::path(path) => {
                         let path_info = extract_params_from_path(&path.value);
-
                         api_path = path_info.1;
                         api_params = path_info.0;
                     }
@@ -111,7 +110,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                 acc.1.extend(quote! {
                     pub async fn #method_name(&mut self, #api_params) -> Result<#res_body_type> {
-                        self.api.#method(format!(#api_path).as_ref())?.go(&mut self.api.client()).await?.body_as(#format_module).await
+                        self.api.#method(format!(#api_path).as_ref()).send().await?.body_as(#format_module).await
                     }
                 });
             }
@@ -188,7 +187,6 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                     }
                     PutFieldEnum::path(path) => {
                         let path_info = extract_params_from_path(&path.value);
-
                         api_path = path_info.1;
                         api_params = path_info.0;
                     }
@@ -245,7 +243,6 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     PatchFieldEnum::path(path) => {
                         let path_info = extract_params_from_path(&path.value);
-
                         api_path = path_info.1;
                         api_params = path_info.0;
                     }
@@ -297,7 +294,6 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                     }
                     DeleteFieldEnum::path(path) => {
                         let path_info = extract_params_from_path(&path.value);
-
                         api_path = path_info.1;
                         api_params = path_info.0;
                     }
@@ -307,7 +303,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                 acc.1.extend(quote! {
                     pub async fn #method_name(&mut self, #api_params) -> Result<()> {
-                        self.api.#method(format!(#api_path).as_ref())?.go(&mut self.api.client()).await?;
+                        self.api.#method(#api_path).send().await?;
                         Ok(())
                     }
                 });
@@ -318,7 +314,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
     });
 
     let ts = quote! {
-        use vamo::Vamo as Client;
+        use vamo::{Vamo as Client, resource::RequestPath};
         use deboa::{response::DeboaResponse, Result};
         #imports
 
@@ -327,7 +323,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
 
         impl #struct_name {
-            pub fn new(api: Vamo) -> Self {
+            pub fn new(api: Client) -> Self {
                 Self {
                     api
                 }

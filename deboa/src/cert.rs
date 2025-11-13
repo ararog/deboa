@@ -11,7 +11,7 @@
 ///
 /// # Examples
 ///
-/// ```compile_fail
+/// ```
 /// use deboa::cert::ClientCert;
 ///
 /// // Create a new client certificate without a CA

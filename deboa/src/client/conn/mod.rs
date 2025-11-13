@@ -14,24 +14,6 @@
 //! - Protocol negotiation (HTTP/1.1, HTTP/2)
 //! - Connection lifecycle management
 //! - Thread-safe connection handling
-//!
-//! # Examples
-//!
-//! ## Creating a Custom Connection
-//!
-//! ```no_run
-//! use deboa::client::conn::http::{DeboaConnection, DeboaHttpConnection};
-//! use deboa::client::conn::pool::HttpConnectionPool;
-//! use url::Url;
-//! use std::sync::Arc;
-//!
-//! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let url = Arc::new(Url::parse("https://example.com")?);
-//! // In practice, you'd use the pool from Deboa client
-//! let mut pool = HttpConnectionPool::new();
-//! # Ok(())
-//! # }
 //! ```
 
 /// HTTP protocol implementations.

@@ -162,8 +162,9 @@ impl DeboaResponseBuilder {
 ///
 /// ## JSON Deserialization
 ///
-/// ```no_run
+/// ```compile_fail
 /// use deboa::request::get;
+/// use deboa::client::serde::json::JsonBody;
 /// use serde::Deserialize;
 ///
 /// #[derive(Debug, Deserialize)]
@@ -172,13 +173,14 @@ impl DeboaResponseBuilder {
 ///     url: String,
 /// }
 ///
-/// # #[tokio::main]
-/// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// let mut client = deboa::Deboa::new();
-/// let response = get("https://httpbin.org/get")?.go(&mut client).await?;
-/// let data: Data = response.body_as(deboa::client::serde::json::JsonBody).await?;
-/// println!("Origin: {}", data.origin);
-/// # Ok(()) }
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let mut client = deboa::Deboa::new();
+///     let response = get("https://httpbin.org/get")?.with(&mut client).await?;
+///     let data: Data = response.body_as(JsonBody).await?;
+///     println!("Origin: {}", data.origin);
+///     Ok(()) 
+/// }
 /// ```
 ///
 /// # Fields

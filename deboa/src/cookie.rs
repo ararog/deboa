@@ -14,7 +14,7 @@
 //!
 //! ## Creating a new cookie
 //!
-//! ```compile_fail
+//! ```rust
 //! use deboa::cookie::DeboaCookie;
 //! use cookie::time::Duration;
 //!
@@ -31,7 +31,7 @@
 //!
 //! ## Parsing from a Set-Cookie header
 //!
-//! ```compile_fail
+//! ```rust
 //! use deboa::cookie::DeboaCookie;
 //!
 //! let header = "session_id=abc123; Path=/; Domain=example.com; Secure; HttpOnly";

@@ -1,4 +1,4 @@
-use crate::{request::DeboaRequest, request::Fetch, Deboa, Result};
+use crate::{request::DeboaRequest, request::FetchWith, Deboa, Result};
 
 use deboa_tests::utils::JSONPLACEHOLDER;
 use http::{header, HeaderValue};
@@ -8,56 +8,43 @@ use url::Url;
 fn test_into_url() -> Result<()> {
     let url = Url::parse(JSONPLACEHOLDER).unwrap();
     let request = DeboaRequest::get(url)?.build()?;
-
     assert_eq!(request.url().to_string(), JSONPLACEHOLDER);
-
     Ok(())
 }
 
 #[test]
 fn test_into_str() -> Result<()> {
     let request = DeboaRequest::get(JSONPLACEHOLDER)?.build()?;
-
     assert_eq!(request.url().to_string(), JSONPLACEHOLDER);
-
     Ok(())
 }
 
 #[test]
 fn test_into_string() -> Result<()> {
     let request = DeboaRequest::get(String::from(JSONPLACEHOLDER))?.build()?;
-
     assert_eq!(request.url().to_string(), JSONPLACEHOLDER);
-
     Ok(())
 }
 
 #[tokio::test]
 async fn test_try_into() -> Result<()> {
     let mut client = Deboa::new();
-
     let response = client.execute(JSONPLACEHOLDER).await?;
-
     assert_eq!(response.status(), 200);
-
     Ok(())
 }
 
 #[test]
 fn test_set_retries() -> Result<()> {
     let api = DeboaRequest::get(JSONPLACEHOLDER)?.retries(5).build()?;
-
     assert_eq!(api.retries(), 5);
-
     Ok(())
 }
 
 #[test]
 fn test_base_url() -> Result<()> {
     let api = DeboaRequest::get(String::from(JSONPLACEHOLDER))?.build()?;
-
     assert_eq!(api.url().to_string(), JSONPLACEHOLDER);
-
     Ok(())
 }
 
@@ -141,7 +128,7 @@ fn test_raw_body() -> Result<()> {
 async fn test_fetch_from_str() -> Result<()> {
     let mut client = Deboa::new();
 
-    let response = JSONPLACEHOLDER.fetch(&mut client).await?;
+    let response = JSONPLACEHOLDER.fetch_with(&mut client).await?;
     assert_eq!(response.status(), 200);
 
     Ok(())

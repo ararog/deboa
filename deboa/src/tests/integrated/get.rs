@@ -111,7 +111,7 @@ async fn do_get_not_found() -> Result<()> {
 
     let response: Result<DeboaResponse> =
         DeboaRequest::get(server.url("/asasa/posts/1ddd").as_str())?
-            .go(client)
+            .with(client)
             .await;
 
     http_mock.assert();
@@ -201,7 +201,7 @@ async fn do_get_by_query() -> Result<()> {
     let client = Deboa::new();
 
     let response = DeboaRequest::get(server.url("/comments/1").as_str())?
-        .go(client)
+        .with(client)
         .await?;
 
     http_mock.assert();
@@ -248,7 +248,7 @@ async fn do_get_by_query_with_retries() -> Result<()> {
 
     let response = DeboaRequest::get(server.url("/comments/1").as_str())?
         .retries(2)
-        .go(client)
+        .with(client)
         .await;
 
     http_mock.assert_calls(3);
@@ -298,7 +298,7 @@ async fn do_get_with_redirect() -> Result<()> {
     let client = Deboa::new();
 
     let response = DeboaRequest::get(server.url("/comments/one").as_str())?
-        .go(client)
+        .with(client)
         .await?;
 
     http_mock_red.assert();

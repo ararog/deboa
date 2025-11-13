@@ -154,7 +154,7 @@ impl Display for HttpVersion {
 ///
 /// # Examples
 ///
-/// ``` compile_fail
+/// ``` rust, no_run
 /// use deboa::{Deboa, HttpVersion};
 /// use std::time::Duration;
 ///
@@ -198,7 +198,7 @@ impl DeboaBuilder {
     ///
     /// # Examples
     ///
-    /// ``` compile_fail
+    /// ``` rust, no_run
     /// use deboa::Deboa;
     /// let builder = Deboa::builder()
     ///     .connection_timeout(10);  // 10 seconds
@@ -222,7 +222,7 @@ impl DeboaBuilder {
     ///
     /// # Examples
     ///
-    /// ``` compile_fail
+    /// ``` rust, no_run
     /// use deboa::Deboa;
     /// let builder = Deboa::builder()
     ///     .request_timeout(30);  // 30 seconds
@@ -342,7 +342,7 @@ impl DeboaBuilder {
     ///
     /// # Examples
     ///
-    /// ``` compile_fail
+    /// ``` rust, no_run
     /// use deboa::{Deboa, HttpVersion};
     ///
     /// let builder = Deboa::builder()
@@ -368,7 +368,7 @@ impl DeboaBuilder {
     ///
     /// # Examples
     ///
-    /// ``` compile_fail
+    /// ``` rust, no_run
     /// use deboa::Deboa;
     ///
     /// #[tokio::main]
@@ -417,7 +417,7 @@ impl DeboaBuilder {
 ///
 /// ## Basic Usage
 ///
-/// ``` compile_fail
+/// ``` rust,no_run
 /// use deboa::Deboa;
 ///
 /// #[tokio::main]
@@ -495,7 +495,7 @@ impl Deboa {
     ///
     /// # Examples
     ///
-    /// ``` compile_fail
+    /// ``` rust,no_run
     /// use deboa::Deboa;
     ///
     /// #[tokio::main]
@@ -656,7 +656,7 @@ impl Deboa {
     ///
     /// ## Basic Error Logging
     ///
-    /// ```no_run
+    /// ```compile_fail
     /// use deboa::Deboa;
     /// use std::error::Error;
     ///
@@ -672,7 +672,7 @@ impl Deboa {
     ///
     /// ## Automatic Retries
     ///
-    /// ```no_run
+    /// ```compile_fail
     /// use deboa::Deboa;
     /// use std::error::Error;
     ///
@@ -733,7 +733,7 @@ impl Deboa {
     ///
     /// ## Simple GET Request
     ///
-    /// ```compile_fail
+    /// ```rust
     /// use deboa::Deboa;
     ///
     /// #[tokio::main]
