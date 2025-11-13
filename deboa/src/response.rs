@@ -179,7 +179,7 @@ impl DeboaResponseBuilder {
 ///     let response = get("https://httpbin.org/get")?.with(&mut client).await?;
 ///     let data: Data = response.body_as(JsonBody).await?;
 ///     println!("Origin: {}", data.origin);
-///     Ok(()) 
+///     Ok(())
 /// }
 /// ```
 ///

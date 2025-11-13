@@ -131,12 +131,12 @@ where
     /// # Returns
     ///
     /// * `Result<&mut Self>` - The result of the post operation.
-    /// 
+    ///
     /// # Example
     ///
     /// ```rust,compile_fail
     /// use vamo::{Vamo, resource::{Resource, ResourceMethod}};
-    /// 
+    ///
     /// let mut vamo = Vamo::new("https://api.example.com")?;
     /// // Assuming Post is a Resource
     /// let mut post = Post {
@@ -162,7 +162,7 @@ where
     ///
     /// ```rust,compile_fail
     /// use vamo::{Vamo, resource::{Resource, ResourceMethod}};
-    /// 
+    ///
     /// let mut vamo = Vamo::new("https://api.example.com")?;
     /// // Assuming Post is a Resource
     /// let mut post = Post {
@@ -188,7 +188,7 @@ where
     ///
     /// ```rust,compile_fail
     /// use vamo::{Vamo, resource::{Resource, ResourceMethod}};
-    /// 
+    ///
     /// let mut vamo = Vamo::new("https://api.example.com")?;
     /// // Assuming Post is a Resource
     /// let mut post = Post {

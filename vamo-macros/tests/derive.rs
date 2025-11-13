@@ -4,7 +4,7 @@ use deboa_tests::utils::setup_server;
 use http::StatusCode;
 use httpmock::{Method::POST, MockServer};
 use serde::Serialize;
-use vamo::{Vamo, resource::ResourceMethod};
+use vamo::{resource::ResourceMethod, Vamo};
 use vamo_macros::Resource;
 
 #[derive(Resource, Serialize)]

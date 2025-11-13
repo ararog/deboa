@@ -23,11 +23,6 @@ async fn main() {
 
 async fn fetch_posts() -> Result<Vec<Post>> {
     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
-    let posts: Vec<Post> = vamo
-        .get("/posts")
-        .send()
-        .await?
-        .body_as(JsonBody)
-        .await?;
+    let posts: Vec<Post> = vamo.get("/posts").send().await?.body_as(JsonBody).await?;
     Ok(posts)
 }

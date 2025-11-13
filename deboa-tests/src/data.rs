@@ -10,7 +10,8 @@ pub const XML_STR_POST: &str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Post>
 pub const XML_STR_PATCH: &str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Post><id>1</id><title>Test</title><body>Some test to do</body></Post>";
 
 pub const JSON_POST: &[u8; 48] = b"{\"id\":1,\"title\":\"Test\",\"body\":\"Some test to do\"}";
-pub const JSON_STR_POST: &str = "{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}";
+pub const JSON_STR_POST: &str =
+    "{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}";
 pub const JSON_STR_PATCH: &str = "{\"id\":1,\"title\":\"Some other title\"}";
 
 pub const BROTLI_COMPRESSED: &[u8; 15] = &[

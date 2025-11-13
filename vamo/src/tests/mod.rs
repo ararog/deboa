@@ -1,5 +1,5 @@
 use crate::Vamo;
-use deboa::{HttpVersion, Result, url::IntoUrl};
+use deboa::{url::IntoUrl, HttpVersion, Result};
 use http::Method;
 
 const JSONPLACEHOLDER: &str = "https://jsonplaceholder.typicode.com";

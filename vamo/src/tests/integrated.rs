@@ -1,6 +1,9 @@
 use deboa::{client::serde::RequestBody, Result};
 use deboa_extras::http::serde::json::JsonBody;
-use deboa_tests::{data::{JSON_STR_PATCH, JSON_STR_POST}, utils::{setup_server, setup_server_with_body}};
+use deboa_tests::{
+    data::{JSON_STR_PATCH, JSON_STR_POST},
+    utils::{setup_server, setup_server_with_body},
+};
 use http::{header, StatusCode};
 use httpmock::{
     Method::{DELETE, GET, PATCH, POST, PUT},
@@ -8,7 +11,10 @@ use httpmock::{
 };
 use serde::Serialize;
 
-use crate::{resource::{Resource, ResourceMethod}, Vamo};
+use crate::{
+    resource::{Resource, ResourceMethod},
+    Vamo,
+};
 
 #[derive(Serialize)]
 struct Post {
@@ -84,9 +90,9 @@ async fn test_put() -> Result<()> {
 async fn test_post() -> Result<()> {
     let server = MockServer::start();
     let mock = server.mock(|when, then| {
-        when.method(POST).path("/api/posts").body(
-            "{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}",
-        );
+        when.method(POST)
+            .path("/api/posts")
+            .body("{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}");
         then.status::<u16>(StatusCode::CREATED.into())
             .header(header::CONTENT_TYPE.as_str(), "application/json")
             .body("{}");
@@ -142,7 +148,13 @@ async fn test_delete() -> Result<()> {
 #[tokio::test]
 async fn test_post_resource() -> Result<()> {
     let server = MockServer::start();
-    let mock = setup_server_with_body(&server, "/api/posts", POST, StatusCode::CREATED, JSON_STR_POST);
+    let mock = setup_server_with_body(
+        &server,
+        "/api/posts",
+        POST,
+        StatusCode::CREATED,
+        JSON_STR_POST,
+    );
 
     let mut post = Post {
         id: 1,
@@ -186,7 +198,13 @@ async fn test_put_resource() -> Result<()> {
 #[tokio::test]
 async fn test_patch_resource() -> Result<()> {
     let server = MockServer::start();
-    let mock = setup_server_with_body(&server, "/api/posts/1", PATCH, StatusCode::OK, JSON_STR_PATCH);
+    let mock = setup_server_with_body(
+        &server,
+        "/api/posts/1",
+        PATCH,
+        StatusCode::OK,
+        JSON_STR_PATCH,
+    );
 
     let mut post = Post {
         id: 1,
