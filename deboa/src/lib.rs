@@ -19,11 +19,11 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<()> {
-//!     let deboa = Deboa::builder()
+//!     let mut deboa = Deboa::builder()
 //!         .build();
 //!
 //!     let response = DeboaRequest::get("https://httpbin.org/get")?
-//!         .go(deboa)
+//!         .send_with(&mut deboa)
 //!         .await?;
 //!
 //!     println!("Response: {:#?}", response);
@@ -758,7 +758,7 @@ impl Deboa {
     ///   let response = client
     ///     .execute(
     ///         post("https://httpbin.org/post")
-    ///             .json(&json!({ "key": "value" }))?
+    ///             .text("text")?
     ///     )
     ///     .await?;
     ///   Ok(())

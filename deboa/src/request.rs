@@ -380,7 +380,7 @@ impl DeboaRequestBuilder {
     ///   .header(header::CONTENT_TYPE, "application/json")
     ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
     ///   .build()?;
-    /// let response = request.go(&mut client).await?;
+    /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
     ///
@@ -449,7 +449,7 @@ impl DeboaRequestBuilder {
     /// let request = post("https://jsonplaceholder.typicode.com/posts")?
     ///   .form(form.into())
     ///   .build()?;
-    /// let response = request.go(&mut client).await?;
+    /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
     pub fn form(mut self, form: Form) -> Self {
@@ -476,7 +476,7 @@ impl DeboaRequestBuilder {
     ///   .header(header::CONTENT_TYPE, "application/json")
     ///   .text("text")
     ///   .build()?;
-    /// let response = request.go(&mut client).await?;
+    /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
     pub fn text(mut self, text: &str) -> Self {
@@ -520,7 +520,7 @@ impl DeboaRequestBuilder {
     ///   .bearer_auth("token")
     ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
     ///   .build()?;
-    /// let response = request.go(&mut client).await?;
+    /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
     #[inline]
@@ -549,7 +549,7 @@ impl DeboaRequestBuilder {
     ///   .basic_auth("username", "password")
     ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
     ///   .build()?;
-    /// let response = request.go(&mut client).await?;
+    /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
     pub fn basic_auth(self, username: &str, password: &str) -> Self {
@@ -605,7 +605,7 @@ impl DeboaRequestBuilder {
     ///   .header(header::CONTENT_TYPE, "application/json")
     ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
     ///   .build()?;
-    /// let response = request.go(&mut client).await?;
+    /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
     #[deprecated(note = "Use `send_with` method instead", since = "0.0.8")]
@@ -701,7 +701,7 @@ impl DeboaRequest {
     ///   .header("Content-Type", "application/json")
     ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
     ///   .build()?;
-    /// let response = request.go(&mut client).await?;
+    /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
     ///

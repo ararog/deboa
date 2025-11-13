@@ -22,7 +22,7 @@ pub trait IntoWebSocket {
     ///
     /// let mut client = Deboa::new();
     /// let builder = DeboaRequestBuilder::websocket("ws://example.com").unwrap();
-    /// let response = builder.go(&mut client).await.unwrap();
+    /// let response = builder.send_with(&mut client).await.unwrap();
     /// let websocket = response.into_websocket().unwrap();
     ///
     /// loop {

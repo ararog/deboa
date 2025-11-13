@@ -125,7 +125,7 @@ async fn get_stream(
     &str,
 ) {
     let stream =
-        once(async move { std::result::Result::<Bytes, Infallible>::Ok(Bytes::from(form)) });
+        once(async move { std::result::Result::<Bytes, Infallible>::Ok(form) });
 
     (stream, boundary)
 }

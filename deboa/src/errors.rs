@@ -25,7 +25,7 @@
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!   let mut client = Deboa::new();
 //!
-//!   match get("https://example.com").and_then(|req| req.go(&mut client)) {
+//!   match get("https://example.com").and_then(|req| req.send_with(&mut client)) {
 //!     Ok(response) => {
 //!         // Handle successful response
 //!     },

@@ -57,7 +57,7 @@ let request = deboa::post("https://api.example.com/users")
 
 // Deserialize response
 let response: User = request
-    .go(&client)
+    .send_with(&client)
     .await?
     .body_as(JsonBody)?;
 ```

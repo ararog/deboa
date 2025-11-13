@@ -152,7 +152,7 @@ impl DeboaResponseBuilder {
 /// # #[tokio::main]
 /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let mut client = deboa::Deboa::new();
-/// let response = get("https://httpbin.org/get")?.go(&mut client).await?;
+/// let response = get("https://httpbin.org/get")?.send_with(&mut client).await?;
 ///
 /// println!("Status: {}", response.status());
 /// println!("Headers: {:?}", response.headers());
@@ -460,7 +460,7 @@ impl DeboaResponse {
     /// use deboa::request::get;
     /// use deboa_extras::http::serde::json::JsonBody;
     ///
-    /// let response = get("https://jsonplaceholder.typicode.com/posts")?.go(client).await?;
+    /// let response = get("https://jsonplaceholder.typicode.com/posts")?.send_with(client).await?;
     /// let posts: Vec<Post> = response.body_as(JsonBody).await?;
     /// ```
     ///
@@ -485,7 +485,7 @@ impl DeboaResponse {
     /// ```compile_fail
     /// use deboa::request::get;
     ///
-    /// let response = get("https://jsonplaceholder.typicode.com/posts")?.go(client).await?;
+    /// let response = get("https://jsonplaceholder.typicode.com/posts")?.send_with(client).await?;
     /// let text = response.text().await?;
     /// ```
     ///
@@ -512,7 +512,7 @@ impl DeboaResponse {
     /// ```compile_fail
     /// use deboa::request::get;
     ///
-    /// let response = get("https://jsonplaceholder.typicode.com/posts")?.go(client).await?;
+    /// let response = get("https://jsonplaceholder.typicode.com/posts")?.send_with(client).await?;
     /// response.to_file("posts.json").await?;
     /// ```
     ///
