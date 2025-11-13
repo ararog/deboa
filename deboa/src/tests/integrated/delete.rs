@@ -23,7 +23,7 @@ async fn do_delete() -> Result<()> {
     let client = Deboa::new();
 
     let response = DeboaRequest::delete(server.url("/posts/1").as_str())?
-        .with(client)
+        .send_with(client)
         .await?;
 
     http_mock.assert();
