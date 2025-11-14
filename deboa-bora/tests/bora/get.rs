@@ -26,7 +26,9 @@ async fn test_get_by_id() -> Result<()> {
 
     let mut post_service = PostService::new(client);
 
-    let post = post_service.get_by_id(1).await?;
+    let post = post_service
+        .get_by_id(1)
+        .await?;
 
     println!("id...: {}", post.id);
     println!("title: {}", post.title);
@@ -41,7 +43,9 @@ async fn test_get_all() -> Result<()> {
 
     let mut post_service = PostService::new(client);
 
-    let posts = post_service.get_all().await?;
+    let posts = post_service
+        .get_all()
+        .await?;
 
     println!("posts: {posts:?}");
 
@@ -55,7 +59,9 @@ async fn test_query_by_id() -> Result<()> {
 
     let mut post_service = PostService::new(client);
 
-    let posts = post_service.query_by_id(1).await?;
+    let posts = post_service
+        .query_by_id(1)
+        .await?;
 
     println!("posts: {posts:?}");
 

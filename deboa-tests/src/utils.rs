@@ -20,10 +20,11 @@ pub fn setup_server<'a>(
     status: StatusCode,
 ) -> httpmock::Mock<'a> {
     server.mock(|when, then| {
-        when.method(method).path(path);
+        when.method(method)
+            .path(path);
         then.status::<u16>(status.into())
             .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
-            .body("ping");
+            .body("pong");
     })
 }
 
@@ -35,9 +36,11 @@ pub fn setup_server_with_body<'a>(
     body: &'a str,
 ) -> httpmock::Mock<'a> {
     server.mock(|when, then| {
-        when.method(method).path(path).body(body);
+        when.method(method)
+            .path(path)
+            .body(body);
         then.status::<u16>(status.into())
             .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
-            .body("ping");
+            .body("pong");
     })
 }

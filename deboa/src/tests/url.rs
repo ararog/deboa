@@ -3,7 +3,9 @@ use crate::url::IntoUrl;
 #[test]
 fn test_url() {
     let url_str = "http://example.com";
-    let url = url_str.parse_url().unwrap();
+    let url = url_str
+        .parse_url()
+        .unwrap();
     assert_eq!(url.scheme(), "http");
     assert_eq!(url.host_str(), Some("example.com"));
 }

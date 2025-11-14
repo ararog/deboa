@@ -34,12 +34,15 @@ impl WebSocket {
             }
             Message::Send(message) => match &mut self.state {
                 State::Connected(connection) => {
-                    self.messages.push(echo::Message::User(format!(
-                        "User: {}",
-                        self.new_message.clone()
-                    )));
+                    self.messages
+                        .push(echo::Message::User(format!(
+                            "User: {}",
+                            self.new_message
+                                .clone()
+                        )));
 
-                    self.new_message.clear();
+                    self.new_message
+                        .clear();
 
                     connection.send(message);
 
@@ -51,19 +54,22 @@ impl WebSocket {
                 echo::Event::Connected(connection) => {
                     self.state = State::Connected(connection);
 
-                    self.messages.push(echo::Message::connected());
+                    self.messages
+                        .push(echo::Message::connected());
 
                     Task::none()
                 }
                 echo::Event::Disconnected => {
                     self.state = State::Disconnected;
 
-                    self.messages.push(echo::Message::disconnected());
+                    self.messages
+                        .push(echo::Message::disconnected());
 
                     Task::none()
                 }
                 echo::Event::MessageReceived(message) => {
-                    self.messages.push(message);
+                    self.messages
+                        .push(message);
 
                     Task::none()
                 }
@@ -76,15 +82,26 @@ impl WebSocket {
     }
 
     fn view(&self) -> Element<'_, Message> {
-        let message_log: Element<_> = if self.messages.is_empty() {
+        let message_log: Element<_> = if self
+            .messages
+            .is_empty()
+        {
             center(text("Your messages will appear here...").color(color!(0x888888))).into()
         } else {
-            scrollable(column(self.messages.iter().map(text).map(Element::from)).spacing(10))
-                .id(Id::new(MESSAGE_LOG))
-                .height(Fill)
-                .width(Fill)
-                .spacing(10)
-                .into()
+            scrollable(
+                column(
+                    self.messages
+                        .iter()
+                        .map(text)
+                        .map(Element::from),
+                )
+                .spacing(10),
+            )
+            .id(Id::new(MESSAGE_LOG))
+            .height(Fill)
+            .width(Fill)
+            .spacing(10)
+            .into()
         };
 
         let new_message_input = {
@@ -92,7 +109,12 @@ impl WebSocket {
                 .on_input(Message::NewMessageChanged)
                 .padding(10);
 
-            let mut button = button(text("Send").height(40).align_y(Center)).padding([0, 20]);
+            let mut button = button(
+                text("Send")
+                    .height(40)
+                    .align_y(Center),
+            )
+            .padding([0, 20]);
 
             if matches!(self.state, State::Connected(_))
                 && let Some(message) = echo::Message::new(&self.new_message)
@@ -101,7 +123,9 @@ impl WebSocket {
                 button = button.on_press(Message::Send(message));
             }
 
-            row![input, button].spacing(10).align_y(Center)
+            row![input, button]
+                .spacing(10)
+                .align_y(Center)
         };
 
         column![message_log, new_message_input]

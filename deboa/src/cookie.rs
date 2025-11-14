@@ -263,9 +263,7 @@ impl DeboaCookie {
         if let Ok(cookie) = cookie {
             Ok(cookie.into())
         } else {
-            Err(DeboaError::Cookie {
-                message: "Invalid cookie header".to_string(),
-            })
+            Err(DeboaError::Cookie { message: "Invalid cookie header".to_string() })
         }
     }
 }
@@ -303,8 +301,12 @@ impl From<Cookie<'_>> for DeboaCookie {
         }
 
         Self {
-            name: cookie.name().to_string(),
-            value: cookie.value().to_string(),
+            name: cookie
+                .name()
+                .to_string(),
+            value: cookie
+                .value()
+                .to_string(),
             expires: cookie.expires(),
             path,
             domain,

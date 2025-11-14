@@ -624,7 +624,8 @@ impl Deboa {
     ///
     #[inline]
     pub fn client_cert(&self) -> Option<&ClientCert> {
-        self.client_cert.as_ref()
+        self.client_cert
+            .as_ref()
     }
 
     /// Allow change client certificate at any time.
@@ -803,13 +804,17 @@ impl Deboa {
         if let Some(catchers) = &self.catchers {
             let mut response = None;
             for catcher in catchers {
-                response = catcher.on_request(request.as_mut()).await?;
+                response = catcher
+                    .on_request(request.as_mut())
+                    .await?;
             }
 
             if let Some(response) = response {
                 let mut new_response = response;
                 for catcher in catchers {
-                    catcher.on_response(new_response.as_mut()).await?;
+                    catcher
+                        .on_response(new_response.as_mut())
+                        .await?;
                 }
                 return Ok(new_response);
             }
@@ -817,16 +822,16 @@ impl Deboa {
 
         let mut retry_count: u32 = 0;
         let response = loop {
-            let response = self.send_request(request.as_mut()).await;
+            let response = self
+                .send_request(request.as_mut())
+                .await;
             if let Err(err) = response {
                 if retry_count == request.retries() {
                     break Err(err);
                 }
                 #[cfg(feature = "tokio-rt")]
-                tokio::time::sleep(tokio::time::Duration::from_secs(
-                    2_u32.pow(retry_count) as u64
-                ))
-                .await;
+                tokio::time::sleep(tokio::time::Duration::from_secs(2_u32.pow(retry_count) as u64))
+                    .await;
                 #[cfg(feature = "smol-rt")]
                 smol::Timer::after(std::time::Duration::from_secs(2_u32.pow(retry_count) as u64))
                     .await;
@@ -836,11 +841,20 @@ impl Deboa {
 
             let response = response.unwrap();
 
-            if response.status().is_redirection() {
-                let location = response.headers().get(header::LOCATION);
+            if response
+                .status()
+                .is_redirection()
+            {
+                let location = response
+                    .headers()
+                    .get(header::LOCATION);
                 if let Some(location) = location {
-                    let location = location.to_str().unwrap();
-                    let result = request.as_mut().set_url(location);
+                    let location = location
+                        .to_str()
+                        .unwrap();
+                    let result = request
+                        .as_mut()
+                        .set_url(location);
                     if let Err(err) = result {
                         break Err(err);
                     }
@@ -851,12 +865,18 @@ impl Deboa {
             break Ok(response);
         };
 
-        let res_url = request.url().to_string();
-        let mut response = self.process_response(res_url, response?).await?;
+        let res_url = request
+            .url()
+            .to_string();
+        let mut response = self
+            .process_response(res_url, response?)
+            .await?;
 
         if let Some(catchers) = &self.catchers {
             for catcher in catchers {
-                catcher.on_response(response.as_mut()).await?;
+                catcher
+                    .on_response(response.as_mut())
+                    .await?;
             }
         }
 
@@ -877,20 +897,32 @@ impl Deboa {
     where
         R: AsRef<DeboaRequest>,
     {
-        let url = request.as_ref().url();
-        let mut uri = url.path().to_string();
+        let url = request
+            .as_ref()
+            .url();
+        let mut uri = url
+            .path()
+            .to_string();
         if let Some(query) = url.query() {
             uri.push('?');
             uri.push_str(query);
         }
 
-        let method = request.as_ref().method();
+        let method = request
+            .as_ref()
+            .method();
 
         let mut builder = Request::builder()
             .uri(uri)
-            .method(method.to_string().as_str());
+            .method(
+                method
+                    .to_string()
+                    .as_str(),
+            );
         {
-            let req_headers = builder.headers_mut().unwrap();
+            let req_headers = builder
+                .headers_mut()
+                .unwrap();
 
             request
                 .as_ref()
@@ -901,7 +933,10 @@ impl Deboa {
                     acc
                 });
 
-            if let Some(deboa_cookies) = request.as_ref().cookies() {
+            if let Some(deboa_cookies) = request
+                .as_ref()
+                .cookies()
+            {
                 let mut cookies = Vec::<String>::new();
 
                 for cookie in deboa_cookies.values() {
@@ -914,7 +949,12 @@ impl Deboa {
             }
         }
 
-        let request = builder.body(Full::new(Bytes::from(request.as_ref().raw_body().to_vec())));
+        let request = builder.body(Full::new(Bytes::from(
+            request
+                .as_ref()
+                .raw_body()
+                .to_vec(),
+        )));
         if let Err(err) = request {
             return Err(DeboaError::Request(errors::RequestError::Send {
                 url: url.to_string(),
@@ -931,9 +971,15 @@ impl Deboa {
             .await?;
         match conn {
             #[cfg(feature = "http1")]
-            DeboaConnection::Http1(ref mut conn) => conn.send_request(request).await,
+            DeboaConnection::Http1(ref mut conn) => {
+                conn.send_request(request)
+                    .await
+            }
             #[cfg(feature = "http2")]
-            DeboaConnection::Http2(ref mut conn) => conn.send_request(request).await,
+            DeboaConnection::Http2(ref mut conn) => {
+                conn.send_request(request)
+                    .await
+            }
         }
     }
 

@@ -25,15 +25,15 @@ async fn test_post_resource() -> Result<()> {
     let server = MockServer::start();
     let mock = setup_server(&server, "/api/users", POST, StatusCode::CREATED);
 
-    let mut user = User {
-        id: 32,
-        name: "User 1".to_string(),
-    };
+    let mut user = User { id: 32, name: "User 1".to_string() };
 
     let mut url = server.base_url();
     url.push_str("/api");
     let mut vamo = Vamo::new(url.to_string())?;
-    let response = vamo.post_resource(&mut user)?.send().await?;
+    let response = vamo
+        .post_resource(&mut user)?
+        .send()
+        .await?;
 
     mock.assert();
 

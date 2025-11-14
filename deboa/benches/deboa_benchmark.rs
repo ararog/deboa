@@ -27,26 +27,30 @@ async fn post_async() -> Result<()> {
 fn deboa(c: &mut Criterion) {
     c.bench_function("deboa_get", move |b| {
         #[cfg(feature = "tokio-rt")]
-        b.to_async(Runtime::new().unwrap()).iter(|| async {
-            let _ = get_async().await;
-        });
+        b.to_async(Runtime::new().unwrap())
+            .iter(|| async {
+                let _ = get_async().await;
+            });
 
         #[cfg(feature = "smol-rt")]
-        b.to_async(SmolExecutor).iter(|| async {
-            let _ = get_async().await;
-        });
+        b.to_async(SmolExecutor)
+            .iter(|| async {
+                let _ = get_async().await;
+            });
     });
 
     c.bench_function("deboa_post", move |b| {
         #[cfg(feature = "tokio-rt")]
-        b.to_async(Runtime::new().unwrap()).iter(|| async {
-            let _ = post_async().await;
-        });
+        b.to_async(Runtime::new().unwrap())
+            .iter(|| async {
+                let _ = post_async().await;
+            });
 
         #[cfg(feature = "smol-rt")]
-        b.to_async(SmolExecutor).iter(|| async {
-            let _ = post_async().await;
-        });
+        b.to_async(SmolExecutor)
+            .iter(|| async {
+                let _ = post_async().await;
+            });
     });
 }
 

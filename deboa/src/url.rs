@@ -21,7 +21,13 @@ pub trait IntoUrl {
     where
         Self: AsRef<str>,
     {
-        if !self.as_ref().starts_with("http") && !self.as_ref().starts_with("ws") {
+        if !self
+            .as_ref()
+            .starts_with("http")
+            && !self
+                .as_ref()
+                .starts_with("ws")
+        {
             return Err(DeboaError::Request(RequestError::UrlParse {
                 message: "Scheme must be http or https or ws or wss".to_string(),
             }));

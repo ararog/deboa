@@ -38,7 +38,9 @@ impl<D: Decompressor> DeboaCatcher for EncodingCatcher<D> {
     }
 
     async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
-        let content_encoding = response.headers().get(header::CONTENT_ENCODING);
+        let content_encoding = response
+            .headers()
+            .get(header::CONTENT_ENCODING);
         if content_encoding.is_none() {
             return Err(DeboaError::Io(IoError::Decompress {
                 message: "Content encoding not found".to_string(),
@@ -47,14 +49,22 @@ impl<D: Decompressor> DeboaCatcher for EncodingCatcher<D> {
 
         let decompressor = self
             .accept_encoding
-            .get(content_encoding.unwrap().to_str().unwrap());
+            .get(
+                content_encoding
+                    .unwrap()
+                    .to_str()
+                    .unwrap(),
+            );
         if decompressor.is_none() {
             return Err(DeboaError::Io(IoError::Decompress {
                 message: "No decompressor found".to_string(),
             }));
         }
 
-        decompressor.unwrap().decompress_body(response).await?;
+        decompressor
+            .unwrap()
+            .decompress_body(response)
+            .await?;
         Ok(())
     }
 }

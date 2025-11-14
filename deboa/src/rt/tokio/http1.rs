@@ -36,12 +36,16 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         url: Arc<Url>,
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
-        let host = url.host().unwrap_or(Host::Domain("localhost"));
+        let host = url
+            .host()
+            .unwrap_or(Host::Domain("localhost"));
         let stream = {
             match url.scheme() {
                 "ws" | "http" => {
                     let stream = {
-                        let port = url.port().unwrap_or(80);
+                        let port = url
+                            .port()
+                            .unwrap_or(80);
                         TcpStream::connect((host.to_string(), port)).await
                     };
 
@@ -56,7 +60,9 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                 }
                 "wss" | "https" => {
                     let stream = {
-                        let port = url.port().unwrap_or(443);
+                        let port = url
+                            .port()
+                            .unwrap_or(443);
                         TcpStream::connect((host.to_string(), port)).await
                     };
 
@@ -72,33 +78,31 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                     if let Some(client_cert) = client_cert {
                         let file = std::fs::read(client_cert.cert());
                         if let Err(e) = file {
-                            return Err(DeboaError::ClientCert {
-                                message: e.to_string(),
-                            });
+                            return Err(DeboaError::ClientCert { message: e.to_string() });
                         }
                         let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.pw());
                         if let Err(e) = identity {
-                            return Err(DeboaError::ClientCert {
-                                message: e.to_string(),
-                            });
+                            return Err(DeboaError::ClientCert { message: e.to_string() });
                         }
                         builder.identity(identity.unwrap());
 
                         if let Some(ca) = client_cert.ca() {
                             let pem = std::fs::read(ca);
                             if let Err(e) = pem {
-                                return Err(DeboaError::ClientCert {
-                                    message: e.to_string(),
-                                });
+                                return Err(DeboaError::ClientCert { message: e.to_string() });
                             }
                             let cert = Certificate::from_pem(&pem.unwrap());
                             builder.add_root_certificate(cert.unwrap());
                         }
                     }
 
-                    let connector = builder.build().unwrap();
+                    let connector = builder
+                        .build()
+                        .unwrap();
                     let connector = tokio_native_tls::TlsConnector::from(connector);
-                    let stream = connector.connect(&host.to_string(), socket).await;
+                    let stream = connector
+                        .connect(&host.to_string(), socket)
+                        .await;
 
                     if let Err(e) = stream {
                         return Err(DeboaError::Connection(ConnectionError::Tls {
@@ -130,21 +134,27 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         let (sender, conn) = result.unwrap();
 
         tokio::spawn(async move {
-            match conn.with_upgrades().await {
+            match conn
+                .with_upgrades()
+                .await
+            {
                 Ok(_) => (),
                 Err(_err) => {}
             };
         });
 
-        Ok(BaseHttpConnection::<Self::Sender> {
-            url: Arc::clone(&url),
-            sender,
-        })
+        Ok(BaseHttpConnection::<Self::Sender> { url: Arc::clone(&url), sender })
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {
-        let method = request.method().to_string();
-        let result = self.sender.send_request(request).await;
-        self.process_response(&self.url, &method, result).await
+        let method = request
+            .method()
+            .to_string();
+        let result = self
+            .sender
+            .send_request(request)
+            .await;
+        self.process_response(&self.url, &method, result)
+            .await
     }
 }

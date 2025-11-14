@@ -19,7 +19,8 @@ async fn do_post() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = server.mock(|when, then| {
-        when.method(POST).path("/posts");
+        when.method(POST)
+            .path("/posts");
         then.status::<u16>(StatusCode::CREATED.into())
             .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
             .body("ping");
@@ -27,16 +28,27 @@ async fn do_post() -> Result<()> {
 
     let mut client = Deboa::new();
 
-    let request = DeboaRequest::post(server.url("/posts").as_str())?
-        .text("ping")
-        .build()?;
+    let request = DeboaRequest::post(
+        server
+            .url("/posts")
+            .as_str(),
+    )?
+    .text("ping")
+    .build()?;
 
-    let mut response = client.execute(request).await?;
+    let mut response = client
+        .execute(request)
+        .await?;
 
     http_mock.assert();
 
     assert_eq!(response.status(), StatusCode::CREATED);
-    assert_eq!(response.raw_body().await, b"ping");
+    assert_eq!(
+        response
+            .raw_body()
+            .await,
+        b"ping"
+    );
 
     Ok(())
 }
@@ -76,16 +88,27 @@ async fn do_post_encoded_form() -> Result<()> {
     form.field("name", "deboa");
     form.field("version", "0.0.1");
 
-    let request = DeboaRequest::post(server.url("/posts").as_str())?
-        .form(form.into())
-        .build()?;
+    let request = DeboaRequest::post(
+        server
+            .url("/posts")
+            .as_str(),
+    )?
+    .form(form.into())
+    .build()?;
 
-    let mut response = client.execute(request).await?;
+    let mut response = client
+        .execute(request)
+        .await?;
 
     http_mock.assert();
 
     assert_eq!(response.status(), StatusCode::CREATED);
-    assert_eq!(response.raw_body().await, b"ping");
+    assert_eq!(
+        response
+            .raw_body()
+            .await,
+        b"ping"
+    );
 
     Ok(())
 }
@@ -107,10 +130,9 @@ async fn do_post_multipart_form() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = server.mock(|when, then| {
-        when.method(POST).path("/posts").header_prefix(
-            header::CONTENT_TYPE.as_str(),
-            mime::MULTIPART_FORM_DATA.to_string(),
-        );
+        when.method(POST)
+            .path("/posts")
+            .header_prefix(header::CONTENT_TYPE.as_str(), mime::MULTIPART_FORM_DATA.to_string());
         then.status::<u16>(StatusCode::CREATED.into())
             .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
             .body("ping");
@@ -122,20 +144,28 @@ async fn do_post_multipart_form() -> Result<()> {
     form.field("name", "deboa");
     form.field("version", "0.0.1");
 
-    let request = DeboaRequest::post(server.url("/posts").as_str())?
-        .header(
-            header::CONTENT_TYPE,
-            mime::MULTIPART_FORM_DATA.essence_str(),
-        )
-        .form(form.into())
-        .build()?;
+    let request = DeboaRequest::post(
+        server
+            .url("/posts")
+            .as_str(),
+    )?
+    .header(header::CONTENT_TYPE, mime::MULTIPART_FORM_DATA.essence_str())
+    .form(form.into())
+    .build()?;
 
-    let mut response = client.execute(request).await?;
+    let mut response = client
+        .execute(request)
+        .await?;
 
     http_mock.assert();
 
     assert_eq!(response.status(), StatusCode::CREATED);
-    assert_eq!(response.raw_body().await, b"ping");
+    assert_eq!(
+        response
+            .raw_body()
+            .await,
+        b"ping"
+    );
 
     Ok(())
 }

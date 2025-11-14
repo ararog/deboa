@@ -18,9 +18,8 @@ impl Parse for PostStruct {
         let content;
         parenthesized!(content in input);
 
-        let post = PostStruct {
-            fields: content.parse_terminated(PostFieldEnum::parse, Token![,])?,
-        };
+        let post =
+            PostStruct { fields: content.parse_terminated(PostFieldEnum::parse, Token![,])? };
 
         let mut fields = post.fields.iter();
         let required_fields = vec!["name", "path", "req_body", "format"];
@@ -59,19 +58,19 @@ impl Parse for PostFieldEnum {
         let lookahead = input.lookahead1();
         if lookahead.peek(Ident) {
             let ident = input.parse::<Ident>()?;
-            match ident.to_string().as_str() {
+            match ident
+                .to_string()
+                .as_str()
+            {
                 "name" => Ok(PostFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(PostFieldEnum::path(PathStruct::parse(input)?)),
-                "req_body" => Ok(PostFieldEnum::req_body(Box::new(ReqBodyStruct::parse(
-                    input,
-                )?))),
-                "res_body" => Ok(PostFieldEnum::res_body(Box::new(ResBodyStruct::parse(
-                    input,
-                )?))),
+                "req_body" => Ok(PostFieldEnum::req_body(Box::new(ReqBodyStruct::parse(input)?))),
+                "res_body" => Ok(PostFieldEnum::res_body(Box::new(ResBodyStruct::parse(input)?))),
                 "format" => Ok(PostFieldEnum::format(FormatStruct::parse(input)?)),
-                _ => Err(input.error(format!(
-                    "expected one of name, path or req_body, found '{ident}'"
-                ))),
+                _ => {
+                    Err(input
+                        .error(format!("expected one of name, path or req_body, found '{ident}'")))
+                }
             }
         } else {
             Err(lookahead.error())

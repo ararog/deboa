@@ -16,15 +16,20 @@ async fn do_delete() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = server.mock(|when, then| {
-        when.method(DELETE).path("/posts/1");
+        when.method(DELETE)
+            .path("/posts/1");
         then.status::<u16>(StatusCode::NO_CONTENT.into());
     });
 
     let client = Deboa::new();
 
-    let response = DeboaRequest::delete(server.url("/posts/1").as_str())?
-        .send_with(client)
-        .await?;
+    let response = DeboaRequest::delete(
+        server
+            .url("/posts/1")
+            .as_str(),
+    )?
+    .send_with(client)
+    .await?;
 
     http_mock.assert();
 

@@ -69,7 +69,9 @@ impl DeboaResponseBuilder {
     /// * `Self` - The response builder.
     ///
     pub fn status(mut self, status: http::StatusCode) -> Self {
-        *self.inner.status_mut() = status;
+        *self
+            .inner
+            .status_mut() = status;
         self
     }
 
@@ -84,7 +86,9 @@ impl DeboaResponseBuilder {
     /// * `Self` - The response builder.
     ///
     pub fn headers(mut self, headers: http::HeaderMap) -> Self {
-        *self.inner.headers_mut() = headers;
+        *self
+            .inner
+            .headers_mut() = headers;
         self
     }
 
@@ -102,7 +106,9 @@ impl DeboaResponseBuilder {
     pub fn header(mut self, name: HeaderName, value: &str) -> Self {
         let header_value = HeaderValue::from_str(value);
         if let Ok(header_value) = header_value {
-            self.inner.headers_mut().insert(name, header_value);
+            self.inner
+                .headers_mut()
+                .insert(name, header_value);
         }
         self
     }
@@ -118,7 +124,9 @@ impl DeboaResponseBuilder {
     /// * `Self` - The response builder.
     ///
     pub fn body<B: IntoBody>(mut self, body: B) -> Self {
-        *self.inner.body_mut() = body.into_body();
+        *self
+            .inner
+            .body_mut() = body.into_body();
         self
     }
 
@@ -129,10 +137,7 @@ impl DeboaResponseBuilder {
     /// * `DeboaResponse` - The response.
     ///
     pub fn build(self) -> DeboaResponse {
-        DeboaResponse {
-            url: self.url,
-            inner: self.inner,
-        }
+        DeboaResponse { url: self.url, inner: self.inner }
     }
 }
 
@@ -268,7 +273,8 @@ impl DeboaResponse {
     ///
     #[inline]
     pub fn status_mut(&mut self) -> &mut http::StatusCode {
-        self.inner.status_mut()
+        self.inner
+            .status_mut()
     }
 
     /// Allow get headers at any time.
@@ -290,7 +296,8 @@ impl DeboaResponse {
     ///
     #[inline]
     pub fn headers_mut(&mut self) -> &mut http::HeaderMap {
-        self.inner.headers_mut()
+        self.inner
+            .headers_mut()
     }
 
     /// Allow get header value at any time.
@@ -308,11 +315,11 @@ impl DeboaResponse {
     #[inline]
     fn header_value(&self, header: HeaderName) -> Result<String> {
         let header_name = header.as_str();
-        let header_value = self.headers().get(header_name);
+        let header_value = self
+            .headers()
+            .get(header_name);
         if header_value.is_none() {
-            return Err(DeboaError::Header {
-                message: "Header is missing".to_string(),
-            });
+            return Err(DeboaError::Header { message: "Header is missing".to_string() });
         }
         let header_value = header_value.unwrap();
         let header_value = header_value.to_str();
@@ -321,7 +328,9 @@ impl DeboaResponse {
                 message: format!("Failed to read {}:: {}", header_name, e),
             });
         }
-        Ok(header_value.unwrap().to_string())
+        Ok(header_value
+            .unwrap()
+            .to_string())
     }
 
     /// Allow get the length of the response body.
@@ -368,7 +377,9 @@ impl DeboaResponse {
     ///
     #[inline]
     pub fn cookies(&self) -> Result<Option<Vec<DeboaCookie>>> {
-        let view = self.headers().get_all(header::SET_COOKIE);
+        let view = self
+            .headers()
+            .get_all(header::SET_COOKIE);
         let cookies = view
             .into_iter()
             .map(|cookie| {
@@ -376,9 +387,7 @@ impl DeboaResponse {
                 if let Ok(cookie) = cookie {
                     DeboaCookie::parse_from_header(cookie)
                 } else {
-                    Err(DeboaError::Cookie {
-                        message: "Invalid cookie header".to_string(),
-                    })
+                    Err(DeboaError::Cookie { message: "Invalid cookie header".to_string() })
                 }
             })
             .collect::<Result<Vec<DeboaCookie>>>()
@@ -399,7 +408,8 @@ impl DeboaResponse {
     ///
     #[inline]
     pub fn inner_body(self) -> DeboaBody {
-        self.inner.into_body()
+        self.inner
+            .into_body()
     }
 
     /// Returns the response body as a vector of bytes, consuming body.
@@ -412,7 +422,12 @@ impl DeboaResponse {
     #[inline]
     pub async fn raw_body(&mut self) -> Vec<u8> {
         let mut data = Vec::<u8>::new();
-        while let Some(chunk) = self.inner.body_mut().frame().await {
+        while let Some(chunk) = self
+            .inner
+            .body_mut()
+            .frame()
+            .await
+        {
             let frame = chunk.unwrap();
             if let Some(bytes) = frame.data_ref() {
                 data.extend_from_slice(bytes);
@@ -429,7 +444,9 @@ impl DeboaResponse {
     ///
     #[inline]
     pub fn set_raw_body(&mut self, body: Bytes) {
-        *self.inner.body_mut() = Either::Right(Full::<Bytes>::from(body));
+        *self
+            .inner
+            .body_mut() = Either::Right(Full::<Bytes>::from(body));
     }
 
     /// Allow get stream body at any time.
@@ -440,7 +457,8 @@ impl DeboaResponse {
     ///
     #[inline]
     pub fn stream(self) -> BodyDataStream<http::Response<DeboaBody>> {
-        self.inner.into_data_stream()
+        self.inner
+            .into_data_stream()
     }
 
     /// Returns the response body as a deserialized type, consuming body.
@@ -469,7 +487,10 @@ impl DeboaResponse {
         mut self,
         body_type: T,
     ) -> Result<B> {
-        let result = body_type.deserialize::<B>(self.raw_body().await)?;
+        let result = body_type.deserialize::<B>(
+            self.raw_body()
+                .await,
+        )?;
         Ok(result)
     }
 
@@ -491,7 +512,9 @@ impl DeboaResponse {
     ///
     #[inline]
     pub async fn text(mut self) -> Result<String> {
-        let body = self.raw_body().await;
+        let body = self
+            .raw_body()
+            .await;
         Ok(String::from_utf8_lossy(&body).to_string())
     }
 
@@ -517,12 +540,12 @@ impl DeboaResponse {
     /// ```
     ///
     pub async fn to_file(mut self, path: &str) -> Result<()> {
-        let body = self.raw_body().await;
+        let body = self
+            .raw_body()
+            .await;
         let result = write(path, body);
         if let Err(e) = result {
-            return Err(DeboaError::Io(IoError::File {
-                message: e.to_string(),
-            }));
+            return Err(DeboaError::Io(IoError::File { message: e.to_string() }));
         }
         Ok(())
     }
@@ -554,9 +577,7 @@ impl DeboaResponse {
 
         let upgrade = on(self.inner).await;
         if let Err(e) = upgrade {
-            return Err(DeboaError::Io {
-                message: e.to_string(),
-            });
+            return Err(DeboaError::Io { message: e.to_string() });
         }
         Ok(FuturesIo::new(upgrade.unwrap()))
     }

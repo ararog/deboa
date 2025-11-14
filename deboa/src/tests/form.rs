@@ -46,7 +46,9 @@ async fn test_multipart_validate_form() -> Result<()> {
     builder.field("name", "deboa");
     builder.field("version", "0.0.1");
 
-    let my_boundary = builder.boundary().to_string();
+    let my_boundary = builder
+        .boundary()
+        .to_string();
 
     let form = builder.build();
 
@@ -54,13 +56,25 @@ async fn test_multipart_validate_form() -> Result<()> {
 
     let mut multer = multer::Multipart::new(stream, boundary);
 
-    if let Ok(Some(field)) = multer.next_field().await {
-        let value = field.text().await.unwrap();
+    if let Ok(Some(field)) = multer
+        .next_field()
+        .await
+    {
+        let value = field
+            .text()
+            .await
+            .unwrap();
         assert_eq!(value, "deboa");
     }
 
-    if let Ok(Some(field)) = multer.next_field().await {
-        let value = field.text().await.unwrap();
+    if let Ok(Some(field)) = multer
+        .next_field()
+        .await
+    {
+        let value = field
+            .text()
+            .await
+            .unwrap();
         assert_eq!(value, "0.0.1");
     }
 
@@ -79,7 +93,9 @@ async fn test_multipart_validate_form_file() -> Result<()> {
 
     let builder = MultiPartForm::builder().file("file", input_file);
 
-    let my_boundary = builder.boundary().to_string();
+    let my_boundary = builder
+        .boundary()
+        .to_string();
 
     let form = builder.build();
 
@@ -87,7 +103,10 @@ async fn test_multipart_validate_form_file() -> Result<()> {
 
     let mut multer = multer::Multipart::new(stream, boundary);
 
-    while let Ok(Some(field)) = multer.next_field().await {
+    while let Ok(Some(field)) = multer
+        .next_field()
+        .await
+    {
         let file = field.bytes().await;
         if let Ok(file) = file {
             if let Err(e) = write_file(output_file, file) {
@@ -120,10 +139,7 @@ async fn test_multipart_validate_form_file() -> Result<()> {
 async fn get_stream(
     form: Bytes,
     boundary: &str,
-) -> (
-    impl Stream<Item = std::result::Result<Bytes, Infallible>>,
-    &str,
-) {
+) -> (impl Stream<Item = std::result::Result<Bytes, Infallible>>, &str) {
     let stream = once(async move { std::result::Result::<Bytes, Infallible>::Ok(form) });
 
     (stream, boundary)

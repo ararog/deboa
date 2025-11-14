@@ -23,11 +23,20 @@ async fn do_get_http1() -> Result<()> {
 
     let http_mock = setup_server(&server, "/posts", httpmock::Method::GET, StatusCode::OK);
 
-    let mut client = Deboa::builder().protocol(HttpVersion::Http1).build();
+    let mut client = Deboa::builder()
+        .protocol(HttpVersion::Http1)
+        .build();
 
-    let request = DeboaRequest::get(server.url("/posts").as_str())?.build()?;
+    let request = DeboaRequest::get(
+        server
+            .url("/posts")
+            .as_str(),
+    )?
+    .build()?;
 
-    let response: DeboaResponse = client.execute(request).await?;
+    let response: DeboaResponse = client
+        .execute(request)
+        .await?;
 
     http_mock.assert();
 
@@ -35,7 +44,9 @@ async fn do_get_http1() -> Result<()> {
         response.status(),
         StatusCode::OK,
         "Status code is {} and should be {}",
-        response.status().as_u16(),
+        response
+            .status()
+            .as_u16(),
         StatusCode::OK.as_u16()
     );
 
@@ -61,11 +72,20 @@ async fn do_get_http2() -> Result<()> {
 
     let http_mock = setup_server(&server, "/posts", httpmock::Method::GET, StatusCode::OK);
 
-    let mut client = Deboa::builder().protocol(HttpVersion::Http2).build();
+    let mut client = Deboa::builder()
+        .protocol(HttpVersion::Http2)
+        .build();
 
-    let request = DeboaRequest::get(server.url("/posts").as_str())?.build()?;
+    let request = DeboaRequest::get(
+        server
+            .url("/posts")
+            .as_str(),
+    )?
+    .build()?;
 
-    let response: DeboaResponse = client.execute(request).await?;
+    let response: DeboaResponse = client
+        .execute(request)
+        .await?;
 
     http_mock.assert();
 
@@ -73,7 +93,9 @@ async fn do_get_http2() -> Result<()> {
         response.status(),
         StatusCode::OK,
         "Status code is {} and should be {}",
-        response.status().as_u16(),
+        response
+            .status()
+            .as_u16(),
         StatusCode::OK.as_u16()
     );
 
@@ -100,19 +122,18 @@ async fn test_get_http2() {
 async fn do_get_not_found() -> Result<()> {
     let server = MockServer::start();
 
-    let http_mock = setup_server(
-        &server,
-        "/asasa/posts/1ddd",
-        httpmock::Method::GET,
-        StatusCode::NOT_FOUND,
-    );
+    let http_mock =
+        setup_server(&server, "/asasa/posts/1ddd", httpmock::Method::GET, StatusCode::NOT_FOUND);
 
     let client = Deboa::new();
 
-    let response: Result<DeboaResponse> =
-        DeboaRequest::get(server.url("/asasa/posts/1ddd").as_str())?
-            .send_with(client)
-            .await;
+    let response: Result<DeboaResponse> = DeboaRequest::get(
+        server
+            .url("/asasa/posts/1ddd")
+            .as_str(),
+    )?
+    .send_with(client)
+    .await;
 
     http_mock.assert();
 
@@ -121,7 +142,7 @@ async fn do_get_not_found() -> Result<()> {
         response.unwrap_err(),
         DeboaError::Response(ResponseError::Receive {
             status_code: StatusCode::NOT_FOUND,
-            message: "Could not process request (404 Not Found): ping".to_string()
+            message: "Could not process request (404 Not Found): pong".to_string()
         })
     );
 
@@ -152,7 +173,9 @@ async fn do_get_invalid_server() -> Result<()> {
         .text("test")
         .build()?;
 
-    let response: Result<DeboaResponse> = api.execute(request).await;
+    let response: Result<DeboaResponse> = api
+        .execute(request)
+        .await;
 
     assert!(response.is_err());
     assert_eq!(
@@ -191,18 +214,17 @@ async fn test_get_invalid_server() {
 async fn do_get_by_query() -> Result<()> {
     let server = MockServer::start();
 
-    let http_mock = setup_server(
-        &server,
-        "/comments/1",
-        httpmock::Method::GET,
-        StatusCode::OK,
-    );
+    let http_mock = setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::OK);
 
     let client = Deboa::new();
 
-    let response = DeboaRequest::get(server.url("/comments/1").as_str())?
-        .send_with(client)
-        .await?;
+    let response = DeboaRequest::get(
+        server
+            .url("/comments/1")
+            .as_str(),
+    )?
+    .send_with(client)
+    .await?;
 
     http_mock.assert();
 
@@ -210,11 +232,15 @@ async fn do_get_by_query() -> Result<()> {
         response.status(),
         StatusCode::OK,
         "Status code is {} and should be {}",
-        response.status().as_u16(),
+        response
+            .status()
+            .as_u16(),
         StatusCode::OK.as_u16()
     );
 
-    let comments = response.text().await;
+    let comments = response
+        .text()
+        .await;
 
     assert!(comments.is_ok());
 
@@ -237,19 +263,19 @@ async fn test_get_by_query() {
 async fn do_get_by_query_with_retries() -> Result<()> {
     let server = MockServer::start();
 
-    let http_mock = setup_server(
-        &server,
-        "/comments/1",
-        httpmock::Method::GET,
-        StatusCode::BAD_GATEWAY,
-    );
+    let http_mock =
+        setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::BAD_GATEWAY);
 
     let client = Deboa::new();
 
-    let response = DeboaRequest::get(server.url("/comments/1").as_str())?
-        .retries(2)
-        .send_with(client)
-        .await;
+    let response = DeboaRequest::get(
+        server
+            .url("/comments/1")
+            .as_str(),
+    )?
+    .retries(2)
+    .send_with(client)
+    .await;
 
     http_mock.assert_calls(3);
 
@@ -258,7 +284,7 @@ async fn do_get_by_query_with_retries() -> Result<()> {
             err,
             DeboaError::Response(ResponseError::Receive {
                 status_code: StatusCode::BAD_GATEWAY,
-                message: "Could not process request (502 Bad Gateway): ping".to_string(),
+                message: "Could not process request (502 Bad Gateway): pong".to_string(),
             }),
         );
     }
@@ -283,13 +309,15 @@ async fn do_get_with_redirect() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock_red = server.mock(|when, then| {
-        when.method(httpmock::Method::GET).path("/comments/one");
+        when.method(httpmock::Method::GET)
+            .path("/comments/one");
         then.status::<u16>(StatusCode::MOVED_PERMANENTLY.into())
             .header(header::LOCATION.as_str(), server.url("/comments/1"));
     });
 
     let http_mock_tgt = server.mock(|when, then| {
-        when.method(httpmock::Method::GET).path("/comments/1");
+        when.method(httpmock::Method::GET)
+            .path("/comments/1");
         then.status::<u16>(StatusCode::OK.into())
             .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
             .body("ping");
@@ -297,9 +325,13 @@ async fn do_get_with_redirect() -> Result<()> {
 
     let client = Deboa::new();
 
-    let response = DeboaRequest::get(server.url("/comments/one").as_str())?
-        .send_with(client)
-        .await?;
+    let response = DeboaRequest::get(
+        server
+            .url("/comments/one")
+            .as_str(),
+    )?
+    .send_with(client)
+    .await?;
 
     http_mock_red.assert();
     http_mock_tgt.assert();

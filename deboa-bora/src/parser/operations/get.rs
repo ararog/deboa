@@ -15,9 +15,7 @@ impl Parse for GetStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let content;
         parenthesized!(content in input);
-        let get = GetStruct {
-            fields: content.parse_terminated(GetFieldEnum::parse, Token![,])?,
-        };
+        let get = GetStruct { fields: content.parse_terminated(GetFieldEnum::parse, Token![,])? };
 
         let mut fields = get.fields.iter();
         let required_fields = vec!["name", "path", "res_body", "format"];
@@ -54,16 +52,18 @@ impl Parse for GetFieldEnum {
         let lookahead = input.lookahead1();
         if lookahead.peek(Ident) {
             let ident = input.parse::<Ident>()?;
-            match ident.to_string().as_str() {
+            match ident
+                .to_string()
+                .as_str()
+            {
                 "name" => Ok(GetFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(GetFieldEnum::path(PathStruct::parse(input)?)),
-                "res_body" => Ok(GetFieldEnum::res_body(Box::new(ResBodyStruct::parse(
-                    input,
-                )?))),
+                "res_body" => Ok(GetFieldEnum::res_body(Box::new(ResBodyStruct::parse(input)?))),
                 "format" => Ok(GetFieldEnum::format(FormatStruct::parse(input)?)),
-                _ => Err(input.error(format!(
-                    "expected one of name, path or res_body, found '{ident}'"
-                ))),
+                _ => {
+                    Err(input
+                        .error(format!("expected one of name, path or res_body, found '{ident}'")))
+                }
             }
         } else {
             Err(lookahead.error())

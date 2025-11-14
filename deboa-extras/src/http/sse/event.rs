@@ -11,12 +11,7 @@ pub struct ServerEvent {
 
 impl ServerEvent {
     pub fn new() -> Self {
-        Self {
-            id: None,
-            event: None,
-            data: Vec::new(),
-            retry: None,
-        }
+        Self { id: None, event: None, data: Vec::new(), retry: None }
     }
 
     pub fn id(&self) -> &Option<String> {
@@ -54,7 +49,11 @@ impl ServerEvent {
             }
 
             if let Some(stripped) = line.strip_prefix("retry: ") {
-                event.retry = Some(stripped.parse::<u64>().unwrap());
+                event.retry = Some(
+                    stripped
+                        .parse::<u64>()
+                        .unwrap(),
+                );
             }
 
             if let Some(stripped) = line.strip_prefix("data: ") {

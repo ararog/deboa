@@ -10,14 +10,20 @@ pub fn extract_params_from_path(path: &LitStr) -> (TokenStream, LitStr) {
     let params = Regex::new(r"<(\w*:\&{0,1}\w*)>")
         .unwrap()
         .captures_iter(&raw_path)
-        .map(|m| m.get(1).unwrap().as_str())
+        .map(|m| {
+            m.get(1)
+                .unwrap()
+                .as_str()
+        })
         .collect::<Vec<_>>();
 
     let api_params = params
         .clone()
         .into_iter()
         .fold(TokenStream::new(), |mut acc, param| {
-            let pair = param.split(':').collect::<Vec<_>>();
+            let pair = param
+                .split(':')
+                .collect::<Vec<_>>();
             let param = parse_str::<syn::Ident>(pair[0]).unwrap();
             let param_type = parse_str::<syn::Type>(pair[1]).unwrap();
             acc.extend(quote! {
@@ -28,7 +34,9 @@ pub fn extract_params_from_path(path: &LitStr) -> (TokenStream, LitStr) {
 
     let has_query = raw_path.contains("?");
     let new_path = if has_query {
-        let parts = raw_path.split("?").collect::<Vec<_>>();
+        let parts = raw_path
+            .split("?")
+            .collect::<Vec<_>>();
         let path = parts[0];
         let query = parts[1];
 
@@ -38,7 +46,12 @@ pub fn extract_params_from_path(path: &LitStr) -> (TokenStream, LitStr) {
         let query_output = query_regex
             .captures_iter(query)
             .map(|m| {
-                let pair = m.get(1).unwrap().as_str().split(':').collect::<Vec<_>>();
+                let pair = m
+                    .get(1)
+                    .unwrap()
+                    .as_str()
+                    .split(':')
+                    .collect::<Vec<_>>();
                 format!("{}={{{}}}", pair[0], pair[0])
             })
             .collect::<Vec<_>>()

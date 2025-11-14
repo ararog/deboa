@@ -21,20 +21,20 @@ impl Compressor for BrotliCompressor {
 
     async fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes> {
         let mut writer = CompressorWriter::new(Vec::new(), 0, 11, 22);
-        let result = writer.write_all(request.raw_body().as_ref());
+        let result = writer.write_all(
+            request
+                .raw_body()
+                .as_ref(),
+        );
 
         if let Err(e) = result {
-            return Err(DeboaError::Io(IoError::Compress {
-                message: e.to_string(),
-            }));
+            return Err(DeboaError::Io(IoError::Compress { message: e.to_string() }));
         }
 
         let result = writer.flush();
 
         if let Err(e) = result {
-            return Err(DeboaError::Io(IoError::Compress {
-                message: e.to_string(),
-            }));
+            return Err(DeboaError::Io(IoError::Compress { message: e.to_string() }));
         }
 
         Ok(Bytes::from(writer.into_inner()))
@@ -51,15 +51,15 @@ impl Decompressor for BrotliDecompressor {
     }
 
     async fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
-        let body = response.raw_body().await;
+        let body = response
+            .raw_body()
+            .await;
         let mut reader = brotli::Decompressor::new(body.reader(), 0);
         let mut buffer = Vec::<u8>::new();
         let result = reader.read_to_end(&mut buffer);
 
         if let Err(e) = result {
-            return Err(DeboaError::Io(IoError::Decompress {
-                message: e.to_string(),
-            }));
+            return Err(DeboaError::Io(IoError::Decompress { message: e.to_string() }));
         }
 
         response.set_raw_body(Bytes::from(buffer));

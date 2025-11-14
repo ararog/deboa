@@ -18,9 +18,8 @@ impl Parse for PatchStruct {
         let content;
         parenthesized!(content in input);
 
-        let patch = PatchStruct {
-            fields: content.parse_terminated(PatchFieldEnum::parse, Token![,])?,
-        };
+        let patch =
+            PatchStruct { fields: content.parse_terminated(PatchFieldEnum::parse, Token![,])? };
 
         let mut fields = patch.fields.iter();
         let required_fields = vec!["name", "path", "req_body", "format"];
@@ -59,19 +58,19 @@ impl Parse for PatchFieldEnum {
         let lookahead = input.lookahead1();
         if lookahead.peek(Ident) {
             let ident = input.parse::<Ident>()?;
-            match ident.to_string().as_str() {
+            match ident
+                .to_string()
+                .as_str()
+            {
                 "name" => Ok(PatchFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(PatchFieldEnum::path(PathStruct::parse(input)?)),
-                "req_body" => Ok(PatchFieldEnum::req_body(Box::new(ReqBodyStruct::parse(
-                    input,
-                )?))),
-                "res_body" => Ok(PatchFieldEnum::res_body(Box::new(ResBodyStruct::parse(
-                    input,
-                )?))),
+                "req_body" => Ok(PatchFieldEnum::req_body(Box::new(ReqBodyStruct::parse(input)?))),
+                "res_body" => Ok(PatchFieldEnum::res_body(Box::new(ResBodyStruct::parse(input)?))),
                 "format" => Ok(PatchFieldEnum::format(FormatStruct::parse(input)?)),
-                _ => Err(input.error(format!(
-                    "expected one of name, path or req_body, found '{ident}'"
-                ))),
+                _ => {
+                    Err(input
+                        .error(format!("expected one of name, path or req_body, found '{ident}'")))
+                }
             }
         } else {
             Err(lookahead.error())

@@ -75,13 +75,14 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
         let mut rx_buf = vec![0; 10240];
         let mut rx_framer = WsRxFramer::new(&mut rx_buf);
 
-        let bytes_read = self.stream.read(rx_framer.mut_buf()).await;
+        let bytes_read = self
+            .stream
+            .read(rx_framer.mut_buf())
+            .await;
         if bytes_read.is_err() {
-            return Err(DeboaExtrasError::WebSocket(
-                WebSocketError::ReceiveMessage {
-                    message: "Failed to read message".to_string(),
-                },
-            ));
+            return Err(DeboaExtrasError::WebSocket(WebSocketError::ReceiveMessage {
+                message: "Failed to read message".to_string(),
+            }));
         }
 
         let bytes_read = bytes_read.unwrap();
@@ -108,7 +109,10 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
         let mut tx_framer = WsTxFramer::new(true, &mut tx_buf);
 
         let result = match message {
-            Message::Text(data) => self.write_all(tx_framer.frame(WsFrame::Text(&data))).await,
+            Message::Text(data) => {
+                self.write_all(tx_framer.frame(WsFrame::Text(&data)))
+                    .await
+            }
             Message::Binary(data) => {
                 self.write_all(tx_framer.frame(WsFrame::Binary(&data)))
                     .await
@@ -117,7 +121,10 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
                 self.write_all(tx_framer.frame(WsFrame::Close(code, &reason)))
                     .await
             }
-            Message::Ping(data) => self.write_all(tx_framer.frame(WsFrame::Ping(&data))).await,
+            Message::Ping(data) => {
+                self.write_all(tx_framer.frame(WsFrame::Ping(&data)))
+                    .await
+            }
             _ => Ok(()),
         };
 
@@ -136,19 +143,23 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
     }
 
     async fn send_text(&mut self, message: &str) -> Result<(), DeboaExtrasError> {
-        self.write_message(Message::Text(message.to_string())).await
+        self.write_message(Message::Text(message.to_string()))
+            .await
     }
 
     async fn send_binary(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError> {
-        self.write_message(Message::Binary(message.to_vec())).await
+        self.write_message(Message::Binary(message.to_vec()))
+            .await
     }
 
     async fn send_ping(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError> {
-        self.write_message(Message::Ping(message.to_vec())).await
+        self.write_message(Message::Ping(message.to_vec()))
+            .await
     }
 
     async fn send_pong(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError> {
-        self.write_message(Message::Pong(message.to_vec())).await
+        self.write_message(Message::Pong(message.to_vec()))
+            .await
     }
 }
 
@@ -158,7 +169,9 @@ impl AsyncRead for WebSocket<UpgradedIo> {
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
-        self.project().stream.poll_read(cx, buf)
+        self.project()
+            .stream
+            .poll_read(cx, buf)
     }
 }
 
@@ -168,21 +181,27 @@ impl AsyncWrite for WebSocket<UpgradedIo> {
         cx: &mut Context<'_>,
         buf: &[u8],
     ) -> std::task::Poll<std::result::Result<usize, std::io::Error>> {
-        self.project().stream.poll_write(cx, buf)
+        self.project()
+            .stream
+            .poll_write(cx, buf)
     }
 
     fn poll_flush(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
     ) -> Poll<std::result::Result<(), std::io::Error>> {
-        self.project().stream.poll_flush(cx)
+        self.project()
+            .stream
+            .poll_flush(cx)
     }
 
     fn poll_shutdown(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
     ) -> Poll<std::result::Result<(), std::io::Error>> {
-        self.project().stream.poll_shutdown(cx)
+        self.project()
+            .stream
+            .poll_shutdown(cx)
     }
 
     fn poll_write_vectored(
@@ -194,10 +213,13 @@ impl AsyncWrite for WebSocket<UpgradedIo> {
             .iter()
             .find(|b| !b.is_empty())
             .map_or(&[][..], |b| &**b);
-        self.project().stream.poll_write(cx, buf)
+        self.project()
+            .stream
+            .poll_write(cx, buf)
     }
 
     fn is_write_vectored(&self) -> bool {
-        self.stream.is_write_vectored()
+        self.stream
+            .is_write_vectored()
     }
 }

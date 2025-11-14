@@ -56,7 +56,8 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let name = if matches!(item.vis, Visibility::Public(_)) && matches!(item.data, Data::Struct(_))
     {
-        item.ident.to_string()
+        item.ident
+            .to_string()
     } else {
         panic!("expected public struct");
     };
@@ -65,10 +66,8 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let mut imports = TS2::new();
     let mut struct_impl = TS2::new();
-    let unit_type = Type::Tuple(TypeTuple {
-        paren_token: Paren::default(),
-        elems: Punctuated::new(),
-    });
+    let unit_type =
+        Type::Tuple(TypeTuple { paren_token: Paren::default(), elems: Punctuated::new() });
 
     root.operations.iter().fold((&mut imports, &mut struct_impl), |acc, op| {
         match op {

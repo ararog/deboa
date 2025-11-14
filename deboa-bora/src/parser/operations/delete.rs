@@ -16,9 +16,7 @@ impl Parse for DeleteStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let content;
         parenthesized!(content in input);
-        Ok(DeleteStruct {
-            fields: content.parse_terminated(DeleteFieldEnum::parse, Token![,])?,
-        })
+        Ok(DeleteStruct { fields: content.parse_terminated(DeleteFieldEnum::parse, Token![,])? })
     }
 }
 
@@ -34,12 +32,16 @@ impl Parse for DeleteFieldEnum {
         let lookahead = input.lookahead1();
         if lookahead.peek(Ident) {
             let ident = input.parse::<Ident>()?;
-            match ident.to_string().as_str() {
+            match ident
+                .to_string()
+                .as_str()
+            {
                 "name" => Ok(DeleteFieldEnum::name(NameStruct::parse(input)?)),
                 "path" => Ok(DeleteFieldEnum::path(PathStruct::parse(input)?)),
-                _ => Err(input.error(format!(
-                    "expected one of name, path or req_body, found '{ident}'"
-                ))),
+                _ => {
+                    Err(input
+                        .error(format!("expected one of name, path or req_body, found '{ident}'")))
+                }
             }
         } else {
             Err(lookahead.error())

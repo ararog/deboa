@@ -29,11 +29,17 @@ pub fn connect() -> impl Sipper<Never, Event> {
                 continue;
             }
 
-            let (mut websocket, mut input) = match response.unwrap().into_websocket().await {
+            let (mut websocket, mut input) = match response
+                .unwrap()
+                .into_websocket()
+                .await
+            {
                 Ok(websocket) => {
                     let (sender, receiver) = mpsc::channel(100);
 
-                    output.send(Event::Connected(Connection(sender))).await;
+                    output
+                        .send(Event::Connected(Connection(sender)))
+                        .await;
 
                     (websocket, receiver)
                 }
@@ -116,11 +122,7 @@ pub enum Message {
 
 impl Message {
     pub fn new(message: &str) -> Option<Self> {
-        if message.is_empty() {
-            None
-        } else {
-            Some(Self::User(message.to_string()))
-        }
+        if message.is_empty() { None } else { Some(Self::User(message.to_string())) }
     }
 
     pub fn connected() -> Self {

@@ -16,7 +16,11 @@ fn test_create_vamo() -> Result<()> {
 #[test]
 fn test_client() -> Result<()> {
     let vamo = Vamo::new(JSONPLACEHOLDER)?;
-    assert_eq!(vamo.client.protocol(), &HttpVersion::Http1);
+    assert_eq!(
+        vamo.client
+            .protocol(),
+        &HttpVersion::Http1
+    );
     Ok(())
 }
 

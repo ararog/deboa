@@ -29,12 +29,16 @@ impl Widget for &App {
             .messages
             .iter()
             .map(|message| {
-                let content = message.content.clone();
+                let content = message
+                    .content
+                    .clone();
                 let text = Text::from(content);
                 if message.role == "user" {
-                    text.fg(Color::Blue).left_aligned()
+                    text.fg(Color::Blue)
+                        .left_aligned()
                 } else {
-                    text.fg(Color::LightGreen).right_aligned()
+                    text.fg(Color::LightGreen)
+                        .right_aligned()
                 }
             })
             .collect::<Vec<Text>>();
@@ -45,7 +49,9 @@ impl Widget for &App {
 
         // keep 2 for borders and 1 for cursor
         let width = area.width.max(3) - 3;
-        let scroll = self.input.visual_scroll(width as usize);
+        let scroll = self
+            .input
+            .visual_scroll(width as usize);
         let style = match self.input_mode {
             InputMode::Normal => Style::default(),
             InputMode::Editing => Color::Yellow.into(),

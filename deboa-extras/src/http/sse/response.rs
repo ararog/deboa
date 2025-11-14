@@ -31,11 +31,11 @@ pub trait IntoEventStream {
 
 impl IntoEventStream for DeboaResponse {
     fn into_event_stream(self) -> Result<ServerEventStream> {
-        let header = self.headers().get(http::header::CONTENT_TYPE);
+        let header = self
+            .headers()
+            .get(http::header::CONTENT_TYPE);
         if header.is_none() {
-            return Err(DeboaError::Header {
-                message: "Missing content type".to_string(),
-            });
+            return Err(DeboaError::Header { message: "Missing content type".to_string() });
         }
 
         let header = header.unwrap();

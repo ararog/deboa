@@ -36,12 +36,16 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         url: Arc<Url>,
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
-        let host = url.host().expect("uri has no host");
+        let host = url
+            .host()
+            .expect("uri has no host");
         let io = {
             match url.scheme() {
                 "http" => {
                     let stream = {
-                        let port = url.port().unwrap_or(80);
+                        let port = url
+                            .port()
+                            .unwrap_or(80);
                         TcpStream::connect((host.to_string(), port)).await
                     };
 
@@ -58,7 +62,9 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                 "https" => {
                     // In case of HTTPS, establish a secure TLS connection first.
                     let stream = {
-                        let port = url.port().unwrap_or(443);
+                        let port = url
+                            .port()
+                            .unwrap_or(443);
                         TcpStream::connect((host.to_string(), port)).await
                     };
 
@@ -73,22 +79,20 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                     let connector = if let Some(client_cert) = client_cert {
                         let file = std::fs::read(client_cert.cert());
                         if let Err(e) = file {
-                            return Err(DeboaError::ClientCert {
-                                message: e.to_string(),
-                            });
+                            return Err(DeboaError::ClientCert { message: e.to_string() });
                         }
                         let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.pw());
                         if let Err(e) = identity {
-                            return Err(DeboaError::ClientCert {
-                                message: e.to_string(),
-                            });
+                            return Err(DeboaError::ClientCert { message: e.to_string() });
                         }
                         TlsConnector::new().identity(identity.unwrap())
                     } else {
                         TlsConnector::new()
                     };
 
-                    let stream = connector.connect(host.to_string(), stream).await;
+                    let stream = connector
+                        .connect(host.to_string(), stream)
+                        .await;
 
                     if let Err(e) = stream {
                         return Err(DeboaError::Connection {
@@ -113,7 +117,10 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         let (sender, conn) = result.unwrap();
 
         smol::spawn(async move {
-            match conn.with_upgrades().await {
+            match conn
+                .with_upgrades()
+                .await
+            {
                 Ok(_) => (),
                 Err(_err) => {}
             };
@@ -124,9 +131,15 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
     }
 
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {
-        let method = request.method().to_string();
-        let result = self.sender.send_request(request).await;
+        let method = request
+            .method()
+            .to_string();
+        let result = self
+            .sender
+            .send_request(request)
+            .await;
 
-        self.process_response(&self.url, &method, result).await
+        self.process_response(&self.url, &method, result)
+            .await
     }
 }

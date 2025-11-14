@@ -13,17 +13,8 @@ pub struct Post {
 #[tokio::test]
 async fn test_post() -> Result<()> {
     let mut client = Deboa::new();
-    let data: Post = Post {
-        id: 1,
-        title: "title".to_string(),
-        body: "body".to_string(),
-    };
-    let response = post!(
-        data,
-        JsonBody,
-        "https://jsonplaceholder.typicode.com/posts",
-        &mut client
-    );
+    let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
+    let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &mut client);
     assert_eq!(response.status(), 201);
     Ok(())
 }

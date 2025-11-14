@@ -52,14 +52,20 @@ impl App {
                 frame.render_widget(&self, frame.area());
                 self.frame = frame.area();
             })?;
-            match self.events.next().await? {
+            match self
+                .events
+                .next()
+                .await?
+            {
                 LocalEvent::Tick => self.tick(),
-                LocalEvent::Crossterm(event) => self.handle_key_events(event).await,
+                LocalEvent::Crossterm(event) => {
+                    self.handle_key_events(event)
+                        .await
+                }
                 LocalEvent::App(app_event) => match app_event {
-                    AppEvent::MessageReceived(message) => self.messages.push(PromptMessage {
-                        role: "assistant".to_string(),
-                        content: message,
-                    }),
+                    AppEvent::MessageReceived(message) => self
+                        .messages
+                        .push(PromptMessage { role: "assistant".to_string(), content: message }),
                     AppEvent::Quit => self.quit(),
                 },
             }
@@ -80,13 +86,15 @@ impl App {
                 },
                 InputMode::Editing => match key_event.code {
                     KeyCode::Enter => {
-                        self.push_message().await;
+                        self.push_message()
+                            .await;
                     }
                     KeyCode::Esc => {
                         self.stop_editing();
                     }
                     _ => {
-                        self.input.handle_event(&event);
+                        self.input
+                            .handle_event(&event);
                     }
                 },
             }
@@ -113,13 +121,15 @@ impl App {
     }
 
     pub async fn push_message(&mut self) {
-        let message = self.input.value_and_reset();
-        self.messages.push(PromptMessage {
-            role: "user".to_string(),
-            content: message,
-        });
+        let message = self
+            .input
+            .value_and_reset();
+        self.messages
+            .push(PromptMessage { role: "user".to_string(), content: message });
 
-        let response = self.make_request().await;
+        let response = self
+            .make_request()
+            .await;
         if let Err(_message) = response {
             //self.events.send(AppEvent::MessageReceived(message));
             return;
@@ -128,23 +138,30 @@ impl App {
         let mut text = Vec::new();
         let response = response;
         if let Ok(stream) = response {
-            let mut stream = stream.into_event_stream().unwrap();
+            let mut stream = stream
+                .into_event_stream()
+                .unwrap();
             while let Some(Ok(events)) = stream.next().await {
                 for data in events.data() {
                     let result = serde_json::from_str::<ModelResponse>(data);
                     #[allow(clippy::collapsible_if)]
                     if let Ok(model_response) = result {
                         let delta = &model_response.choices[0].delta;
-                        text.push(delta.content.clone())
+                        text.push(
+                            delta
+                                .content
+                                .clone(),
+                        )
                     }
                 }
             }
         }
         let content = text.join("");
-        self.messages.push(PromptMessage {
-            role: "assistant".to_string(),
-            content: textwrap::fill(&content, self.frame.width as usize - 2),
-        });
+        self.messages
+            .push(PromptMessage {
+                role: "assistant".to_string(),
+                content: textwrap::fill(&content, self.frame.width as usize - 2),
+            });
     }
 
     async fn make_request(&mut self) -> Result<DeboaResponse, String> {
@@ -156,7 +173,9 @@ impl App {
                 JsonBody,
                 &Prompt {
                     model: "gpt-3.5-turbo".to_string(),
-                    messages: self.messages.clone(),
+                    messages: self
+                        .messages
+                        .clone(),
                     stream: true,
                 },
             )

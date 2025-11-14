@@ -125,7 +125,10 @@ macro_rules! get {
     };
 
     ($url:expr, &mut $client:ident) => {
-        $client.execute($url).await?.text()
+        $client
+            .execute($url)
+            .await?
+            .text()
     };
 }
 
@@ -403,7 +406,9 @@ macro_rules! fetch {
     };
 
     ($url:expr, &mut $client:ident) => {
-        $client.execute($url).await?
+        $client
+            .execute($url)
+            .await?
     };
 }
 #[macro_export]

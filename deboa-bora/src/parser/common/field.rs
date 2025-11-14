@@ -11,10 +11,7 @@ pub struct NameStruct {
 
 impl Parse for NameStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-        Ok(NameStruct {
-            _equal_token: input.parse()?,
-            value: input.parse()?,
-        })
+        Ok(NameStruct { _equal_token: input.parse()?, value: input.parse()? })
     }
 }
 
@@ -26,10 +23,7 @@ pub struct PathStruct {
 
 impl Parse for PathStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-        Ok(PathStruct {
-            _equal_token: input.parse()?,
-            value: input.parse()?,
-        })
+        Ok(PathStruct { _equal_token: input.parse()?, value: input.parse()? })
     }
 }
 
@@ -41,10 +35,7 @@ pub struct ReqBodyStruct {
 
 impl Parse for ReqBodyStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-        Ok(ReqBodyStruct {
-            _equal_token: input.parse()?,
-            value: input.parse()?,
-        })
+        Ok(ReqBodyStruct { _equal_token: input.parse()?, value: input.parse()? })
     }
 }
 
@@ -56,10 +47,7 @@ pub struct ResBodyStruct {
 
 impl Parse for ResBodyStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-        Ok(ResBodyStruct {
-            _equal_token: input.parse()?,
-            value: input.parse()?,
-        })
+        Ok(ResBodyStruct { _equal_token: input.parse()?, value: input.parse()? })
     }
 }
 
@@ -88,10 +76,7 @@ fn is_valid_format(format: &String) -> bool {
 
 impl Parse for FormatStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-        let format = FormatStruct {
-            _equal_token: input.parse()?,
-            value: input.parse()?,
-        };
+        let format = FormatStruct { _equal_token: input.parse()?, value: input.parse()? };
 
         let format_name = format.value.value();
         if !is_valid_format(&format_name) {

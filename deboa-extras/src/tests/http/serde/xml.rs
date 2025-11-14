@@ -27,7 +27,9 @@ async fn test_xml_response() -> Result<()> {
         .body(&XML_POST[..])
         .build();
 
-    let response: Post = response.body_as(XmlBody).await?;
+    let response: Post = response
+        .body_as(XmlBody)
+        .await?;
 
     assert_eq!(response, data);
 

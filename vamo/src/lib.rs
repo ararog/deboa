@@ -111,12 +111,14 @@ impl Vamo {
         let mut headers = HeaderMap::new();
         headers.insert(
             HOST,
-            HeaderValue::from_str(base_url.host_str().unwrap()).unwrap(),
+            HeaderValue::from_str(
+                base_url
+                    .host_str()
+                    .unwrap(),
+            )
+            .unwrap(),
         );
-        headers.insert(
-            CONTENT_TYPE,
-            HeaderValue::from_str("application/json").unwrap(),
-        );
+        headers.insert(CONTENT_TYPE, HeaderValue::from_str("application/json").unwrap());
 
         Ok(Vamo {
             client: Deboa::new(),
@@ -144,7 +146,9 @@ impl Vamo {
         body_type: T,
         body: B,
     ) -> Result<&mut Self> {
-        self.body = body_type.serialize(body)?.into();
+        self.body = body_type
+            .serialize(body)?
+            .into();
         Ok(self)
     }
 
@@ -179,8 +183,12 @@ impl Vamo {
     }
 
     pub async fn send(&mut self) -> Result<DeboaResponse> {
-        let mut base_url = self.base_url.clone();
-        let path_and_query = self.path.split_once('?');
+        let mut base_url = self
+            .base_url
+            .clone();
+        let path_and_query = self
+            .path
+            .split_once('?');
         let path = if let Some((path, query)) = path_and_query {
             base_url.set_query(Some(query));
             path
@@ -201,7 +209,9 @@ impl Vamo {
             .raw_body(&self.body)
             .build()?;
 
-        self.client.execute(request).await
+        self.client
+            .execute(request)
+            .await
     }
 }
 
@@ -211,25 +221,36 @@ impl<R: Resource + Serialize> ResourceMethod<R> for Vamo {
         self.method = Method::GET;
         Ok(self)
     }
-    
+
     fn post_resource(&mut self, resource: &mut R) -> Result<&mut Self> {
-        self.path = resource.post_path().to_string();
+        self.path = resource
+            .post_path()
+            .to_string();
         self.method = Method::POST;
-        self.body = resource.body_type().serialize(&resource)?.into();
+        self.body = resource
+            .body_type()
+            .serialize(&resource)?
+            .into();
         Ok(self)
     }
 
     fn put_resource(&mut self, resource: &mut R) -> Result<&mut Self> {
         self.path = resource.add_path(resource.put_path());
         self.method = Method::PUT;
-        self.body = resource.body_type().serialize(&resource)?.into();
+        self.body = resource
+            .body_type()
+            .serialize(&resource)?
+            .into();
         Ok(self)
     }
 
     fn patch_resource(&mut self, resource: &mut R) -> Result<&mut Self> {
         self.path = resource.add_path(resource.patch_path());
         self.method = Method::PATCH;
-        self.body = resource.body_type().serialize(&resource)?.into();
+        self.body = resource
+            .body_type()
+            .serialize(&resource)?
+            .into();
         Ok(self)
     }
 
