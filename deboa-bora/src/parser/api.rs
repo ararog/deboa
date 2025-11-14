@@ -22,9 +22,7 @@ impl Parse for BoraApi {
             }
             let content;
             parenthesized!(content in input);
-            Ok(BoraApi {
-                operations: content.parse_terminated(OperationEnum::parse, Token![,])?,
-            })
+            Ok(BoraApi { operations: content.parse_terminated(OperationEnum::parse, Token![,])? })
         } else {
             Err(lookahead.error())
         }
@@ -40,16 +38,18 @@ pub enum OperationEnum {
     patch(PatchStruct),
 }
 
-const METHODS: [&str; 9] = [
-    "get", "post", "put", "delete", "patch", "head", "options", "connect", "trace",
-];
+const METHODS: [&str; 9] =
+    ["get", "post", "put", "delete", "patch", "head", "options", "connect", "trace"];
 
 impl Parse for OperationEnum {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let lookahead = input.lookahead1();
         if lookahead.peek(Ident) {
             let ident = input.parse::<Ident>()?;
-            match ident.to_string().as_str() {
+            match ident
+                .to_string()
+                .as_str()
+            {
                 "get" => Ok(OperationEnum::get(GetStruct::parse(input)?)),
                 "post" => Ok(OperationEnum::post(PostStruct::parse(input)?)),
                 "put" => Ok(OperationEnum::put(PutStruct::parse(input)?)),

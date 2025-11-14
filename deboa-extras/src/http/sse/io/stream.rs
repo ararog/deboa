@@ -34,7 +34,12 @@ impl Stream for ServerEventStream {
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         loop {
-            return match ready!(self.as_mut().project().stream.poll_frame(cx)) {
+            return match ready!(self
+                .as_mut()
+                .project()
+                .stream
+                .poll_frame(cx))
+            {
                 Some(Ok(frame)) => match frame.into_data() {
                     Ok(bytes) => {
                         let event = ServerEvent::parse(&bytes);

@@ -25,14 +25,7 @@ async fn test_patch_by_id() -> Result<()> {
     let mut post_service = PostService::new(client);
 
     post_service
-        .patch_post(
-            1,
-            Post {
-                title: "title".to_string(),
-                body: "body".to_string(),
-                user_id: 1,
-            },
-        )
+        .patch_post(1, Post { title: "title".to_string(), body: "body".to_string(), user_id: 1 })
         .await?;
     Ok(())
 }

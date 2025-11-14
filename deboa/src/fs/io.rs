@@ -34,7 +34,9 @@ impl<T: Compressor> Compressor for Box<T> {
     }
 
     async fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes> {
-        self.as_ref().compress_body(request).await
+        self.as_ref()
+            .compress_body(request)
+            .await
     }
 }
 
@@ -70,6 +72,8 @@ impl<T: Decompressor> Decompressor for Box<T> {
     }
 
     async fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
-        self.as_ref().decompress_body(response).await
+        self.as_ref()
+            .decompress_body(response)
+            .await
     }
 }

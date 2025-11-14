@@ -13,12 +13,8 @@ pub struct Post {
 #[tokio::test]
 async fn test_fetch_str() -> Result<()> {
     let mut client = Deboa::new();
-    let response = fetch!(
-        "https://jsonplaceholder.typicode.com/posts",
-        &mut client,
-        JsonBody,
-        Vec<Post>
-    );
+    let response =
+        fetch!("https://jsonplaceholder.typicode.com/posts", &mut client, JsonBody, Vec<Post>);
     assert_eq!(response.len(), 100);
     Ok(())
 }

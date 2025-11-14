@@ -14,7 +14,8 @@ async fn do_put() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = server.mock(|when, then| {
-        when.method(PUT).path("/posts/1");
+        when.method(PUT)
+            .path("/posts/1");
         then.status::<u16>(StatusCode::OK.into())
             .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
             .body("ping");
@@ -22,11 +23,17 @@ async fn do_put() -> Result<()> {
 
     let mut client = Deboa::new();
 
-    let request = DeboaRequest::put(server.url("/posts/1").as_str())?
-        .text("ping")
-        .build()?;
+    let request = DeboaRequest::put(
+        server
+            .url("/posts/1")
+            .as_str(),
+    )?
+    .text("ping")
+    .build()?;
 
-    let response = client.execute(request).await?;
+    let response = client
+        .execute(request)
+        .await?;
 
     http_mock.assert();
 

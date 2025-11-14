@@ -21,20 +21,20 @@ impl Compressor for GzipCompressor {
 
     async fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes> {
         let mut writer = GzEncoder::new(Vec::new(), flate2::Compression::default());
-        let result = writer.write_all(request.raw_body().as_ref());
+        let result = writer.write_all(
+            request
+                .raw_body()
+                .as_ref(),
+        );
 
         if let Err(e) = result {
-            return Err(DeboaError::Io(IoError::Compress {
-                message: e.to_string(),
-            }));
+            return Err(DeboaError::Io(IoError::Compress { message: e.to_string() }));
         }
 
         let result = writer.finish();
 
         if let Err(e) = result {
-            return Err(DeboaError::Io(IoError::Compress {
-                message: e.to_string(),
-            }));
+            return Err(DeboaError::Io(IoError::Compress { message: e.to_string() }));
         }
 
         Ok(Bytes::from(result.unwrap()))
@@ -51,15 +51,15 @@ impl Decompressor for GzipDecompressor {
     }
 
     async fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
-        let body = response.raw_body().await;
+        let body = response
+            .raw_body()
+            .await;
         let mut reader = GzDecoder::new(body.reader());
         let mut buffer = Vec::new();
         let result = reader.read_to_end(&mut buffer);
 
         if let Err(e) = result {
-            return Err(DeboaError::Io(IoError::Decompress {
-                message: e.to_string(),
-            }));
+            return Err(DeboaError::Io(IoError::Decompress { message: e.to_string() }));
         }
 
         response.set_raw_body(Bytes::from(buffer));

@@ -37,7 +37,9 @@ pub trait IntoWebSocket {
 #[deboa::async_trait]
 impl IntoWebSocket for DeboaResponse {
     async fn into_websocket(self) -> Result<WebSocket<UpgradedIo>> {
-        let upgraded = self.upgrade().await?;
+        let upgraded = self
+            .upgrade()
+            .await?;
         Ok(WebSocket::new(upgraded))
     }
 }

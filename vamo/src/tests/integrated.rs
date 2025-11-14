@@ -59,14 +59,33 @@ impl Resource for Post {
 #[tokio::test]
 async fn test_get() -> Result<()> {
     let server = MockServer::start();
-    let mock = setup_server(&server, "/posts", GET, StatusCode::OK);
+    let mock_all = setup_server(&server, "/posts", GET, StatusCode::OK);
+    let mock_path = setup_server(&server, "/posts/1", GET, StatusCode::OK);
 
-    let mut vamo = Vamo::new(server.base_url().as_str())?;
-    let response = vamo.get("/posts").send().await?;
-
-    mock.assert();
-
+    let mut vamo = Vamo::new(
+        server
+            .base_url()
+            .as_str(),
+    )?;
+    let response = vamo
+        .get("/posts")
+        .send()
+        .await?;
+    mock_all.assert();
     assert_eq!(response.status(), StatusCode::OK);
+
+    let response = vamo
+        .get("/posts/1")
+        .send()
+        .await?;
+    mock_path.assert();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response
+            .text()
+            .await?,
+        "pong"
+    );
 
     Ok(())
 }
@@ -76,8 +95,15 @@ async fn test_put() -> Result<()> {
     let server = MockServer::start();
     let mock = setup_server(&server, "/posts", PUT, StatusCode::OK);
 
-    let mut vamo = Vamo::new(server.base_url().as_str())?;
-    let response = vamo.put("/posts").send().await?;
+    let mut vamo = Vamo::new(
+        server
+            .base_url()
+            .as_str(),
+    )?;
+    let response = vamo
+        .put("/posts")
+        .send()
+        .await?;
 
     mock.assert();
 
@@ -106,7 +132,11 @@ async fn test_post() -> Result<()> {
     };
 
     let mut vamo = Vamo::new(server.url("/api"))?;
-    let response = vamo.post("/posts").body_as(JsonBody, post)?.send().await?;
+    let response = vamo
+        .post("/posts")
+        .body_as(JsonBody, post)?
+        .send()
+        .await?;
 
     mock.assert();
 
@@ -121,7 +151,10 @@ async fn test_patch() -> Result<()> {
     let mock = setup_server(&server, "/api/posts/1", PATCH, StatusCode::OK);
 
     let mut vamo = Vamo::new(server.url("/api"))?;
-    let response = vamo.patch("/posts/1").send().await?;
+    let response = vamo
+        .patch("/posts/1")
+        .send()
+        .await?;
 
     mock.assert();
 
@@ -136,7 +169,10 @@ async fn test_delete() -> Result<()> {
     let mock = setup_server(&server, "/api/posts/1", DELETE, StatusCode::NO_CONTENT);
 
     let mut vamo = Vamo::new(server.url("/api"))?;
-    let response = vamo.delete("/posts/1").send().await?;
+    let response = vamo
+        .delete("/posts/1")
+        .send()
+        .await?;
 
     mock.assert();
 
@@ -148,13 +184,8 @@ async fn test_delete() -> Result<()> {
 #[tokio::test]
 async fn test_post_resource() -> Result<()> {
     let server = MockServer::start();
-    let mock = setup_server_with_body(
-        &server,
-        "/api/posts",
-        POST,
-        StatusCode::CREATED,
-        JSON_STR_POST,
-    );
+    let mock =
+        setup_server_with_body(&server, "/api/posts", POST, StatusCode::CREATED, JSON_STR_POST);
 
     let mut post = Post {
         id: 1,
@@ -164,7 +195,10 @@ async fn test_post_resource() -> Result<()> {
     };
 
     let mut vamo = Vamo::new(server.url("/api"))?;
-    let response = vamo.post_resource(&mut post)?.send().await?;
+    let response = vamo
+        .post_resource(&mut post)?
+        .send()
+        .await?;
 
     mock.assert();
 
@@ -186,7 +220,10 @@ async fn test_put_resource() -> Result<()> {
     };
 
     let mut vamo = Vamo::new(server.url("/api"))?;
-    let response = vamo.put_resource(&mut post)?.send().await?;
+    let response = vamo
+        .put_resource(&mut post)?
+        .send()
+        .await?;
 
     mock.assert();
 
@@ -198,23 +235,16 @@ async fn test_put_resource() -> Result<()> {
 #[tokio::test]
 async fn test_patch_resource() -> Result<()> {
     let server = MockServer::start();
-    let mock = setup_server_with_body(
-        &server,
-        "/api/posts/1",
-        PATCH,
-        StatusCode::OK,
-        JSON_STR_PATCH,
-    );
+    let mock =
+        setup_server_with_body(&server, "/api/posts/1", PATCH, StatusCode::OK, JSON_STR_PATCH);
 
-    let mut post = Post {
-        id: 1,
-        title: "Some other title".to_string(),
-        body: None,
-        user_id: None,
-    };
+    let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
 
     let mut vamo = Vamo::new(server.url("/api"))?;
-    let response = vamo.patch_resource(&mut post)?.send().await?;
+    let response = vamo
+        .patch_resource(&mut post)?
+        .send()
+        .await?;
 
     mock.assert();
 

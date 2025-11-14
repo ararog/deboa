@@ -28,30 +28,26 @@ impl ToFile {
     {
         let file = File::create(path.as_ref());
         if let Err(err) = file {
-            return Err(DeboaError::Io(IoError::File {
-                message: err.to_string(),
-            }));
+            return Err(DeboaError::Io(IoError::File { message: err.to_string() }));
         }
 
         let mut file = file.unwrap();
-        let mut stream = self.response.stream();
+        let mut stream = self
+            .response
+            .stream();
         while let Some(frame) = stream.next().await {
             if let Ok(chunk) = frame {
                 if let Some(ref on_progress) = on_progress {
                     on_progress(chunk.len() as u64);
                 }
                 if let Err(err) = file.write(chunk.as_ref()) {
-                    return Err(DeboaError::Io(IoError::File {
-                        message: err.to_string(),
-                    }));
+                    return Err(DeboaError::Io(IoError::File { message: err.to_string() }));
                 }
             }
         }
 
         if let Err(err) = file.flush() {
-            return Err(DeboaError::Io(IoError::File {
-                message: err.to_string(),
-            }));
+            return Err(DeboaError::Io(IoError::File { message: err.to_string() }));
         }
 
         Ok(())

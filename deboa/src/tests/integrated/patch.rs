@@ -16,7 +16,8 @@ async fn do_patch() -> Result<()> {
     let server = MockServer::start();
 
     let http_mock = server.mock(|when, then| {
-        when.method(PATCH).path("/posts/1");
+        when.method(PATCH)
+            .path("/posts/1");
         then.status::<u16>(StatusCode::OK.into())
             .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
             .body("ping");
@@ -24,11 +25,17 @@ async fn do_patch() -> Result<()> {
 
     let mut client: Deboa = Deboa::new();
 
-    let request = DeboaRequest::patch(server.url("/posts/1").as_str())?
-        .text("")
-        .build()?;
+    let request = DeboaRequest::patch(
+        server
+            .url("/posts/1")
+            .as_str(),
+    )?
+    .text("")
+    .build()?;
 
-    let response = client.execute(request).await?;
+    let response = client
+        .execute(request)
+        .await?;
 
     http_mock.assert();
 

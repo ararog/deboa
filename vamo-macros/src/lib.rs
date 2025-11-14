@@ -158,7 +158,14 @@ pub fn resource(input: TokenStream) -> TokenStream {
 
     let mut rid_field: Option<Ident> = None;
     for field in fields {
-        if field.attrs.iter().any(|attr| attr.path().is_ident("rid")) {
+        if field
+            .attrs
+            .iter()
+            .any(|attr| {
+                attr.path()
+                    .is_ident("rid")
+            })
+        {
             rid_field = field.ident;
             break;
         }
@@ -172,17 +179,35 @@ pub fn resource(input: TokenStream) -> TokenStream {
     let mut delete_path: Option<String> = None;
     let mut body_type: Option<Ident> = None;
     for attr in ast.attrs {
-        if attr.path().is_ident("get") {
+        if attr
+            .path()
+            .is_ident("get")
+        {
             get_path = extract_path(&attr);
-        } else if attr.path().is_ident("post") {
+        } else if attr
+            .path()
+            .is_ident("post")
+        {
             post_path = extract_path(&attr);
-        } else if attr.path().is_ident("put") {
+        } else if attr
+            .path()
+            .is_ident("put")
+        {
             put_path = extract_path(&attr);
-        } else if attr.path().is_ident("patch") {
+        } else if attr
+            .path()
+            .is_ident("patch")
+        {
             patch_path = extract_path(&attr);
-        } else if attr.path().is_ident("delete") {
+        } else if attr
+            .path()
+            .is_ident("delete")
+        {
             delete_path = extract_path(&attr);
-        } else if attr.path().is_ident("body_type") {
+        } else if attr
+            .path()
+            .is_ident("body_type")
+        {
             body_type = extract_ident(&attr);
         }
     }

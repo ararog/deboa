@@ -121,7 +121,8 @@ pub trait Resource {
 pub trait ResourceMethod<R>
 where
     R: Resource + Serialize,
-{   /// Get a resource from REST endpoint
+{
+    /// Get a resource from REST endpoint
     ///
     /// # Arguments
     ///
