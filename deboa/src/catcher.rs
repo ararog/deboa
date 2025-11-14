@@ -42,10 +42,14 @@ pub trait DeboaCatcher: Send + Sync + 'static {
 #[async_trait]
 impl<T: DeboaCatcher> DeboaCatcher for Box<T> {
     async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
-        self.as_ref().on_request(request).await
+        self.as_ref()
+            .on_request(request)
+            .await
     }
 
     async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
-        self.as_ref().on_response(response).await
+        self.as_ref()
+            .on_response(response)
+            .await
     }
 }

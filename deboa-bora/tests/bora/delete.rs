@@ -11,6 +11,8 @@ async fn test_delete_by_id() -> Result<()> {
 
     let mut post_service = PostService::new(client);
 
-    post_service.delete_post(1).await?;
+    post_service
+        .delete_post(1)
+        .await?;
     Ok(())
 }

@@ -20,23 +20,27 @@ impl Compressor for DeflateCompressor {
 
     async fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes> {
         let mut writer = DeflateEncoder::new(Vec::new(), flate2::Compression::default());
-        let result = writer.write_all(request.raw_body().as_ref());
+        let result = writer.write_all(
+            request
+                .raw_body()
+                .as_ref(),
+        );
 
         if let Err(e) = result {
-            return Err(DeboaError::Io(IoError::Compress {
-                message: e.to_string(),
-            }));
+            return Err(DeboaError::Io(IoError::Compress { message: e.to_string() }));
         }
 
         let result = writer.flush();
 
         if let Err(e) = result {
-            return Err(DeboaError::Io(IoError::Compress {
-                message: e.to_string(),
-            }));
+            return Err(DeboaError::Io(IoError::Compress { message: e.to_string() }));
         }
 
-        Ok(Bytes::from(writer.get_ref().to_vec()))
+        Ok(Bytes::from(
+            writer
+                .get_ref()
+                .to_vec(),
+        ))
     }
 }
 
@@ -50,15 +54,15 @@ impl Decompressor for DeflateDecompressor {
     }
 
     async fn decompress_body(&self, response: &mut DeboaResponse) -> Result<()> {
-        let body = response.raw_body().await;
+        let body = response
+            .raw_body()
+            .await;
         let mut reader = DeflateDecoder::new(body.reader());
         let mut buffer = Vec::new();
         let result = reader.read_to_end(&mut buffer);
 
         if let Err(e) = result {
-            return Err(DeboaError::Io(IoError::Decompress {
-                message: e.to_string(),
-            }));
+            return Err(DeboaError::Io(IoError::Decompress { message: e.to_string() }));
         }
 
         response.set_raw_body(Bytes::from(buffer));

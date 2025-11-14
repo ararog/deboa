@@ -26,7 +26,9 @@ impl DeboaCatcher for TestMonitor {
 async fn main() -> Result<()> {
     use deboa::Deboa;
 
-    let client = Deboa::builder().catch(TestMonitor).build();
+    let client = Deboa::builder()
+        .catch(TestMonitor)
+        .build();
 
     let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com")?
         .send_with(client)

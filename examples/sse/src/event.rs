@@ -57,7 +57,11 @@ impl EventHandler {
     pub fn new() -> Self {
         let (sender, receiver) = mpsc::unbounded_channel();
         let event_task = EventTask::new(sender.clone());
-        tokio::spawn(async { event_task.run().await });
+        tokio::spawn(async {
+            event_task
+                .run()
+                .await
+        });
         Self { sender, receiver }
     }
 
@@ -84,7 +88,9 @@ impl EventHandler {
     pub fn send(&mut self, app_event: AppEvent) {
         // Ignore the result as the reciever cannot be dropped while this struct still has a
         // reference to it
-        let _ = self.sender.send(LocalEvent::App(app_event));
+        let _ = self
+            .sender
+            .send(LocalEvent::App(app_event));
     }
 }
 
@@ -129,6 +135,8 @@ impl EventTask {
     fn send(&self, event: LocalEvent) {
         // Ignores the result because shutting down the app drops the receiver, which causes the send
         // operation to fail. This is expected behavior and should not panic.
-        let _ = self.sender.send(event);
+        let _ = self
+            .sender
+            .send(event);
     }
 }

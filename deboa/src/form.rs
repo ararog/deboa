@@ -129,9 +129,7 @@ impl EncodedForm {
     /// * `Self` - The encoded form.
     ///
     pub fn builder() -> Self {
-        Self {
-            fields: IndexMap::new(),
-        }
+        Self { fields: IndexMap::new() }
     }
 }
 
@@ -141,7 +139,8 @@ impl DeboaForm for EncodedForm {
     }
 
     fn field(&mut self, key: &str, value: &str) -> &mut Self {
-        self.fields.insert(key.to_string(), value.to_string());
+        self.fields
+            .insert(key.to_string(), value.to_string());
         self
     }
 
@@ -193,10 +192,7 @@ impl MultiPartForm {
     ///
     pub fn builder() -> Self {
         let boundary = Alphanumeric.sample_string(&mut rand::rng(), 10);
-        Self {
-            fields: IndexMap::new(),
-            boundary: format!("DeboaFormBdry{}", boundary),
-        }
+        Self { fields: IndexMap::new(), boundary: format!("DeboaFormBdry{}", boundary) }
     }
 
     /// Add a file to the form.
@@ -216,7 +212,11 @@ impl MultiPartForm {
     {
         self.fields.insert(
             key.to_string(),
-            value.as_ref().to_str().unwrap().to_string(),
+            value
+                .as_ref()
+                .to_str()
+                .unwrap()
+                .to_string(),
         );
         self
     }
@@ -228,7 +228,8 @@ impl MultiPartForm {
     /// * `String` - The boundary.
     ///
     pub fn boundary(&self) -> String {
-        self.boundary.to_string()
+        self.boundary
+            .to_string()
     }
 }
 
@@ -238,7 +239,8 @@ impl DeboaForm for MultiPartForm {
     }
 
     fn field(&mut self, key: &str, value: &str) -> &mut Self {
-        self.fields.insert(key.to_string(), value.to_string());
+        self.fields
+            .insert(key.to_string(), value.to_string());
         self
     }
 
@@ -260,7 +262,10 @@ impl DeboaForm for MultiPartForm {
                             &format!(
                                 "Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"",
                                 key,
-                                file_name.unwrap().to_str().unwrap()
+                                file_name
+                                    .unwrap()
+                                    .to_str()
+                                    .unwrap()
                             )
                             .into_bytes(),
                         );
@@ -286,7 +291,13 @@ impl DeboaForm for MultiPartForm {
             form.extend_from_slice(b"--");
             form.extend_from_slice(boundary.as_bytes());
 
-            if key != self.fields.last().unwrap().0 {
+            if key
+                != self
+                    .fields
+                    .last()
+                    .unwrap()
+                    .0
+            {
                 form.extend_from_slice(CRLF);
             } else {
                 form.extend_from_slice(b"--\r\n");

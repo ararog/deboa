@@ -83,7 +83,9 @@ impl Fetch for &str {
     where
         T: AsMut<Deboa> + Send,
     {
-        DeboaRequest::get(*self)?.send_with(client).await
+        DeboaRequest::get(*self)?
+            .send_with(client)
+            .await
     }
 }
 
@@ -120,7 +122,9 @@ impl FetchWith for &str {
     where
         T: AsMut<Deboa> + Send,
     {
-        DeboaRequest::get(*self)?.send_with(client).await
+        DeboaRequest::get(*self)?
+            .send_with(client)
+            .await
     }
 }
 
@@ -417,9 +421,19 @@ impl DeboaRequestBuilder {
     ///
     pub fn cookie(mut self, cookie: DeboaCookie) -> Self {
         if let Some(cookies) = &mut self.cookies {
-            cookies.insert(cookie.name().to_string(), cookie);
+            cookies.insert(
+                cookie
+                    .name()
+                    .to_string(),
+                cookie,
+            );
         } else {
-            self.cookies = Some(HashMap::from([(cookie.name().to_string(), cookie)]));
+            self.cookies = Some(HashMap::from([(
+                cookie
+                    .name()
+                    .to_string(),
+                cookie,
+            )]));
         }
         self
     }
@@ -480,7 +494,9 @@ impl DeboaRequestBuilder {
     /// assert_eq!(response.status(), 201);
     /// ```
     pub fn text(mut self, text: &str) -> Self {
-        self.body = text.as_bytes().into();
+        self.body = text
+            .as_bytes()
+            .into();
         self
     }
 
@@ -496,7 +512,9 @@ impl DeboaRequestBuilder {
     /// * `Result<Self>` - The request builder.
     ///
     pub fn body_as<T: RequestBody, B: Serialize>(mut self, body_type: T, body: B) -> Result<Self> {
-        self.body = body_type.serialize(body)?.into();
+        self.body = body_type
+            .serialize(body)?
+            .into();
         Ok(self)
     }
 
@@ -555,11 +573,7 @@ impl DeboaRequestBuilder {
     pub fn basic_auth(self, username: &str, password: &str) -> Self {
         self.header(
             header::AUTHORIZATION,
-            format!(
-                "Basic {}",
-                STANDARD.encode(format!("{username}:{password}"))
-            )
-            .as_str(),
+            format!("Basic {}", STANDARD.encode(format!("{username}:{password}"))).as_str(),
         )
     }
 
@@ -613,7 +627,10 @@ impl DeboaRequestBuilder {
     where
         T: AsMut<Deboa>,
     {
-        client.as_mut().execute(self.build()?).await
+        client
+            .as_mut()
+            .execute(self.build()?)
+            .await
     }
 
     /// Send the request. Consuming the builder.
@@ -642,7 +659,10 @@ impl DeboaRequestBuilder {
     where
         T: AsMut<Deboa>,
     {
-        client.as_mut().execute(self.build()?).await
+        client
+            .as_mut()
+            .execute(self.build()?)
+            .await
     }
 }
 
@@ -708,9 +728,7 @@ impl DeboaRequest {
     pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
-            return Err(DeboaError::Request(RequestError::UrlParse {
-                message: e.to_string(),
-            }));
+            return Err(DeboaError::Request(RequestError::UrlParse { message: e.to_string() }));
         }
 
         let url = parsed_url.unwrap();
@@ -873,14 +891,13 @@ impl DeboaRequest {
     pub fn set_url<T: IntoUrl>(&mut self, url: T) -> Result<&mut Self> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
-            return Err(DeboaError::Request(RequestError::UrlParse {
-                message: e.to_string(),
-            }));
+            return Err(DeboaError::Request(RequestError::UrlParse { message: e.to_string() }));
         }
 
         let parsed_url = parsed_url.unwrap();
         if self.has_header(&header::HOST) {
-            self.headers.remove(&header::HOST);
+            self.headers
+                .remove(&header::HOST);
             self.add_header(HOST, parsed_url.authority());
         }
 
@@ -961,7 +978,8 @@ impl DeboaRequest {
     ///
     #[inline]
     fn has_header(&self, key: &HeaderName) -> bool {
-        self.headers.contains_key(key)
+        self.headers
+            .contains_key(key)
     }
 
     /// Allow add bearer auth at any time.
@@ -992,10 +1010,7 @@ impl DeboaRequest {
     /// * `&mut Self` - The request.
     ///
     pub fn add_basic_auth(&mut self, username: &str, password: &str) -> &mut Self {
-        let auth = format!(
-            "Basic {}",
-            STANDARD.encode(format!("{username}:{password}"))
-        );
+        let auth = format!("Basic {}", STANDARD.encode(format!("{username}:{password}")));
         self.add_header(header::AUTHORIZATION, &auth);
         self
     }
@@ -1012,9 +1027,19 @@ impl DeboaRequest {
     ///
     pub fn add_cookie(&mut self, cookie: DeboaCookie) -> &mut Self {
         if let Some(cookies) = &mut self.cookies {
-            cookies.insert(cookie.name().to_string(), cookie);
+            cookies.insert(
+                cookie
+                    .name()
+                    .to_string(),
+                cookie,
+            );
         } else {
-            self.cookies = Some(HashMap::from([(cookie.name().to_string(), cookie)]));
+            self.cookies = Some(HashMap::from([(
+                cookie
+                    .name()
+                    .to_string(),
+                cookie,
+            )]));
         }
         self
     }
@@ -1076,7 +1101,8 @@ impl DeboaRequest {
     /// * `Option<&HashMap<String, DeboaCookie>>` - The cookies.
     ///
     pub fn cookies(&self) -> Option<&HashMap<String, DeboaCookie>> {
-        self.cookies.as_ref()
+        self.cookies
+            .as_ref()
     }
 
     /// Allow set form at any time.
@@ -1125,7 +1151,12 @@ impl DeboaRequest {
     /// * `&mut Self` - The request.
     ///
     pub fn set_raw_body(&mut self, body: &[u8]) -> &mut Self {
-        self.add_header(header::CONTENT_LENGTH, &body.len().to_string());
+        self.add_header(
+            header::CONTENT_LENGTH,
+            &body
+                .len()
+                .to_string(),
+        );
         self.body = body.into();
         self
     }

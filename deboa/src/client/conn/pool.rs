@@ -71,9 +71,7 @@ pub trait DeboaHttpConnectionPool {
 #[async_trait]
 impl DeboaHttpConnectionPool for HttpConnectionPool {
     fn new() -> Self {
-        Self {
-            connections: HashMap::new(),
-        }
+        Self { connections: HashMap::new() }
     }
 
     #[inline]
@@ -87,7 +85,10 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         protocol: &HttpVersion,
         client_cert: &Option<ClientCert>,
     ) -> Result<&mut DeboaConnection> {
-        let mut host = url.host_str().unwrap().to_string();
+        let mut host = url
+            .host_str()
+            .unwrap()
+            .to_string();
         if url.port().is_some() {
             let port = url.port().unwrap();
             host = format!("{}:{}", host, port);
@@ -100,8 +101,14 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         }
 
         let host_key = host;
-        if self.connections.contains_key(&host_key) {
-            return Ok(self.connections.get_mut(&host_key).unwrap());
+        if self
+            .connections
+            .contains_key(&host_key)
+        {
+            return Ok(self
+                .connections
+                .get_mut(&host_key)
+                .unwrap());
         }
 
         let connection = match protocol {
@@ -125,7 +132,11 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
             }
         };
 
-        self.connections.insert(host_key.to_string(), connection);
-        Ok(self.connections.get_mut(&host_key).unwrap())
+        self.connections
+            .insert(host_key.to_string(), connection);
+        Ok(self
+            .connections
+            .get_mut(&host_key)
+            .unwrap())
     }
 }

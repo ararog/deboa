@@ -84,11 +84,7 @@ pub enum DeboaError {
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum RequestError {
     #[error("Failed to send request: {method} {url}: {message}")]
-    Send {
-        url: String,
-        method: String,
-        message: String,
-    },
+    Send { url: String, method: String, message: String },
 
     #[error("Failed to prepare request: {message}")]
     Prepare { message: String },
@@ -103,10 +99,7 @@ pub enum RequestError {
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum ResponseError {
     #[error("Failed to receive response: {status_code}: {message}")]
-    Receive {
-        status_code: StatusCode,
-        message: String,
-    },
+    Receive { status_code: StatusCode, message: String },
 
     #[error("Failed to process response: {message}")]
     Process { message: String },

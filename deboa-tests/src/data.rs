@@ -14,13 +14,11 @@ pub const JSON_STR_POST: &str =
     "{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}";
 pub const JSON_STR_PATCH: &str = "{\"id\":1,\"title\":\"Some other title\"}";
 
-pub const BROTLI_COMPRESSED: &[u8; 15] = &[
-    11, 5, 128, 108, 111, 114, 101, 109, 32, 105, 112, 115, 117, 109, 3,
-];
+pub const BROTLI_COMPRESSED: &[u8; 15] =
+    &[11, 5, 128, 108, 111, 114, 101, 109, 32, 105, 112, 115, 117, 109, 3];
 
-pub const DEFLATE_COMPRESSED: &[u8; 17] = &[
-    202, 201, 47, 74, 205, 85, 200, 44, 40, 46, 205, 5, 0, 0, 0, 255, 255,
-];
+pub const DEFLATE_COMPRESSED: &[u8; 17] =
+    &[202, 201, 47, 74, 205, 85, 200, 44, 40, 46, 205, 5, 0, 0, 0, 255, 255];
 
 pub const GZIP_COMPRESSED: &[u8; 31] = &[
     31, 139, 8, 0, 0, 0, 0, 0, 0, 255, 203, 201, 47, 74, 205, 85, 200, 44, 40, 46, 205, 5, 0, 142,
@@ -30,11 +28,7 @@ pub const GZIP_COMPRESSED: &[u8; 31] = &[
 pub const DECOMPRESSED: &[u8; 11] = b"lorem ipsum";
 
 pub fn sample_post() -> Post {
-    Post {
-        id: 1,
-        title: "Test".to_string(),
-        body: "Some test to do".to_string(),
-    }
+    Post { id: 1, title: "Test".to_string(), body: "Some test to do".to_string() }
 }
 
 #[derive(Default, Serialize, Deserialize, Debug, PartialEq)]

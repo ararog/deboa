@@ -24,7 +24,9 @@ async fn test_msgpack_response() -> Result<()> {
         .header(http::header::CONTENT_TYPE, "application/msgpack")
         .body(&MSGPACK_POST[..])
         .build();
-    let response: Post = response.body_as(MsgPackBody).await?;
+    let response: Post = response
+        .body_as(MsgPackBody)
+        .await?;
 
     assert_eq!(response, data);
     Ok(())

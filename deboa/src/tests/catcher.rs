@@ -18,15 +18,20 @@ async fn test_catcher_request() {
         .expect("REASON")
         .build()
         .unwrap();
-    mock.expect_on_request().returning(move |req| {
-        req.headers_mut()
-            .insert("test", HeaderValue::from_str("test").unwrap());
-        Ok(None)
-    });
+    mock.expect_on_request()
+        .returning(move |req| {
+            req.headers_mut()
+                .insert("test", HeaderValue::from_str("test").unwrap());
+            Ok(None)
+        });
 
-    let _ = mock.on_request(&mut request).await;
+    let _ = mock
+        .on_request(&mut request)
+        .await;
     assert_eq!(
-        request.headers().get("test"),
+        request
+            .headers()
+            .get("test"),
         Some(&HeaderValue::from_str("test").unwrap())
     );
 }
@@ -50,16 +55,27 @@ async fn test_catcher_response() {
             Ok(())
         });
 
-    let client = Deboa::builder().catch(catcher_mock).build();
-    let mut response = DeboaRequest::get(server.url("/get").as_str())
-        .expect("Invalid URL")
-        .send_with(client)
-        .await
-        .unwrap();
+    let client = Deboa::builder()
+        .catch(catcher_mock)
+        .build();
+    let mut response = DeboaRequest::get(
+        server
+            .url("/get")
+            .as_str(),
+    )
+    .expect("Invalid URL")
+    .send_with(client)
+    .await
+    .unwrap();
 
     http_mock.assert();
 
-    assert_eq!(response.raw_body().await, b"test");
+    assert_eq!(
+        response
+            .raw_body()
+            .await,
+        b"test"
+    );
 }
 
 #[tokio::test]
@@ -71,12 +87,13 @@ async fn test_catcher_early_response() {
     let mut catcher_mock = MockDeboaCatcher::new();
 
     let mut headers = HeaderMap::new();
-    headers.insert(
-        HeaderName::from_static("test"),
-        HeaderValue::from_static("test"),
-    );
+    headers.insert(HeaderName::from_static("test"), HeaderValue::from_static("test"));
 
-    let url = url_from_string(server.url("/get").to_string());
+    let url = url_from_string(
+        server
+            .url("/get")
+            .to_string(),
+    );
 
     catcher_mock
         .expect_on_request()
@@ -96,14 +113,26 @@ async fn test_catcher_early_response() {
         .times(1)
         .return_const(Ok(()));
 
-    let client = Deboa::builder().catch(catcher_mock).build();
-    let response = DeboaRequest::get(server.url("/get").as_str())
-        .expect("Invalid URL")
-        .send_with(client)
-        .await
-        .unwrap();
+    let client = Deboa::builder()
+        .catch(catcher_mock)
+        .build();
+    let response = DeboaRequest::get(
+        server
+            .url("/get")
+            .as_str(),
+    )
+    .expect("Invalid URL")
+    .send_with(client)
+    .await
+    .unwrap();
 
     http_mock.assert_calls(0);
 
-    assert_eq!(response.headers().get("test").unwrap(), "test");
+    assert_eq!(
+        response
+            .headers()
+            .get("test")
+            .unwrap(),
+        "test"
+    );
 }

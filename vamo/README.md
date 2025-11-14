@@ -8,7 +8,10 @@
 use vamo::Vamo;
 
 let vamo = Vamo::new("https://api.example.com")?;
-let response = vamo.get("/users")?.send().await?;
+let response = vamo
+    .get("/users")?
+    .send()
+    .await?;
 ```
 
 ## Features
