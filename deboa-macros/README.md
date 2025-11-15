@@ -68,8 +68,11 @@ let mut client = Deboa::new();
 // fetch macro
 let response: Vec<Post> = fetch!("https://jsonplaceholder.typicode.com/posts", JsonBody, Vec<Post>, &mut client);
 
-// get macro
+// get macro, returning posts serialized as json
 let response: Vec<Post> = get!("https://jsonplaceholder.typicode.com/posts", JsonBody, Vec<Post>, &mut client);
+
+//get macro, returning text
+let response: String = get!("https://rust-lang.org", &mut client);
 
 // post macro
 let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &mut client);
