@@ -1,8 +1,9 @@
-use deboa::Result;
+use deboa::{Deboa, Result, async_trait};
 use deboa_extras::http::serde::json::JsonBody;
+use http::header::AUTHORIZATION;
 use serde::Deserialize;
-use tokio::sync::Mutex;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 use vamo::Vamo;
 
 #[derive(Debug, Deserialize)]
@@ -13,9 +14,30 @@ struct Post {
     body: String,
 }
 
+struct AuthCatcher;
+
+#[async_trait]
+impl deboa::catcher::DeboaCatcher for AuthCatcher {
+    async fn on_request(
+        &self,
+        request: &mut deboa::request::DeboaRequest,
+    ) -> Result<Option<deboa::response::DeboaResponse>> {
+        request.add_header(AUTHORIZATION, "Bearer token");
+        Ok(None)
+    }
+
+    async fn on_response(&self, _response: &mut deboa::response::DeboaResponse) -> Result<()> {
+        Ok(())
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
+    let mut client = Deboa::new();
+    client.catch(AuthCatcher);
     let vamo = Arc::new(Mutex::new(Vamo::new("https://jsonplaceholder.typicode.com")?));
+    vamo.lock().await.client(client);
+
     let ids = vec![1, 16, 21, 26, 31, 36, 41, 46, 51, 56, 61, 66];
     let mut handles = vec![];
     for id in ids {
@@ -29,7 +51,7 @@ async fn main() -> Result<()> {
             }
         }));
     }
-    
+
     for handle in handles {
         let _ = handle.await;
     }
