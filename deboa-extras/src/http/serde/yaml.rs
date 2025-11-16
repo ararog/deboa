@@ -1,5 +1,3 @@
-use std::io::Cursor;
-
 use deboa::client::serde::{RequestBody, ResponseBody};
 use deboa::{
     errors::{ContentError, DeboaError},

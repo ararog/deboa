@@ -31,24 +31,8 @@ impl Resource for Post {
         self.id.to_string()
     }
 
-    fn get_path(&self) -> &str {
-        "/posts/:id"
-    }
-
-    fn post_path(&self) -> &str {
-        "/posts"
-    }
-
-    fn delete_path(&self) -> &str {
-        "/posts/:id"
-    }
-
-    fn put_path(&self) -> &str {
-        "/posts/:id"
-    }
-
-    fn patch_path(&self) -> &str {
-        "/posts/:id"
+    fn name(&self) -> &str {
+        "posts"
     }
 
     fn body_type(&self) -> impl RequestBody {
@@ -196,7 +180,7 @@ async fn test_post_resource() -> Result<()> {
 
     let mut vamo = Vamo::new(server.url("/api"))?;
     let response = vamo
-        .post_resource(&mut post)?
+        .create(&mut post)?
         .send()
         .await?;
 
@@ -221,7 +205,7 @@ async fn test_put_resource() -> Result<()> {
 
     let mut vamo = Vamo::new(server.url("/api"))?;
     let response = vamo
-        .put_resource(&mut post)?
+        .update(&mut post)?
         .send()
         .await?;
 
@@ -242,7 +226,29 @@ async fn test_patch_resource() -> Result<()> {
 
     let mut vamo = Vamo::new(server.url("/api"))?;
     let response = vamo
-        .patch_resource(&mut post)?
+        .edit(&mut post)?
+        .send()
+        .await?;
+
+    mock.assert();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    Ok(())
+}
+
+
+#[tokio::test]
+async fn test_remove_resource() -> Result<()> {
+    let server = MockServer::start();
+    let mock =
+        setup_server(&server, "/api/posts/1", DELETE, StatusCode::OK);
+
+    let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
+
+    let mut vamo = Vamo::new(server.url("/api"))?;
+    let response = vamo
+        .remove(&mut post)?
         .send()
         .await?;
 

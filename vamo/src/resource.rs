@@ -37,11 +37,11 @@
 //!         self.id.map(|id| id.to_string()).unwrap_or_default()
 //!     }
 //!
-//!     fn get_path(&self) -> &str { "/users/:id" }
-//!     fn post_path(&self) -> &str { "/users" }
-//!     fn delete_path(&self) -> &str { "/users/:id" }
-//!     fn put_path(&self) -> &str { "/users/:id" }
-//!     fn patch_path(&self) -> &str { "/users/:id" }
+//!     fn load_path(&self) -> &str { "/users/:id" }
+//!     fn create_path(&self) -> &str { "/users" }
+//!     fn remove_path(&self) -> &str { "/users/:id" }
+//!     fn update_path(&self) -> &str { "/users/:id" }
+//!     fn edit_path(&self) -> &str { "/users/:id" }
 //!     
 //!     fn body_type(&self) -> impl RequestBody {
 //!         JsonBody
@@ -53,56 +53,28 @@ use serde::Serialize;
 
 /// Trait to be implemented by resources.
 pub trait Resource {
-    /// Returns the id of the resource.
+    /// Returns the id of resource.
     ///
     /// # Returns
     ///
-    /// * `String` - The id of the resource.
+    /// * `String` - The id of resource.
     ///
     fn id(&self) -> String;
-    /// Returns the get path of the resource.
+    /// Returns the name of resource.
     ///
     /// # Returns
     ///
-    /// * `&str` - The get path of the resource.
+    /// * `&str` - The name of resource.
     ///
-    fn get_path(&self) -> &str;
-    /// Returns the post path of the resource.
-    ///
-    /// # Returns
-    ///
-    /// * `&str` - The post path of the resource.
-    ///
-    fn post_path(&self) -> &str;
-    /// Returns the delete path of the resource.
+    fn name(&self) -> &str;
+    /// Returns the body type of resource.
     ///
     /// # Returns
     ///
-    /// * `&str` - The delete path of the resource.
-    ///
-    fn delete_path(&self) -> &str;
-    /// Returns the put path of the resource.
-    ///
-    /// # Returns
-    ///
-    /// * `&str` - The put path of the resource.
-    ///
-    fn put_path(&self) -> &str;
-    /// Returns the patch path of the resource.
-    ///
-    /// # Returns
-    ///
-    /// * `&str` - The patch path of the resource.
-    ///
-    fn patch_path(&self) -> &str;
-    /// Returns the body type of the resource.
-    ///
-    /// # Returns
-    ///
-    /// * `impl RequestBody` - The body type of the resource.
+    /// * `impl RequestBody` - The body type of resource.
     ///
     fn body_type(&self) -> impl RequestBody;
-    /// Adds a path to the resource.
+    /// Adds a path to the url.
     ///
     /// # Arguments
     ///
@@ -118,6 +90,26 @@ pub trait Resource {
 }
 
 /// Trait which allow http methods on resources
+/// 
+/// # Type Parameters
+///
+/// * `R` - The resource type.
+/// 
+/// # Example
+///
+/// ```rust,compile_fail
+/// use vamo::{Vamo, resource::{Resource, ResourceMethod}};
+///
+/// let mut vamo = Vamo::new("https://api.example.com")?;
+/// // Assuming Post is a Resource
+/// let mut post = Post {
+///     id: 1,
+///     title: "Some title".to_string(),
+///     body: "Some body".to_string(),
+///     user_id: 1,
+/// };
+/// let response = vamo.create(&mut post)?.send().await?;
+/// ```
 pub trait ResourceMethod<R>
 where
     R: Resource + Serialize,
@@ -145,9 +137,9 @@ where
     ///     body: "Some body".to_string(),
     ///     user_id: 1,
     /// };
-    /// let response = vamo.get_resource(&mut post)?.send().await?;
+    /// let response = vamo.load(&mut post)?.send().await?;
     /// ```
-    fn get_resource(&mut self, resource: &mut R) -> Result<&mut Self>;
+    fn load(&mut self, resource: &mut R) -> Result<&mut Self>;
     /// Post a resource to REST endpoint
     ///
     /// # Arguments
@@ -171,9 +163,9 @@ where
     ///     body: "Some body".to_string(),
     ///     user_id: 1,
     /// };
-    /// let response = vamo.post_resource(&mut post)?.send().await?;
+    /// let response = vamo.create(&mut post)?.send().await?;
     /// ```
-    fn post_resource(&mut self, resource: &mut R) -> Result<&mut Self>;
+    fn create(&mut self, resource: &mut R) -> Result<&mut Self>;
     /// Put a resource to REST endpoint
     ///
     /// # Arguments
@@ -197,9 +189,9 @@ where
     ///     body: "Some body".to_string(),
     ///     user_id: 1,
     /// };
-    /// let response = vamo.put_resource(&mut post)?.send().await?;
+    /// let response = vamo.update(&mut post)?.send().await?;
     /// ```
-    fn put_resource(&mut self, resource: &mut R) -> Result<&mut Self>;
+    fn update(&mut self, resource: &mut R) -> Result<&mut Self>;
     /// Patch a resource to REST endpoint
     ///
     /// # Arguments
@@ -223,9 +215,9 @@ where
     ///     body: "Some body".to_string(),
     ///     user_id: 1,
     /// };
-    /// let response = vamo.patch_resource(&mut post)?.send().await?;
+    /// let response = vamo.edit(&mut post)?.send().await?;
     /// ```
-    fn patch_resource(&mut self, resource: &mut R) -> Result<&mut Self>;
+    fn edit(&mut self, resource: &mut R) -> Result<&mut Self>;
     /// Delete a resource to REST endpoint
     ///
     /// # Arguments
@@ -249,7 +241,7 @@ where
     ///     body: "Some body".to_string(),
     ///     user_id: 1,
     /// };
-    /// let response = vamo.delete_resource(&mut post)?.send().await?;
+    /// let response = vamo.remove(&mut post)?.send().await?;
     /// ```
-    fn delete_resource(&mut self, resource: &mut R) -> Result<&mut Self>;
+    fn remove(&mut self, resource: &mut R) -> Result<&mut Self>;
 }

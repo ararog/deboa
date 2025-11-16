@@ -35,7 +35,7 @@
 //!   // Make a GET request
 //!   let user: serde_json::Value = vamo
 //!     .get("/users/1")?
-//!     .send_with(&mut vamo)
+//!     .send()
 //!     .await?
 //!     .body_as(JsonBody)
 //!     .await?;
@@ -57,14 +57,33 @@
 //!     name: String,
 //!     email: String,
 //! }
+//! 
+//! impl Resource for User {
+//!     fn id(&self) -> String {
+//!         self.id.map(|id| id.to_string()).unwrap_or_default()
+//!     }
+//!
+//!     fn load_path(&self) -> &str { "/users/:id" }
+//!     fn create_path(&self) -> &str { "/users" }
+//!     fn remove_path(&self) -> &str { "/users/:id" }
+//!     fn update_path(&self) -> &str { "/users/:id" }
+//!     fn edit_path(&self) -> &str { "/users/:id" }
+//!     
+//!     fn body_type(&self) -> impl RequestBody {
+//!         JsonBody
+//!     }
+//! }
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!   let mut vamo = Vamo::new("https://api.example.com")?;
-//!   let users = Resource::new("/users", &mut vamo);
-//!
+//!   let mut users = User {
+//!     id: None,
+//!     name: String::new(),
+//!     email: String::new(),
+//!   };
 //!   // List all users
-//!   let all_users: Vec<User> = users.list().await?;
+//!   let all_users: Vec<User> = vamo.load(&mut users).await?;
 //!
 //!   // Create a new user
 //!   let new_user = User {
@@ -72,12 +91,12 @@
 //!     name: "John Doe".to_string(),
 //!     email: "john@example.com".to_string(),
 //!   };
-//!   let created: User = users.create(&new_user).await?;
+//!   let created: User = vamo.create(&new_user).await?;
 //!   Ok(())
 //! }
 //! ```
 
-use std::sync::Arc;
+use std::{sync::Arc};
 
 use crate::resource::{Resource, ResourceMethod};
 use deboa::{
@@ -216,16 +235,14 @@ impl Vamo {
 }
 
 impl<R: Resource + Serialize> ResourceMethod<R> for Vamo {
-    fn get_resource(&mut self, resource: &mut R) -> Result<&mut Self> {
-        self.path = resource.add_path(resource.get_path());
+    fn load(&mut self, resource: &mut R) -> Result<&mut Self> {
+        self.path = format!("/{}/{}", resource.name(), resource.id());
         self.method = Method::GET;
         Ok(self)
     }
 
-    fn post_resource(&mut self, resource: &mut R) -> Result<&mut Self> {
-        self.path = resource
-            .post_path()
-            .to_string();
+    fn create(&mut self, resource: &mut R) -> Result<&mut Self> {
+        self.path = format!("/{}", resource.name());
         self.method = Method::POST;
         self.body = resource
             .body_type()
@@ -234,8 +251,8 @@ impl<R: Resource + Serialize> ResourceMethod<R> for Vamo {
         Ok(self)
     }
 
-    fn put_resource(&mut self, resource: &mut R) -> Result<&mut Self> {
-        self.path = resource.add_path(resource.put_path());
+    fn update(&mut self, resource: &mut R) -> Result<&mut Self> {
+        self.path = format!("/{}/{}", resource.name(), resource.id());
         self.method = Method::PUT;
         self.body = resource
             .body_type()
@@ -244,8 +261,8 @@ impl<R: Resource + Serialize> ResourceMethod<R> for Vamo {
         Ok(self)
     }
 
-    fn patch_resource(&mut self, resource: &mut R) -> Result<&mut Self> {
-        self.path = resource.add_path(resource.patch_path());
+    fn edit(&mut self, resource: &mut R) -> Result<&mut Self> {
+        self.path = format!("/{}/{}", resource.name(), resource.id());
         self.method = Method::PATCH;
         self.body = resource
             .body_type()
@@ -254,8 +271,8 @@ impl<R: Resource + Serialize> ResourceMethod<R> for Vamo {
         Ok(self)
     }
 
-    fn delete_resource(&mut self, resource: &mut R) -> Result<&mut Self> {
-        self.path = resource.add_path(resource.delete_path());
+    fn remove(&mut self, resource: &mut R) -> Result<&mut Self> {
+        self.path = format!("/{}/{}", resource.name(), resource.id());
         self.method = Method::DELETE;
         Ok(self)
     }
