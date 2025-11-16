@@ -59,7 +59,7 @@ use serde::Serialize;
 /// 
 /// # Example
 ///
-/// ```rust,compile_fail
+/// ```rust,no_run
 /// use serde::{Serialize, Deserialize};
 /// use vamo::resource::Resource;
 /// use deboa::{Result, client::serde::RequestBody};
