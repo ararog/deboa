@@ -15,8 +15,7 @@ pub struct Post {
 async fn main() -> Result<()> {
     let mut client = Deboa::new();
 
-    let url = concat!("https://jsonplaceholder.typicode.com/posts/", 1);
-    let response: Post = url
+    let response: Post = concat!("https://jsonplaceholder.typicode.com/posts/", 1)
         .fetch_with(&mut client)
         .await?
         .body_as(JsonBody)
