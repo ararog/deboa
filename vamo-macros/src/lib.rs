@@ -33,11 +33,7 @@
 //! use deboa_extras::http::serde::json::JsonBody;
 //!
 //! #[derive(Debug, Serialize, Deserialize, Resource)]
-//! #[get("/posts/:id")]
-//! #[post("/posts")]
-//! #[put("/posts/:id")]
-//! #[patch("/posts/:id")]
-//! #[delete("/posts/:id")]
+//! #[name("posts")]
 //! #[body_type(JsonBody)]
 //! struct Post {
 //!     #[rid]
@@ -50,7 +46,6 @@
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let mut vamo = vamo::Vamo::new("https://jsonplaceholder.typicode.com")?;
-//!     let posts = Post::new("/posts", &mut vamo);
 //!
 //!     // Create a new post
 //!     let new_post = Post {
@@ -59,12 +54,8 @@
 //!         body: "This is a test post".into(),
 //!         user_id: 1,
 //!     };
-//!     let created: Post = posts.create(&new_post).await?;
+//!     let created: Post = vamo.create(&new_post).await?;
 //!     println!("Created post with ID: {}", created.id.unwrap());
-//!
-//!     // Get all posts
-//!     let all_posts: Vec<Post> = posts.list().await?;
-//!     println!("Total posts: {}", all_posts.len());
 //!
 //!     Ok(())
 //! }
@@ -74,10 +65,7 @@
 //!
 //! ### Struct Attributes
 //!
-//! - `#[post("path")]`: Specify the POST endpoint for creating resources
-//! - `#[put("path")]`: Specify the PUT endpoint for updating resources
-//! - `#[patch("path")]`: Specify the PATCH endpoint for partial updates
-//! - `#[delete("path")]`: Specify the DELETE endpoint for removing resources
+//! - `#[name("path")]`: Specify the resource name, rest endpoint (e.g., `posts`, `users`)
 //! - `#[body_type(Type)]`: Specify the request/response body type (e.g., `JsonBody`, `XmlBody`)
 //!
 //! ### Field Attributes
@@ -88,12 +76,9 @@
 //!
 //! The `Resource` derive macro automatically implements the following methods:
 //! - `new(base_path, vamo)`: Create a new resource client
-//! - `list(&self)`: List all resources
-//! - `get(&self, id)`: Get a specific resource by ID
-//! - `create(&self, item)`: Create a new resource
-//! - `update(&self, id, item)`: Update a resource (full update)
-//! - `patch(&self, id, item)`: Partially update a resource
-//! - `delete(&self, id)`: Delete a resource
+//! - `id()`: Get the resource identifier
+//! - `name()`: Get the resource name
+//! - `body_type()`: Get the resource body type
 
 extern crate proc_macro;
 use core::panic;
@@ -118,18 +103,14 @@ fn extract_ident(attr: &Attribute) -> Option<Ident> {
     Some(ident.unwrap())
 }
 
-#[proc_macro_derive(Resource, attributes(rid, get, post, put, patch, delete, body_type))]
+#[proc_macro_derive(Resource, attributes(rid, name, body_type))]
 /// Derive macro for the Resource trait.
 ///
 /// # Attributes
 ///
-/// * `rid` - The id of the resource.
-/// * `get` - The get path of the resource.
-/// * `post` - The post path of the resource.
-/// * `put` - The put path of the resource.
-/// * `patch` - The patch path of the resource.
-/// * `delete` - The delete path of the resource.
-/// * `body_type` - The body type of the resource (impl RequestBody from deboa-extras).
+/// * `rid` - The id of resource.
+/// * `name` - The name of resource.
+/// * `body_type` - The body type of resource (impl RequestBody from deboa-extras).
 ///
 /// # Example
 ///
@@ -137,11 +118,7 @@ fn extract_ident(attr: &Attribute) -> Option<Ident> {
 /// use deboa_extras::http::serde::json::JsonBody;
 ///
 /// #[derive(Resource)]
-/// #[get("/posts/:id")]
-/// #[post("/posts")]
-/// #[put("/posts/:id")]
-/// #[patch("/posts/:id")]
-/// #[delete("/posts/:id")]
+/// #[name("posts")]
 /// #[body_type(JsonBody)]
 /// struct MyResource {
 ///     #[rid("id")]
@@ -172,38 +149,16 @@ pub fn resource(input: TokenStream) -> TokenStream {
     }
 
     // Extract literals from attributes
-    let mut get_path: Option<String> = None;
-    let mut post_path: Option<String> = None;
-    let mut put_path: Option<String> = None;
-    let mut patch_path: Option<String> = None;
-    let mut delete_path: Option<String> = None;
+    let mut resource_name: Option<String> = None;
+
     let mut body_type: Option<Ident> = None;
     for attr in ast.attrs {
         if attr
             .path()
-            .is_ident("get")
+            .is_ident("name")
         {
-            get_path = extract_path(&attr);
-        } else if attr
-            .path()
-            .is_ident("post")
-        {
-            post_path = extract_path(&attr);
-        } else if attr
-            .path()
-            .is_ident("put")
-        {
-            put_path = extract_path(&attr);
-        } else if attr
-            .path()
-            .is_ident("patch")
-        {
-            patch_path = extract_path(&attr);
-        } else if attr
-            .path()
-            .is_ident("delete")
-        {
-            delete_path = extract_path(&attr);
+            resource_name = extract_path(&attr);
+
         } else if attr
             .path()
             .is_ident("body_type")
@@ -212,25 +167,10 @@ pub fn resource(input: TokenStream) -> TokenStream {
         }
     }
 
-    if get_path.is_none() {
-        panic!("missing path for get");
+    if resource_name.is_none() {
+        panic!("resource name is required");
     }
 
-    if post_path.is_none() {
-        panic!("missing path for post");
-    }
-
-    if put_path.is_none() {
-        panic!("missing path for put");
-    }
-
-    if patch_path.is_none() {
-        panic!("missing path for patch");
-    }
-
-    if delete_path.is_none() {
-        panic!("missing path for delete");
-    }
 
     if body_type.is_none() {
         panic!("body type is required");
@@ -242,24 +182,8 @@ pub fn resource(input: TokenStream) -> TokenStream {
                 self.#rid_field.to_string()
             }
 
-            fn get_path(&self) -> &str {
-                #get_path
-            }
-
-            fn post_path(&self) -> &str {
-                #post_path
-            }
-
-            fn put_path(&self) -> &str {
-                #put_path
-            }
-
-            fn patch_path(&self) -> &str {
-                #patch_path
-            }
-
-            fn delete_path(&self) -> &str {
-                #delete_path
+            fn name(&self) -> &str {
+                #resource_name
             }
 
             fn body_type(&self) -> impl RequestBody {

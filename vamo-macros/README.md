@@ -11,11 +11,7 @@ use vamo_macros::Resource;
 use vamo::{Vamo, ResourceMethod};
 
 #[derive(Resource)]
-#[get("/users/:id")]
-#[post("/users")]
-#[put("/users/:id")]
-#[patch("/users/:id")]
-#[delete("/users/:id")]
+#[name("posts")]
 #[body_type(JsonBody)]
 pub struct User {
     #[rid]
@@ -24,7 +20,7 @@ pub struct User {
 }
 
 let mut vamo = Vamo::new("https://api.example.com")?;
-let response = vamo.post_resource(user).await?;
+let response = vamo.create(user).await?;
 ```
 
 ## Features

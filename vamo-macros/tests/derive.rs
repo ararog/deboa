@@ -8,11 +8,7 @@ use vamo::{resource::ResourceMethod, Vamo};
 use vamo_macros::Resource;
 
 #[derive(Resource, Serialize)]
-#[get("/users/:id")]
-#[post("/users")]
-#[put("/users/:id")]
-#[patch("/users/:id")]
-#[delete("/users/:id")]
+#[name("users")]
 #[body_type(JsonBody)]
 pub struct User {
     #[rid]
@@ -31,7 +27,7 @@ async fn test_post_resource() -> Result<()> {
     url.push_str("/api");
     let mut vamo = Vamo::new(url.to_string())?;
     let response = vamo
-        .post_resource(&mut user)?
+        .create(&mut user)?
         .send()
         .await?;
 
