@@ -11,3 +11,4 @@ tokio = { version = "1.47.2", features = ["macros", "rt-multi-thread"], default-
 http = { version = "1.4.0", optional = true }
 serde = "1.0.226"
 serde_json = "1.0.145"
+rayon = "1.11.0"
