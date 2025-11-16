@@ -18,6 +18,20 @@ use url::Url;
 
 pub type DeboaBody = Either<Incoming, Full<Bytes>>;
 
+/// Trait to allow convert a type into a DeboaBody.
+/// 
+/// # Examples
+/// 
+/// ``` compile_fail
+/// use deboa::{Deboa, response::IntoBody};
+///
+/// let mut client = Deboa::new();
+///
+/// let response = b"Some bytes"
+///   .into_body()
+///   .unwrap();
+/// assert_eq!(response, DeboaBody::Right(Full::<Bytes>::from(b"Some bytes")));
+/// ```
 pub trait IntoBody {
     fn into_body(self) -> DeboaBody;
 }

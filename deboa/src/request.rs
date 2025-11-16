@@ -20,6 +20,21 @@ use crate::{
     Deboa, Result,
 };
 
+/// Trait to allow make a request from different types.
+/// 
+/// # Examples
+/// 
+/// ``` compile_fail
+/// use deboa::{Deboa, request::IntoRequest};
+///
+/// let mut client = Deboa::new();
+///
+/// let response = "https://jsonplaceholder.typicode.com"
+///   .into_request()
+///   .await?;
+/// assert_eq!(response.status(), 200);
+/// ```
+#[async_trait]
 pub trait IntoRequest {
     fn into_request(self) -> Result<DeboaRequest>;
 }
@@ -90,6 +105,19 @@ impl Fetch for &str {
 }
 
 /// Trait to allow make a get request from different types.
+/// 
+/// # Examples
+/// 
+/// ``` compile_fail
+/// use deboa::{Deboa, request::FetchWith};
+///
+/// let mut client = Deboa::new();
+///
+/// let response = "https://jsonplaceholder.typicode.com"
+///   .fetch_with(&mut client)
+///   .await?;
+/// assert_eq!(response.status(), 200);
+/// ```
 #[async_trait]
 pub trait FetchWith {
     /// Fetch the request.
