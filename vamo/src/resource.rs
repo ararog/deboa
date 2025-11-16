@@ -51,7 +51,39 @@
 use deboa::{client::serde::RequestBody, Result};
 use serde::Serialize;
 
-/// Trait to be implemented by resources.
+/// Trait to be implemented by struct resources.
+/// 
+/// # Type Parameters
+///
+/// * `R` - The resource type.
+/// 
+/// # Example
+///
+/// ```rust,compile_fail
+/// use serde::{Serialize, Deserialize};
+/// use vamo::resource::Resource;
+/// use deboa::{Result, client::serde::RequestBody};
+/// use deboa_extras::http::serde::json::JsonBody;
+///
+/// #[derive(Debug, Serialize, Deserialize)]
+/// struct User {
+///     id: Option<u64>,
+///     name: String,
+///     email: String,
+/// }
+///
+/// impl Resource for User {
+///     fn id(&self) -> String {
+///         self.id.map(|id| id.to_string()).unwrap_or_default()
+///     }
+///
+///     fn name(&self) -> &str { "users" }
+///     
+///     fn body_type(&self) -> impl RequestBody {
+///         JsonBody
+///     }
+/// }
+/// ```
 pub trait Resource {
     /// Returns the id of resource.
     ///
