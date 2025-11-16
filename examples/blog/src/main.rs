@@ -63,7 +63,7 @@ async fn fetch_post(vamo: Arc<Mutex<Vamo>>, id: u32) -> Result<Post> {
     let post: Post = vamo
         .lock()
         .await
-        .get(format!("/posts/{id}").as_str())
+        .get(&format!("/posts/{id}"))
         .send()
         .await?
         .body_as(JsonBody)
