@@ -1,3 +1,83 @@
+//! # HTTP Response Module
+//!
+//! This module provides comprehensive HTTP response handling capabilities for the Deboa HTTP client.
+//! It includes response parsing, body processing, cookie management, and various utilities for
+//! working with HTTP responses.
+//!
+//! ## Key Components
+//!
+//! - [`DeboaResponse`]: Main response structure with full HTTP functionality
+//! - [`IntoBody`]: Trait for converting types into response bodies
+//! - [`DeboaBody`]: Type alias for response body types
+//! - Response body deserialization and streaming
+//! - Cookie extraction and management
+//! - Response status and header handling
+//!
+//! ## Features
+//!
+//! - Async response body streaming
+//! - Automatic JSON deserialization
+//! - Cookie jar integration
+//! - Response body buffering and streaming
+//! - Status code handling
+//! - Header access and manipulation
+//! - Response upgrade support (WebSocket, etc.)
+//! - Runtime-agnostic body handling (Tokio/Smol)
+//!
+//! ## Examples
+//!
+//! ### Basic Response Handling
+//!
+//! ```rust, ignore
+//! use deboa::{Deboa, request::IntoRequest};
+//!
+//! let mut client = Deboa::new();
+//! let response = "https://api.example.com/data"
+//!     .into_request()
+//!     .execute(&mut client)
+//!     .await?;
+//!
+//! println!("Status: {}", response.status());
+//! println!("Body: {}", response.text().await?);
+//! ```
+//!
+//! ### JSON Response Parsing
+//!
+//! ```rust, ignore
+//! use deboa::{Deboa, request::get};
+//! use serde::Deserialize;
+//!
+//! #[derive(Deserialize)]
+//! struct User {
+//!     id: u32,
+//!     name: String,
+//! }
+//!
+//! let mut client = Deboa::new();
+//! let response = get("https://api.example.com/user/1")
+//!     .execute(&mut client)
+//!     .await?;
+//!
+//! let user: User = response.json().await?;
+//! println!("User: {}", user.name);
+//! ```
+//!
+//! ### Streaming Response Body
+//!
+//! ```rust, ignore
+//! use deboa::{Deboa, request::get};
+//! use futures::StreamExt;
+//!
+//! let mut client = Deboa::new();
+//! let response = get("https://api.example.com/large-data")
+//!     .execute(&mut client)
+//!     .await?;
+//!
+//! let mut stream = response.bytes_stream();
+//! while let Some(chunk) = stream.next().await {
+//!     // Process chunk
+//! }
+//! ```
 use std::fmt::Debug;
 use std::fs::write;
 
@@ -18,7 +98,11 @@ use url::Url;
 
 pub type DeboaBody = Either<Incoming, Full<Bytes>>;
 
-/// Trait to allow convert a type into a DeboaBody.
+/// Trait to allow converting a type into a DeboaBody.
+/// 
+/// This trait provides a flexible way to convert various input types into
+/// HTTP response bodies. It enables convenient body creation from bytes,
+/// strings, and other body-like objects.
 /// 
 /// # Examples
 /// 
