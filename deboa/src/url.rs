@@ -3,7 +3,7 @@ use url::Url;
 use crate::{errors::RequestError, DeboaError, Result};
 
 /// Trait to convert a value into a Url.
-pub trait IntoUrl {
+pub trait IntoUrl: private::Sealed {
     /// Convert the value into a Url.
     ///
     /// # Returns
@@ -68,3 +68,20 @@ impl IntoUrl for String {
         self.parse_url()
     }
 }
+
+/// Sealed trait to prevent external implementation.
+/// 
+/// This is used to ensure that the `IntoUrl` trait can only be implemented
+/// for types that are defined in this crate.
+mod private {
+    pub trait Sealed {}
+}
+
+/// Implement the `IntoUrl` trait for `Url`, `&str`, `&mut String`, and `String`.
+impl private::Sealed for Url {}
+
+impl private::Sealed for &str {}
+
+impl private::Sealed for &mut String {}
+
+impl private::Sealed for String {}
