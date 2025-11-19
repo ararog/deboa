@@ -1,5 +1,7 @@
 use deboa::{catcher::DeboaCatcher, response::DeboaResponse, Result};
-use http::{HeaderMap, HeaderValue, StatusCode};
+use http::{Response, StatusCode};
+use http_body_util::Either;
+use http_body_util::Full;
 
 use crate::{catcher::encoding::EncodingCatcher, io::deflate::DeflateDecompressor};
 
@@ -12,16 +14,15 @@ use deboa_tests::{
 async fn test_deflate_decompress() -> Result<()> {
     let encoding_catcher = EncodingCatcher::register_decoders(vec![DeflateDecompressor]);
 
-    let mut headers = HeaderMap::new();
-    headers.insert("Content-Encoding", HeaderValue::from_static("deflate"));
-    let response = DeboaResponse::new(
-        fake_url(),
-        StatusCode::OK,
-        headers,
-        DEFLATE_COMPRESSED.as_ref(),
-    );
+    let response = Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Encoding", "deflate")
+        .body(Either::Right(Full::from(DEFLATE_COMPRESSED.to_vec())))
+        .unwrap();
 
-    let mut response = encoding_catcher.on_response(response).await?;
+    let mut response = DeboaResponse::new(fake_url(), response);
+
+    encoding_catcher.on_response(&mut response).await?;
 
     assert_eq!(response.raw_body().await, DECOMPRESSED);
     Ok(())
