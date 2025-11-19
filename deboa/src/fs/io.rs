@@ -1,10 +1,85 @@
+//! # Compression I/O Module
+//!
+//! This module provides compression functionality for HTTP requests and responses.
+//! It defines a `Compressor` trait that allows for different compression algorithms
+//! to be implemented and used with the Deboa HTTP client.
+//!
+//! ## Purpose
+//!
+//! The compression module enables automatic compression of request bodies to reduce
+//! bandwidth usage and improve performance when sending large payloads.
+//!
+//! ## Usage
+//!
+//! Implement the `Compressor` trait for your desired compression algorithm:
+//!
+//! ```rust, ignore
+//! use deboa::fs::io::Compressor;
+//! use async_trait::async_trait;
+//! use bytes::Bytes;
+//! use deboa::{request::DeboaRequest, Result};
+//!
+//! #[async_trait]
+//! impl Compressor for MyCompressor {
+//!     fn name(&self) -> String {
+//!         "my-compression".to_string()
+//!     }
+//!
+//!     async fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes> {
+//!         // Implement compression logic here
+//!         Ok(Bytes::from("compressed-data"))
+//!     }
+//! }
+//! ```
+//!
+//! ## Supported Features
+//!
+//! - Async compression operations
+//! - Thread-safe implementations (`Send + Sync`)
+//! - Custom compression algorithms
+//! - Integration with HTTP request pipeline
+
 #![allow(unused_variables)]
 use async_trait::async_trait;
 use bytes::Bytes;
 
 use crate::{request::DeboaRequest, response::DeboaResponse, Result};
 
-/// Trait that represents the compressor.
+/// Trait that represents a compression algorithm for HTTP request bodies.
+///
+/// This trait defines the interface that all compression implementations must follow.
+/// It enables automatic compression of request payloads to reduce bandwidth usage
+/// and improve transfer speeds.
+///
+/// # Requirements
+///
+/// Implementations must be:
+/// - `Send`: Safe to transfer across thread boundaries
+/// - `Sync`: Safe to share between threads
+/// - `'static`: Valid for the entire lifetime of the program
+///
+/// # Examples
+///
+/// ```rust, ignore
+/// use deboa::fs::io::Compressor;
+/// use async_trait::async_trait;
+/// use bytes::Bytes;
+/// use deboa::{request::DeboaRequest, Result};
+///
+/// struct GzipCompressor;
+///
+/// #[async_trait]
+/// impl Compressor for GzipCompressor {
+///     fn name(&self) -> String {
+///         "gzip".to_string()
+///     }
+///
+///     async fn compress_body(&self, request: &DeboaRequest) -> Result<Bytes> {
+///         // Implement gzip compression
+///         Ok(request.body().clone())
+///     }
+/// }
+/// ```
 #[async_trait::async_trait]
 pub trait Compressor: Send + Sync + 'static {
     /// This method returns the name of encoding for this compressor.

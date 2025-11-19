@@ -1,3 +1,73 @@
+//! # HTTP Form Data Module
+//!
+//! This module provides comprehensive form data handling capabilities for HTTP requests.
+//! It supports both URL-encoded forms and multipart forms, enabling easy submission
+//! of form data including file uploads.
+//!
+//! ## Form Types
+//!
+//! - **URL-encoded Forms** (`application/x-www-form-urlencoded`): Standard form encoding
+//!   for simple key-value pairs
+//! - **Multipart Forms** (`multipart/form-data`): Supports file uploads and complex data
+//!
+//! ## Key Components
+//!
+//! - [`Form`]: Common trait for building and encoding form data
+//! - [`EncodedForm`]: URL-encoded form implementation
+//! - [`MultiPartForm`]: Multipart form implementation with file upload support
+//! - Form builders for fluent API usage
+//!
+//! ## Features
+//!
+//! - Type-safe form field addition
+//! - Automatic URL encoding for form fields
+//! - File upload support in multipart forms
+//! - Boundary generation for multipart data
+//! - Memory-efficient encoding using `Bytes` and `BytesMut`
+//!
+//! ## Examples
+//!
+//! ### URL-encoded Form
+//!
+//! ```rust, ignore
+//! use deboa::form::EncodedForm;
+//!
+//! let mut form = EncodedForm::builder()
+//!     .field("username", "user123")
+//!     .field("password", "s3cr3t");
+//!
+//! let encoded = form.build();
+//! ```
+//!
+//! ### Multipart Form with File Upload
+//!
+//! ```rust, ignore
+//! use deboa::form::MultiPartForm;
+//!
+//! let mut form = MultiPartForm::builder()
+//!     .field("description", "User profile")
+//!     .file("avatar", "path/to/avatar.jpg")?;
+//!
+//! let encoded = form.build();
+//! ```
+//!
+//! ## Usage in HTTP Requests
+//!
+//! ```rust, ignore
+//! use deboa::{Deboa, request::post, form::EncodedForm};
+//!
+//! let mut client = Deboa::new();
+//! let form = EncodedForm::builder()
+//!     .field("name", "John")
+//!     .field("email", "john@example.com")
+//!     .build();
+//!
+//! let response = post("https://api.example.com/submit")
+//!     .form(form)?
+//!     .execute(&mut client)
+//!     .await?;
+//! ```
+
 use std::path::Path;
 
 use bytes::{Bytes, BytesMut};
@@ -6,6 +76,7 @@ use rand::distr::{Alphanumeric, SampleString};
 use urlencoding::encode;
 
 const CRLF: &[u8] = b"\r\n";
+
 /// A trait for building and encoding form data for HTTP requests.
 ///
 /// This trait provides a common interface for different types of form data,

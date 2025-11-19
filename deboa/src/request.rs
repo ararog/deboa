@@ -1,3 +1,66 @@
+//! # HTTP Request Module
+//!
+//! This module provides comprehensive HTTP request building and handling functionality
+//! for the Deboa HTTP client. It includes traits and structs for creating, configuring,
+//! and executing HTTP requests with various features like authentication, headers,
+//! cookies, and body serialization.
+//!
+//! ## Key Components
+//!
+//! - [`IntoRequest`]: Trait for converting various types into HTTP requests
+//! - [`DeboaRequest`]: Main request structure with full HTTP functionality
+//! - Request builders for different HTTP methods (GET, POST, PUT, DELETE, etc.)
+//! - Authentication mechanisms (Basic, Bearer token, custom)
+//! - Header and cookie management
+//! - Form data and JSON serialization support
+//!
+//! ## Features
+//!
+//! - Type-safe request building
+//! - Automatic content-type handling
+//! - Authentication support (Basic, Bearer, custom)
+//! - Cookie jar integration
+//! - Form data and JSON serialization
+//! - File upload support
+//! - Request retry mechanisms
+//! - Custom headers and query parameters
+//!
+//! ## Examples
+//!
+//! ### Basic GET Request
+//!
+//! ```rust, ignore
+//! use deboa::{Deboa, request::IntoRequest};
+//!
+//! let mut client = Deboa::new();
+//! let response = "https://api.example.com/data".into_request().execute(&mut client).await?;
+//! ```
+//!
+//! ### POST Request with JSON
+//!
+//! ```rust, ignore
+//! use deboa::{Deboa, request::post};
+//! use serde_json::json;
+//!
+//! let mut client = Deboa::new();
+//! let response = post("https://api.example.com/users")
+//!     .json(json!({"name": "John", "age": 30}))?
+//!     .execute(&mut client)
+//!     .await?;
+//! ```
+//!
+//! ### Authentication
+//!
+//! ```rust, ignore
+//! use deboa::{Deboa, request::get};
+//!
+//! let mut client = Deboa::new();
+//! let response = get("https://api.example.com/protected")
+//!     .basic_auth("username", "password")
+//!     .execute(&mut client)
+//!     .await?;
+//! ```
+
 use std::{collections::HashMap, fmt::Debug, sync::Arc};
 
 use async_trait::async_trait;
@@ -20,7 +83,11 @@ use crate::{
     Deboa, Result,
 };
 
-/// Trait to allow make a request from different types.
+/// Trait to allow making a request from different types.
+/// 
+/// This trait provides a flexible way to convert various input types into
+/// HTTP requests. It enables convenient request creation from strings, URLs,
+/// and other request-like objects.
 /// 
 /// # Examples
 /// 
@@ -35,7 +102,7 @@ use crate::{
 /// assert_eq!(response.status(), 200);
 /// ```
 #[async_trait]
-pub trait IntoRequest {
+pub trait IntoRequest : private::Sealed {
     fn into_request(self) -> Result<DeboaRequest>;
 }
 
@@ -1222,3 +1289,15 @@ impl DeboaRequest {
         Ok(self)
     }
 }
+
+mod private {
+    pub trait Sealed {}
+}
+
+impl private::Sealed for DeboaRequest {}
+
+impl private::Sealed for &str {}
+
+impl private::Sealed for String {}
+
+impl private::Sealed for Url {}
