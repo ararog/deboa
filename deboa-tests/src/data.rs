@@ -5,6 +5,16 @@ pub const MSGPACK_POST: [u8; 23] = [
     32, 100, 111,
 ];
 
+pub const FLEX_POST: [u8; 53] = [
+    105, 100, 0, 116, 105, 116, 108, 101, 0, 4, 84, 101, 115, 116, 0, 98, 111, 100, 121, 0, 15, 83,
+    111, 109, 101, 32, 116, 101, 115, 116, 32, 116, 111, 32, 100, 111, 0, 3, 23, 39, 37, 3, 1, 3,
+    23, 1, 36, 20, 4, 20, 6, 36, 1,
+];
+
+pub const YAML_POST: &[u8; 40] = b"id: 1\ntitle: Test\nbody: Some test to do\n";
+pub const YAML_STR_POST: &str = "id: 1\ntitle: Test\nbody: Some test to do\n";
+
+
 pub const XML_POST: &[u8; 108] = b"<?xml version=\"1.0\" encoding=\"UTF-8\"?><Post><id>1</id><title>Test</title><body>Some test to do</body></Post>";
 pub const XML_STR_POST: &str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Post><id>1</id><title>Test</title><body>Some test to do</body></Post>";
 pub const XML_STR_PATCH: &str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Post><id>1</id><title>Test</title><body>Some test to do</body></Post>";

@@ -454,3 +454,36 @@ macro_rules! submit {
             .await?
     };
 }
+
+#[macro_export]
+/// Make a GET request to the specified URL, returning a stream.
+///
+/// The `stream!` macro is used to make a GET request to the specified URL
+/// Its first argument is a string literal or a variable.
+///
+/// To help understand the macro arguments, here is an example:
+///
+/// stream!(url, &mut client)
+///
+/// # Arguments
+///
+/// * `url`    - The URL to make the GET request to.
+/// * `client` - The client variable to use for the request.
+///
+/// Please note url can be a string literal or a variable.
+///
+/// # Example
+///
+/// ```compile_fail
+/// let mut client = Deboa::new();
+/// let response = stream!("https://jsonplaceholder.typicode.com/posts", &mut client);
+/// assert_eq!(response.id, 1);
+/// ```
+macro_rules! stream {
+    ($url:expr, &mut $client:ident) => {
+        $client
+            .execute($url)
+            .await?
+            .stream()
+    };
+}
