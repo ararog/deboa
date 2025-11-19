@@ -51,7 +51,9 @@
 use deboa::{client::serde::RequestBody, Result};
 use serde::Serialize;
 
-/// Trait to be implemented by struct resources.
+/// Trait to be implemented by structs which will behave as rest resources.
+/// Resource trait will use convention over configuration to define the paths
+/// for operations on resources.
 /// 
 /// # Type Parameters
 ///
