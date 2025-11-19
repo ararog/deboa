@@ -161,3 +161,5 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
             .await
     }
 }
+
+impl crate::client::conn::http::private::Sealed for BaseHttpConnection<Http2Request> {}
