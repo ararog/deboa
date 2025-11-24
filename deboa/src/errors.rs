@@ -83,6 +83,9 @@ pub enum DeboaError {
 
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum RequestError {
+    #[error("Failed to parse request: {message}")]
+    Parse { message: String },
+
     #[error("Failed to send request: {method} {url}: {message}")]
     Send { url: String, method: String, message: String },
 

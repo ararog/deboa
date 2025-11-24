@@ -61,15 +61,17 @@
 //!     .await?;
 //! ```
 
-use std::{collections::HashMap, fmt::Debug, sync::Arc};
+use std::{collections::HashMap, fmt::Debug, str::FromStr, sync::Arc};
 
 use async_trait::async_trait;
+use bytes::BytesMut;
 use http::{
     header::{self, HOST},
     HeaderMap, HeaderName, HeaderValue, Method,
 };
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
+use regex::Regex;
 use serde::Serialize;
 use url::Url;
 
@@ -84,13 +86,13 @@ use crate::{
 };
 
 /// Trait to allow making a request from different types.
-/// 
+///
 /// This trait provides a flexible way to convert various input types into
 /// HTTP requests. It enables convenient request creation from strings, URLs,
 /// and other request-like objects.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ``` compile_fail
 /// use deboa::{Deboa, request::IntoRequest};
 ///
@@ -102,7 +104,7 @@ use crate::{
 /// assert_eq!(response.status(), 200);
 /// ```
 #[async_trait]
-pub trait IntoRequest : private::Sealed {
+pub trait IntoRequest: private::Sealed {
     fn into_request(self) -> Result<DeboaRequest>;
 }
 
@@ -172,9 +174,9 @@ impl Fetch for &str {
 }
 
 /// Trait to allow make a get request from different types.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ``` compile_fail
 /// use deboa::{Deboa, request::FetchWith};
 ///
@@ -218,6 +220,18 @@ impl FetchWith for &str {
         T: AsMut<Deboa> + Send,
     {
         DeboaRequest::get(*self)?
+            .send_with(client)
+            .await
+    }
+}
+
+#[async_trait]
+impl FetchWith for String {
+    async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
+    where
+        T: AsMut<Deboa> + Send,
+    {
+        DeboaRequest::get(self)?
             .send_with(client)
             .await
     }
@@ -783,6 +797,118 @@ impl Debug for DeboaRequest {
     }
 }
 
+impl FromStr for DeboaRequest {
+    type Err = DeboaError;
+
+    fn from_str(s: &str) -> Result<Self> {
+        let lines = s.lines();
+
+        let mut headers = HeaderMap::new();
+        let mut url = String::new();
+        let mut method = String::new();
+        let mut body = Vec::new();
+        let mut is_reading_body = false;
+
+        let method_url_regex =
+            Regex::new(r"(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+(https?://[^\s]+)");
+        if let Err(e) = method_url_regex {
+            return Err(DeboaError::Request(RequestError::Parse { message: e.to_string() }));
+        }
+
+        for line in lines {
+            let line = line.trim();
+            if !is_reading_body {
+                let regex = method_url_regex
+                    .as_ref()
+                    .unwrap();
+                let captures = regex.captures(line);
+                if let Some(captures) = captures {
+                    let method_cap = captures.get(1);
+                    if method_cap.is_none() {
+                        return Err(DeboaError::Request(RequestError::Parse {
+                            message: "Missing method in request format".into(),
+                        }));
+                    }
+                    let url_cap = captures.get(2);
+                    if url_cap.is_none() {
+                        return Err(DeboaError::Request(RequestError::Parse {
+                            message: "Missing url in request format".into(),
+                        }));
+                    }
+                    method = method_cap
+                        .unwrap()
+                        .as_str()
+                        .to_string();
+                    url = url_cap
+                        .unwrap()
+                        .as_str()
+                        .to_string();
+                    continue;
+                }
+
+                let header = line.split_once(':');
+                if let Some(header) = header {
+                    let header_name = HeaderName::from_bytes(
+                        header
+                            .0
+                            .trim()
+                            .as_bytes(),
+                    )
+                    .map_err(|_| {
+                        DeboaError::Request(RequestError::Parse {
+                            message: "Invalid header name".into(),
+                        })
+                    })?;
+
+                    let header_value = HeaderValue::from_bytes(
+                        header
+                            .1
+                            .trim()
+                            .as_bytes(),
+                    )
+                    .map_err(|_| {
+                        DeboaError::Request(RequestError::Parse {
+                            message: "Invalid header value".into(),
+                        })
+                    })?;
+
+                    headers.insert(header_name, header_value);
+                    continue;
+                }
+            }
+
+            if line.is_empty() && !url.is_empty() && !headers.is_empty() {
+                is_reading_body = true;
+                continue;
+            }
+
+            if is_reading_body {
+                body.extend_from_slice(line.as_bytes());
+            }
+        }
+
+        let url = url.parse_url()?;
+        if headers
+            .get(header::HOST)
+            .is_none()
+        {
+            let authority = url.authority();
+            headers.insert(header::HOST, HeaderValue::from_str(authority).unwrap());
+        }
+
+        Ok(DeboaRequest {
+            url: Arc::new(url),
+            headers,
+            cookies: None,
+            retries: 0,
+            method: method
+                .parse::<http::Method>()
+                .unwrap(),
+            body: body.into(),
+        })
+    }
+}
+
 impl AsRef<DeboaRequest> for DeboaRequest {
     fn as_ref(&self) -> &DeboaRequest {
         self
@@ -823,7 +949,9 @@ impl DeboaRequest {
     pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
-            return Err(DeboaError::Request(RequestError::UrlParse { message: e.to_string() }));
+            return Err(DeboaError::Request(RequestError::UrlParse {
+                message: e.to_string().into(),
+            }));
         }
 
         let url = parsed_url.unwrap();
