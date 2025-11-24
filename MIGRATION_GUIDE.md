@@ -1,5 +1,35 @@
 # Migration guide
 
+## From 0.0.8 to 0.0.9
+
+### Breaking changes
+
+* Made request, response, connection and runtime traits sealed
+
+### Non-breaking changes
+
+* Improved documentation
+* Added more examples
+
+
+## From 0.0.7 to 0.0.8
+
+### Breaking changes
+
+* 
+
+
+## From 0.0.6 to 0.0.7
+
+### Breaking changes
+
+* 
+
+## From 0.0.5 to 0.0.6
+
+### Breaking changes
+
+
 ## From 0.0.4 to 0.0.5
 
 ### Breaking changes
