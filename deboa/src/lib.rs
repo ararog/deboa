@@ -76,7 +76,7 @@ use http::{header, HeaderValue, Request, Response};
 use http_body_util::Full;
 use hyper::body::Incoming;
 
-use crate::cert::ClientCert;
+use crate::cert::{ClientCert, Identity};
 use crate::client::conn::http::{DeboaConnection, DeboaHttpConnection};
 
 use crate::catcher::DeboaCatcher;
@@ -182,6 +182,7 @@ pub struct DeboaBuilder {
     connection_timeout: u64,
     request_timeout: u64,
     client_cert: Option<ClientCert>,
+    identity: Option<Identity>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
 }
@@ -392,6 +393,7 @@ impl DeboaBuilder {
             connection_timeout: self.connection_timeout,
             request_timeout: self.request_timeout,
             client_cert: self.client_cert,
+            identity: self.identity,
             catchers: self.catchers,
             protocol: self.protocol,
             pool: HttpConnectionPool::new(),
@@ -448,6 +450,7 @@ pub struct Deboa {
     connection_timeout: u64,
     request_timeout: u64,
     client_cert: Option<ClientCert>,
+    identity: Option<Identity>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     pool: HttpConnectionPool,
@@ -516,6 +519,7 @@ impl Deboa {
             connection_timeout: 0,
             request_timeout: 0,
             client_cert: None,
+            identity: None,
             catchers: None,
             protocol: HttpVersion::Http1,
             pool: HttpConnectionPool::new(),
@@ -533,6 +537,7 @@ impl Deboa {
             connection_timeout: 0,
             request_timeout: 0,
             client_cert: None,
+            identity: None,
             catchers: None,
             protocol: HttpVersion::Http1,
         }
@@ -623,8 +628,21 @@ impl Deboa {
     /// * `Option<ClientCert>` - The client certificate.
     ///
     #[inline]
+    #[deprecated(note = "Use identity instead", since = "0.0.8")]
     pub fn client_cert(&self) -> Option<&ClientCert> {
         self.client_cert
+            .as_ref()
+    }
+
+    /// Allow get identity at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `Option<Identity>` - The identity.
+    ///
+    #[inline]
+    pub fn identity(&self) -> Option<&Identity> {
+        self.identity
             .as_ref()
     }
 
@@ -638,8 +656,24 @@ impl Deboa {
     ///
     /// * `&mut Self` - The Deboa instance.
     ///
+    #[deprecated(note = "Use set_identity instead", since = "0.0.8")]
     pub fn set_client_cert(&mut self, client_cert: Option<ClientCert>) -> &mut Self {
         self.client_cert = client_cert;
+        self
+    }
+
+    /// Allow change identity at any time.
+    ///
+    /// # Arguments
+    ///
+    /// * `identity` - The identity to be used.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The Deboa instance.
+    ///
+    pub fn set_identity(&mut self, identity: Option<Identity>) -> &mut Self {
+        self.identity = identity;
         self
     }
 
