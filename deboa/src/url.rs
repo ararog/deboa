@@ -63,6 +63,12 @@ impl IntoUrl for &mut String {
     }
 }
 
+impl IntoUrl for &String {
+    fn into_url(self) -> Result<Url> {
+        self.parse_url()
+    }
+}
+
 impl IntoUrl for String {
     fn into_url(self) -> Result<Url> {
         self.parse_url()
@@ -81,6 +87,8 @@ mod private {
 impl private::Sealed for Url {}
 
 impl private::Sealed for &str {}
+
+impl private::Sealed for &String {}
 
 impl private::Sealed for &mut String {}
 
