@@ -1,28 +1,28 @@
 //! Client certificate handling for secure connections.
 //!
-//! This module provides the `ClientCert` struct for working with client certificates
+//! This module provides the `Identity` struct for working with client certificates
 //! in HTTPS connections, enabling mutual TLS (mTLS) authentication.
 
 /// Represents a client certificate and its associated data for mutual TLS authentication.
 ///
-/// `ClientCert` encapsulates the client certificate, its password, and an optional
+/// `Identity` encapsulates the client certificate, its password, and an optional
 /// certificate authority (CA) certificate. It's used to authenticate the client
 /// to the server during the TLS handshake.
 ///
 /// # Examples
 ///
 /// ```
-/// use deboa::cert::ClientCert;
+/// use deboa::cert::Identity;
 ///
 /// // Create a new client certificate without a CA
-/// let cert = ClientCert::new(
+/// let cert = Identity::new(
 ///     "/path/to/cert.p12".to_string(),
 ///     "cert-password".to_string(),
 ///     None
 /// );
 ///
 /// // Create a client certificate with a CA
-/// let cert_with_ca = ClientCert::new(
+/// let cert_with_ca = Identity::new(
 ///     "/path/to/cert.p12".to_string(),
 ///     "cert-password".to_string(),
 ///     Some("/path/to/ca.pem".to_string())
@@ -33,14 +33,17 @@
 /// println!("CA path: {:?}", cert.ca());
 /// ```
 #[derive(Debug, Clone)]
-pub struct ClientCert {
+pub struct Identity {
     cert: String,
     pw: String,
     ca: Option<String>,
 }
 
-impl ClientCert {
-    /// Allow create a new ClientCert instance.
+#[deprecated(note = "Use `Identity` instead")]
+pub type ClientCert = Identity;
+
+impl Identity {
+    /// Allow create a new Identity instance.
     ///
     /// # Arguments
     ///
@@ -50,10 +53,10 @@ impl ClientCert {
     ///
     /// # Returns
     ///
-    /// * `ClientCert` - The new ClientCert instance.
+    /// * `Identity` - The new Identity instance.
     ///
     pub fn new(cert: String, pw: String, ca: Option<String>) -> Self {
-        ClientCert { cert, pw, ca }
+        Identity { cert, pw, ca }
     }
 
     /// Allow get the client certificate.
