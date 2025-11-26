@@ -1,6 +1,6 @@
 # deboa
 
-[![crates.io](https://img.shields.io/crates/v/deboa?style=flat-square)](https://crates.io/crates/deboa) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) [![Documentation](https://docs.rs/deboa/badge.svg)](https://docs.rs/deboa/latest/deboa)
+[![crates.io](https://img.shields.io/crates/v/deboa?style=flat-square)](https://crates.io/crates/deboa) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) [![Documentation](https://docs.rs/deboa/badge.svg)](https://docs.rs/deboa/latest/deboa) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ararog/deboa/blob/main/LICENSE.md)
 
 ## Description
 
@@ -96,6 +96,20 @@ async fn main() -> Result<()> {
       .await?
       .body_as(JsonBody)
       .await?;
+
+    // you can also post a json body
+
+    let body = serde_json::json!({
+      "id": 100,
+      "title": "Some title",
+      "body": "Some body"
+    });
+
+    let request = post("https://jsonplaceholder.typicode.com/posts")?
+      .header(header::CONTENT_TYPE, "application/json")
+      .body_as(JsonBody, body)?;
+    let response = request.send_with(&mut client).await?;
+    assert_eq!(response.status(), 201);
 
     */
 
