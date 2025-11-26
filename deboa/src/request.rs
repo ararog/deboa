@@ -620,6 +620,24 @@ impl DeboaRequestBuilder {
     ///
     /// * `Result<Self>` - The request builder.
     ///
+    /// # Examples
+    ///
+    /// ```compile_fail
+    /// use deboa::request::post;
+    /// use deboa_extras::http::serde::JsonBody;
+    /// 
+    /// let body = serde_json::json!({
+    ///   "name": "deboa",
+    ///   "version": "0.0.1"
+    /// });
+    ///
+    /// let request = post("https://some.api.com/ping")?
+    ///   .header(header::CONTENT_TYPE, "application/json")
+    ///   .body_as(JsonBody, body)
+    ///   .build()?;
+    /// let response = request.send_with(&mut client).await?;
+    /// assert_eq!(response.status(), 200);
+    /// ```
     pub fn body_as<T: RequestBody, B: Serialize>(mut self, body_type: T, body: B) -> Result<Self> {
         self.body = body_type
             .serialize(body)?
