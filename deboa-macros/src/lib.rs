@@ -170,6 +170,26 @@ macro_rules! get {
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! post {
+    ($input:ident, $url:literal, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::post($url)?
+                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                    .build()?,
+            )
+            .await?
+    };
+
+    ($input:ident, $url:expr, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::post($url)?
+                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                    .build()?,
+            )
+            .await?
+    };
+
     ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
         $client
             .execute(
@@ -229,6 +249,26 @@ macro_rules! post {
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! put {
+    ($input:ident, $url:literal, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::put($url)?
+                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                    .build()?,
+            )
+            .await?
+    };
+
+    ($input:ident, $url:expr, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::put($url)?
+                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                    .build()?,
+            )
+            .await?
+    };
+  
     ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
         $client
             .execute(
@@ -288,6 +328,16 @@ macro_rules! put {
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! patch {
+    ($input:ident, $url:literal, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::patch($url)?
+                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                    .build()?,
+            )
+            .await?
+    };
+
     ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
         $client
             .execute(
