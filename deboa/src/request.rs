@@ -40,12 +40,12 @@
 //!
 //! ```rust, ignore
 //! use deboa::{Deboa, request::post};
-//! use serde_json::json;
+//! use deboa_extras::http::serde::json::JsonBody;
 //!
 //! let mut client = Deboa::new();
 //! let response = post("https://api.example.com/users")
-//!     .json(json!({"name": "John", "age": 30}))?
-//!     .execute(&mut client)
+//!     .body_as(JsonBody, json!({"name": "John", "age": 30}))?
+//!     .send_with(&mut client)
 //!     .await?;
 //! ```
 //!
@@ -57,14 +57,13 @@
 //! let mut client = Deboa::new();
 //! let response = get("https://api.example.com/protected")
 //!     .basic_auth("username", "password")
-//!     .execute(&mut client)
+//!     .send_with(&mut client)
 //!     .await?;
 //! ```
 
 use std::{collections::HashMap, fmt::Debug, str::FromStr, sync::Arc};
 
 use async_trait::async_trait;
-use bytes::BytesMut;
 use http::{
     header::{self, HOST},
     HeaderMap, HeaderName, HeaderValue, Method,
@@ -710,6 +709,10 @@ impl DeboaRequestBuilder {
     ///
     /// * `Result<DeboaRequest>` - The request.
     ///
+    /// # Panics
+    ///
+    /// * If an error occurs while building the request
+    ///
     pub fn build(self) -> Result<DeboaRequest> {
         let mut request = DeboaRequest {
             url: self.url,
@@ -770,6 +773,10 @@ impl DeboaRequestBuilder {
     ///
     /// * `Result<DeboaResponse>` - The response.
     ///
+    /// # Panics
+    /// 
+    /// * If an error occurs while sending the request
+    /// 
     /// # Examples
     ///
     /// ```compile_fail
@@ -782,6 +789,7 @@ impl DeboaRequestBuilder {
     /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
+    /// 
     pub async fn send_with<T>(self, mut client: T) -> Result<DeboaResponse>
     where
         T: AsMut<Deboa>,
@@ -815,6 +823,25 @@ impl Debug for DeboaRequest {
     }
 }
 
+/// Parse a string into a DeboaRequest.
+///
+/// # Arguments
+///
+/// * `s` - The string to parse.
+///
+/// # Returns
+///
+/// * `Result<DeboaRequest>` - The parsed request.
+///
+/// # Examples
+///
+/// ```compile_fail
+/// use deboa::request::DeboaRequest;
+///
+/// let request = DeboaRequest::from_str("GET https://jsonplaceholder.typicode.com/posts").unwrap();
+/// assert_eq!(request.method(), http::Method::GET);
+/// assert_eq!(request.url(), "https://jsonplaceholder.typicode.com/posts");
+/// ```
 impl FromStr for DeboaRequest {
     type Err = DeboaError;
 
@@ -950,6 +977,10 @@ impl DeboaRequest {
     /// # Returns
     ///
     /// * `DeboaRequestBuilder` - The request builder.
+    /// 
+    /// # Panics
+    /// 
+    /// * If URL is invalid
     ///
     /// # Examples
     ///
@@ -968,7 +999,7 @@ impl DeboaRequest {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
             return Err(DeboaError::Request(RequestError::UrlParse {
-                message: e.to_string().into(),
+                message: e.to_string(),
             }));
         }
 
@@ -998,6 +1029,10 @@ impl DeboaRequest {
     ///
     /// * `DeboaRequestBuilder` - The request builder.
     ///
+    /// # Panics
+    ///
+    /// * If URL is invalid
+    ///
     #[inline]
     pub fn from<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
         DeboaRequest::at(url, Method::GET)
@@ -1012,6 +1047,10 @@ impl DeboaRequest {
     /// # Returns
     ///
     /// * `DeboaRequestBuilder` - The request builder.
+    ///
+    /// # Panics
+    ///
+    /// * If URL is invalid
     ///
     #[inline]
     pub fn to<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
@@ -1028,6 +1067,10 @@ impl DeboaRequest {
     ///
     /// * `DeboaRequestBuilder` - The request builder.
     ///
+    /// # Panics
+    /// 
+    /// * If URL is invalid
+    ///
     #[inline]
     pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
         Ok(DeboaRequest::from(url)?.method(Method::GET))
@@ -1042,6 +1085,10 @@ impl DeboaRequest {
     /// # Returns
     ///
     /// * `DeboaRequestBuilder` - The request builder.
+    ///
+    /// # Panics
+    /// 
+    /// * If URL is invalid
     ///
     #[inline]
     pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
@@ -1058,6 +1105,10 @@ impl DeboaRequest {
     ///
     /// * `DeboaRequestBuilder` - The request builder.
     ///
+    /// # Panics
+    ///
+    /// * If URL is invalid
+    ///
     #[inline]
     pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
         Ok(DeboaRequest::to(url)?.method(Method::PUT))
@@ -1073,6 +1124,10 @@ impl DeboaRequest {
     ///
     /// * `DeboaRequestBuilder` - The request builder.
     ///
+    /// # Panics
+    ///
+    /// * If URL is invalid
+    ///
     #[inline]
     pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
         Ok(DeboaRequest::to(url)?.method(Method::PATCH))
@@ -1087,6 +1142,10 @@ impl DeboaRequest {
     /// # Returns
     ///
     /// * `DeboaRequestBuilder` - The request builder.
+    ///
+    /// # Panics
+    ///
+    /// * If URL is invalid
     ///
     #[inline]
     pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
