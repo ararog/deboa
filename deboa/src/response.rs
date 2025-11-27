@@ -409,6 +409,10 @@ impl DeboaResponse {
     /// # Returns
     ///
     /// * `Result<String>` - The header value.
+    /// 
+    /// # Panics
+    /// - If the header is missing
+    /// - If the header value is invalid
     ///
     #[inline]
     fn header_value(&self, header: HeaderName) -> Result<String> {
@@ -438,6 +442,10 @@ impl DeboaResponse {
     /// # Returns
     ///
     /// * `Result<u64>` - The length of the response body.
+    /// 
+    /// # Panics
+    /// - If the Content-Length header is missing
+    /// - If the Content-Length header value is invalid
     ///
     #[inline]
     pub fn content_length(&self) -> Result<u64> {
@@ -460,6 +468,10 @@ impl DeboaResponse {
     ///
     /// * `Result<String>` - The content type of the response body.
     ///
+    /// # Panics
+    /// - If the Content-Type header is missing
+    /// - If the Content-Type header value is invalid
+    ///
     #[inline]
     pub fn content_type(&self) -> Result<String> {
         let header = self.header_value(header::CONTENT_TYPE)?;
@@ -472,6 +484,10 @@ impl DeboaResponse {
     /// # Returns
     ///
     /// * `Option<Vec<DeboaCookie>>` - The cookies of the response.
+    ///
+    /// # Panics
+    /// - If the Set-Cookie header is missing
+    /// - If the Set-Cookie header value is invalid
     ///
     #[inline]
     pub fn cookies(&self) -> Result<Option<Vec<DeboaCookie>>> {

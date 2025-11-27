@@ -1,5 +1,5 @@
 use deboa::{
-    request::{get, FetchWith},
+    request::{get, FetchWith, DeboaRequest},
     Deboa, Result,
 };
 use deboa_extras::http::serde::json::JsonBody;
@@ -30,6 +30,21 @@ async fn main() -> Result<()> {
         .await?;
 
     println!("posts: {posts:#?}");
+
+    let request = r##"
+    POST https://jsonplaceholder.typicode.com/posts
+    Content-Type: application/json
+
+    {
+        "title": "foo",
+        "body": "bar",
+        "userId": 1
+    }
+    "##.parse::<DeboaRequest>()?;
+
+    let response: Post = client.execute(request).await?.body_as(JsonBody).await?;
+
+    println!("saved post: {response:#?}");
 
     Ok(())
 }
