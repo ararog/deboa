@@ -5,7 +5,7 @@ use syn::{
     Ident, Token,
 };
 
-use crate::parser::operations::{
+use crate::bora::parser::operations::{
     delete::DeleteStruct, get::GetStruct, patch::PatchStruct, post::PostStruct, put::PutStruct,
 };
 pub struct BoraApi {

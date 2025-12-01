@@ -21,7 +21,6 @@ msgpack = ["deboa-extras/msgpack"]
 
 [dependencies]
 deboa = { path = "../deboa", version = "0.0.8", features = ["http1"] }
-deboa-bora = { path = "../deboa-bora", version = "0.0.5" }
 deboa-extras = { path = "../deboa-extras", version = "0.0.4", features = ["json"] }
 serde = "1.0.228"
 

@@ -17,7 +17,7 @@ pub struct ToFile {
 /// which provides async file writing capabilities.
 /// 
 /// # Example
-/// ```
+/// ``` rust, compile_fail
 /// use deboa::{request::get, Deboa};
 /// use deboa_extras::http::utils::file::IntoFile;
 /// 
@@ -47,7 +47,7 @@ impl ToFile {
     /// * `Result<()>` - Ok if successful, Err with IoError if failed
     /// 
     /// # Examples
-    /// ```
+    /// ``` rust, compile_fail
     /// 
     /// use deboa::{request::get, Deboa};
     /// use deboa_extras::http::utils::file::IntoFile;

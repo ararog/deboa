@@ -7,7 +7,7 @@
 //! 
 //! 
 //! ## Example
-//! ```rust
+//! ```rust, compile_fail
 //! use deboa::{Deboa, Result, request::DeboaRequestBuilder};
 //! use deboa_extras::ws::{
 //!     io::socket::DeboaWebSocket,

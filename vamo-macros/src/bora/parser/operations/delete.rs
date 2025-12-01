@@ -5,7 +5,7 @@ use syn::{
     Ident, Token,
 };
 
-use crate::parser::common::field::{NameStruct, PathStruct};
+use crate::bora::parser::common::field::{NameStruct, PathStruct};
 
 #[derive(Debug)]
 pub struct DeleteStruct {

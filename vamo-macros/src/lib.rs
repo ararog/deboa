@@ -80,27 +80,126 @@
 //! - `name()`: Get the resource name
 //! - `body_type()`: Get the resource body type
 
-extern crate proc_macro;
-use core::panic;
-
 use proc_macro::TokenStream;
-use quote::quote;
-use syn::{parse_macro_input, Attribute, Ident, LitStr};
 
-fn extract_path(attr: &Attribute) -> Option<String> {
-    let lit = attr.parse_args::<LitStr>();
-    if let Err(e) = lit {
-        panic!("failed to parse path: {}", e);
-    }
-    Some(lit.unwrap().value())
-}
+extern crate proc_macro;
 
-fn extract_ident(attr: &Attribute) -> Option<Ident> {
-    let ident = attr.parse_args::<Ident>();
-    if let Err(e) = ident {
-        panic!("failed to parse path: {}", e);
-    }
-    Some(ident.unwrap())
+mod bora;
+mod resource;
+
+use crate::bora::bora as bora_macro;
+use crate::resource::resource as resource_macro;
+
+#[proc_macro_attribute]
+///
+/// The `bora` attribute macro is used to generate a Deboa client.
+/// With this macro you can define the API endpoints and their methods.
+/// You can define multiple endpoints and methods in the same macro.
+///
+/// A basic definition is:
+///
+/// #[bora(api(operation)))]
+///
+/// Where 'operation' is one or more of the following:
+///
+/// - get
+/// - post
+/// - delete
+/// - put
+/// - patch
+///
+/// # get
+///
+/// The `get` operation is used to retrieve data from the API.
+///
+/// It has the following arguments:
+///
+/// - name: The name of the operation.
+/// - path: The path of the operation.
+/// - res_body: The type of the response body.
+/// - format: The format of the response body.
+///
+/// ## Example
+///
+/// ```compile_fail
+/// #[bora(api(get(name = "get_post", path = "/posts/<id:i32>")))]
+/// pub struct PostService;
+/// ```
+///
+/// # post
+///
+/// The `post` operation is used to create data in the API.
+///
+/// It has the following arguments:
+///
+/// - name: The name of the operation.
+/// - path: The path of the operation.
+/// - req_body: The type of the request body.
+/// - res_body: The type of the response body.
+/// - format: The format of the response body.
+///
+/// ## Example
+///
+/// ```compile_fail
+/// #[bora(api(post(name = "post_post", path = "/posts", req_body = "Post", res_body = "Post")))]
+/// pub struct PostService;
+/// ```
+///
+/// # delete
+///
+/// The `delete` operation is used to delete data from the API.
+///
+/// It has the following arguments:
+///
+/// - name: The name of the operation.
+/// - path: The path of the operation.
+///
+/// ## Example
+///
+/// ```compile_fail
+/// #[bora(api(delete(name = "delete_post", path = "/posts/<id:i32>")))]
+/// pub struct PostService;
+/// ```
+///
+/// # put
+///
+/// The `put` operation is used to update data in the API.
+///
+/// It has the following arguments:
+///
+/// - name: The name of the operation.
+/// - path: The path of the operation.
+/// - req_body: The type of the request body.
+/// - res_body: The type of the response body.
+/// - format: The format of the response body.
+///
+/// ## Example
+///
+/// ```compile_fail
+/// #[bora(api(put(name = "put_post", path = "/posts/<id:i32>", req_body = "Post", res_body = "Post")))]
+/// pub struct PostService;
+/// ```
+///
+/// # patch
+///
+/// The `patch` operation is used to update data in the API.
+///
+/// It has the following arguments:
+///
+/// - name: The name of the operation.
+/// - path: The path of the operation.
+/// - req_body: The type of the request body.
+/// - res_body: The type of the response body.
+/// - format: The format of the response body.
+///
+/// ## Example
+///
+/// ```compile_fail
+/// #[bora(api(patch(name = "patch_post", path = "/posts/<id:i32>", req_body = "Post", res_body = "Post")))]
+/// pub struct PostService;
+/// ```
+pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
+    bora_macro(attr, item)
 }
 
 #[proc_macro_derive(Resource, attributes(rid, name, body_type))]
@@ -126,70 +225,5 @@ fn extract_ident(attr: &Attribute) -> Option<Ident> {
 /// }
 /// ```
 pub fn resource(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as syn::DeriveInput);
-    let name = &ast.ident;
-    let fields = match ast.data {
-        syn::Data::Struct(data) => data.fields,
-        _ => panic!("only structs are supported"),
-    };
-
-    let mut rid_field: Option<Ident> = None;
-    for field in fields {
-        if field
-            .attrs
-            .iter()
-            .any(|attr| {
-                attr.path()
-                    .is_ident("rid")
-            })
-        {
-            rid_field = field.ident;
-            break;
-        }
-    }
-
-    // Extract literals from attributes
-    let mut resource_name: Option<String> = None;
-
-    let mut body_type: Option<Ident> = None;
-    for attr in ast.attrs {
-        if attr
-            .path()
-            .is_ident("name")
-        {
-            resource_name = extract_path(&attr);
-
-        } else if attr
-            .path()
-            .is_ident("body_type")
-        {
-            body_type = extract_ident(&attr);
-        }
-    }
-
-    if resource_name.is_none() {
-        panic!("resource name is required");
-    }
-
-
-    if body_type.is_none() {
-        panic!("body type is required");
-    }
-
-    quote! {
-        impl vamo::resource::Resource for #name {
-            fn id(&self) -> String {
-                self.#rid_field.to_string()
-            }
-
-            fn name(&self) -> &str {
-                #resource_name
-            }
-
-            fn body_type(&self) -> impl RequestBody {
-                #body_type
-            }
-        }
-    }
-    .into()
+    resource_macro(input)
 }
