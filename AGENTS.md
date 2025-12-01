@@ -21,7 +21,7 @@ The library is highly configurable and supports:
 The library is modular, and features can be enabled or disabled via Cargo
 features to keep the binary size small.
 
-## Related Projects
+## Sub Projects
 
 ### deboa-bora
 
@@ -29,7 +29,7 @@ A crate with bora macro, for easy rest client generation.
 
 ### deboa-extras
 
-Pluggable compression/decompression, serializers and catchers.
+Pluggable compression/decompression, serializers, websockets, streams, see and catchers (middleware support).
 
 ### deboa-macros
 
@@ -113,4 +113,4 @@ The project follows standard Rust conventions.
   date. The configuration is in the `.github/dependabot.yml` file.
 - **Documentation:** The project has extensive documentation, which can be
   generated with `cargo doc`. The documentation is also available on
-  [docs.rs](https://docs.rs/textwrap/).
+  [docs.rs](https://docs.rs/deboa/).

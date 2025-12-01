@@ -20,7 +20,9 @@
 //! - `json`: Enables JSON serialization/deserialization
 //! - `msgpack`: Enables MessagePack serialization/deserialization
 //! - `xml`: Enables XML serialization/deserialization
-//!
+//! - `yaml`: Enables YAML serialization/deserialization
+//! - `flex`: Enables flexbuffers serialization/deserialization
+//! 
 //! ## Examples
 //!
 //! ### Using Server-Sent Events (SSE)
@@ -32,15 +34,15 @@
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!   let mut client = deboa::Deboa::new();
-//!   let sse = SseRequest::get("https://example.com/events")?;
-//!   let mut stream = sse.send_with(&mut client).await?;
+//!   let response = client.execute("https://sse.dev/test").await?.into_event_stream();
 //!
-//!   while let Some(event) = stream.next().await {
-//!     match event {
-//!       Ok(event) => println!("Event: {:?}", event),
-//!       Err(e) => eprintln!("Error: {}", e),
-//!     }
+//!   // Poll events, until the connection is closed
+//!   // please note that this is a blocking call
+//!   while let Some(event) = response.next().await {
+//!     println!("event: {}", event);
 //!   }
+//!
+//!   println!("Connection closed");
 //!   Ok(())
 //! }
 //! ```
@@ -48,23 +50,29 @@
 //! ### Using WebSockets
 //!
 //! ```compile_fail
-//! use deboa_extras::ws::WebSocketRequest;
-//! use futures_util::{SinkExt, StreamExt};
+//! use deboa::{Deboa, Result, request::DeboaRequestBuilder};
+//! use deboa_extras::ws::{
+//!     io::socket::DeboaWebSocket,
+//!     protocol::{self},
+//!     request::WebsocketRequestBuilder,
+//!     response::IntoWebSocket,
+//! };
+//! 
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!   let mut client = deboa::Deboa::new();
-//!   let (mut ws, _) = WebSocketRequest::connect("wss://echo.websocket.org").send_with(&mut client).await?;
+//!   let websocket = DeboaRequestBuilder::connect("wss://echo.websocket.org").send_with(&mut client).await?;
 //!
 //!   // Send a message
-//!   ws.send("Hello, WebSocket!".into()).await?;
+//!   websocket.send_text("Hello, WebSocket!".into()).await?;
 //!
 //!   // Receive messages
-//!   while let Some(msg) = ws.next().await {
-//!     match msg {
-//!       Ok(msg) => println!("Received: {:?}", msg),
-//!       Err(e) => eprintln!("Error: {}", e),
-//!     }
+//!   while let Ok(Some(msg)) = websocket.read_message().await {
+//!       match msg {
+//!           protocol::Message::Text(text) => println!("Received text: {}", text),
+//!           protocol::Message::Binary(data) => println!("Received binary data: {} bytes", data.len()),
+//!       }
 //!   }
 //!   Ok(())
 //! }

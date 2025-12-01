@@ -11,6 +11,7 @@ use deboa::{
 };
 
 #[derive(PartialEq)]
+/// Brotli compression implementation for Deboa.
 pub struct BrotliCompressor;
 
 #[deboa::async_trait]
@@ -42,6 +43,7 @@ impl Compressor for BrotliCompressor {
 }
 
 #[derive(PartialEq)]
+/// Brotli decompression implementation for Deboa.
 pub struct BrotliDecompressor;
 
 #[deboa::async_trait]
