@@ -75,8 +75,6 @@
 //! }
 //! ```
 
-pub use deboa_bora::bora;
-
 #[macro_export]
 /// Make a GET request to the specified URL.
 ///

@@ -12,6 +12,12 @@ exclude = [".travis.yml"]
 publish = true
 rust-version = "1.64.0"
 
+[features]
+default = ["json"]
+json = ["deboa-extras/json"]
+xml = ["deboa-extras/xml"]
+msgpack = ["deboa-extras/msgpack"]
+
 [lib]
 proc-macro = true
 
@@ -24,6 +30,8 @@ serde = "1.0.228"
 syn = { version = "2.0", features = ["full"] }
 quote = "1.0.41"
 http = "1.4.0"
+regex = "1.9.6"
+titlecase = "2.2.1"
 
 [dev-dependencies]
 deboa-tests = { path = "../deboa-tests", version = "0.0.1" }

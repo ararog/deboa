@@ -9,16 +9,16 @@ use syn::{
 };
 
 use crate::{
-    parser::{
+    bora::parser::{
         api::{BoraApi, OperationEnum},
         operations::{
             delete::DeleteFieldEnum, get::GetFieldEnum, patch::PatchFieldEnum, post::PostFieldEnum,
             put::PutFieldEnum,
         },
     },
-    token::utils::extract_params_from_path,
+    bora::token::utils::extract_params_from_path,
 };
-use titlecase::Titlecase;
+use titlecase::titlecase;
 
 #[allow(clippy::too_many_arguments)]
 fn impl_function(
@@ -97,7 +97,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                     GetFieldEnum::format(format) => {
                         let format_value = format.value.value();
                         format_name = format_ident!("{}", format_value);
-                        format_module = format_ident!("{}Body", format_value.titlecase());
+                        format_module = format_ident!("{}Body", titlecase(&format_value));
                     }
                 });
 
@@ -143,7 +143,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                     }
                     PostFieldEnum::format(format) => {
                         let format_value = format.value.value();
-                        let title_format_value = format_value.titlecase();
+                        let title_format_value = titlecase(&format_value);
                         format_name = format_ident!("{}", format_value);
                         format_module = format_ident!("{}Body", title_format_value);
                     }
@@ -200,7 +200,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     PutFieldEnum::format(format) => {
                         let format_value = format.value.value();
-                        let title_format_value = format_value.titlecase();
+                        let title_format_value = titlecase(&format_value);
                         format_name = format_ident!("{}", format_value);
                         format_module = format_ident!("{}Body", title_format_value);
                     }
@@ -256,7 +256,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
                     PatchFieldEnum::format(format) => {
                         let format_value = format.value.value();
-                        let title_format_value = format_value.titlecase();
+                        let title_format_value = titlecase(&format_value);
                         format_name = format_ident!("{}", format_value);
                         format_module = format_ident!("{}Body", title_format_value);
                     }

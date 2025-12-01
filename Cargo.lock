@@ -1214,25 +1214,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "deboa-bora"
-version = "0.0.5"
-dependencies = [
- "deboa",
- "deboa-extras",
- "deboa-tests",
- "httpmock",
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "regex",
- "serde",
- "syn 2.0.106",
- "titlecase",
- "tokio",
- "vamo",
-]
-
-[[package]]
 name = "deboa-extras"
 version = "0.0.4"
 dependencies = [
@@ -1286,7 +1267,6 @@ name = "deboa-macros"
 version = "0.0.6"
 dependencies = [
  "deboa",
- "deboa-bora",
  "deboa-extras",
  "httpmock",
  "serde",
@@ -2711,6 +2691,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "joinery"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72167d68f5fce3b8655487b8038691a3c9984ee769590f93f2a631f4ad64e4f5"
+
+[[package]]
 name = "js-sys"
 version = "0.3.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3737,12 +3723,12 @@ dependencies = [
  "async-trait",
  "deboa",
  "deboa-extras",
- "deboa-macros",
  "http",
  "serde",
  "serde_json",
  "tokio",
  "vamo",
+ "vamo-macros",
 ]
 
 [[package]]
@@ -3819,30 +3805,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "219cb19e96be00ab2e37d6e299658a0cfa83e52429179969b0f0121b4ac46983"
 dependencies = [
  "toml_edit 0.23.5",
-]
-
-[[package]]
-name = "proc-macro-error"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da25490ff9892aab3fcf7c36f08cfb902dd3e71ca0f9f9517bea02a73a5ce38c"
-dependencies = [
- "proc-macro-error-attr",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
- "version_check",
-]
-
-[[package]]
-name = "proc-macro-error-attr"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1be40180e52ecc98ad80b184934baf3d0d29f979574e439af5a55274b35f869"
-dependencies = [
- "proc-macro2",
- "quote",
- "version_check",
 ]
 
 [[package]]
@@ -5133,10 +5095,12 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "titlecase"
-version = "3.6.0"
+version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb567088a91d59b492520c8149e2be5ce10d5deb2d9a383f3378df3259679d40"
+checksum = "38397a8cdb017cfeb48bf6c154d6de975ac69ffeed35980fde199d2ee0842042"
 dependencies = [
+ "joinery",
+ "lazy_static",
  "regex",
 ]
 
@@ -5528,8 +5492,10 @@ dependencies = [
  "httpmock",
  "proc-macro2",
  "quote",
+ "regex",
  "serde",
  "syn 2.0.106",
+ "titlecase",
  "tokio",
  "vamo",
 ]

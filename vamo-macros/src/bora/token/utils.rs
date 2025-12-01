@@ -1,4 +1,4 @@
-use crate::parser::utils::extract_path_params;
+use crate::bora::parser::utils::extract_path_params;
 use proc_macro2::Span;
 use proc_macro2::TokenStream;
 use quote::quote;

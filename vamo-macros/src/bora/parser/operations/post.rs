@@ -5,33 +5,33 @@ use syn::{
     Ident, Token,
 };
 
-use crate::parser::common::field::{
+use crate::bora::parser::common::field::{
     FormatStruct, NameStruct, PathStruct, ReqBodyStruct, ResBodyStruct,
 };
 
-pub struct PatchStruct {
-    pub fields: Punctuated<PatchFieldEnum, Token![,]>,
+pub struct PostStruct {
+    pub fields: Punctuated<PostFieldEnum, Token![,]>,
 }
 
-impl Parse for PatchStruct {
+impl Parse for PostStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let content;
         parenthesized!(content in input);
 
-        let patch =
-            PatchStruct { fields: content.parse_terminated(PatchFieldEnum::parse, Token![,])? };
+        let post =
+            PostStruct { fields: content.parse_terminated(PostFieldEnum::parse, Token![,])? };
 
-        let mut fields = patch.fields.iter();
+        let mut fields = post.fields.iter();
         let required_fields = vec!["name", "path", "req_body", "format"];
         let missing_fields = required_fields
             .into_iter()
             .filter(|field| {
                 !fields.any(|f| match f {
-                    PatchFieldEnum::name(_) => *field == "name",
-                    PatchFieldEnum::path(_) => *field == "path",
-                    PatchFieldEnum::res_body(_) => *field == "res_body",
-                    PatchFieldEnum::format(_) => *field == "format",
-                    PatchFieldEnum::req_body(_) => *field == "req_body",
+                    PostFieldEnum::name(_) => *field == "name",
+                    PostFieldEnum::path(_) => *field == "path",
+                    PostFieldEnum::res_body(_) => *field == "res_body",
+                    PostFieldEnum::format(_) => *field == "format",
+                    PostFieldEnum::req_body(_) => *field == "req_body",
                 })
             })
             .collect::<Vec<_>>();
@@ -40,12 +40,12 @@ impl Parse for PatchStruct {
             return Err(input.error(format!("expected one of {missing_fields:?}")));
         }
 
-        Ok(patch)
+        Ok(post)
     }
 }
 
 #[allow(non_camel_case_types)]
-pub enum PatchFieldEnum {
+pub enum PostFieldEnum {
     name(NameStruct),
     path(PathStruct),
     req_body(Box<ReqBodyStruct>),
@@ -53,7 +53,7 @@ pub enum PatchFieldEnum {
     format(FormatStruct),
 }
 
-impl Parse for PatchFieldEnum {
+impl Parse for PostFieldEnum {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let lookahead = input.lookahead1();
         if lookahead.peek(Ident) {
@@ -62,11 +62,11 @@ impl Parse for PatchFieldEnum {
                 .to_string()
                 .as_str()
             {
-                "name" => Ok(PatchFieldEnum::name(NameStruct::parse(input)?)),
-                "path" => Ok(PatchFieldEnum::path(PathStruct::parse(input)?)),
-                "req_body" => Ok(PatchFieldEnum::req_body(Box::new(ReqBodyStruct::parse(input)?))),
-                "res_body" => Ok(PatchFieldEnum::res_body(Box::new(ResBodyStruct::parse(input)?))),
-                "format" => Ok(PatchFieldEnum::format(FormatStruct::parse(input)?)),
+                "name" => Ok(PostFieldEnum::name(NameStruct::parse(input)?)),
+                "path" => Ok(PostFieldEnum::path(PathStruct::parse(input)?)),
+                "req_body" => Ok(PostFieldEnum::req_body(Box::new(ReqBodyStruct::parse(input)?))),
+                "res_body" => Ok(PostFieldEnum::res_body(Box::new(ResBodyStruct::parse(input)?))),
+                "format" => Ok(PostFieldEnum::format(FormatStruct::parse(input)?)),
                 _ => {
                     Err(input
                         .error(format!("expected one of name, path or req_body, found '{ident}'")))

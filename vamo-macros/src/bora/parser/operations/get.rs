@@ -5,7 +5,7 @@ use syn::{
     Ident, Token,
 };
 
-use crate::parser::common::field::{FormatStruct, NameStruct, PathStruct, ResBodyStruct};
+use crate::bora::parser::common::field::{FormatStruct, NameStruct, PathStruct, ResBodyStruct};
 
 pub struct GetStruct {
     pub fields: Punctuated<GetFieldEnum, Token![,]>,

@@ -56,9 +56,9 @@ async fn main() -> Result<()> {
 
 ## Subprojects
 
-### deboa-bora
+### deboa-bora (removed)
 
-A crate with bora macro, for easy rest client generation.
+A crate with bora macro, for easy rest client generation. Bora macro is now part of vamo-macros.
 
 ### deboa-extras
 
@@ -66,7 +66,7 @@ Pluggable compression/decompression, serializers and catchers.
 
 ### deboa-macros
 
-A crate with set of convenience macros.
+A crate with set of convenience macros. Please note this macro no longer provides bora macro.
 
 ### deboa-tests
 
@@ -82,8 +82,8 @@ Nice wrapper on top of deboa for dry rest client.
 
 ### vamo-macros
 
-Vamo macros is a collection of macros to make possible
-use structs as resources to be sent over vamo as client.
+Vamo macros is a collection of macros to make possible use structs as resources to be sent over vamo as client.
+It is also the new home of bora macro.
 
 ## License
 
