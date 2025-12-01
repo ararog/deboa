@@ -99,13 +99,13 @@ use url::Url;
 pub type DeboaBody = Either<Incoming, Full<Bytes>>;
 
 /// Trait to allow converting a type into a DeboaBody.
-/// 
+///
 /// This trait provides a flexible way to convert various input types into
 /// HTTP response bodies. It enables convenient body creation from bytes,
 /// strings, and other body-like objects.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ``` compile_fail
 /// use deboa::{Deboa, response::IntoBody};
 ///
@@ -409,7 +409,7 @@ impl DeboaResponse {
     /// # Returns
     ///
     /// * `Result<String>` - The header value.
-    /// 
+    ///
     /// # Panics
     /// - If the header is missing
     /// - If the header value is invalid
@@ -442,7 +442,7 @@ impl DeboaResponse {
     /// # Returns
     ///
     /// * `Result<u64>` - The length of the response body.
-    /// 
+    ///
     /// # Panics
     /// - If the Content-Length header is missing
     /// - If the Content-Length header value is invalid

@@ -14,7 +14,6 @@ pub const FLEX_POST: [u8; 53] = [
 pub const YAML_POST: &[u8; 40] = b"id: 1\ntitle: Test\nbody: Some test to do\n";
 pub const YAML_STR_POST: &str = "id: 1\ntitle: Test\nbody: Some test to do\n";
 
-
 pub const XML_POST: &[u8; 108] = b"<?xml version=\"1.0\" encoding=\"UTF-8\"?><Post><id>1</id><title>Test</title><body>Some test to do</body></Post>";
 pub const XML_STR_POST: &str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Post><id>1</id><title>Test</title><body>Some test to do</body></Post>";
 pub const XML_STR_PATCH: &str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Post><id>1</id><title>Test</title><body>Some test to do</body></Post>";

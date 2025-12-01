@@ -823,7 +823,7 @@ impl Deboa {
     ///   Ok(())
     /// }
     /// ```
-    /// 
+    ///
     /// # Panics
     /// - If the request is invalid
     /// - If the response is a non-success status code

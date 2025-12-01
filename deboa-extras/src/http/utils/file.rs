@@ -12,15 +12,15 @@ pub struct ToFile {
 }
 
 /// Trait to convert a DeboaResponse into a file writer.
-/// 
+///
 /// This trait allows converting a DeboaResponse into a ToFile helper type
 /// which provides async file writing capabilities.
-/// 
+///
 /// # Example
 /// ``` rust, compile_fail
 /// use deboa::{request::get, Deboa};
 /// use deboa_extras::http::utils::file::IntoFile;
-/// 
+///
 /// let mut client = Deboa::new();
 /// let response = get("https://example.com").send_with(&mut client).await?;
 /// response.into_file().save("output.txt", None).await?;
@@ -45,13 +45,13 @@ impl ToFile {
     ///
     /// # Returns
     /// * `Result<()>` - Ok if successful, Err with IoError if failed
-    /// 
+    ///
     /// # Examples
     /// ``` rust, compile_fail
-    /// 
+    ///
     /// use deboa::{request::get, Deboa};
     /// use deboa_extras::http::utils::file::IntoFile;
-    /// 
+    ///
     /// let mut client = Deboa::new();
     /// let response = get("https://example.com").send_with(&mut client).await?;
     /// response.into_file().save("output.txt", None).await?;

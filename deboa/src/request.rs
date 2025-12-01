@@ -624,7 +624,7 @@ impl DeboaRequestBuilder {
     /// ```compile_fail
     /// use deboa::request::post;
     /// use deboa_extras::http::serde::JsonBody;
-    /// 
+    ///
     /// let body = serde_json::json!({
     ///   "name": "deboa",
     ///   "version": "0.0.1"
@@ -774,9 +774,9 @@ impl DeboaRequestBuilder {
     /// * `Result<DeboaResponse>` - The response.
     ///
     /// # Panics
-    /// 
+    ///
     /// * If an error occurs while sending the request
-    /// 
+    ///
     /// # Examples
     ///
     /// ```compile_fail
@@ -789,7 +789,7 @@ impl DeboaRequestBuilder {
     /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
-    /// 
+    ///
     pub async fn send_with<T>(self, mut client: T) -> Result<DeboaResponse>
     where
         T: AsMut<Deboa>,
@@ -977,9 +977,9 @@ impl DeboaRequest {
     /// # Returns
     ///
     /// * `DeboaRequestBuilder` - The request builder.
-    /// 
+    ///
     /// # Panics
-    /// 
+    ///
     /// * If URL is invalid
     ///
     /// # Examples
@@ -998,9 +998,7 @@ impl DeboaRequest {
     pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
-            return Err(DeboaError::Request(RequestError::UrlParse {
-                message: e.to_string(),
-            }));
+            return Err(DeboaError::Request(RequestError::UrlParse { message: e.to_string() }));
         }
 
         let url = parsed_url.unwrap();
@@ -1068,7 +1066,7 @@ impl DeboaRequest {
     /// * `DeboaRequestBuilder` - The request builder.
     ///
     /// # Panics
-    /// 
+    ///
     /// * If URL is invalid
     ///
     #[inline]
@@ -1087,7 +1085,7 @@ impl DeboaRequest {
     /// * `DeboaRequestBuilder` - The request builder.
     ///
     /// # Panics
-    /// 
+    ///
     /// * If URL is invalid
     ///
     #[inline]

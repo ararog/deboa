@@ -36,7 +36,9 @@ async fn main() -> Result<()> {
     let mut client = Deboa::new();
     client.catch(AuthCatcher);
     let vamo = Arc::new(Mutex::new(Vamo::new("https://jsonplaceholder.typicode.com")?));
-    vamo.lock().await.client(client);
+    vamo.lock()
+        .await
+        .client(client);
 
     let ids = vec![1, 16, 21, 26, 31, 36, 41, 46, 51, 56, 61, 66];
     let mut handles = vec![];

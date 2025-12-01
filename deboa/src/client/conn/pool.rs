@@ -31,7 +31,7 @@ impl AsMut<HttpConnectionPool> for HttpConnectionPool {
 
 #[async_trait]
 /// Trait that represents the HTTP connection pool.
-pub trait DeboaHttpConnectionPool : private::Sealed {
+pub trait DeboaHttpConnectionPool: private::Sealed {
     /// Allow create a new connection pool.
     ///
     /// # Returns

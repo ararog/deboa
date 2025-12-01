@@ -12,14 +12,8 @@ const FLEXBUFFERS_CONTENT_TYPE: &str = "application/x-flexbuffers";
 
 impl RequestBody for FlexBody {
     fn register_content_type(&self, request: &mut DeboaRequest) {
-        request.add_header(
-            header::CONTENT_TYPE,
-            FLEXBUFFERS_CONTENT_TYPE,
-        );
-        request.add_header(
-            header::ACCEPT,
-            FLEXBUFFERS_CONTENT_TYPE,
-        );
+        request.add_header(header::CONTENT_TYPE, FLEXBUFFERS_CONTENT_TYPE);
+        request.add_header(header::ACCEPT, FLEXBUFFERS_CONTENT_TYPE);
     }
 
     fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>> {

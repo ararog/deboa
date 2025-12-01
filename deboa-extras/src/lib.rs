@@ -22,7 +22,7 @@
 //! - `xml`: Enables XML serialization/deserialization
 //! - `yaml`: Enables YAML serialization/deserialization
 //! - `flex`: Enables flexbuffers serialization/deserialization
-//! 
+//!
 //! ## Examples
 //!
 //! ### Using Server-Sent Events (SSE)
@@ -57,7 +57,7 @@
 //!     request::WebsocketRequestBuilder,
 //!     response::IntoWebSocket,
 //! };
-//! 
+//!
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -1,5 +1,5 @@
 use deboa::{
-    request::{get, FetchWith, DeboaRequest},
+    request::{get, DeboaRequest, FetchWith},
     Deboa, Result,
 };
 use deboa_extras::http::serde::json::JsonBody;
@@ -40,9 +40,14 @@ async fn main() -> Result<()> {
         "body": "bar",
         "userId": 1
     }
-    "##.parse::<DeboaRequest>()?;
+    "##
+    .parse::<DeboaRequest>()?;
 
-    let response: Post = client.execute(request).await?.body_as(JsonBody).await?;
+    let response: Post = client
+        .execute(request)
+        .await?
+        .body_as(JsonBody)
+        .await?;
 
     println!("saved post: {response:#?}");
 

@@ -22,8 +22,15 @@ async fn test_deflate_decompress() -> Result<()> {
 
     let mut response = DeboaResponse::new(fake_url(), response);
 
-    encoding_catcher.on_response(&mut response).await?;
+    encoding_catcher
+        .on_response(&mut response)
+        .await?;
 
-    assert_eq!(response.raw_body().await, DECOMPRESSED);
+    assert_eq!(
+        response
+            .raw_body()
+            .await,
+        DECOMPRESSED
+    );
     Ok(())
 }

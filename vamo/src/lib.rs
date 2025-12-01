@@ -57,7 +57,7 @@
 //!     name: String,
 //!     email: String,
 //! }
-//! 
+//!
 //! impl Resource for User {
 //!     fn id(&self) -> String {
 //!         self.id.map(|id| id.to_string()).unwrap_or_default()
@@ -92,7 +92,7 @@
 //! }
 //! ```
 
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use crate::resource::{Resource, ResourceMethod};
 use deboa::{

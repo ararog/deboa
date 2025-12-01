@@ -12,14 +12,8 @@ const YAML_CONTENT_TYPE: &str = "application/yaml";
 
 impl RequestBody for YamlBody {
     fn register_content_type(&self, request: &mut DeboaRequest) {
-        request.add_header(
-            header::CONTENT_TYPE,
-            YAML_CONTENT_TYPE,
-        );
-        request.add_header(
-            header::ACCEPT,
-            YAML_CONTENT_TYPE,
-        );
+        request.add_header(header::CONTENT_TYPE, YAML_CONTENT_TYPE);
+        request.add_header(header::ACCEPT, YAML_CONTENT_TYPE);
     }
 
     fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>> {
