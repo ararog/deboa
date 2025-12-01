@@ -10,6 +10,7 @@ use deboa::{
 };
 use flate2::{read::GzDecoder, write::GzEncoder};
 
+/// Gzip compression implementation for Deboa.
 #[derive(PartialEq)]
 pub struct GzipCompressor;
 
@@ -42,6 +43,7 @@ impl Compressor for GzipCompressor {
 }
 
 #[derive(PartialEq)]
+/// Gzip decompression implementation for Deboa.
 pub struct GzipDecompressor;
 
 #[deboa::async_trait]

@@ -10,6 +10,7 @@ use deboa::{
 };
 use flate2::{read::DeflateDecoder, write::DeflateEncoder};
 
+/// Deflate compression implementation for Deboa.
 pub struct DeflateCompressor;
 
 #[deboa::async_trait]
@@ -45,6 +46,7 @@ impl Compressor for DeflateCompressor {
 }
 
 #[derive(PartialEq)]
+/// Deflate decompression implementation for Deboa.
 pub struct DeflateDecompressor;
 
 #[deboa::async_trait]

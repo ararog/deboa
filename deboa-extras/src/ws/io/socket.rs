@@ -71,6 +71,23 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
         Self { stream }
     }
 
+    
+    /// Reads a message from the WebSocket.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing an Option<Message> or a DeboaExtrasError.
+    /// 
+    /// # Examples
+    ///
+    /// ```rust
+    /// // Example usage would go here
+    /// ```
+    /// 
+    /// # Panics
+    /// 
+    /// This function may panic if the WebSocket frame processing fails.
+    /// 
     async fn read_message(&mut self) -> Result<Option<Message>, DeboaExtrasError> {
         let mut rx_buf = vec![0; 10240];
         let mut rx_framer = WsRxFramer::new(&mut rx_buf);
@@ -104,6 +121,27 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
         Ok(message)
     }
 
+    /// Writes a message to the WebSocket.
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - The message to write.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or a DeboaExtrasError.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// // Example usage would go here
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function may panic if the WebSocket frame processing fails.
+    ///
+    /// 
     async fn write_message(&mut self, message: Message) -> Result<(), DeboaExtrasError> {
         let mut tx_buf = vec![0; 10240];
         let mut tx_framer = WsTxFramer::new(true, &mut tx_buf);
@@ -137,26 +175,127 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
         Ok(())
     }
 
+    /// Sends a close frame to the WebSocket.
+    ///
+    /// # Arguments
+    ///
+    /// * `code` - The close code.
+    /// * `reason` - The close reason.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or a DeboaExtrasError.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// // Example usage would go here
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function may panic if the WebSocket frame processing fails.
+    ///
     async fn send_close(&mut self, code: u16, reason: &str) -> Result<(), DeboaExtrasError> {
         self.write_message(Message::Close(code, reason.to_string()))
             .await
     }
 
+    /// Sends a text frame to the WebSocket.
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - The text message to send.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or a DeboaExtrasError.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// // Example usage would go here
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function may panic if the WebSocket frame processing fails.
+    ///
     async fn send_text(&mut self, message: &str) -> Result<(), DeboaExtrasError> {
         self.write_message(Message::Text(message.to_string()))
             .await
     }
 
+    /// Sends a binary frame to the WebSocket.
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - The binary message to send.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or a DeboaExtrasError.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// // Example usage would go here
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function may panic if the WebSocket frame processing fails.
+    ///
     async fn send_binary(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError> {
         self.write_message(Message::Binary(message.to_vec()))
             .await
     }
 
+    /// Sends a ping frame to the WebSocket.
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - The ping message to send.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or a DeboaExtrasError.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// // Example usage would go here
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function may panic if the WebSocket frame processing fails.
+    ///
     async fn send_ping(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError> {
         self.write_message(Message::Ping(message.to_vec()))
             .await
     }
 
+    /// Sends a pong frame to the WebSocket.
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - The pong message to send.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or a DeboaExtrasError.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// // Example usage would go here
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function may panic if the WebSocket frame processing fails.
+    ///
     async fn send_pong(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError> {
         self.write_message(Message::Pong(message.to_vec()))
             .await
