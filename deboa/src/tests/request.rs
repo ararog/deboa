@@ -3,7 +3,7 @@ use std::{str::FromStr, sync::Arc};
 use crate::{request::DeboaRequest, request::FetchWith, Deboa, Result};
 
 use deboa_tests::utils::JSONPLACEHOLDER;
-use http::{HeaderValue, Method, header};
+use http::{header, HeaderValue, Method};
 use url::Url;
 
 #[test]
@@ -53,34 +53,48 @@ async fn test_try_into() -> Result<()> {
     Ok(())
 }
 
-#[test] 
+#[test]
 fn test_from_str_method_and_url() -> Result<()> {
-    let request = DeboaRequest::from_str(r##"
+    let request = DeboaRequest::from_str(
+        r##"
     GET https://jsonplaceholder.typicode.com
-    "##)?;
+    "##,
+    )?;
     assert_eq!(request.method(), Method::GET);
-    assert_eq!(request.url(), Arc::new(Url::parse("https://jsonplaceholder.typicode.com").unwrap()));
+    assert_eq!(
+        request.url(),
+        Arc::new(Url::parse("https://jsonplaceholder.typicode.com").unwrap())
+    );
     Ok(())
 }
 
-#[test] 
+#[test]
 fn test_from_str_headers() -> Result<()> {
-    let request = DeboaRequest::from_str(r##"
+    let request = DeboaRequest::from_str(
+        r##"
     GET https://jsonplaceholder.typicode.com
     Content-Type: application/json
-    "##)?;
-    assert_eq!(request.headers().get(header::CONTENT_TYPE), Some(&HeaderValue::from_str("application/json").unwrap()));
+    "##,
+    )?;
+    assert_eq!(
+        request
+            .headers()
+            .get(header::CONTENT_TYPE),
+        Some(&HeaderValue::from_str("application/json").unwrap())
+    );
     Ok(())
 }
 
-#[test] 
+#[test]
 fn test_from_str_body() -> Result<()> {
-    let request = DeboaRequest::from_str(r##"
+    let request = DeboaRequest::from_str(
+        r##"
     GET https://jsonplaceholder.typicode.com
     Content-Type: application/json
     
     {"title": "foo", "body": "bar", "userId": 1}
-    "##)?;
+    "##,
+    )?;
     assert_eq!(request.raw_body(), b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}");
     Ok(())
 }

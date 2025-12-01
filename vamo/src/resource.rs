@@ -54,11 +54,11 @@ use serde::Serialize;
 /// Trait to be implemented by structs which will behave as rest resources.
 /// Resource trait will use convention over configuration to define the paths
 /// for operations on resources.
-/// 
+///
 /// # Type Parameters
 ///
 /// * `R` - The resource type.
-/// 
+///
 /// # Example
 ///
 /// ```rust,no_run
@@ -124,11 +124,11 @@ pub trait Resource {
 }
 
 /// Trait which allow http methods on resources
-/// 
+///
 /// # Type Parameters
 ///
 /// * `R` - The resource type.
-/// 
+///
 /// # Example
 ///
 /// ```rust,compile_fail

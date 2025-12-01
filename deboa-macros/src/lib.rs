@@ -266,7 +266,7 @@ macro_rules! put {
             )
             .await?
     };
-  
+
     ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
         $client
             .execute(

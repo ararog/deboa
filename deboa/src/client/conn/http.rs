@@ -51,7 +51,7 @@ pub type Http2Request = hyper::client::conn::http2::SendRequest<Full<Bytes>>;
 ///
 /// * `Sender` - The sender to use.
 ///
-pub trait DeboaHttpConnection : private::Sealed {
+pub trait DeboaHttpConnection: private::Sealed {
     type Sender;
 
     /// Create a new connection.

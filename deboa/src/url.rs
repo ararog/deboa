@@ -76,7 +76,7 @@ impl IntoUrl for String {
 }
 
 /// Sealed trait to prevent external implementation.
-/// 
+///
 /// This is used to ensure that the `IntoUrl` trait can only be implemented
 /// for types that are defined in this crate.
 mod private {

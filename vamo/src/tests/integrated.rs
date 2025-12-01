@@ -237,12 +237,10 @@ async fn test_patch_resource() -> Result<()> {
     Ok(())
 }
 
-
 #[tokio::test]
 async fn test_remove_resource() -> Result<()> {
     let server = MockServer::start();
-    let mock =
-        setup_server(&server, "/api/posts/1", DELETE, StatusCode::OK);
+    let mock = setup_server(&server, "/api/posts/1", DELETE, StatusCode::OK);
 
     let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
 

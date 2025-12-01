@@ -71,23 +71,22 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
         Self { stream }
     }
 
-    
     /// Reads a message from the WebSocket.
     ///
     /// # Returns
     ///
     /// A Result containing an Option<Message> or a DeboaExtrasError.
-    /// 
+    ///
     /// # Examples
     ///
     /// ```rust
     /// // Example usage would go here
     /// ```
-    /// 
+    ///
     /// # Panics
-    /// 
+    ///
     /// This function may panic if the WebSocket frame processing fails.
-    /// 
+    ///
     async fn read_message(&mut self) -> Result<Option<Message>, DeboaExtrasError> {
         let mut rx_buf = vec![0; 10240];
         let mut rx_framer = WsRxFramer::new(&mut rx_buf);
@@ -141,7 +140,7 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
     ///
     /// This function may panic if the WebSocket frame processing fails.
     ///
-    /// 
+    ///
     async fn write_message(&mut self, message: Message) -> Result<(), DeboaExtrasError> {
         let mut tx_buf = vec![0; 10240];
         let mut tx_framer = WsTxFramer::new(true, &mut tx_buf);
