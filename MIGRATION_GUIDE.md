@@ -5,30 +5,39 @@
 ### Breaking changes
 
 * Made request, response, connection and runtime traits sealed
+* Removed deboa-bora crate
+* Removed bora macro from deboa-macros crate
+* Moved bora macro to vamo-macros crate
+
+### Non-breaking changes
+
+* Improved documentation
+* Added more examples
+* Deprecated Fetch trait, added FetchWith trait
+* Deprecated go method, added send_with method to DeboaRequestBuilder
+
+## From 0.0.7 to 0.0.8
+
+### Breaking changes
+
+* Improved error handling, added more error variants
+
+### Non-breaking changes
+
+* Added multipart support
+
+## From 0.0.6 to 0.0.7
 
 ### Non-breaking changes
 
 * Improved documentation
 * Added more examples
 
-
-## From 0.0.7 to 0.0.8
-
-### Breaking changes
-
-* 
-
-
-## From 0.0.6 to 0.0.7
-
-### Breaking changes
-
-* 
-
 ## From 0.0.5 to 0.0.6
 
 ### Breaking changes
 
+* Macro migration: `bora` macro moved to `deboa-bora`, update all macro imports.            
 
 ## From 0.0.4 to 0.0.5
 
