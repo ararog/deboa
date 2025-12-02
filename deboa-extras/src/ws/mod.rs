@@ -24,8 +24,45 @@
 //!     .into_websocket()
 //!     .await;
 //!
-//! while let Ok(()) = websocket.read_message().await {
-//!     // Just keep checking messages
+//! loop {
+//!     select! {
+//!         outgoing_message = websocket.read_message() => {
+//!             if let Err(message) = outgoing_message {
+//!                 println!("Failed to read message from echo server: {}", message);
+//!
+//!                 output.send(Event::Disconnected).await;
+//!                 break;
+//!             }
+//!
+//!             match outgoing_message.unwrap() {
+//!                 Some(message) => {
+//!                     if let protocol::Message::Text(message) = message {
+//!                         output
+//!                             .send(Event::MessageReceived(Message::User(
+//!                                 format!("Server: {}", message).to_string(),
+//!                             )))
+//!                                        .await;
+//!                      }
+//!                 }
+//!                 None => {
+//!                     output.send(Event::Disconnected).await;
+//!                     break;
+//!                 }
+//!             }
+//!         }
+//!
+//!         incoming_message = input.next() => {
+//!             if let Some(message) = incoming_message {
+//!                 let result = websocket
+//!                   .write_message(protocol::Message::Text(message.to_string()))
+//!                   .await;
+//!                 if result.is_err() {
+//!                     output.send(Event::Disconnected).await;
+//!                     break;
+//!                 }
+//!             }
+//!         }
+//!     }
 //! }
 //! ```
 //!

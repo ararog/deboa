@@ -1,5 +1,7 @@
-
 # Vamo Macros
+
+[![Crates.io downloads](https://img.shields.io/crates/d/vamo-macros)](https://crates.io/crates/vamo-macros) [![crates.io](https://img.shields.io/crates/v/vamo-macros?style=flat-square)](https://crates.io/crates/vamo-macros) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) ![Crates.io MSRV](https://img.shields.io/crates/msrv/vamo-macros) [![Documentation](https://docs.rs/vamo-macros/badge.svg)](https://docs.rs/vamo-macros/latest/vamo-macros) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ararog/deboa/blob/main/LICENSE.md)  ![Codecov](https://img.shields.io/codecov/c/github/ararog/deboa) 
+
 
 Vamo macros is a collection of macros to make possible
 use structs as resources to be sent over vamo as client.
