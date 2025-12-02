@@ -1,5 +1,8 @@
 # Vamo
 
+[![Crates.io downloads](https://img.shields.io/crates/d/vamo)](https://crates.io/crates/vamo) [![crates.io](https://img.shields.io/crates/v/vamo?style=flat-square)](https://crates.io/crates/vamo) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) ![Crates.io MSRV](https://img.shields.io/crates/msrv/vamo) [![Documentation](https://docs.rs/vamo/badge.svg)](https://docs.rs/vamo/latest/vamo) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ararog/deboa/blob/main/LICENSE.md) ![Codecov](https://img.shields.io/codecov/c/github/ararog/deboa) 
+
+
 **vamo** ("Let's go" in portuguese) is a rest wrapper for deboa. Vamo is a key part of the deboa ecosystem, allowing bora macro to generate api clients.
 
 ## Usage

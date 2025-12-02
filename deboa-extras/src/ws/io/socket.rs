@@ -79,8 +79,10 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// // Example usage would go here
+    /// ```rust, compile_fail
+    /// while let Some(message) = websocket.read_message().await {
+    ///     println!("message: {}", message);
+    /// }
     /// ```
     ///
     /// # Panics
@@ -132,8 +134,14 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// // Example usage would go here
+    /// ```rust, compile_fail
+    /// let result = websocket
+    ///   .write_message(protocol::Message::Text(message.to_string()))
+    ///   .await;
+    /// if result.is_err() {
+    ///     output.send(Event::Disconnected).await;
+    ///     break;
+    /// }
     /// ```
     ///
     /// # Panics
@@ -187,8 +195,12 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// // Example usage would go here
+    /// ```rust, compile_fail
+    /// let result = websocket.send_close(1000, "Goodbye").await;
+    /// if result.is_err() {
+    ///     output.send(Event::Disconnected).await;
+    ///     break;
+    /// }
     /// ```
     ///
     /// # Panics
@@ -212,8 +224,12 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// // Example usage would go here
+    /// ```rust, compile_fail
+    /// let result = websocket.send_text("Hello").await;
+    /// if result.is_err() {
+    ///     output.send(Event::Disconnected).await;
+    ///     break;
+    /// }
     /// ```
     ///
     /// # Panics
@@ -237,8 +253,12 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// // Example usage would go here
+    /// ```rust, compile_fail
+    /// let result = websocket.send_binary(&[0x00, 0x01, 0x02]).await;
+    /// if result.is_err() {
+    ///     output.send(Event::Disconnected).await;
+    ///     break;
+    /// }
     /// ```
     ///
     /// # Panics
@@ -262,8 +282,12 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// // Example usage would go here
+    /// ```rust, compile_fail
+    /// let result = websocket.send_ping(&[0x00, 0x01, 0x02]).await;
+    /// if result.is_err() {
+    ///     output.send(Event::Disconnected).await;
+    ///     break;
+    /// }
     /// ```
     ///
     /// # Panics
@@ -287,8 +311,12 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// // Example usage would go here
+    /// ```rust, compile_fail
+    /// let result = websocket.send_pong(&[0x00, 0x01, 0x02]).await;
+    /// if result.is_err() {
+    ///     output.send(Event::Disconnected).await;
+    ///     break;
+    /// }
     /// ```
     ///
     /// # Panics

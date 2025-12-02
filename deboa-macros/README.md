@@ -1,5 +1,8 @@
 # Deboa Macros
 
+[![Crates.io downloads](https://img.shields.io/crates/d/deboa-macros)](https://crates.io/crates/deboa-macros) [![crates.io](https://img.shields.io/crates/v/deboa-macros?style=flat-square)](https://crates.io/crates/deboa-macros) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) ![Crates.io MSRV](https://img.shields.io/crates/msrv/deboa-macros) [![Documentation](https://docs.rs/deboa-macros/badge.svg)](https://docs.rs/deboa-macros/latest/deboa-macros) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ararog/deboa/blob/main/LICENSE.md)  ![Codecov](https://img.shields.io/codecov/c/github/ararog/deboa-macros) 
+
+
 **deboa-macros** is a collection of macros for deboa.
 It used to be the home of bora macro, which has been moved to its own crate
 but it will continue to exist in this crate for backwards compatibility.
