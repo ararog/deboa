@@ -83,17 +83,18 @@ use std::fs::write;
 
 use http::{header, HeaderName, HeaderValue, Response};
 use http_body_util::{BodyDataStream, BodyExt, Either, Full};
-use hyper::body::{Bytes, Incoming};
-use hyper::upgrade::on;
+use hyper::{
+    body::{Bytes, Incoming},
+    upgrade::on,
+};
 #[cfg(feature = "tokio-rt")]
 use hyper_util::rt::TokioIo;
 use serde::Deserialize;
 #[cfg(feature = "smol-rt")]
 use smol_hyper::rt::FuturesIo;
 
-use crate::cookie::DeboaCookie;
-use crate::errors::{ConnectionError, IoError};
-use crate::{client::serde::ResponseBody, errors::DeboaError, Result};
+use crate::errors::{ConnectionError, DeboaError, IoError};
+use crate::{client::serde::ResponseBody, cookie::DeboaCookie, Result};
 use url::Url;
 
 pub type DeboaBody = Either<Incoming, Full<Bytes>>;
