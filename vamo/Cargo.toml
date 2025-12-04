@@ -13,6 +13,7 @@ publish = true
 rust-version = "1.64.0"
 
 [dependencies]
+base64 = "0.22.1"
 deboa = { path = "../deboa", version = "0.0.8", features = ["http1"] }
 deboa-extras = { path = "../deboa-extras", version = "0.0.4", features = ["json"] }
 http = "1.4.0"

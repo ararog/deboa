@@ -62,8 +62,8 @@
 //! ```
 //!
 
-mod config;
-mod parser;
-mod token;
+pub(crate) mod config;
+pub(crate) mod parser;
+pub(crate) mod token;
 
 pub use config::api::bora;
