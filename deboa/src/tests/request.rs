@@ -1,6 +1,9 @@
 use std::{str::FromStr, sync::Arc};
 
-use crate::{request::DeboaRequest, request::FetchWith, Deboa, Result};
+use crate::{
+    request::{DeboaRequest, FetchWith, IntoRequest},
+    Deboa, Result,
+};
 
 use deboa_tests::utils::JSONPLACEHOLDER;
 use http::{header, HeaderValue, Method};
@@ -15,6 +18,30 @@ fn test_into_url() -> Result<()> {
             .url()
             .to_string(),
         JSONPLACEHOLDER
+    );
+    Ok(())
+}
+
+#[test]
+fn test_into_request_from_str() -> Result<()> {
+    let request = JSONPLACEHOLDER.into_request()?;
+    assert_eq!(
+        request
+            .url()
+            .to_string(),
+        JSONPLACEHOLDER
+    );
+    Ok(())
+}
+
+#[test]
+fn test_into_request_from_string() -> Result<()> {
+    let request = format!("{}/posts/{}", JSONPLACEHOLDER, 1).into_request()?;
+    assert_eq!(
+        request
+            .url()
+            .to_string(),
+        format!("{}/posts/{}", JSONPLACEHOLDER, 1)
     );
     Ok(())
 }
