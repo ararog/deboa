@@ -161,16 +161,24 @@
 //!
 //! Vamo provides convenience methods for common authentication methods:
 //!
-//! ```no_run
+//! ```no_run, compile_fail
 //! # use vamo::Vamo;
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Bearer token authentication
 //! let mut vamo = Vamo::new("https://api.example.com")?;
-//! vamo.bearer_auth("your-token-here");
+//! vamo
+//!   .get("/users/1")
+//!   .bearer_auth("your-token-here")
+//!   .send()
+//!   .await?;
 //!
 //! // Basic authentication
 //! let mut vamo = Vamo::new("https://api.example.com")?;
-//! vamo.basic_auth("username", "password");
+//! vamo
+//!   .get("/users/1")
+//!   .basic_auth("username", "password")
+//!   .send()
+//!   .await?;
 //! # Ok(()) }
 //! ```
 //!
@@ -190,17 +198,21 @@
 //!
 //! ## License
 //!
-//! Licensed under either of
-//!  * Apache License, Version 2.0
-//!  * MIT license
-//! at your option.
-
+//! MIT license
+//!
+//! ## Author
+//!
+//! Rogerio Pacheco <rogerio.pacheco@gmail.com>
 use std::sync::Arc;
 
 use crate::resource::{Resource, ResourceMethod};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use deboa::{
-    client::serde::RequestBody, request::DeboaRequest, response::DeboaResponse, url::IntoUrl,
+    client::serde::RequestBody,
+    errors::{DeboaError, RequestError},
+    request::DeboaRequest,
+    response::DeboaResponse,
+    url::IntoUrl,
     Deboa, Result,
 };
 use http::{
@@ -242,19 +254,38 @@ impl Vamo {
     /// let mut vamo = Vamo::new("https://api.example.com")?;
     /// let response = vamo.get("/path").send().await?;
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// If the URL is invalid, or headers are invalid, the function will panic.
+    ///
     pub fn new<U: IntoUrl>(url: U) -> Result<Vamo> {
         let base_url = url.into_url()?;
         let mut headers = HeaderMap::new();
-        headers.insert(
-            HOST,
-            HeaderValue::from_str(
-                base_url
-                    .host_str()
-                    .unwrap(),
-            )
-            .unwrap(),
+        let host = base_url.host_str();
+        if host.is_none() {
+            return Err(DeboaError::Request(RequestError::UrlParse {
+                message: "Invalid URL: Missing host.".to_string(),
+            }));
+        }
+
+        let host_header = HeaderValue::from_str(
+            base_url
+                .host_str()
+                .unwrap(),
         );
-        headers.insert(CONTENT_TYPE, HeaderValue::from_str("application/json").unwrap());
+        if let Err(e) = host_header {
+            return Err(DeboaError::Header { message: e.to_string() });
+        }
+
+        headers.insert(HOST, host_header.unwrap());
+
+        let content_type_header = HeaderValue::from_str("application/json");
+        if let Err(e) = content_type_header {
+            return Err(DeboaError::Header { message: e.to_string() });
+        }
+
+        headers.insert(CONTENT_TYPE, content_type_header.unwrap());
 
         Ok(Vamo {
             client: Deboa::new(),

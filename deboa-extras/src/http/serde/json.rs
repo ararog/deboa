@@ -24,7 +24,7 @@ impl RequestBody for JsonBody {
     }
 
     fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>, DeboaError> {
-        let result = serde_json::to_vec(&data);
+        let result = sonic_rs::to_vec(&data);
         if let Err(error) = result {
             return Err(DeboaError::Content(ContentError::Serialization {
                 message: error.to_string(),
@@ -40,7 +40,7 @@ impl ResponseBody for JsonBody {
         let binding = body;
         let body = binding.as_ref();
 
-        let json = serde_json::from_slice(body);
+        let json = sonic_rs::from_slice(body);
 
         match json {
             Ok(deserialized_body) => Ok(deserialized_body),

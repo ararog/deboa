@@ -56,6 +56,10 @@ async fn main() -> Result<()> {
 
 ## Subprojects
 
+### deboa
+
+The core create of http client.
+
 ### deboa-bora (removed)
 
 A crate with bora macro, for easy rest client generation. Bora macro is now part of vamo-macros.
@@ -66,7 +70,7 @@ Pluggable compression/decompression, serializers and catchers.
 
 ### deboa-macros
 
-A crate with set of convenience macros. Please note this macro no longer provides bora macro.
+A crate with set of convenience macros. Please note this crate no longer provides bora macro.
 
 ### deboa-tests
 
