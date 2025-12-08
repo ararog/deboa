@@ -51,7 +51,7 @@ http = "1"
 http-body = "1"
 http-body-util = "0.1"
 hyper = { version = "1.8.1", features = ["client", "http1", "http2"] }
-hyper-util = { version = "0.1.18", features = [
+hyper-util = { version = "0.1.19", features = [
   "http1",
   "http2",
   "client",
