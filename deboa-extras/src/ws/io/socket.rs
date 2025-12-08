@@ -329,6 +329,7 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
     }
 }
 
+#[cfg(feature = "tokio")]
 impl AsyncRead for WebSocket<UpgradedIo> {
     fn poll_read(
         self: Pin<&mut Self>,
@@ -341,6 +342,7 @@ impl AsyncRead for WebSocket<UpgradedIo> {
     }
 }
 
+#[cfg(feature = "tokio")]
 impl AsyncWrite for WebSocket<UpgradedIo> {
     fn poll_write(
         self: Pin<&mut Self>,
@@ -387,5 +389,71 @@ impl AsyncWrite for WebSocket<UpgradedIo> {
     fn is_write_vectored(&self) -> bool {
         self.stream
             .is_write_vectored()
+    }
+}
+
+#[cfg(feature = "smol")]
+impl<T> AsyncRead for WebSocket<FuturesIo<T>>
+where
+    T: hyper::rt::Read,
+{
+    fn poll_read(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &mut [u8],
+    ) -> Poll<io::Result<usize>> {
+        Poll::Ready(Ok(0))
+    }
+}
+
+#[cfg(feature = "smol")]
+impl<T> AsyncWrite for WebSocket<FuturesIo<T>>
+where
+    T: hyper::rt::Write,
+{
+    fn poll_write(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &[u8],
+    ) -> Poll<io::Result<usize>> {
+        hyper::rt::Write::poll_write(
+            self.project()
+                .stream
+                .get_pin_mut(),
+            cx,
+            buf,
+        )
+    }
+
+    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+        hyper::rt::Write::poll_flush(
+            self.project()
+                .stream
+                .get_pin_mut(),
+            cx,
+        )
+    }
+
+    fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+        hyper::rt::Write::poll_shutdown(
+            self.project()
+                .stream
+                .get_pin_mut(),
+            cx,
+        )
+    }
+
+    fn poll_write_vectored(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        bufs: &[std::io::IoSlice<'_>],
+    ) -> Poll<std::result::Result<usize, std::io::Error>> {
+        hyper::rt::Write::poll_write_vectored(
+            self.project()
+                .stream
+                .get_pin_mut(),
+            cx,
+            bufs,
+        )
     }
 }

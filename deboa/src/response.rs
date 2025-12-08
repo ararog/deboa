@@ -685,14 +685,16 @@ impl DeboaResponse {
     #[cfg(feature = "smol-rt")]
     pub async fn upgrade(self) -> Result<FuturesIo<hyper::upgrade::Upgraded>> {
         if self.inner.version() != http::Version::HTTP_11 {
-            return Err(DeboaError::Io {
+            return Err(DeboaError::Connection(ConnectionError::Upgrade {
                 message: "Upgrade is only supported for HTTP/1.1".to_string(),
-            });
+            }));
         }
 
         let upgrade = on(self.inner).await;
         if let Err(e) = upgrade {
-            return Err(DeboaError::Io { message: e.to_string() });
+            return Err(DeboaError::Connection(ConnectionError::Upgrade {
+                message: e.to_string(),
+            }));
         }
         Ok(FuturesIo::new(upgrade.unwrap()))
     }

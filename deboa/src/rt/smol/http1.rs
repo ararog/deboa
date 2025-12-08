@@ -13,7 +13,7 @@ use url::Url;
 use crate::{
     cert::ClientCert,
     client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http1Request},
-    errors::DeboaError,
+    errors::{ConnectionError, DeboaError},
     rt::smol::stream::SmolStream,
     Result,
 };
@@ -50,10 +50,10 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                     };
 
                     if let Err(e) = stream {
-                        return Err(DeboaError::Connection {
+                        return Err(DeboaError::Connection(ConnectionError::Tcp {
                             host: host.to_string(),
                             message: e.to_string(),
-                        });
+                        }));
                     }
 
                     let stream = stream.unwrap();
@@ -69,10 +69,10 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                     };
 
                     if let Err(e) = stream {
-                        return Err(DeboaError::Connection {
+                        return Err(DeboaError::Connection(ConnectionError::Tcp {
                             host: host.to_string(),
                             message: e.to_string(),
-                        });
+                        }));
                     }
 
                     let stream = stream.unwrap();
@@ -95,19 +95,19 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                         .await;
 
                     if let Err(e) = stream {
-                        return Err(DeboaError::Connection {
+                        return Err(DeboaError::Connection(ConnectionError::Tls {
                             host: host.to_string(),
                             message: e.to_string(),
-                        });
+                        }));
                     }
 
                     let stream = stream.unwrap();
                     SmolStream::Tls(stream)
                 }
                 scheme => {
-                    return Err(DeboaError::UnsupportedScheme {
+                    return Err(DeboaError::Connection(ConnectionError::UnsupportedScheme {
                         message: format!("unsupported scheme: {scheme:?}"),
-                    });
+                    }));
                 }
             }
         };
@@ -143,3 +143,5 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
             .await
     }
 }
+
+impl crate::client::conn::http::private::Sealed for BaseHttpConnection<Http1Request> {}
