@@ -1,11 +1,10 @@
 mod echo;
 
-use iced::widget::scrollable::Id;
-use iced::widget::{button, center, column, row, scrollable, text, text_input};
+use iced::widget::{Id, button, center, column, row, scrollable, text, text_input};
 use iced::{Center, Element, Fill, Subscription, Task, color};
 
 pub fn main() -> iced::Result {
-    iced::application("WebSocket", WebSocket::update, WebSocket::view)
+    iced::application(WebSocket::default, WebSocket::update, WebSocket::view)
         .subscription(WebSocket::subscription)
         .run()
 }
