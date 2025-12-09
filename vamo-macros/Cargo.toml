@@ -1,7 +1,7 @@
 [package]
 name = "vamo-macros"
 edition = "2021"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 description = "macros for vamo to automate resource trait generation"
 license = "MIT"
@@ -22,9 +22,9 @@ msgpack = ["deboa-extras/msgpack"]
 proc-macro = true
 
 [dependencies]
-deboa = { path = "../deboa", version = "0.0.8", features = ["http1"] }
-deboa-extras = { path = "../deboa-extras", version = "0.0.4", features=["json"] }
-vamo = { path = "../vamo", version = "0.0.4" }
+deboa = { path = "../deboa", version = "0.0.9", features = ["http1"] }
+deboa-extras = { path = "../deboa-extras", version = "0.0.5", features=["json"] }
+vamo = { path = "../vamo", version = "0.0.5" }
 proc-macro2 = "1.0.103"
 serde = "1.0.228"
 syn = { version = "2.0", features = ["full"] }
