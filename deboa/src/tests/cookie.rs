@@ -1,4 +1,5 @@
-use cookie::{time::OffsetDateTime, Expiration};
+use cookie::Expiration;
+use time::OffsetDateTime;
 
 use crate::cookie::DeboaCookie;
 

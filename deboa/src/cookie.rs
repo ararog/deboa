@@ -16,7 +16,7 @@
 //!
 //! ```rust
 //! use deboa::cookie::DeboaCookie;
-//! use cookie::time::Duration;
+//! use time::Duration;
 //!
 //! // Create a simple session cookie
 //! let mut cookie = DeboaCookie::new("session_id", "abc123");
