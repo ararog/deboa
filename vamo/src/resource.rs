@@ -37,11 +37,9 @@
 //!         self.id.map(|id| id.to_string()).unwrap_or_default()
 //!     }
 //!
-//!     fn load_path(&self) -> &str { "/users/:id" }
-//!     fn create_path(&self) -> &str { "/users" }
-//!     fn remove_path(&self) -> &str { "/users/:id" }
-//!     fn update_path(&self) -> &str { "/users/:id" }
-//!     fn edit_path(&self) -> &str { "/users/:id" }
+//!     fn name(&self) -> &str {
+//!         "users"
+//!     }
 //!     
 //!     fn body_type(&self) -> impl RequestBody {
 //!         JsonBody
