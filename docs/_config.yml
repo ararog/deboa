@@ -7,7 +7,7 @@ theme: just-the-docs
 markdown: kramdown
 
 plugins:
-  - jekyll-seo-tag
+  - jekyll-default-layout
   - jekyll-sitemap
   - jekyll-feed
 
