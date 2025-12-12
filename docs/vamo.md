@@ -12,27 +12,22 @@ A nice wrapper on top of deboa for creating DRY REST clients.
 
 - Type-safe REST client generation
 - Resource-based API design
-- Automatic serialization/deserialization
-- Middleware support
-- Pagination helpers
-- Request/response interceptors
 
 ## Installation
 
 ```toml
 [dependencies]
-vamo = { version = "0.1.0", features = ["json"] }
+vamo = { version = "0.1.0" }
 ```
 
 ## Quick Start
 
 ```rust
 use serde::{Deserialize, Serialize};
-use vamo::prelude::*;
+use vamo::Vamo;
 
 // Define your resource
 #[derive(Debug, Serialize, Deserialize, Resource)]
-#[resource(path = "/users")]
 struct User {
     id: Option<u64>,
     name: String,
@@ -42,7 +37,7 @@ struct User {
 #[tokio::main]
 async fn main() -> Result<()> {
     // Create a client
-    let client = vamo::Client::new("https://api.example.com");
+    let client = Vamo::new("https://api.example.com");
     
     // Create a new user
     let mut user = User {
@@ -81,7 +76,6 @@ use serde::{Deserialize, Serialize};
 use vamo::Resource;
 
 #[derive(Debug, Serialize, Deserialize, Resource)]
-#[resource(path = "/posts")]
 struct Post {
     id: Option<u64>,
     title: String,
@@ -138,77 +132,6 @@ let updated_post = post.update(&client).await?;
 // Delete a post
 post.delete(&client).await?;
 ```
-
-## Relationships
-
-```rust
-#[derive(Debug, Serialize, Deserialize, Resource)]
-#[resource(path = "/users")]
-struct User {
-    id: Option<u64>,
-    name: String,
-    email: String,
-}
-
-impl User {
-    // Define a custom method to get user's posts
-    pub async fn posts(&self, client: &vamo::Client) -> Result<Vec<Post>, vamo::Error> {
-        Post::list_with_params(client, &[("user_id", &self.id.unwrap().to_string())]).await
-    }
-}
-
-// Usage
-let user = User::get(1, &client).await?;
-let user_posts = user.posts(&client).await?;
-```
-
-## Middleware
-
-```rust
-use vamo::middleware::{Middleware, Next};
-use deboa::Request;
-
-struct AuthMiddleware {
-    token: String,
-}
-
-#[async_trait::async_trait]
-impl Middleware for AuthMiddleware {
-    async fn handle(&self, req: Request, next: Next<'_>) -> Result<deboa::Response, deboa::Error> {
-        next.run(req.header("Authorization", format!("Bearer {}", self.token))).await
-    }
-}
-
-// Create a client with middleware
-let client = vamo::Client::builder("https://api.example.com")
-    .with(AuthMiddleware { token: "secret-token".to_string() })
-    .build();
-```
-
-## Error Handling
-
-```rust
-use vamo::Error as VamoError;
-
-match user.delete(&client).await {
-    Ok(_) => println!("User deleted successfully"),
-    Err(VamoError::NotFound) => eprintln!("User not found"),
-    Err(VamoError::Unauthorized) => eprintln!("Authentication required"),
-    Err(e) => eprintln!("An error occurred: {}", e),
-}
-```
-
-## Features
-
-- `json`: Enable JSON support (requires `serde_json`)
-- `form`: Enable URL-encoded form support (requires `serde_urlencoded`)
-- `multipart`: Enable multipart form data support
-- `uuid`: Enable UUID support
-- `chrono`: Enable date/time support with chrono
-
-## Examples
-
-See the [examples](../examples) directory for more usage examples.
 
 ## API Reference
 
