@@ -297,32 +297,30 @@ impl DeboaBuilder {
     /// ## Automatic Retries
     ///
     /// ``` compile_fail
-    /// use deboa::Deboa;
-    /// use std::error::Error;
+    /// use deboa::{Deboa, Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
+    ///
+    /// struct AddAuthorization;
+    ///
+    /// #[deboa::async_trait]
+    /// impl DeboaCatcher for AddAuthorization {
+    /// async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
+    ///    println!("Request: {:?}", request.url());
+    ///    Ok(None)
+    /// }
+    ///
+    /// async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
+    ///    println!("Response: {:?}", response.status());
+    ///    Ok(())
+    /// }
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn Error>> {
-    ///     let builder = Deboa::builder()
-    ///         .catch(|e: std::io::Error| {
-    ///             if e.kind() == std::io::ErrorKind::TimedOut {
-    ///                 eprintln!("Request timed out, will retry...");
-    ///                 // Return error to trigger retry logic
-    ///             Err(Box::new(e))
-    ///         } else {
-    ///             // For other errors, continue with the error
-    ///             Ok(())
-    ///         }
-    ///     });
+    /// async fn main() -> Result<()> {
+    ///     let client = Deboa::builder()
+    ///         .catch(AddAuthorization)
+    ///         .build();
     ///     Ok(())
     /// }
     /// ```
-    ///
-    /// # Notes
-    /// - Multiple catchers can be added for different error types
-    /// - Catchers are called in the order they are added
-    /// - If a catcher returns `Ok(())`, error handling continues to the next catcher
-    /// - If a catcher returns `Err(e)`, error propagation stops and the error is returned
-    /// - The default error handler will be called if no catcher handles the error
     pub fn catch<C: DeboaCatcher>(mut self, catcher: C) -> Self {
         if let Some(catchers) = &mut self.catchers {
             catchers.push(Box::new(catcher));
