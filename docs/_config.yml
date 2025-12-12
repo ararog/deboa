@@ -2,16 +2,14 @@ title: Deboa
 baseurl: "/deboa" # the subpath of your site, e.g. /blog
 url: "https://ararog.github.io" # the base hostname & protocol for your site
 
-theme: just-the-docs
+theme: jekyll-theme-cayman
 
 markdown: kramdown
 
 plugins:
-  - jekyll-default-layout
+  - jekyll-seo-tag
   - jekyll-sitemap
   - jekyll-feed
-
-color_scheme: dark
 
 defaults:
   - scope:
@@ -23,4 +21,3 @@ defaults:
       sidebar:
         nav: "navigation"
 
-nav_enabled: true 

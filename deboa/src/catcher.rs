@@ -1,5 +1,35 @@
 #![allow(unused_variables)]
-
+//! This module define the catcher API for Deboa.
+//!
+//! Catchers are called when an error occurs during request execution.
+//! They can be used to implement logic, such as logging, inject headers, etc.
+//!
+//! # Examples
+//!
+//! ```rust
+//! use deboa::{Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
+//!
+//! struct TestMonitor;
+//!
+//! #[deboa::async_trait]
+//! impl DeboaCatcher for TestMonitor {
+//!     async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
+//!         println!("Request: {:?}", request.url());
+//!         Ok(None)
+//!     }
+//!
+//!     async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
+//!         println!("Response: {:?}", response.status());
+//!         Ok(())
+//!     }
+//! }
+//!
+//! // Create a client with middleware
+//! let client = deboa::Deboa::builder()
+//!     .catch(TestMonitor)
+//!     .build();
+//! ```
+//!
 use async_trait::async_trait;
 use mockall::automock;
 

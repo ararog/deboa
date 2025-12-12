@@ -14,7 +14,6 @@ A collection of procedural macros to simplify working with the Deboa HTTP client
 - `#[derive(FromResponse)]`: Automatically parse an HTTP response into a struct
 - `#[derive(QueryParams)]`: Convert a struct into URL query parameters
 - `#[derive(FormData)]`: Convert a struct into form data
-- `#[derive(JsonBody)]`: Convert a struct into a JSON request body
 
 ## Installation
 

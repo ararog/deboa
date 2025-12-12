@@ -1,4 +1,4 @@
-use deboa::{Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
+use deboa::{Deboa, Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Post {
@@ -24,8 +24,6 @@ impl DeboaCatcher for TestMonitor {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    use deboa::Deboa;
-
     let client = Deboa::builder()
         .catch(TestMonitor)
         .build();

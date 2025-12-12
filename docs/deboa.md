@@ -30,10 +30,10 @@ deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
 ## Basic Usage
 
 ```rust
-use deboa::{Deboa, request::get};
+use deboa::{Deboa, request::get, Result};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Result> {
     let client = Deboa::new();
     
     // Make a GET request
@@ -100,25 +100,26 @@ let bytes = response.bytes().await?;
 Deoba supports middleware for request/response processing:
 
 ```rust
-use deboa::middleware::{Middleware, Next};
+use deboa::{Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
 
-struct LoggingMiddleware;
+struct TestMonitor;
 
-#[async_trait::async_trait]
-impl Middleware for LoggingMiddleware {
-    async fn handle(&self, req: deboa::Request, next: Next<'_>) -> Result<deboa::Response, deboa::Error> {
-        println!("Sending request to {} {}", req.method(), req.uri());
-        let start = std::time::Instant::now();
-        let res = next.run(req).await?;
-        let duration = start.elapsed();
-        println!("Received response in {:?} - {}", duration, res.status());
-        Ok(res)
+#[deboa::async_trait]
+impl DeboaCatcher for TestMonitor {
+    async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
+        println!("Request: {:?}", request.url());
+        Ok(None)
+    }
+
+    async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
+        println!("Response: {:?}", response.status());
+        Ok(())
     }
 }
 
 // Create a client with middleware
 let client = deboa::Deboa::builder()
-    .with(LoggingMiddleware)
+    .catch(TestMonitor)
     .build();
 ```
 

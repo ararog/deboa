@@ -33,7 +33,7 @@ deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
 ## Usage
 
 ```rust
-use deboa::{Deboa, errors::DeboaError, request::get};
+use deboa::{Deboa, errors::DeboaError, request::get, Result};
 use deboa_extras::http::serde::json::JsonBody;
 
 #[tokio::main]

@@ -40,7 +40,7 @@ struct User {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     // Create a client
     let client = vamo::Client::new("https://api.example.com");
     

@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Vamo Macros - Resource Macros
+title: Vamo Macros - bora amd resource macros
 nav_order: 7
 ---
 

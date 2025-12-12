@@ -35,7 +35,7 @@ deboa = { version = "0.1.0", features = ["http1", "tokio-rt"] }
 Basic usage:
 
 ```rust
-use deboa::{Deboa, request::get};
+use deboa::{Deboa, request::get, Result};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -46,7 +46,7 @@ struct Post {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     let client = Deboa::new();
     
     let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")
