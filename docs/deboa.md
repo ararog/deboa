@@ -12,11 +12,11 @@ The core HTTP client library for Rust, providing a simple yet powerful interface
 
 - Async/await support
 - HTTP/1.1 and HTTP/2 support
-- Extensible middleware system
+- Extensible middleware system (catcher)
 - Request and response builders
 - Timeout and retry configuration
 - Cookie handling
-- Automatic request/response serialization/deserialization
+- Pluggable serializer/deserializer
 
 ## Installation
 
