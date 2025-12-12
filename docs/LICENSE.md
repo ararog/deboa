@@ -1,4 +1,11 @@
-MIT License
+---
+layout: default
+title: License
+nav_order: 1
+permalink: /license
+---
+
+# MIT License
 
 Copyright (c) 2025 Rogerio Pereira Araújo <rogerio.pereira@gmail.com>
 
