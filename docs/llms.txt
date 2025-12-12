@@ -1,0 +1,1256 @@
+Directory structure:
+└── ararog-deboa/
+    └── docs/
+        ├── deboa-bora.md
+        ├── deboa-extras.md
+        ├── deboa-macros.md
+        ├── deboa.md
+        ├── index.md
+        ├── vamo-macros.md
+        └── vamo.md
+
+================================================
+FILE: docs/deboa-bora.md
+================================================
+---
+layout: default
+title: Deboa Bora - REST Client Generator
+nav_order: 4
+---
+
+# Deboa Bora
+
+A macro for easy REST client generation on top of the Deboa HTTP client.
+
+## Features
+
+- Generate type-safe REST clients from trait definitions
+- Automatic serialization/deserialization
+- Path and query parameter support
+- Request body handling
+- Custom headers and middleware
+
+## Installation
+
+```toml
+[dependencies]
+deboa-bora = { version = "0.1.0", features = ["json"] }
+```
+
+## Basic Example
+
+```rust
+use deboa_bora::bora;
+use serde::{Deserialize, Serialize};
+
+// Define your API trait
+#[bora(base_url = "https://api.example.com/v1")]
+trait MyApi {
+    // GET /users/{id}
+    #[get("/users/{id}")]
+    async fn get_user(&self, id: u64) -> Result<User, Error>;
+    
+    // POST /users
+    #[post("/users")]
+    async fn create_user(&self, user: CreateUser) -> Result<User, Error>;
+}
+
+// Define your data structures
+#[derive(Serialize, Deserialize)]
+struct User {
+    id: u64,
+    name: String,
+    email: String,
+}
+
+#[derive(Serialize)]
+struct CreateUser {
+    name: String,
+    email: String,
+}
+
+// Use the generated client
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = MyApiClient::new();
+    
+    // Create a new user
+    let new_user = CreateUser {
+        name: "John Doe".to_string(),
+        email: "john@example.com".to_string(),
+    };
+    
+    let user = client.create_user(new_user).await?;
+    println!("Created user: {:?}", user);
+    
+    // Fetch a user
+    let fetched_user = client.get_user(user.id).await?;
+    println!("Fetched user: {:?}", fetched_user);
+    
+    Ok(())
+}
+```
+
+## Advanced Features
+
+### Path and Query Parameters
+
+```rust
+#[bora(base_url = "https://api.example.com")]
+trait UserApi {
+    // Path parameters in URL
+    #[get("/users/{id}")]
+    async fn get_user(&self, id: u64) -> Result<User, Error>;
+    
+    // Query parameters from method parameters
+    #[get("/users")]
+    async fn list_users(&self, page: Option<u32>, limit: Option<u32>) -> Result<Vec<User>, Error>;
+}
+```
+
+### Request and Response Headers
+
+```rust
+#[bora(base_url = "https://api.example.com")]
+trait SecureApi {
+    // Set request headers
+    #[post("/data")]
+    #[header("X-API-Key: {api_key}")]
+    async fn post_data(&self, api_key: String, data: Data) -> Result<(), Error>;
+    
+    // Read response headers
+    #[get("/data/{id}")]
+    #[response_header("ETag")]
+    async fn get_data(&self, id: String) -> Result<(Data, String), Error>;
+}
+```
+
+### Error Handling
+
+```rust
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum ApiError {
+    #[error("HTTP error: {0}")]
+    Http(#[from] deboa::Error),
+    
+    #[error("API error: {0}")]
+    Api(String),
+    
+    #[error("Not found")]
+    NotFound,
+}
+
+// Implement From<deboa::Error> for your error type
+impl From<deboa::Error> for ApiError {
+    fn from(err: deboa::Error) -> Self {
+        ApiError::Http(err)
+    }
+}
+
+#[bora(base_url = "https://api.example.com")]
+trait UserApi {
+    // Use your custom error type
+    #[get("/users/{id}")]
+    async fn get_user(&self, id: u64) -> Result<User, ApiError>;
+}
+```
+
+## Features
+
+- `json`: Enable JSON serialization/deserialization (requires `serde_json`)
+- `form`: Enable URL-encoded form serialization (requires `serde_urlencoded`)
+- `multipart`: Enable multipart form data support
+
+## Customization
+
+### Custom Client Configuration
+
+```rust
+use deboa::Deboa;
+
+let client = Deboa::builder()
+    .timeout(std::time::Duration::from_secs(30))
+    .build();
+
+let api = MyApiClient::with_client(client);
+```
+
+### Middleware
+
+```rust
+use deboa::middleware::Middleware;
+
+struct AuthMiddleware {
+    token: String,
+}
+
+#[async_trait::async_trait]
+impl Middleware for AuthMiddleware {
+    async fn handle(&self, req: deboa::request::Request, next: deboa::middleware::Next<'_>) -> Result<deboa::response::Response, deboa::Error> {
+        let req = req.header("Authorization", format!("Bearer {}", self.token));
+        next.run(req).await
+    }
+}
+
+let client = Deboa::builder()
+    .with(AuthMiddleware { token: "my-secret-token".to_string() })
+    .build();
+
+let api = MyApiClient::with_client(client);
+```
+
+## Examples
+
+See the [examples](../examples) directory for more usage examples.
+
+## API Reference
+
+For detailed API documentation, see the [docs.rs page](https://docs.rs/deboa-bora).
+
+
+
+================================================
+FILE: docs/deboa-extras.md
+================================================
+---
+layout: default
+title: Deboa Extras - Additional Functionality
+nav_order: 3
+---
+
+# Deboa Extras
+
+Additional functionality for the Deboa HTTP client, including serializers, middleware, and utilities.
+
+## Features
+
+- **Serialization/Deserialization**
+  - JSON
+  - URL-encoded forms
+  - Multipart forms
+  - MessagePack
+  - XML
+
+- **Middleware**
+  - Logging
+  - Retry
+  - Rate limiting
+  - Authentication
+  - Caching
+
+- **Utilities**
+  - Request/response interceptors
+  - Mock server for testing
+  - Cookie management
+
+## Installation
+
+```toml
+[dependencies]
+deboa-extras = { version = "0.0.7", features = ["json", "middleware-logger"] }
+```
+
+## Serialization
+
+### JSON
+
+```rust
+use deboa_extras::http::serde::json::JsonBody;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct User {
+    id: u64,
+    name: String,
+}
+
+// Serialize request body
+let user = User { id: 1, name: "John Doe".to_string() };
+let request = deboa::post("https://api.example.com/users")
+    .body(JsonBody::new(&user))?;
+
+// Deserialize response
+let response: User = request
+    .send_with(&client)
+    .await?
+    .body_as(JsonBody)?;
+```
+
+## Middleware
+
+### Logging
+
+```rust
+use deboa_extras::middleware::logger::Logger;
+
+let client = deboa::Deboa::builder()
+    .with(Logger::default())
+    .build();
+```
+
+### Retry
+
+```rust
+use deboa_extras::middleware::retry::{Retry, RetryPolicy};
+use std::time::Duration;
+
+let retry_policy = RetryPolicy::new()
+    .with_max_retries(3)
+    .with_backoff(Duration::from_millis(100));
+
+let client = deboa::Deboa::builder()
+    .with(Retry::new(retry_policy))
+    .build();
+```
+
+### Rate Limiting
+
+```rust
+use deboa_extras::middleware::rate_limit::{RateLimit, RateLimiter};
+
+// Allow 10 requests per minute per client
+let rate_limiter = RateLimiter::per_minute(10);
+let client = deboa::Deboa::builder()
+    .with(RateLimit::new(rate_limiter))
+    .build();
+```
+
+## Authentication
+
+### Basic Auth
+
+```rust
+use deboa_extras::auth::BasicAuth;
+
+let client = deboa::Deboa::builder()
+    .with(BasicAuth::new("username", "password"))
+    .build();
+```
+
+### Bearer Token
+
+```rust
+use deboa_extras::auth::BearerToken;
+
+let client = deboa::Deboa::builder()
+    .with(BearerToken::new("your-token-here"))
+    .build();
+```
+
+## Features
+
+- `json`: JSON serialization/deserialization (requires `serde_json`)
+- `form`: URL-encoded form serialization (requires `serde_urlencoded`)
+- `multipart`: Multipart form data support
+- `msgpack`: MessagePack serialization
+- `xml`: XML serialization
+- `middleware-logger`: Request/response logging
+- `middleware-retry`: Automatic request retry
+- `middleware-rate-limit`: Rate limiting
+- `middleware-cache`: Response caching
+- `testing`: Testing utilities and mock server
+
+## Examples
+
+See the [examples](../examples) directory for more usage examples.
+
+## API Reference
+
+For detailed API documentation, see the [docs.rs page](https://docs.rs/deboa-extras).
+
+
+
+================================================
+FILE: docs/deboa-macros.md
+================================================
+---
+layout: default
+title: Deboa Macros - Procedural Macros
+nav_order: 5
+---
+
+# Deboa Macros
+
+A collection of procedural macros to simplify working with the Deboa HTTP client.
+
+## Features
+
+- `#[derive(IntoRequest)]`: Automatically convert a struct into an HTTP request
+- `#[derive(FromResponse)]`: Automatically parse an HTTP response into a struct
+- `#[derive(QueryParams)]`: Convert a struct into URL query parameters
+- `#[derive(FormData)]`: Convert a struct into form data
+- `#[derive(JsonBody)]`: Convert a struct into a JSON request body
+
+## Installation
+
+```toml
+[dependencies]
+deboa-macros = "0.1.0"
+```
+
+## Usage
+
+### IntoRequest and FromResponse
+
+```rust
+use deboa_macros::{IntoRequest, FromResponse};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize, IntoRequest, FromResponse)]
+#[deboa(method = "POST", path = "/users")]
+struct CreateUserRequest {
+    name: String,
+    email: String,
+    #[deboa(header = "X-Request-ID")]
+    request_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromResponse)]
+struct User {
+    id: u64,
+    name: String,
+    email: String,
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = deboa::Deboa::new();
+    
+    let request = CreateUserRequest {
+        name: "John Doe".to_string(),
+        email: "john@example.com".to_string(),
+        request_id: "abc123".to_string(),
+    };
+    
+    // Convert the request into an HTTP request
+    let http_request = request.into_request("https://api.example.com")?;
+    
+    // Send the request
+    let user: User = http_request
+        .send_with(&client)
+        .await?
+        .body()?;
+    
+    println!("Created user: {:?}", user);
+    
+    Ok(())
+}
+```
+
+### QueryParams
+
+```rust
+use deboa_macros::QueryParams;
+use serde::Serialize;
+
+#[derive(Debug, Serialize, QueryParams)]
+struct UserQuery {
+    name: Option<String>,
+    email: Option<String>,
+    #[query(rename = "sort_by")]
+    sort_by: Option<String>,
+    page: Option<u32>,
+    per_page: Option<u32>,
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let query = UserQuery {
+        name: Some("John".to_string()),
+        email: None,
+        sort_by: Some("name".to_string()),
+        page: Some(1),
+        per_page: Some(10),
+    };
+    
+    let query_string = query.to_query_string()?;
+    assert_eq!(query_string, "name=John&sort_by=name&page=1&per_page=10");
+    
+    let url = format!("https://api.example.com/users?{}", query_string);
+    println!("URL: {}", url);
+    
+    Ok(())
+}
+```
+
+### FormData
+
+```rust
+use deboa_macros::FormData;
+use serde::Serialize;
+
+#[derive(Debug, Serialize, FormData)]
+struct LoginForm {
+    username: String,
+    password: String,
+    #[form(rename = "remember_me")]
+    remember_me: bool,
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let form = LoginForm {
+        username: "johndoe".to_string(),
+        password: "s3cr3t".to_string(),
+        remember_me: true,
+    };
+    
+    let form_data = form.to_form_data()?;
+    
+    let client = deboa::Deboa::new();
+    let response = deboa::post("https://api.example.com/login")
+        .body(form_data)
+        .send_with(&client)
+        .await?;
+    
+    println!("Login response: {}", response.status());
+    
+    Ok(())
+}
+```
+
+### JsonBody
+
+```rust
+use deboa_macros::JsonBody;
+use serde::Serialize;
+
+#[derive(Debug, Serialize, JsonBody)]
+struct CreatePostRequest {
+    title: String,
+    content: String,
+    tags: Vec<String>,
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let post = CreatePostRequest {
+        title: "Hello, World!".to_string(),
+        content: "This is a test post.".to_string(),
+        tags: vec!["rust".to_string(), "deboa".to_string()],
+    };
+    
+    let client = deboa::Deboa::new();
+    let response = deboa::post("https://api.example.com/posts")
+        .body(post.into_body()?)
+        .send_with(&client)
+        .await?;
+    
+    println!("Created post: {}", response.status());
+    
+    Ok(())
+}
+```
+
+## Attribute Macros
+
+### `#[deboa(method = "...", path = "...")]`
+
+Specify the HTTP method and path for a request.
+
+### `#[deboa(header = "...")]`
+
+Specify a header for a request field.
+
+### `#[query(rename = "...")]`
+
+Rename a field in the query string.
+
+### `#[form(rename = "...")]`
+
+Rename a field in form data.
+
+## Features
+
+- `derive`: Enable derive macros (enabled by default)
+- `serde`: Enable serde integration (enabled by default)
+- `json`: Enable JSON support
+- `form`: Enable form data support
+
+## Examples
+
+See the [examples](../examples) directory for more usage examples.
+
+## API Reference
+
+For detailed API documentation, see the [docs.rs page](https://docs.rs/deboa-macros).
+
+
+
+================================================
+FILE: docs/deboa.md
+================================================
+---
+layout: default
+title: Deboa - Core HTTP Client
+nav_order: 2
+---
+
+# Deboa Core
+
+The core HTTP client library for Rust, providing a simple yet powerful interface for making HTTP requests.
+
+## Features
+
+- Async/await support
+- HTTP/1.1 and HTTP/2 support
+- Extensible middleware system
+- Request and response builders
+- Timeout and retry configuration
+- Cookie handling
+- Automatic request/response serialization/deserialization
+
+## Installation
+
+Add to your `Cargo.toml`:
+
+```toml
+[dependencies]
+deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
+```
+
+## Basic Usage
+
+```rust
+use deboa::{Deboa, request::get};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Deboa::new();
+    
+    // Make a GET request
+    let response = get("https://httpbin.org/get")
+        .send_with(&client)
+        .await?;
+        
+    println!("Status: {}", response.status());
+    println!("Body: {}", response.text().await?);
+    
+    Ok(())
+}
+```
+
+## Making Requests
+
+### GET Request
+
+```rust
+let response = deboa::get("https://api.example.com/data")
+    .header("Accept", "application/json")
+    .send_with(&client)
+    .await?;
+```
+
+### POST Request with JSON
+
+```rust
+use serde_json::json;
+
+let data = json!({ "name": "John Doe", "age": 30 });
+
+let response = deboa::post("https://api.example.com/users")
+    .json(&data)?
+    .send_with(&client)
+    .await?;
+```
+
+### Handling Responses
+
+```rust
+#[derive(serde::Deserialize)]
+struct User {
+    id: u64,
+    name: String,
+    email: String,
+}
+
+// Parse JSON response into a struct
+let user: User = deboa::get("https://api.example.com/users/1")
+    .send_with(&client)
+    .await?
+    .body_as_json()?;
+
+// Get response as text
+let text = response.text().await?;
+
+// Get response as bytes
+let bytes = response.bytes().await?;
+```
+
+## Middleware
+
+Deoba supports middleware for request/response processing:
+
+```rust
+use deboa::middleware::{Middleware, Next};
+
+struct LoggingMiddleware;
+
+#[async_trait::async_trait]
+impl Middleware for LoggingMiddleware {
+    async fn handle(&self, req: deboa::Request, next: Next<'_>) -> Result<deboa::Response, deboa::Error> {
+        println!("Sending request to {} {}", req.method(), req.uri());
+        let start = std::time::Instant::now();
+        let res = next.run(req).await?;
+        let duration = start.elapsed();
+        println!("Received response in {:?} - {}", duration, res.status());
+        Ok(res)
+    }
+}
+
+// Create a client with middleware
+let client = deboa::Deboa::builder()
+    .with(LoggingMiddleware)
+    .build();
+```
+
+## Error Handling
+
+Deoba provides comprehensive error handling through the `deboa::Error` type:
+
+```rust
+match deboa::get("https://api.example.com/data").send_with(&client).await {
+    Ok(response) => {
+        // Handle successful response
+    }
+    Err(deboa::Error::Http(e)) => {
+        // Handle HTTP errors
+    }
+    Err(deboa::Error::Json(e)) => {
+        // Handle JSON parsing errors
+    }
+    Err(e) => {
+        // Handle other errors
+    }
+}
+```
+
+## Features
+
+- `http1`: Enable HTTP/1 support (enabled by default)
+- `http2`: Enable HTTP/2 support
+- `tokio-rt`: Use Tokio as the async runtime (enabled by default)
+- `smol-rt`: Use smol as the async runtime
+
+## Examples
+
+See the [examples](../examples) directory for more usage examples.
+
+## API Reference
+
+For detailed API documentation, see the [docs.rs page](https://docs.rs/deboa).
+
+
+
+================================================
+FILE: docs/index.md
+================================================
+---
+layout: default
+title: Deboa - A Rust HTTP Client
+nav_order: 1
+description: "A straightforward, non-opinionated, developer-centric HTTP client library for Rust"
+permalink: /
+---
+
+# Deboa
+
+[![crates.io](https://img.shields.io/crates/v/deboa?style=flat-square)](https://crates.io/crates/deboa) 
+[![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) 
+[![Documentation](https://docs.rs/deboa/badge.svg)](https://docs.rs/deboa/latest/deboa)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A straightforward, non-opinionated, developer-centric HTTP client library for Rust. Built on top of [hyper](https://github.com/hyperium/hyper).
+
+## Features
+
+- **Async/Await** - Built with Rust's async/await syntax
+- **Flexible** - Supports both HTTP/1.1 and HTTP/2
+- **Extensible** - Middleware support for custom functionality
+- **Runtime Agnostic** - Works with tokio and smol runtimes
+- **Type-safe** - Strong typing for requests and responses
+
+## Quick Start
+
+Add to your `Cargo.toml`:
+
+```toml
+[dependencies]
+deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
+```
+
+Basic usage:
+
+```rust
+use deboa::{Deboa, request::get};
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+struct Post {
+    id: u64,
+    title: String,
+    body: String,
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Deboa::new();
+    
+    let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")
+        .send_with(&client)
+        .await?
+        .body_as_json()?;
+    
+    println!("First post: {}", posts[0].title);
+    Ok(())
+}
+```
+
+## Crates
+
+| Crate | Description | Documentation |
+|-------|-------------|---------------|
+| [deboa](./deboa) | Core HTTP client library | [![docs.rs](https://img.shields.io/docsrs/deboa/latest)](https://docs.rs/deboa) |
+| [deboa-extras](./deboa-extras) | Additional functionality and middleware | [![docs.rs](https://img.shields.io/docsrs/deboa-extras/latest)](https://docs.rs/deboa-extras) |
+| [deboa-bora](./deboa-bora) | Macro for easy REST client generation | [![docs.rs](https://img.shields.io/docsrs/deboa-bora/latest)](https://docs.rs/deboa-bora) |
+| [deboa-macros](./deboa-macros) | Procedural macros for Deboa | [![docs.rs](https://img.shields.io/docsrs/deboa-macros/latest)](https://docs.rs/deboa-macros) |
+| [vamo](./vamo) | DRY REST client wrapper | [![docs.rs](https://img.shields.io/docsrs/vamo/latest)](https://docs.rs/vamo) |
+| [vamo-macros](./vamo-macros) | Macros for Vamo | [![docs.rs](https://img.shields.io/docsrs/vamo-macros/latest)](https://docs.rs/vamo-macros) |
+
+## Examples
+
+Check out the [examples](./examples) directory for complete examples of how to use Deboa in your projects.
+
+## Documentation
+
+- [API Reference](https://docs.rs/deboa)
+- [Migration Guide](./MIGRATION_GUIDE.md)
+- [Contributing Guide](./CONTRIBUTING.md)
+
+## License
+
+This project is licensed under the [MIT License](./LICENSE.md).
+
+## Author
+
+Rogerio Pereira Araujo <rogerio.araujo@gmail.com>
+
+
+
+================================================
+FILE: docs/vamo-macros.md
+================================================
+---
+layout: default
+title: Vamo Macros - Resource Macros
+nav_order: 7
+---
+
+# Vamo Macros
+
+Procedural macros for the Vamo crate, enabling seamless integration with the Deboa HTTP client.
+
+## Features
+
+- `#[derive(Resource)]`: Automatically implement the `Resource` trait for structs
+- `#[resource]`: Configure resource behavior and endpoints
+- Custom field attributes for fine-grained control
+
+## Installation
+
+```toml
+[dependencies]
+vamo-macros = "0.1.0"
+```
+
+## Usage
+
+### Basic Resource
+
+```rust
+use serde::{Deserialize, Serialize};
+use vamo_macros::Resource;
+
+#[derive(Debug, Serialize, Deserialize, Resource)]
+#[resource(path = "/users")]
+struct User {
+    id: Option<u64>,
+    name: String,
+    email: String,
+}
+```
+
+### Custom Endpoints
+
+```rust
+#[derive(Debug, Serialize, Deserialize, Resource)]
+#[resource(path = "/articles")]
+struct Article {
+    id: Option<u64>,
+    title: String,
+    content: String,
+    published: bool,
+    
+    #[resource(skip)]
+    metadata: Option<serde_json::Value>,
+}
+
+// Custom implementation for the Article resource
+impl Article {
+    // Custom method to publish an article
+    pub async fn publish(&mut self, client: &vamo::Client) -> Result<Self, vamo::Error> {
+        self.published = true;
+        self.update(client).await
+    }
+    
+    // Custom endpoint to get published articles
+    pub async fn published(client: &vamo::Client) -> Result<Vec<Self>, vamo::Error> {
+        Self::list_with_params(client, &[("published", "true")]).await
+    }
+}
+```
+
+### Field Attributes
+
+```rust
+#[derive(Debug, Serialize, Deserialize, Resource)]
+#[resource(path = "/products")]
+struct Product {
+    id: Option<u64>,
+    name: String,
+    
+    #[resource(readonly)]
+    created_at: Option<String>,
+    
+    #[resource(skip_deserialize)]
+    temporary_data: Option<String>,
+    
+    #[resource(skip_serialize)]
+    secret_token: Option<String>,
+}
+```
+
+### Nested Resources
+
+```rust
+#[derive(Debug, Serialize, Deserialize, Resource)]
+#[resource(path = "/users/{user_id}/posts")]
+struct UserPost {
+    id: Option<u64>,
+    user_id: u64,
+    title: String,
+    content: String,
+}
+
+// Usage
+let posts = UserPost::list_with_params(
+    &client, 
+    &[("user_id", "1")]
+).await?;
+```
+
+## Attribute Reference
+
+### Struct Attributes
+
+- `#[resource(path = "/endpoint")]`: Set the base API endpoint for the resource
+- `#[resource(primary_key = "field_name")]`: Specify a custom primary key field (default is `id`)
+- `#[resource(version = "v1")]`: Set the API version prefix
+
+### Field Attributes
+
+- `#[resource(readonly)]`: Field is read-only and won't be included in create/update requests
+- `#[resource(skip)]`: Field is completely ignored by the resource system
+- `#[resource(skip_serialize)]`: Field is not included when serializing to JSON
+- `#[resource(skip_deserialize)]`: Field is not set when deserializing from JSON
+- `#[resource(default)]`: Use the default value when deserializing if the field is missing
+- `#[resource(rename = "new_name")]`: Use a different name in the JSON representation
+
+## Custom Serialization
+
+```rust
+use serde::{Serialize, Deserialize};
+use std::str::FromStr;
+
+#[derive(Debug, Resource)]
+#[resource(path = "/custom")]
+struct CustomResource {
+    id: Option<u64>,
+    
+    #[serde(serialize_with = "serialize_custom", deserialize_with = "deserialize_custom")]
+    data: CustomType,
+}
+
+#[derive(Debug)]
+struct CustomType {
+    value: String,
+}
+
+fn serialize_custom<S>(value: &CustomType, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    serializer.serialize_str(&value.value)
+}
+
+fn deserialize_custom<'de, D>(deserializer: D) -> Result<CustomType, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    Ok(CustomType { value: s })
+}
+```
+
+## Error Handling
+
+```rust
+use vamo::Error as VamoError;
+
+match article.update(&client).await {
+    Ok(updated) => println!("Updated: {:?}", updated),
+    Err(VamoError::Validation(errors)) => {
+        eprintln!("Validation errors: {:?}", errors);
+    }
+    Err(e) => eprintln!("Error: {}", e),
+}
+```
+
+## Features
+
+- `serde`: Enable serde integration (enabled by default)
+- `json`: Enable JSON support (requires `serde_json`)
+- `uuid`: Enable UUID support
+- `chrono`: Enable date/time support with chrono
+
+## Examples
+
+See the [examples](../examples) directory for more usage examples.
+
+## API Reference
+
+For detailed API documentation, see the [docs.rs page](https://docs.rs/vamo-macros).
+
+
+
+================================================
+FILE: docs/vamo.md
+================================================
+---
+layout: default
+title: Vamo - DRY REST Client
+nav_order: 6
+---
+
+# Vamo
+
+A nice wrapper on top of deboa for creating DRY REST clients.
+
+## Features
+
+- Type-safe REST client generation
+- Resource-based API design
+- Automatic serialization/deserialization
+- Middleware support
+- Pagination helpers
+- Request/response interceptors
+
+## Installation
+
+```toml
+[dependencies]
+vamo = { version = "0.1.0", features = ["json"] }
+```
+
+## Quick Start
+
+```rust
+use serde::{Deserialize, Serialize};
+use vamo::prelude::*;
+
+// Define your resource
+#[derive(Debug, Serialize, Deserialize, Resource)]
+#[resource(path = "/users")]
+struct User {
+    id: Option<u64>,
+    name: String,
+    email: String,
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create a client
+    let client = vamo::Client::new("https://api.example.com");
+    
+    // Create a new user
+    let mut user = User {
+        id: None,
+        name: "John Doe".to_string(),
+        email: "john@example.com".to_string(),
+    };
+    
+    // Save the user
+    user = user.create(&client).await?;
+    println!("Created user: {:?}", user);
+    
+    // Fetch all users
+    let users = User::list(&client).await?;
+    println!("Users: {:?}", users);
+    
+    // Update the user
+    user.name = "Jane Doe".to_string();
+    user = user.update(&client).await?;
+    println!("Updated user: {:?}", user);
+    
+    // Delete the user
+    user.delete(&client).await?;
+    println!("User deleted");
+    
+    Ok(())
+}
+```
+
+## Resource Definition
+
+Define your resources using the `Resource` derive macro:
+
+```rust
+use serde::{Deserialize, Serialize};
+use vamo::Resource;
+
+#[derive(Debug, Serialize, Deserialize, Resource)]
+#[resource(path = "/posts")]
+struct Post {
+    id: Option<u64>,
+    title: String,
+    content: String,
+    user_id: u64,
+    created_at: Option<String>,
+}
+```
+
+## CRUD Operations
+
+### Create
+
+```rust
+let mut post = Post {
+    id: None,
+    title: "Hello, Vamo!".to_string(),
+    content: "This is a test post.".to_string(),
+    user_id: 1,
+    created_at: None,
+};
+
+// Create a new post
+post = post.create(&client).await?;
+```
+
+### Read
+
+```rust
+// Get a post by ID
+let post = Post::get(1, &client).await?;
+
+// Get all posts
+let posts = Post::list(&client).await?;
+
+// With query parameters
+use std::collections::HashMap;
+let mut query = HashMap::new();
+query.insert("user_id", "1");
+let user_posts = Post::list_with_params(&client, &query).await?;
+```
+
+### Update
+
+```rust
+// Update a post
+post.title = "Updated Title".to_string();
+let updated_post = post.update(&client).await?;
+```
+
+### Delete
+
+```rust
+// Delete a post
+post.delete(&client).await?;
+```
+
+## Relationships
+
+```rust
+#[derive(Debug, Serialize, Deserialize, Resource)]
+#[resource(path = "/users")]
+struct User {
+    id: Option<u64>,
+    name: String,
+    email: String,
+}
+
+impl User {
+    // Define a custom method to get user's posts
+    pub async fn posts(&self, client: &vamo::Client) -> Result<Vec<Post>, vamo::Error> {
+        Post::list_with_params(client, &[("user_id", &self.id.unwrap().to_string())]).await
+    }
+}
+
+// Usage
+let user = User::get(1, &client).await?;
+let user_posts = user.posts(&client).await?;
+```
+
+## Middleware
+
+```rust
+use vamo::middleware::{Middleware, Next};
+use deboa::Request;
+
+struct AuthMiddleware {
+    token: String,
+}
+
+#[async_trait::async_trait]
+impl Middleware for AuthMiddleware {
+    async fn handle(&self, req: Request, next: Next<'_>) -> Result<deboa::Response, deboa::Error> {
+        next.run(req.header("Authorization", format!("Bearer {}", self.token))).await
+    }
+}
+
+// Create a client with middleware
+let client = vamo::Client::builder("https://api.example.com")
+    .with(AuthMiddleware { token: "secret-token".to_string() })
+    .build();
+```
+
+## Error Handling
+
+```rust
+use vamo::Error as VamoError;
+
+match user.delete(&client).await {
+    Ok(_) => println!("User deleted successfully"),
+    Err(VamoError::NotFound) => eprintln!("User not found"),
+    Err(VamoError::Unauthorized) => eprintln!("Authentication required"),
+    Err(e) => eprintln!("An error occurred: {}", e),
+}
+```
+
+## Features
+
+- `json`: Enable JSON support (requires `serde_json`)
+- `form`: Enable URL-encoded form support (requires `serde_urlencoded`)
+- `multipart`: Enable multipart form data support
+- `uuid`: Enable UUID support
+- `chrono`: Enable date/time support with chrono
+
+## Examples
+
+See the [examples](../examples) directory for more usage examples.
+
+## API Reference
+
+For detailed API documentation, see the [docs.rs page](https://docs.rs/vamo).
+
+

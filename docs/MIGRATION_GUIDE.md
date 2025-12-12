@@ -1,3 +1,10 @@
+---
+layout: default
+title: Migration Guide
+nav_order: 1
+permalink: /migration-guide
+---
+
 # Migration guide
 
 ## From 0.0.8 to 0.0.9
