@@ -8,22 +8,6 @@ nav_order: 3
 
 Additional functionality for the Deboa HTTP client, including serializers, compression, websockets and sse support.
 
-## Features
-
-- **Serialization/Deserialization**
-  - JSON
-  - MessagePack
-  - XML
-
-- **Compression**
-  - Gzip
-  - Brotli
-  - Deflate
-
-- **WebSockets**
-
-- **Server-Sent Events**
-
 ## Installation
 
 ```toml
@@ -31,9 +15,20 @@ Additional functionality for the Deboa HTTP client, including serializers, compr
 deboa-extras = { version = "0.0.7", features = ["json", "websocket", "sse"] }
 ```
 
-## Serialization
+## Features
 
-### JSON
+- `json`: JSON serialization/deserialization (requires `serde_json`)
+- `msgpack`: MessagePack serialization
+- `xml`: XML serialization
+- `gzip`: Gzip compression
+- `brotli`: Brotli compression
+- `deflate`: Deflate compression
+- `websocket`: WebSocket support
+- `sse`: Server-Sent Events support
+
+## Examples
+
+### JSON Serialization/Deserialization
 
 ```rust
 use deboa_extras::http::serde::json::JsonBody;
@@ -57,15 +52,48 @@ let response: User = request
     .body_as(JsonBody)?;
 ```
 
-## Features
+### SSE
 
-- `json`: JSON serialization/deserialization (requires `serde_json`)
-- `msgpack`: MessagePack serialization
-- `xml`: XML serialization
+```rust
+use deboa::{Deboa, Result};
+use deboa_extras::http::sse::response::{IntoEventStream};
 
-## Examples
+let mut client = Deboa::new();
 
-See the [examples](../examples) directory for more usage examples.
+let response = client.execute("https://sse.dev/test").await?.into_event_stream();
+
+// Poll events, until the connection is closed
+// please note that this is a blocking call
+while let Some(event) = response.next().await {
+    println!("event: {}", event);
+}
+
+println!("Connection closed");
+```
+
+### Websockets
+
+```rust
+use deboa::{Deboa, Result, request::DeboaRequestBuilder};
+use deboa_extras::ws::{
+    io::socket::DeboaWebSocket,
+    protocol::{self},
+    request::WebsocketRequestBuilder,
+    response::IntoWebSocket,
+};
+
+let mut client = Deboa::new();
+
+let websocket = DeboaRequestBuilder::websocket("wss://echo.websocket.org")?
+    .send_with(&mut client)
+    .await?
+    .into_websocket()
+    .await;
+
+while let Ok(()) = websocket.read_message().await {
+    // Just keep checking messages
+}
+```
 
 ## API Reference
 
