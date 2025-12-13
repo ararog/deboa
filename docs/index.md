@@ -6,7 +6,11 @@ description: "A straightforward, non-opinionated, developer-centric HTTP client 
 permalink: /
 ---
 
-# Deboa
+<div style="text-align: center">
+  <img src="./other_deboa_128.png" alt="deboa" width="128" height="128">
+
+  <h1><b>Deboa</b></h1>
+</div>
 
 [![crates.io](https://img.shields.io/crates/v/deboa?style=flat-square)](https://crates.io/crates/deboa) 
 [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) 
