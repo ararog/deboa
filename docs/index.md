@@ -9,7 +9,8 @@ permalink: /
 <div align="center">
 <img src="https://raw.githubusercontent.com/ararog/deboa/refs/heads/develop/other_deboa_128.png" alt="deboa" width="128" height="128">
 
-# Deboa
+<h1><b>Deboa</b></h1>
+</div>
 
 [![crates.io](https://img.shields.io/crates/v/deboa?style=flat-square)](https://crates.io/crates/deboa) 
 [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) 
@@ -18,8 +19,6 @@ permalink: /
 
 A straightforward, non-opinionated, developer-centric HTTP client library for Rust. 
 Built on top of [hyper](https://github.com/hyperium/hyper).
-
-</div>
 
 ## Features
 
