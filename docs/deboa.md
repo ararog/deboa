@@ -23,7 +23,7 @@ The core HTTP client library for Rust, providing a simple yet powerful interface
 - upgrade support (websocket, etc.)
 - runtime compatibility (tokio and smol)
 - http1/2 support 
-- http3 support (soon)
+- http3 support (planned)
 
 ## Installation
 
@@ -37,11 +37,11 @@ deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
 ## Basic Usage
 
 ```rust
-use deboa::{Deboa, request::get, Result};
+use deboa::{Client, request::get, Result};
 
 #[tokio::main]
 async fn main() -> Result<(), Result> {
-    let client = Deboa::new();
+    let client = Client::new();
     
     // Make a GET request
     let response = get("https://httpbin.org/get")
@@ -102,9 +102,9 @@ let text = response.text().await?;
 let bytes = response.bytes().await?;
 ```
 
-## Middleware
+## Catchers (Middleware)
 
-Deoba supports middleware for request/response processing:
+Deboa supports middleware for request/response processing:
 
 ```rust
 use deboa::{Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
@@ -125,26 +125,28 @@ impl DeboaCatcher for TestMonitor {
 }
 
 // Create a client with middleware
-let client = deboa::Deboa::builder()
+let client = deboa::Client::builder()
     .catch(TestMonitor)
     .build();
 ```
 
 ## Error Handling
 
-Deoba provides comprehensive error handling through the `deboa::Error` type:
+Deboa provides comprehensive error handling through the `deboa::errors::DeboaError` type:
 
 ```rust
 match deboa::get("https://api.example.com/data").send_with(&client).await {
     Ok(response) => {
         // Handle successful response
     }
-    Err(deboa::Error::Http(e)) => {
-        // Handle HTTP errors
-    }
-    Err(deboa::Error::Json(e)) => {
-        // Handle JSON parsing errors
-    }
+    Err(DeboaError::Connection(e)) => {
+        // Handle connection errors
+        eprintln!("Connection failed: {}", e);
+    },
+    Err(DeboaError::Request(e)) => {
+        // Handle request errors
+        eprintln!("Request failed: {}", e);
+    },
     Err(e) => {
         // Handle other errors
     }
@@ -160,7 +162,7 @@ match deboa::get("https://api.example.com/data").send_with(&client).await {
 
 ## Examples
 
-See the [examples](../examples) directory for more usage examples.
+See the [examples](../examples.md) for more usage examples.
 
 ## API Reference
 

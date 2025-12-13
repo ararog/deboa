@@ -104,8 +104,46 @@ pub mod url;
 #[cfg(test)]
 mod tests;
 
+/// Type alias for Result<T, DeboaError>
+/// Convenience alias for handling Deboa errors throughout the library.
+///
+/// # Examples
+///
+/// ```
+/// use deboa::Result;
+///
+/// fn example() -> Result<String> {
+///     Ok("success".to_string())
+/// }
+/// ```
+///
+/// # See Also
+/// - [DeboaError](crate::errors::DeboaError)
 pub type Result<T> = std::result::Result<T, DeboaError>;
 
+///
+/// Extension trait for Client to enable the `<<` operator for URL construction.
+/// This allows for a more ergonomic way to create requests using the `<<` operator.
+/// The operator creates a GET request with the provided URL.
+///
+/// # Examples
+///
+/// ```
+/// use deboa::{Client, Result};
+///
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     let client = Client::new();
+///     let request = &client << "https://httpbin.org/get";
+///     // do something with the request
+///     Ok(())
+/// }
+/// ```
+///
+/// # Notes
+/// - This implementation is primarily for convenience and ergonomics
+/// - For more complex request configurations, use the full DeboaRequest API
+/// - The `<<` operator is a shorthand for creating GET requests
 impl Shl<&str> for &Client {
     type Output = DeboaRequest;
 
