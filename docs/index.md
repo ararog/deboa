@@ -7,7 +7,7 @@ permalink: /
 ---
 
 <div style="text-align: center">
-  <img src="./other_deboa_128.png" alt="deboa" width="128" height="128">
+  <img src="https://raw.githubusercontent.com/ararog/deboa/refs/heads/develop/other_deboa_128.png" alt="deboa" width="128" height="128">
 
   <h1><b>Deboa</b></h1>
 </div>
