@@ -17,11 +17,20 @@ A straightforward, non-opinionated, developer-centric HTTP client library for Ru
 
 ## Features
 
-- **Async/Await** - Built with Rust's async/await syntax
-- **Flexible** - Supports both HTTP/1.1 and HTTP/2
-- **Extensible** - Middleware support for custom functionality
-- **Runtime Agnostic** - Works with tokio and smol runtimes
-- **Type-safe** - Strong typing for requests and responses
+- easily add, remove and update headers
+- helpers to add basic and bearer auth
+- set retries and timeout
+- pluggable catchers (interceptors)
+- pluggable compression (gzip, deflate, br)
+- pluggable serialization (json, xml, msgpack)
+- cookies support
+- urlencoded and multipart forms
+- comprehensive error handling
+- response streaming
+- upgrade support (websocket, etc.)
+- runtime compatibility (tokio and smol)
+- http1/2 support 
+- http3 support (planned)
 
 ## Quick Start
 
@@ -35,7 +44,7 @@ deboa = { version = "0.1.0", features = ["http1", "tokio-rt"] }
 Basic usage:
 
 ```rust
-use deboa::{Deboa, request::get, Result};
+use deboa::{Client, request::get, Result};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -47,7 +56,7 @@ struct Post {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client = Deboa::new();
+    let client = Client::new();
     
     let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")
         .send_with(&client)
@@ -71,7 +80,7 @@ async fn main() -> Result<()> {
 
 ## Examples
 
-Check out the [examples](./examples) directory for complete examples of how to use Deboa in your projects.
+Check out the [examples](./examples.md) for complete examples of how to use Deboa in your projects.
 
 ## Documentation
 

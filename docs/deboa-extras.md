@@ -55,10 +55,10 @@ let response: User = request
 ### SSE
 
 ```rust
-use deboa::{Deboa, Result};
+use deboa::{Client, Result};
 use deboa_extras::http::sse::response::{IntoEventStream};
 
-let mut client = Deboa::new();
+let mut client = Client::new();
 
 let response = client.execute("https://sse.dev/test").await?.into_event_stream();
 
@@ -74,7 +74,7 @@ println!("Connection closed");
 ### Websockets
 
 ```rust
-use deboa::{Deboa, Result, request::DeboaRequestBuilder};
+use deboa::{Client, Result, request::DeboaRequestBuilder};
 use deboa_extras::ws::{
     io::socket::DeboaWebSocket,
     protocol::{self},
@@ -82,7 +82,7 @@ use deboa_extras::ws::{
     response::IntoWebSocket,
 };
 
-let mut client = Deboa::new();
+let mut client = Client::new();
 
 let websocket = DeboaRequestBuilder::websocket("wss://echo.websocket.org")?
     .send_with(&mut client)

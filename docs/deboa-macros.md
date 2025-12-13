@@ -29,7 +29,7 @@ deboa-macros = "0.1.0"
 ### get!
 
 ```rust
-let mut client = Deboa::new();
+let mut client = Client::new();
 
 let response: Vec<Post> = get!(
   "https://jsonplaceholder.typicode.com/posts", 
