@@ -48,7 +48,7 @@ http = "1.3.1"
 
 ```rust
 use deboa::{
-    Deboa, Result, request::{DeboaRequest, FetchWith, get}
+    Client, Result, request::{DeboaRequest, FetchWith, get}
 };
 use deboa_extras::http::{self, serde::json::JsonBody};
 
@@ -63,7 +63,7 @@ pub struct Post {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut client = Deboa::new();
+    let mut client = Client::new();
 
     /*
 

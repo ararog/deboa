@@ -11,10 +11,14 @@ This crate provides additional features for Deboa like compression and serializa
 
 ## Features
 
-- compression (gzip, deflate and brotli)
-- serialization (json, xml, msgpack)
-- sse
-- websockets
+- `json` serialization
+- `msgpack` serialization
+- `xml` serialization
+- `gzip` compression
+- `brotli` compression
+- `deflate` compression
+- `websocket` support
+- `sse` support
 
 ## Usage
 
