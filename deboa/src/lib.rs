@@ -106,7 +106,7 @@ mod tests;
 
 pub type Result<T> = std::result::Result<T, DeboaError>;
 
-impl Shl<&str> for &Deboa {
+impl Shl<&str> for &Client {
     type Output = DeboaRequest;
 
     fn shl(self, other: &str) -> Self::Output {
@@ -146,6 +146,9 @@ impl Display for HttpVersion {
     }
 }
 
+#[deprecated(note = "DeboaBuilder is now ClientBuilder")]
+pub type DeboaBuilder = ClientBuilder;
+
 /// A builder for configuring and creating a new `Deboa` client instance.
 ///
 /// This builder allows you to configure various aspects of the HTTP client before
@@ -178,7 +181,7 @@ impl Display for HttpVersion {
 /// - Protocol: HTTP/1.1
 /// - No client certificates
 /// - No custom error catchers
-pub struct DeboaBuilder {
+pub struct ClientBuilder {
     connection_timeout: u64,
     request_timeout: u64,
     client_cert: Option<ClientCert>,
@@ -187,7 +190,7 @@ pub struct DeboaBuilder {
     protocol: HttpVersion,
 }
 
-impl DeboaBuilder {
+impl ClientBuilder {
     /// Sets the maximum duration to wait when connecting to a server.
     ///
     /// This timeout affects the initial TCP connection establishment. If the server
@@ -399,6 +402,9 @@ impl DeboaBuilder {
     }
 }
 
+#[deprecated(note = "Deboa is now Client")]
+pub type Deboa = Client;
+
 /// The main HTTP client for making requests.
 ///
 /// `Deboa` is a flexible and efficient HTTP client that supports both synchronous
@@ -444,7 +450,7 @@ impl DeboaBuilder {
 /// - Connection pooling reduces latency for repeated requests to the same host
 /// - Automatic connection reuse when possible
 /// - Configurable timeouts prevent hanging requests
-pub struct Deboa {
+pub struct Client {
     connection_timeout: u64,
     request_timeout: u64,
     client_cert: Option<ClientCert>,
@@ -454,21 +460,21 @@ pub struct Deboa {
     pool: HttpConnectionPool,
 }
 
-impl AsRef<Deboa> for Deboa {
-    fn as_ref(&self) -> &Deboa {
+impl AsRef<Client> for Client {
+    fn as_ref(&self) -> &Client {
         self
     }
 }
 
-impl AsMut<Deboa> for Deboa {
-    fn as_mut(&mut self) -> &mut Deboa {
+impl AsMut<Client> for Client {
+    fn as_mut(&mut self) -> &mut Client {
         self
     }
 }
 
-impl Debug for Deboa {
+impl Debug for Client {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Deboa")
+        f.debug_struct("Client")
             .field("connection_timeout", &self.connection_timeout)
             .field("request_timeout", &self.request_timeout)
             .field("protocol", &self.protocol)
