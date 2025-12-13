@@ -10,13 +10,20 @@ The core HTTP client library for Rust, providing a simple yet powerful interface
 
 ## Features
 
-- Async/await support
-- HTTP/1.1 and HTTP/2 support
-- Extensible middleware system (catcher)
-- Request and response builders
-- Timeout and retry configuration
-- Cookie handling
-- Pluggable serializer/deserializer
+- easily add, remove and update headers
+- helpers to add basic and bearer auth
+- set retries and timeout
+- pluggable catchers (interceptors)
+- pluggable compression (gzip, deflate, br)
+- pluggable serialization (json, xml, msgpack)
+- cookies support
+- urlencoded and multipart forms
+- comprehensive error handling
+- response streaming
+- upgrade support (websocket, etc.)
+- runtime compatibility (tokio and smol)
+- http1/2 support 
+- http3 support (soon)
 
 ## Installation
 

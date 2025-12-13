@@ -33,13 +33,13 @@ deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
 ## Usage
 
 ```rust
-use deboa::{Deboa, errors::DeboaError, request::get, Result};
+use deboa::{Client, errors::DeboaError, request::get, Result};
 use deboa_extras::http::serde::json::JsonBody;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-  // Create a new Deboa instance, set timeouts, catches and protocol.
-  let mut client = Deboa::new();
+  // Create a new Client instance, set timeouts, catches and protocol.
+  let mut client = Client::new();
 
   let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
     .header(header::CONTENT_TYPE, "application/json")
