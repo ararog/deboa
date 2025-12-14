@@ -18,13 +18,14 @@ sse = ["dep:http-body-util", "dep:deboa"]
 utils = ["dep:deboa"]
 websockets = ["dep:deboa", "dep:base64", "dep:rand", "dep:ws-framer"]
 # serialization
-serialization_all = ["json", "xml", "msgpack", "yaml", "flex"]
-serialization = ["json", "yaml", "flex"]
+serialization_all = ["json", "xml", "msgpack", "yaml", "flex", "cbor"]
+serialization = ["json", "yaml", "flex", "cbor"]
 json = ["dep:sonic-rs", "dep:serde", "dep:http", "dep:mime", "dep:deboa"]
 xml = ["dep:serde-xml-rust", "dep:serde", "dep:http", "dep:mime", "dep:deboa"]
 msgpack = ["dep:rmp-serde", "dep:serde", "dep:http", "dep:mime", "dep:deboa"]
 yaml = ["dep:serde-saphyr", "dep:serde", "dep:http", "dep:mime", "dep:deboa"]
 flex = ["dep:flexbuffers", "dep:serde", "dep:http", "dep:mime", "dep:deboa"]
+cbor = ["dep:ciborium", "dep:serde", "dep:http", "dep:deboa"]
 compression_all = ["gzip", "brotli", "deflate"]
 compression = ["gzip"]
 brotli = ["dep:brotli", "dep:bytes", "dep:deboa"]
@@ -39,6 +40,7 @@ smol = ["dep:smol", "dep:smol-hyper", "dep:hyper", "dep:hyper-util"]
 base64 = { version = "0.22.1", optional = true }
 brotli = { version = "8.0.2", optional = true }
 bytes = { version = "1.11.0", optional = true }
+ciborium = { version = "0.2.2", optional = true }
 deboa = { path = "../deboa", version = "0.0.9", features = [
   "http1", "tokio-rt"
 ], optional = true }

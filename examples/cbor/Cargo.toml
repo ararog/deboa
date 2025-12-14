@@ -1,0 +1,13 @@
+[package]
+name = "cbor"
+version = "0.1.0"
+edition = "2024"
+authors = ["Kelvin Andrade <contato@kelvinandrade.com>"]
+publish = false
+
+[dependencies]
+deboa = { path = "../../deboa" }
+deboa-extras = { path = "../../deboa-extras", features = ["cbor"] }
+ciborium = "0.2.2"
+tokio = { version = "1" }
+serde = { version = "1"}

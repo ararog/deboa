@@ -13,6 +13,7 @@ members = [
     "examples/catcher",
     "examples/sse", 
     "examples/simple", 
+    "examples/cbor",
     "vamo", 
     "vamo-macros", 
 ]
