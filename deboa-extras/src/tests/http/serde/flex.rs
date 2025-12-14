@@ -3,7 +3,6 @@ use deboa::{request::DeboaRequest, response::DeboaResponse, Result};
 use deboa_tests::data::{sample_post, Post, FLEX_POST};
 use deboa_tests::utils::fake_url;
 
-#[cfg(feature = "flex")]
 #[test]
 fn test_set_flex() -> Result<()> {
     let request = DeboaRequest::post(fake_url())?
@@ -15,7 +14,6 @@ fn test_set_flex() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "flex")]
 #[tokio::test]
 async fn test_response_flex() -> Result<()> {
     let data = sample_post();
