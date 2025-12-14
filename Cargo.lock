@@ -629,6 +629,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "cbor"
+version = "0.1.0"
+dependencies = [
+ "ciborium",
+ "deboa",
+ "deboa-extras",
+ "serde",
+ "tokio",
+]
+
+[[package]]
 name = "cc"
 version = "1.2.49"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1205,6 +1216,7 @@ dependencies = [
  "base64 0.22.1",
  "brotli",
  "bytes",
+ "ciborium",
  "deboa",
  "deboa-tests",
  "flate2",

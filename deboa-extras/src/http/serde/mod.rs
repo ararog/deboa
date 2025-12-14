@@ -12,3 +12,6 @@ pub mod yaml;
 
 #[cfg(feature = "flex")]
 pub mod flex;
+
+#[cfg(feature = "cbor")]
+pub mod cbor;

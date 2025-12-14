@@ -1,3 +1,5 @@
+#[cfg(feature = "cbor")]
+mod cbor;
 #[cfg(feature = "flex")]
 mod flex;
 #[cfg(feature = "json")]
