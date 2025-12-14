@@ -3,7 +3,6 @@ use deboa::{request::DeboaRequest, response::DeboaResponse, Result};
 use deboa_tests::data::{sample_post, Post, YAML_POST};
 use deboa_tests::utils::fake_url;
 
-#[cfg(feature = "yaml")]
 #[test]
 fn test_set_yaml() -> Result<()> {
     let request = DeboaRequest::post(fake_url())?
@@ -15,7 +14,6 @@ fn test_set_yaml() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "yaml")]
 #[tokio::test]
 async fn test_response_yaml() -> Result<()> {
     let data = sample_post();

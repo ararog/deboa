@@ -4,7 +4,6 @@ use deboa::{request::DeboaRequest, response::DeboaResponse, Result};
 use deboa_tests::data::{sample_post, Post};
 use deboa_tests::utils::fake_url;
 
-#[cfg(feature = "cbor")]
 fn build_sample_cbor_body() -> Vec<u8> {
     let mut buf = Vec::new();
     let body = sample_post();
@@ -12,7 +11,6 @@ fn build_sample_cbor_body() -> Vec<u8> {
     buf
 }
 
-#[cfg(feature = "cbor")]
 #[test]
 fn test_set_cbor() -> Result<()> {
     let request = DeboaRequest::post(fake_url())?
@@ -24,7 +22,6 @@ fn test_set_cbor() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "cbor")]
 #[test]
 fn test_set_cbor_registers_headers() -> Result<()> {
     let mut request = DeboaRequest::post(fake_url())?.build()?;
@@ -52,7 +49,6 @@ fn test_set_cbor_registers_headers() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "cbor")]
 #[tokio::test]
 async fn test_response_cbor() -> Result<()> {
     let data = sample_post();
@@ -71,7 +67,6 @@ async fn test_response_cbor() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "cbor")]
 #[tokio::test]
 async fn test_response_cbor_invalid_body() {
     let response = DeboaResponse::builder(fake_url())
