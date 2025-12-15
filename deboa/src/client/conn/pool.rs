@@ -105,12 +105,14 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
             .connections
             .contains_key(&host_key)
         {
+            log::debug!("Connection already exists for {}, reusing.", host_key);
             return Ok(self
                 .connections
                 .get_mut(&host_key)
                 .unwrap());
         }
 
+        log::debug!("Creating new connection for {}", host_key);
         let connection = match protocol {
             #[cfg(feature = "http1")]
             HttpVersion::Http1 => {

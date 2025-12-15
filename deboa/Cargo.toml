@@ -31,11 +31,7 @@ smol-rt = [
 # protocols
 http1 = []
 http2 = []
-http3 = [
-    "dep:h3",
-    "dep:h3-quinn",
-    "dep:quinn",
-]
+http3 = ["dep:h3", "dep:h3-quinn", "dep:quinn"]
 
 [dependencies]
 async-executor = { version = "1.13.3", optional = true }
@@ -58,8 +54,8 @@ hyper-util = { version = "0.1.19", features = [
   "tokio",
 ] }
 indexmap = "2.11.4"
+log = "0.4.28"
 macro_rules_attribute = { version = "0.2.2", optional = true }
-mime = { version = "0.3.17" }
 minimime = "1.0.0"
 mockall = "0.14.0"
 quinn = { version = "0.10.2", optional = true }
@@ -86,6 +82,7 @@ criterion = { version = "0.8.1", features = [
 deboa-tests = { path = "../deboa-tests", version = "0.0.1" }
 futures-util = "0.3.31"
 httpmock = { version = "0.8.2", features = ["http2"] }
+mime = { version = "0.3.17" }
 multer = "3.1.0"
 smol = "2.0.2"
 tokio = { version = "1.47.2" }

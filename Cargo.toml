@@ -5,16 +5,16 @@ resolver = "3"
 members = [
     "deboa",
     "deboa-extras",
-    "deboa-fory", 
+    "deboa-fory",
     "deboa-macros",
-    "examples/blog", 
-    "examples/chat", 
-    "examples/postman", 
+    "examples/blog",
     "examples/catcher",
-    "examples/sse", 
-    "examples/simple", 
     "examples/cbor",
-    "vamo", 
+    "examples/chat",
+    "examples/postman",
+    "examples/simple",
+    "examples/sse",
+    "vamo",
     "vamo-macros", 
 ]
 

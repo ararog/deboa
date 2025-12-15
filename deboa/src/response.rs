@@ -29,9 +29,9 @@
 //! ### Basic Response Handling
 //!
 //! ```rust, ignore
-//! use deboa::{Deboa, request::IntoRequest};
+//! use deboa::{Client, request::IntoRequest};
 //!
-//! let mut client = Deboa::new();
+//! let mut client = Client::new();
 //! let response = "https://api.example.com/data"
 //!     .into_request()
 //!     .execute(&mut client)
@@ -44,7 +44,7 @@
 //! ### JSON Response Parsing
 //!
 //! ```rust, ignore
-//! use deboa::{Deboa, request::get};
+//! use deboa::{Client, request::get};
 //! use serde::Deserialize;
 //!
 //! #[derive(Deserialize)]
@@ -53,7 +53,7 @@
 //!     name: String,
 //! }
 //!
-//! let mut client = Deboa::new();
+//! let mut client = Client::new();
 //! let response = get("https://api.example.com/user/1")
 //!     .execute(&mut client)
 //!     .await?;
@@ -65,10 +65,10 @@
 //! ### Streaming Response Body
 //!
 //! ```rust, ignore
-//! use deboa::{Deboa, request::get};
+//! use deboa::{Client, request::get};
 //! use futures::StreamExt;
 //!
-//! let mut client = Deboa::new();
+//! let mut client = Client::new();
 //! let response = get("https://api.example.com/large-data")
 //!     .execute(&mut client)
 //!     .await?;
@@ -89,6 +89,7 @@ use hyper::{
 };
 #[cfg(feature = "tokio-rt")]
 use hyper_util::rt::TokioIo;
+use log::error;
 use serde::Deserialize;
 #[cfg(feature = "smol-rt")]
 use smol_hyper::rt::FuturesIo;
@@ -108,9 +109,9 @@ pub type DeboaBody = Either<Incoming, Full<Bytes>>;
 /// # Examples
 ///
 /// ``` compile_fail
-/// use deboa::{Deboa, response::IntoBody};
+/// use deboa::{Client, response::IntoBody};
 ///
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 ///
 /// let response = b"Some bytes"
 ///   .into_body()
@@ -251,24 +252,25 @@ impl DeboaResponseBuilder {
 /// ## Basic Usage
 ///
 /// ```no_run
-/// use deboa::request::get;
+/// use deboa::{Client, request::get, Result};
 ///
 /// # #[tokio::main]
-/// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// let mut client = deboa::Deboa::new();
-/// let response = get("https://httpbin.org/get")?.send_with(&mut client).await?;
+/// async fn main() -> Result<()> {
+///     let mut client = Client::new();
+///     let response = get("https://httpbin.org/get")?.send_with(&mut client).await?;
 ///
-/// println!("Status: {}", response.status());
-/// println!("Headers: {:?}", response.headers());
-/// println!("Body: {}", response.text().await?);
-/// # Ok(()) }
+///     println!("Status: {}", response.status());
+///     println!("Headers: {:?}", response.headers());
+///     println!("Body: {}", response.text().await?);
+///     Ok(())
+/// }
 /// ```
 ///
 /// ## JSON Deserialization
 ///
 /// ```compile_fail
-/// use deboa::request::get;
-/// use deboa::client::serde::json::JsonBody;
+/// use deboa::{Client, request::get, Result};
+/// use deboa_extras::http::serde::json::JsonBody;
 /// use serde::Deserialize;
 ///
 /// #[derive(Debug, Deserialize)]
@@ -278,8 +280,8 @@ impl DeboaResponseBuilder {
 /// }
 ///
 /// #[tokio::main]
-/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let mut client = deboa::Deboa::new();
+/// async fn main() -> Result<()> {
+///     let mut client = Client::new();
 ///     let response = get("https://httpbin.org/get")?.with(&mut client).await?;
 ///     let data: Data = response.body_as(JsonBody).await?;
 ///     println!("Origin: {}", data.origin);
@@ -422,11 +424,13 @@ impl DeboaResponse {
             .headers()
             .get(header_name);
         if header_value.is_none() {
+            error!("Header {} is missing", header_name);
             return Err(DeboaError::Header { message: "Header is missing".to_string() });
         }
         let header_value = header_value.unwrap();
         let header_value = header_value.to_str();
         if let Err(e) = header_value {
+            error!("Failed to read {}:: {}", header_name, e);
             return Err(DeboaError::Header {
                 message: format!("Failed to read {}:: {}", header_name, e),
             });
@@ -453,6 +457,7 @@ impl DeboaResponse {
         let header = self.header_value(header::CONTENT_LENGTH)?;
         let header = header.parse::<u64>();
         if let Err(e) = header {
+            error!("Failed to parse content-length: {}", e);
             return Err(DeboaError::Header {
                 message: format!("Failed to parse content-length: {}", e),
             });
@@ -502,6 +507,7 @@ impl DeboaResponse {
                 if let Ok(cookie) = cookie {
                     DeboaCookie::parse_from_header(cookie)
                 } else {
+                    error!("Invalid cookie header");
                     Err(DeboaError::Cookie { message: "Invalid cookie header".to_string() })
                 }
             })
@@ -593,8 +599,12 @@ impl DeboaResponse {
     /// use deboa::request::get;
     /// use deboa_extras::http::serde::json::JsonBody;
     ///
-    /// let response = get("https://jsonplaceholder.typicode.com/posts")?.send_with(client).await?;
-    /// let posts: Vec<Post> = response.body_as(JsonBody).await?;
+    /// let response = get("https://jsonplaceholder.typicode.com/posts")?
+    ///     .send_with(client)
+    ///     .await?;
+    /// let posts: Vec<Post> = response
+    ///     .body_as(JsonBody)
+    ///     .await?;
     /// ```
     ///
     #[inline]
@@ -621,8 +631,12 @@ impl DeboaResponse {
     /// ```compile_fail
     /// use deboa::request::get;
     ///
-    /// let response = get("https://jsonplaceholder.typicode.com/posts")?.send_with(client).await?;
-    /// let text = response.text().await?;
+    /// let response = get("https://jsonplaceholder.typicode.com/posts")?
+    ///     .send_with(client)
+    ///     .await?;
+    /// let text = response
+    ///     .text()
+    ///     .await?;
     /// ```
     ///
     #[inline]
@@ -650,8 +664,12 @@ impl DeboaResponse {
     /// ```compile_fail
     /// use deboa::request::get;
     ///
-    /// let response = get("https://jsonplaceholder.typicode.com/posts")?.send_with(client).await?;
-    /// response.to_file("posts.json").await?;
+    /// let response = get("https://jsonplaceholder.typicode.com/posts")?
+    ///     .send_with(client)
+    ///     .await?;
+    /// response
+    ///     .to_file("posts.json")
+    ///     .await?;
     /// ```
     ///
     pub async fn to_file(mut self, path: &str) -> Result<()> {
@@ -660,6 +678,7 @@ impl DeboaResponse {
             .await;
         let result = write(path, body);
         if let Err(e) = result {
+            error!("Failed to write file: {}", e);
             return Err(DeboaError::Io(IoError::File { message: e.to_string() }));
         }
         Ok(())
@@ -668,6 +687,7 @@ impl DeboaResponse {
     #[cfg(feature = "tokio-rt")]
     pub async fn upgrade(self) -> Result<hyper_util::rt::TokioIo<hyper::upgrade::Upgraded>> {
         if self.inner.version() != http::Version::HTTP_11 {
+            error!("Upgrade is only supported for HTTP/1.1");
             return Err(DeboaError::Connection(ConnectionError::Upgrade {
                 message: "Upgrade is only supported for HTTP/1.1".to_string(),
             }));
@@ -675,6 +695,7 @@ impl DeboaResponse {
 
         let upgrade = on(self.inner).await;
         if let Err(e) = upgrade {
+            error!("Failed to upgrade connection: {}", e);
             return Err(DeboaError::Connection(ConnectionError::Upgrade {
                 message: e.to_string(),
             }));
@@ -685,6 +706,7 @@ impl DeboaResponse {
     #[cfg(feature = "smol-rt")]
     pub async fn upgrade(self) -> Result<FuturesIo<hyper::upgrade::Upgraded>> {
         if self.inner.version() != http::Version::HTTP_11 {
+            error!("Upgrade is only supported for HTTP/1.1");
             return Err(DeboaError::Connection(ConnectionError::Upgrade {
                 message: "Upgrade is only supported for HTTP/1.1".to_string(),
             }));
@@ -692,6 +714,7 @@ impl DeboaResponse {
 
         let upgrade = on(self.inner).await;
         if let Err(e) = upgrade {
+            error!("Failed to upgrade connection: {}", e);
             return Err(DeboaError::Connection(ConnectionError::Upgrade {
                 message: e.to_string(),
             }));
