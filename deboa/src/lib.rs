@@ -75,6 +75,7 @@ use bytes::Bytes;
 use http::{header, HeaderValue, Request, Response};
 use http_body_util::Full;
 use hyper::body::Incoming;
+use log::{error, info};
 
 use crate::cert::{ClientCert, Identity};
 use crate::client::conn::http::{DeboaConnection, DeboaHttpConnection};
@@ -222,7 +223,6 @@ pub type DeboaBuilder = ClientBuilder;
 pub struct ClientBuilder {
     connection_timeout: u64,
     request_timeout: u64,
-    client_cert: Option<ClientCert>,
     identity: Option<Identity>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
@@ -241,8 +241,8 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` rust, no_run
-    /// use deboa::Deboa;
-    /// let builder = Deboa::builder()
+    /// use deboa::Client;
+    /// let builder = Client::builder()
     ///     .connection_timeout(10);  // 10 seconds
     /// ```
     ///
@@ -265,8 +265,8 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` rust, no_run
-    /// use deboa::Deboa;
-    /// let builder = Deboa::builder()
+    /// use deboa::Client;
+    /// let builder = Client::builder()
     ///     .request_timeout(30);  // 30 seconds
     /// ```
     ///
@@ -290,19 +290,48 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` compile_fail
-    /// use deboa::{Deboa, ClientCert};
+    /// use deboa::{Client, ClientCert};
     ///
     /// #[tokio::main]
     ///
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let cert = ClientCert::from_pem_file("client.pem")?;
-    ///     let builder = Deboa::builder()
+    ///     let builder = Client::builder()
     ///         .client_cert(cert);
     ///     Ok(())
     /// }
     /// ```
     pub fn client_cert(mut self, client_cert: ClientCert) -> Self {
-        self.client_cert = Some(client_cert);
+        self.identity = Some(client_cert);
+        self
+    }
+
+    /// Configures a client certificate for mutual TLS authentication.
+    ///
+    /// This is used when the server requires client certificate authentication.
+    /// The certificate should be in PEM format and include both the certificate
+    /// and private key.
+    ///
+    /// # Arguments
+    ///
+    /// * `identity` - The client certificate file.
+    ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use deboa::{Client, Identity};
+    ///
+    /// #[tokio::main]
+    ///
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let cert = Identity::from_pem_file("client.pem")?;
+    ///     let builder = Client::builder()
+    ///         .identity(cert);
+    ///     Ok(())
+    /// }
+    /// ```
+    pub fn identity(mut self, identity: Identity) -> Self {
+        self.identity = Some(identity);
         self
     }
 
@@ -321,12 +350,12 @@ impl ClientBuilder {
     /// ## Basic Error Logging
     ///
     /// ``` compile_fail
-    /// use deboa::Deboa;
+    /// use deboa::Client;
     /// use std::error::Error;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn Error>> {
-    ///     let builder = Deboa::builder()
+    ///     let builder = Client::builder()
     ///         .catch(|e: std::io::Error| {
     ///             eprintln!("Network error: {}", e);
     ///             Ok(())  // Continue execution
@@ -337,26 +366,27 @@ impl ClientBuilder {
     ///
     /// ## Automatic Retries
     ///
-    /// ``` compile_fail
-    /// use deboa::{Deboa, Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
+    /// ```
+    /// use deboa::{Client, Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
     ///
     /// struct AddAuthorization;
     ///
     /// #[deboa::async_trait]
     /// impl DeboaCatcher for AddAuthorization {
-    /// async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
-    ///    println!("Request: {:?}", request.url());
-    ///    Ok(None)
-    /// }
+    ///     async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
+    ///         println!("Request: {:?}", request.url());
+    ///         Ok(None)
+    ///     }
     ///
-    /// async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
-    ///    println!("Response: {:?}", response.status());
-    ///    Ok(())
+    ///     async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
+    ///         println!("Response: {:?}", response.status());
+    ///         Ok(())
+    ///     }
     /// }
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
-    ///     let client = Deboa::builder()
+    ///     let client = Client::builder()
     ///         .catch(AddAuthorization)
     ///         .build();
     ///     Ok(())
@@ -383,9 +413,9 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` rust, no_run
-    /// use deboa::{Deboa, HttpVersion};
+    /// use deboa::{Client, HttpVersion};
     ///
-    /// let builder = Deboa::builder()
+    /// let builder = Client::builder()
     ///     .protocol(HttpVersion::Http2);  // Use HTTP/2
     /// ```
     ///
@@ -409,11 +439,11 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` rust, no_run
-    /// use deboa::Deboa;
+    /// use deboa::Client;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///   let client = Deboa::builder()
+    ///   let client = Client::builder()
     ///     .connection_timeout(10)
     ///     .request_timeout(30)
     ///     .build();
@@ -427,11 +457,10 @@ impl ClientBuilder {
     ///
     /// This method may panic if the underlying HTTP client cannot be created
     /// with the specified configuration.
-    pub fn build(self) -> Deboa {
-        Deboa {
+    pub fn build(self) -> Client {
+        Client {
             connection_timeout: self.connection_timeout,
             request_timeout: self.request_timeout,
-            client_cert: self.client_cert,
             identity: self.identity,
             catchers: self.catchers,
             protocol: self.protocol,
@@ -462,15 +491,15 @@ pub type Deboa = Client;
 /// ## Basic Usage
 ///
 /// ``` rust,no_run
-/// use deboa::Deboa;
+/// use deboa::Client;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///   // Create a new client with default settings
-///   let client = Deboa::new();
+///   let client = Client::new();
 ///
 ///   // Or configure with custom settings
-///   let client = Deboa::builder()
+///   let client = Client::builder()
 ///     .connection_timeout(10)  // 10 seconds
 ///     .request_timeout(30)     // 30 seconds
 ///     .build();
@@ -491,7 +520,6 @@ pub type Deboa = Client;
 pub struct Client {
     connection_timeout: u64,
     request_timeout: u64,
-    client_cert: Option<ClientCert>,
     identity: Option<Identity>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
@@ -520,7 +548,7 @@ impl Debug for Client {
     }
 }
 
-impl Deboa {
+impl Client {
     /// Creates a new `Deboa` instance with default settings.
     ///
     /// This is equivalent to calling `Deboa::builder().build()` and provides
@@ -536,16 +564,16 @@ impl Deboa {
     ///
     /// # Returns
     ///
-    /// A new `Deboa` instance with default settings.
+    /// A new `Client` instance with default settings.
     ///
     /// # Examples
     ///
     /// ``` rust,no_run
-    /// use deboa::Deboa;
+    /// use deboa::Client;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///   let client = Deboa::new();
+    ///   let client = Client::new();
     ///   // client is ready to make requests
     ///   Ok(())
     /// }
@@ -553,14 +581,13 @@ impl Deboa {
     ///
     /// # See Also
     ///
-    /// - [`Deboa::builder()`] for custom configuration
-    /// - [`Deboa::default()`] for the same functionality via the `Default` trait
+    /// - [`Client::builder()`] for custom configuration
+    /// - [`Client::default()`] for the same functionality via the `Default` trait
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        Deboa {
+        Client {
             connection_timeout: 0,
             request_timeout: 0,
-            client_cert: None,
             identity: None,
             catchers: None,
             protocol: HttpVersion::Http1,
@@ -572,13 +599,12 @@ impl Deboa {
     ///
     /// # Returns
     ///
-    /// * `DeboaBuilder` - The new DeboaBuilder instance.
+    /// * `ClientBuilder` - The new ClientBuilder instance.
     ///
-    pub fn builder() -> DeboaBuilder {
-        DeboaBuilder {
+    pub fn builder() -> ClientBuilder {
+        ClientBuilder {
             connection_timeout: 0,
             request_timeout: 0,
-            client_cert: None,
             identity: None,
             catchers: None,
             protocol: HttpVersion::Http1,
@@ -671,8 +697,8 @@ impl Deboa {
     ///
     #[inline]
     #[deprecated(note = "Use identity instead", since = "0.0.8")]
-    pub fn client_cert(&self) -> Option<&ClientCert> {
-        self.client_cert
+    pub fn client_cert(&self) -> Option<&Identity> {
+        self.identity
             .as_ref()
     }
 
@@ -700,7 +726,7 @@ impl Deboa {
     ///
     #[deprecated(note = "Use set_identity instead", since = "0.0.8")]
     pub fn set_client_cert(&mut self, client_cert: Option<ClientCert>) -> &mut Self {
-        self.client_cert = client_cert;
+        self.identity = client_cert;
         self
     }
 
@@ -734,12 +760,12 @@ impl Deboa {
     /// ## Basic Error Logging
     ///
     /// ```compile_fail
-    /// use deboa::Deboa;
+    /// use deboa::Client;
     /// use std::error::Error;
     ///
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn Error>> {
-    /// let builder = Deboa::builder()
+    /// let builder = Client::builder()
     ///     .catch(|e: std::io::Error| {
     ///         eprintln!("Network error: {}", e);
     ///         Ok(())  // Continue execution
@@ -750,12 +776,12 @@ impl Deboa {
     /// ## Automatic Retries
     ///
     /// ```compile_fail
-    /// use deboa::Deboa;
+    /// use deboa::Client;
     /// use std::error::Error;
     ///
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn Error>> {
-    /// let builder = Deboa::builder()
+    /// let builder = Client::builder()
     ///     .catch(|e: std::io::Error| {
     ///         if e.kind() == std::io::ErrorKind::TimedOut {
     ///             eprintln!("Request timed out, will retry...");
@@ -811,11 +837,11 @@ impl Deboa {
     /// ## Simple GET Request
     ///
     /// ```rust,no_run
-    /// use deboa::Deboa;
+    /// use deboa::Client;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///   let mut client = Deboa::new();
+    ///   let mut client = Client::new();
     ///   let response = client.execute("https://httpbin.org/get").await?;
     ///   println!("Status: {}", response.status());
     ///   println!("Body: {}", response.text().await?);
@@ -826,12 +852,12 @@ impl Deboa {
     /// ## POST Request with JSON Body
     ///
     /// ```compile_fail
-    /// use deboa::{Deboa, request::post};
+    /// use deboa::{Client, request::post};
     /// use serde_json::json;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///   let mut client = Deboa::new();
+    ///   let mut client = Client::new();
     ///   let response = client
     ///     .execute(
     ///         post("https://httpbin.org/post")
@@ -855,11 +881,11 @@ impl Deboa {
     /// By default, failed requests are not automatically retried. To enable retries:
     ///
     /// ```compile_fail
-    /// use deboa::{Deboa, request::get};
+    /// use deboa::{Client, request::get};
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///   let mut client = Deboa::new();
+    ///   let mut client = Client::new();
     ///   let request = get("https://example.com").retries(3); // Retry up to 3 times
     ///   let response = client.execute(request).await?;
     ///   Ok(())
@@ -907,6 +933,7 @@ impl Deboa {
                 .await;
             if let Err(err) = response {
                 if retry_count == request.retries() {
+                    error!("Request failed after {} retries: {}", retry_count, err);
                     break Err(err);
                 }
                 #[cfg(feature = "tokio-rt")]
@@ -928,6 +955,13 @@ impl Deboa {
                 let location = response
                     .headers()
                     .get(header::LOCATION);
+                info!(
+                    "Redirecting to {}",
+                    location
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                );
                 if let Some(location) = location {
                     let location = location
                         .to_str()
@@ -992,6 +1026,7 @@ impl Deboa {
             .as_ref()
             .method();
 
+        info!("Building request: {} {}", method, uri);
         let mut builder = Request::builder()
             .uri(uri)
             .method(
@@ -1036,6 +1071,7 @@ impl Deboa {
                 .to_vec(),
         )));
         if let Err(err) = request {
+            error!("Failed to send request: {}", err);
             return Err(DeboaError::Request(errors::RequestError::Send {
                 url: url.to_string(),
                 method: method.to_string(),
@@ -1047,7 +1083,7 @@ impl Deboa {
 
         let conn = self
             .pool
-            .create_connection(url, &self.protocol, &self.client_cert)
+            .create_connection(url, &self.protocol, &self.identity)
             .await?;
         match conn {
             #[cfg(feature = "http1")]

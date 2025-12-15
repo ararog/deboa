@@ -30,19 +30,19 @@
 //! ### Basic GET Request
 //!
 //! ```rust, ignore
-//! use deboa::{Deboa, request::IntoRequest};
+//! use deboa::{Client, request::IntoRequest};
 //!
-//! let mut client = Deboa::new();
+//! let mut client = Client::new();
 //! let response = "https://api.example.com/data".into_request().execute(&mut client).await?;
 //! ```
 //!
 //! ### POST Request with JSON
 //!
 //! ```rust, ignore
-//! use deboa::{Deboa, request::post};
+//! use deboa::{Client, request::post};
 //! use deboa_extras::http::serde::json::JsonBody;
 //!
-//! let mut client = Deboa::new();
+//! let mut client = Client::new();
 //! let response = post("https://api.example.com/users")
 //!     .body_as(JsonBody, json!({"name": "John", "age": 30}))?
 //!     .send_with(&mut client)
@@ -52,9 +52,9 @@
 //! ### Authentication
 //!
 //! ```rust, ignore
-//! use deboa::{Deboa, request::get};
+//! use deboa::{Client, request::get};
 //!
-//! let mut client = Deboa::new();
+//! let mut client = Client::new();
 //! let response = get("https://api.example.com/protected")
 //!     .basic_auth("username", "password")
 //!     .send_with(&mut client)
@@ -70,6 +70,7 @@ use http::{
 };
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
+use log::error;
 use regex::Regex;
 use serde::Serialize;
 use url::Url;
@@ -81,7 +82,7 @@ use crate::{
     form::{DeboaForm, Form},
     response::DeboaResponse,
     url::IntoUrl,
-    Deboa, Result,
+    Client, Result,
 };
 
 /// Trait to allow making a request from different types.
@@ -93,9 +94,9 @@ use crate::{
 /// # Examples
 ///
 /// ``` compile_fail
-/// use deboa::{Deboa, request::IntoRequest};
+/// use deboa::{Client, request::IntoRequest};
 ///
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 ///
 /// let response = "https://jsonplaceholder.typicode.com"
 ///   .into_request()
@@ -144,9 +145,9 @@ pub trait Fetch {
     /// # Examples
     ///
     /// ``` compile_fail
-    /// use deboa::{Deboa, request::Fetch};
+    /// use deboa::{Client, request::Fetch};
     ///
-    /// let mut client = Deboa::new();
+    /// let mut client = Client::new();
     ///
     /// let response = "https://jsonplaceholder.typicode.com"
     ///   .fetch(&mut client)
@@ -156,7 +157,7 @@ pub trait Fetch {
     ///
     async fn fetch<T>(&self, client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Deboa> + Send;
+        T: AsMut<Client> + Send;
 }
 
 #[async_trait]
@@ -164,7 +165,7 @@ pub trait Fetch {
 impl Fetch for &str {
     async fn fetch<T>(&self, client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Deboa> + Send,
+        T: AsMut<Client> + Send,
     {
         DeboaRequest::get(*self)?
             .send_with(client)
@@ -197,9 +198,9 @@ pub trait FetchWith {
     /// # Examples
     ///
     /// ``` compile_fail
-    /// use deboa::{Deboa, request::FetchWith};
+    /// use deboa::{Client, request::FetchWith};
     ///
-    /// let mut client = Deboa::new();
+    /// let mut client = Client::new();
     ///
     /// let response = "https://jsonplaceholder.typicode.com"
     ///   .fetch_with(&mut client)
@@ -209,14 +210,14 @@ pub trait FetchWith {
     ///
     async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Deboa> + Send;
+        T: AsMut<Client> + Send;
 }
 
 #[async_trait]
 impl FetchWith for &str {
     async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Deboa> + Send,
+        T: AsMut<Client> + Send,
     {
         DeboaRequest::get(*self)?
             .send_with(client)
@@ -228,7 +229,7 @@ impl FetchWith for &str {
 impl FetchWith for String {
     async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Deboa> + Send,
+        T: AsMut<Client> + Send,
     {
         DeboaRequest::get(self)?
             .send_with(client)
@@ -249,9 +250,9 @@ impl FetchWith for String {
 /// # Examples
 ///
 /// ``` compile_fail
-/// use deboa::{Deboa, request::get};
+/// use deboa::{Client, request::get};
 ///
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 ///
 /// let request = get("https://jsonplaceholder.typicode.com").unwrap();
 /// let response = request.send_with(&mut client).await?;
@@ -276,9 +277,9 @@ pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// # Examples
 ///
 /// ``` compile_fail
-/// use deboa::{Deboa, request::post};
+/// use deboa::{Client, request::post};
 ///
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 ///
 /// let request = post("https://jsonplaceholder.typicode.com/posts")?
 ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
@@ -305,9 +306,9 @@ pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// # Examples
 ///
 /// ``` compile_fail
-/// use deboa::{Deboa, request::put};
+/// use deboa::{Client, request::put};
 ///
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 ///
 /// let request = put("https://jsonplaceholder.typicode.com/posts/1")?
 ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
@@ -333,9 +334,9 @@ pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// # Examples
 ///
 /// ``` compile_fail
-/// use deboa::{Deboa, request::delete};
+/// use deboa::{Client, request::delete};
 ///
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 ///
 /// let request = delete("https://jsonplaceholder.typicode.com/posts/1")?.build()?;
 /// let response = request.send_with(&mut client).await?;
@@ -359,9 +360,9 @@ pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// # Examples
 ///
 /// ``` compile_fail
-/// use deboa::{Deboa, request::patch};
+/// use deboa::{Client, request::patch};
 ///
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 ///
 /// let request = patch("https://jsonplaceholder.typicode.com/posts/1")?
 ///   .raw_body(b"{\"title\": \"foo\"}")
@@ -755,7 +756,7 @@ impl DeboaRequestBuilder {
     #[deprecated(note = "Use `send_with` method instead", since = "0.0.8")]
     pub async fn go<T>(self, mut client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Deboa>,
+        T: AsMut<Client>,
     {
         client
             .as_mut()
@@ -792,7 +793,7 @@ impl DeboaRequestBuilder {
     ///
     pub async fn send_with<T>(self, mut client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Deboa>,
+        T: AsMut<Client>,
     {
         client
             .as_mut()
@@ -857,6 +858,7 @@ impl FromStr for DeboaRequest {
         let method_url_regex =
             Regex::new(r"(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+(https?://[^\s]+)");
         if let Err(e) = method_url_regex {
+            error!("Failed to parse request: {}", e);
             return Err(DeboaError::Request(RequestError::Parse { message: e.to_string() }));
         }
 
@@ -870,12 +872,14 @@ impl FromStr for DeboaRequest {
                 if let Some(captures) = captures {
                     let method_cap = captures.get(1);
                     if method_cap.is_none() {
+                        error!("Missing method in request format");
                         return Err(DeboaError::Request(RequestError::Parse {
                             message: "Missing method in request format".into(),
                         }));
                     }
                     let url_cap = captures.get(2);
                     if url_cap.is_none() {
+                        error!("Missing url in request format");
                         return Err(DeboaError::Request(RequestError::Parse {
                             message: "Missing url in request format".into(),
                         }));
@@ -900,6 +904,7 @@ impl FromStr for DeboaRequest {
                             .as_bytes(),
                     )
                     .map_err(|_| {
+                        error!("Invalid header name");
                         DeboaError::Request(RequestError::Parse {
                             message: "Invalid header name".into(),
                         })
@@ -912,6 +917,7 @@ impl FromStr for DeboaRequest {
                             .as_bytes(),
                     )
                     .map_err(|_| {
+                        error!("Invalid header value");
                         DeboaError::Request(RequestError::Parse {
                             message: "Invalid header value".into(),
                         })
@@ -998,6 +1004,7 @@ impl DeboaRequest {
     pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
+            error!("Failed to parse url: {}", e);
             return Err(DeboaError::Request(RequestError::UrlParse { message: e.to_string() }));
         }
 
@@ -1189,6 +1196,7 @@ impl DeboaRequest {
     pub fn set_url<T: IntoUrl>(&mut self, url: T) -> Result<&mut Self> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
+            error!("Failed to parse url: {}", e);
             return Err(DeboaError::Request(RequestError::UrlParse { message: e.to_string() }));
         }
 

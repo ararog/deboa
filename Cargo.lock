@@ -1189,6 +1189,7 @@ dependencies = [
  "hyper",
  "hyper-util",
  "indexmap",
+ "log",
  "macro_rules_attribute",
  "mime",
  "minimime",
