@@ -48,14 +48,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = { version = "0.0.8", features = ["tokio_rt", "http1", "http2"] }
+//! deboa = { version = "0.0.9", features = ["tokio_rt", "http1", "http2"] }
 //! ```
 //!
 //! Conversely, HTTP/2 can be disabled:
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = { version = "0.0.8", default-features = false }
+//! deboa = { version = "0.0.9", default-features = false }
 //! ```
 //!
 
