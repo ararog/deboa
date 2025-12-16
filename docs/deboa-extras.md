@@ -12,7 +12,7 @@ Additional functionality for the Deboa HTTP client, including serializers, compr
 
 ```toml
 [dependencies]
-deboa-extras = { version = "0.0.7", features = ["json", "websocket", "sse"] }
+deboa-extras = { version = "0.0.5", features = ["json", "websocket", "sse"] }
 ```
 
 ## Features

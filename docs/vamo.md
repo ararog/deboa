@@ -17,7 +17,7 @@ A nice wrapper on top of deboa for creating DRY REST clients.
 
 ```toml
 [dependencies]
-vamo = { version = "0.1.0" }
+vamo = { version = "0.0.5" }
 ```
 
 ## Quick Start

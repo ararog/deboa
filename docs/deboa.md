@@ -14,8 +14,8 @@ The core HTTP client library for Rust, providing a simple yet powerful interface
 - helpers to add basic and bearer auth
 - set retries and timeout
 - pluggable catchers (interceptors)
-- pluggable compression (gzip, deflate, br)
-- pluggable serialization (json, xml, msgpack)
+- pluggable compression (gzip, deflate, brotli)
+- pluggable serialization (json, xml, msgpack, yaml, fory and cbor)
 - cookies support
 - urlencoded and multipart forms
 - comprehensive error handling
@@ -31,7 +31,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.0.9", features = ["http1", "tokio-rt"] }
 ```
 
 ## Basic Usage
