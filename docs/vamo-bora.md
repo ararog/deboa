@@ -20,7 +20,7 @@ A macro for easy REST client generation on top of the Vamo REST client.
 
 ```toml
 [dependencies]
-vamo-macros = { version = "0.1.0", features = ["json"] }
+vamo-macros = { version = "0.0.5", features = ["json"] }
 ```
 
 ## Basic Example

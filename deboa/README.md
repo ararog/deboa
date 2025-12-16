@@ -32,7 +32,7 @@ This release has a major api change. Please check the [migration guide](https://
 ## Install
 
 ```rust
-deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.0.9", features = ["http1", "tokio-rt"] }
 http = "1.3.1"
 ```
 

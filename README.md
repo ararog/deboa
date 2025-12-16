@@ -21,7 +21,7 @@ This release has a major api change. Please check the [migration guide](https://
 ## Install
 
 ```rust
-deboa = { version = "0.0.7", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.0.9", features = ["http1", "tokio-rt"] }
 ```
 
 ## Runtimes
@@ -81,10 +81,6 @@ A crate with set of convenience macros. Please note this crate no longer provide
 ### deboa-tests
 
 A crate with testing utilities.
-
-### examples
-
-Examples of how to use deboa.
 
 ### vamo
 

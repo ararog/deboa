@@ -17,7 +17,7 @@ Procedural macros for the Vamo crate, enabling seamless integration with the Deb
 
 ```toml
 [dependencies]
-vamo-macros = "0.1.0"
+vamo-macros = "0.0.5"
 ```
 
 ## Usage
