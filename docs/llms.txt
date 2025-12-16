@@ -6,14 +6,50 @@ to runtime compatibility and middleware support—while maintaining simplicity a
 It’s especially well-suited for Rust projects that require a lightweight, efficient HTTP client 
 without sacrificing control or extensibility.
 
+## Installation
+
+```toml
+[dependencies]
+deboa = { version = "0.0.9", features = ["http1", "tokio-rt"] }
+```
+
+## quickstart
+
+```rust
+use deboa::{Client, request::get, Result};
+
+#[tokio::main]
+async fn main() -> Result<(), Result> {
+    let client = Client::new();
+    
+    // Make a GET request
+    let response = get("https://httpbin.org/get")
+        .send_with(&client)
+        .await?;
+        
+    println!("Status: {}", response.status());
+    println!("Body: {}", response.text().await?);
+    
+    Ok(())
+}
+```
+
 ## Features
 
-- Async/await support
-- HTTP/1.1 and HTTP/2 support
-- Request and response builders
-- Timeout and retry configuration
-- Cookie handling
-- Pluggable serializer/deserializer
+- easily add, remove and update headers
+- helpers to add basic and bearer auth
+- set retries and timeout
+- pluggable catchers (interceptors)
+- pluggable compression (gzip, deflate, brotli)
+- pluggable serialization (json, xml, msgpack, yaml, fory and cbor)
+- cookies support
+- urlencoded and multipart forms
+- comprehensive error handling
+- response streaming
+- upgrade support (websocket, etc.)
+- runtime compatibility (tokio and smol)
+- http1/2 support 
+- http3 support (planned)
 
 ## Crates
 
@@ -22,10 +58,6 @@ without sacrificing control or extensibility.
 - [deboa_extras](https://crates.io/crates/deboa_extras)
 - [vamo](https://crates.io/crates/vamo)
 - [vamo_macros](https://crates.io/crates/vamo_macros)
-
-## Docs
-
-- [deboa quick start](https://github.com/ararog/deboa/blob/main/docs/quickstart.md): A brief overview of many FastHTML features
 
 ## Examples
 
