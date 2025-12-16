@@ -13,7 +13,7 @@ rust-version = "1.70.0"
 
 [dependencies]
 deboa = { path = "../deboa", version = "0.0.9", features = ["http1", "tokio-rt"] }
-fory = "0.13.2"
+fory = "0.14.0"
 fory-core = "0.13.1"
 http = "1.4.0"
  
