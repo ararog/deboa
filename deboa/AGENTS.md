@@ -1,4 +1,4 @@
-## Project Overview
+# Project Overview
 
 This crate is the core deboa HTTP client library, providing foundational HTTP request and response handling with support for modern async runtimes like Tokio and Smol.
 

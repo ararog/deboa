@@ -7,7 +7,15 @@ This crate provides additional features for Deboa like compression and serializa
 
 ## Install
 
+Either run from command line:
+
 `cargo add deboa-extras`
+
+Or add to your `Cargo.toml`:
+
+```toml
+deboa-extras = "0.0.1"
+```
 
 ## Features
 

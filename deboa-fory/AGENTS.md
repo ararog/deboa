@@ -1,4 +1,4 @@
-## Project Overview
+# Project Overview
 
 This crate provides Apache Fory serialization support for the deboa HTTP client.
 

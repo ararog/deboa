@@ -1,4 +1,4 @@
-## Project Overview
+# Project Overview
 
 This crate provides a REST wrapper for the deboa HTTP client also adds Resource trait to make structs
 usable for REST operations.

@@ -2,6 +2,23 @@
 
 Apache Fory serializer support for Deboa
 
+## Features
+
+- [x] Fory serializer
+- [x] Fory deserializer
+
+## Install
+
+Either run from command line:
+
+`cargo add deboa-fory`
+
+Or add to your `Cargo.toml`:
+
+```toml
+deboa-fory = "0.0.1"
+```
+
 ## Usage
 
 ```rust
@@ -34,11 +51,6 @@ let response: Person = request
     .body_as_fory(&fory)
     .await?;
 ```
-
-## Features
-
-- [x] Fory serializer
-- [x] Fory deserializer
 
 ## License
 
