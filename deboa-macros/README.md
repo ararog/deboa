@@ -7,15 +7,23 @@
 It used to be the home of bora macro, which has been moved to its own crate
 but it will continue to exist in this crate for backwards compatibility.
 
-## Install
-
-`cargo add deboa-macros`
-
 ## Features
 
 - json
 - xml
 - msgpack
+
+## Install
+
+Either run from command line:
+
+`cargo add deboa-macros`
+
+Or add to your `Cargo.toml`:
+
+```toml
+deboa-macros = "0.0.1"
+```
 
 ## Usage
 

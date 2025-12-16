@@ -1,4 +1,4 @@
-## Project Overview
+# Project Overview
 
 This crate provides extra functionality for the deboa HTTP client, including serialization, compression, websockets, streams, and middleware support.
 

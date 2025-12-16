@@ -1,4 +1,4 @@
-## Project Overview
+# Project Overview
 
 This crate provides procedural macros to automate resource trait generation for vamo.
 
