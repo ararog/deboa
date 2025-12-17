@@ -37,8 +37,8 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
         let host = url
-            .host()
-            .unwrap_or(Host::Domain("localhost"));
+            .host_str()
+            .unwrap_or("localhost");
         let stream = {
             match url.scheme() {
                 "ws" | "http" => {
@@ -46,7 +46,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                         let port = url
                             .port()
                             .unwrap_or(80);
-                        TcpStream::connect((host.to_string(), port)).await
+                        TcpStream::connect((host, port)).await
                     };
 
                     if let Err(e) = stream {
@@ -63,7 +63,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                         let port = url
                             .port()
                             .unwrap_or(443);
-                        TcpStream::connect((host.to_string(), port)).await
+                        TcpStream::connect((host, port)).await
                     };
 
                     if let Err(e) = stream {
@@ -101,7 +101,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
                         .unwrap();
                     let connector = tokio_native_tls::TlsConnector::from(connector);
                     let stream = connector
-                        .connect(&host.to_string(), socket)
+                        .connect(host, socket)
                         .await;
 
                     if let Err(e) = stream {
