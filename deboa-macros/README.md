@@ -4,8 +4,7 @@
 
 
 **deboa-macros** is a collection of macros for deboa.
-It used to be the home of bora macro, which has been moved to its own crate
-but it will continue to exist in this crate for backwards compatibility.
+It used to be the home of bora macro, which has been moved to vamo-macros crate.
 
 ## Features
 
