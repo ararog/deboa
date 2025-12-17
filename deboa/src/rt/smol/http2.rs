@@ -37,8 +37,8 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
         let host = url
-            .host()
-            .expect("uri has no host");
+            .host_str()
+            .unwrap_or("localhost");
         let io = {
             match url.scheme() {
                 "http" => {
@@ -46,7 +46,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
                         let port = url
                             .port()
                             .unwrap_or(80);
-                        TcpStream::connect((host.to_string(), port)).await
+                        TcpStream::connect((host, port)).await
                     };
 
                     if let Err(e) = stream {
@@ -65,7 +65,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
                         let port = url
                             .port()
                             .unwrap_or(443);
-                        TcpStream::connect((host.to_string(), port)).await
+                        TcpStream::connect((host, port)).await
                     };
 
                     if let Err(e) = stream {
@@ -90,7 +90,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
                         TlsConnector::new()
                     };
                     let stream = connector
-                        .connect(&host.to_string(), stream)
+                        .connect(host, stream)
                         .await;
 
                     if let Err(e) = stream {

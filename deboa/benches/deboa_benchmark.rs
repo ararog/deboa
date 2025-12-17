@@ -39,6 +39,7 @@ fn deboa(c: &mut Criterion) {
             });
     });
 
+    /*
     c.bench_function("deboa_post", move |b| {
         #[cfg(feature = "tokio-rt")]
         b.to_async(Runtime::new().unwrap())
@@ -52,6 +53,7 @@ fn deboa(c: &mut Criterion) {
                 let _ = post_async().await;
             });
     });
+    */
 }
 
 criterion_group!(benches, deboa);
