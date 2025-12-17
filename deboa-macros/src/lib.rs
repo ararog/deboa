@@ -23,7 +23,7 @@
 //!
 //! ### Basic GET Request
 //! ```compile_fail
-//! use deboa::Deboa;
+//! use deboa::{Deboa, Result>;
 //! use deboa_extras::http::serde::json::JsonBody;
 //!
 //! #[derive(serde::Deserialize)]
@@ -35,7 +35,7 @@
 //! }
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! async fn main() -> Result<()> {
 //!     let mut client = Deboa::new();
 //!     let post: Post = get!("https://jsonplaceholder.typicode.com/posts/1", &mut client, JsonBody, Post);
 //!     println!("Post title: {}", post.title);
@@ -45,7 +45,7 @@
 //!
 //! ### POST with JSON Body
 //! ```compile_fail
-//! use deboa::Deboa;
+//! use deboa::{Deboa, Result>;
 //! use deboa_extras::http::serde::json::JsonBody;
 //! use serde::Serialize;
 //!
@@ -57,7 +57,7 @@
 //! }
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! async fn main() -> Result<()> {
 //!     let mut client = Deboa::new();
 //!     let new_post = NewPost {
 //!         title: "Hello World".into(),
