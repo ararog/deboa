@@ -71,3 +71,4 @@ It also shows how to use DeboaCatcher trait to implement a simple middleware.
 - [🦀 Exploring deboa-macros: Ergonomic HTTP Client Macros for Rust](https://medium.com/@ararog/exploring-deboa-macros-ergonomic-http-client-macros-for-rust-d0c3df22e0a7)
 - [Real-time Communication with WebSockets using deboa-extras](https://dev.to/rogrio_arajo_55dae16f0d/real-time-communication-with-websockets-using-deboa-extras-172o)
 - [🚀 Level Up Your HTTP Requests: Exploring deboa-extras (Rust Crate)](https://medium.com/@ararog/level-up-your-http-requests-exploring-deboa-extras-rust-crate-56e2a64d1186)
+- [Trait Deep Dive: How Deboa's IntoRequest Makes Rust HTTP Easy](https://www.linkedin.com/pulse/trait-deep-dive-how-deboas-intorequest-makes-rust-rog%C3%A9rio-crude/)
