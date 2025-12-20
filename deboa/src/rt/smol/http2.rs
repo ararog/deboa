@@ -140,4 +140,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
     }
 }
 
-impl crate::client::conn::http::private::Sealed for BaseHttpConnection<Http2Request> {}
+impl crate::client::conn::http::private::DeboaHttpConnectionSealed
+    for BaseHttpConnection<Http2Request>
+{
+}
