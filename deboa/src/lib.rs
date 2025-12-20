@@ -8,22 +8,22 @@
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = "0.0.8"
+//! deboa = "0.1.0"
 //! ```
 //!
 //! <small>Note that development versions, tagged with `-dev`, are not published
 //! and need to be specified as [git dependencies].</small>
 //!
 //! ```rust,no_run
-//! use deboa::{Deboa, Result, errors::DeboaError, request::DeboaRequest};
+//! use deboa::{Client, Result, errors::DeboaError, request::DeboaRequest};
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<()> {
-//!     let mut deboa = Deboa::builder()
+//!     let mut client = Client::builder()
 //!         .build();
 //!
 //!     let response = DeboaRequest::get("https://httpbin.org/get")?
-//!         .send_with(&mut deboa)
+//!         .send_with(&mut client)
 //!         .await?;
 //!
 //!     println!("Response: {:#?}", response);
@@ -48,14 +48,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = { version = "0.0.9", features = ["tokio_rt", "http1", "http2"] }
+//! deboa = { version = "0.1.0", features = ["tokio_rt", "http1", "http2"] }
 //! ```
 //!
 //! Conversely, HTTP/2 can be disabled:
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = { version = "0.0.9", default-features = false }
+//! deboa = { version = "0.1.0", default-features = false }
 //! ```
 //!
 
@@ -78,7 +78,9 @@ use hyper::body::Incoming;
 use log::{error, info};
 
 use crate::cert::{ClientCert, Identity};
-use crate::client::conn::http::{DeboaConnection, DeboaHttpConnection};
+use crate::client::conn::http::{
+    BaseHttpConnection, DeboaConnection, DeboaHttpConnection, Http1Request, Http2Request,
+};
 
 use crate::catcher::DeboaCatcher;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
@@ -197,12 +199,11 @@ pub type DeboaBuilder = ClientBuilder;
 /// # Examples
 ///
 /// ``` rust, no_run
-/// use deboa::{Deboa, HttpVersion};
-/// use std::time::Duration;
+/// use deboa::{Client, Result, HttpVersion};
 ///
 /// #[tokio::main]
-/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///   let client = deboa::Deboa::builder()
+/// async fn main() -> Result<()> {
+///   let client = Client::builder()
 ///     .connection_timeout(30)  // 30 seconds
 ///     .request_timeout(10)     // 10 seconds
 ///     .protocol(HttpVersion::Http2)  // Use HTTP/2
@@ -226,6 +227,7 @@ pub struct ClientBuilder {
     identity: Option<Identity>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
+    pool: Option<HttpConnectionPool>,
 }
 
 impl ClientBuilder {
@@ -290,14 +292,14 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` compile_fail
-    /// use deboa::{Client, ClientCert};
+    /// use deboa::{Client, Result, Identity};
     ///
     /// #[tokio::main]
     ///
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let cert = ClientCert::from_pem_file("client.pem")?;
+    /// async fn main() -> Result<()> {
+    ///     let cert = Identity::from_pem_file("client.pem")?;
     ///     let builder = Client::builder()
-    ///         .client_cert(cert);
+    ///         .set_identity(cert);
     ///     Ok(())
     /// }
     /// ```
@@ -319,11 +321,11 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` compile_fail
-    /// use deboa::{Client, Identity};
+    /// use deboa::{Client, Identity, Result};
     ///
     /// #[tokio::main]
     ///
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// async fn main() -> Result<()> {
     ///     let cert = Identity::from_pem_file("client.pem")?;
     ///     let builder = Client::builder()
     ///         .identity(cert);
@@ -346,23 +348,6 @@ impl ClientBuilder {
     /// * `catcher` - A function or closure that handles specific error types.
     ///
     /// # Examples
-    ///
-    /// ## Basic Error Logging
-    ///
-    /// ``` compile_fail
-    /// use deboa::Client;
-    /// use std::error::Error;
-    ///
-    /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn Error>> {
-    ///     let builder = Client::builder()
-    ///         .catch(|e: std::io::Error| {
-    ///             eprintln!("Network error: {}", e);
-    ///             Ok(())  // Continue execution
-    ///         });
-    ///     Ok(())
-    /// }
-    /// ```
     ///
     /// ## Automatic Retries
     ///
@@ -427,6 +412,30 @@ impl ClientBuilder {
         self
     }
 
+    /// Set a connection pool.
+    ///
+    /// # Arguments
+    ///
+    /// * `pool` - The connection pool to use.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The builder.
+    ///
+    /// # Example
+    ///
+    /// ```compile_fail
+    /// use deboa::Client;
+    ///
+    /// let client = Client::builder()
+    ///     .pool(HttpConnectionPool::default())
+    ///     .build();
+    /// ```
+    pub fn pool(mut self, pool: HttpConnectionPool) -> Self {
+        self.pool = Some(pool);
+        self
+    }
+
     /// Constructs a new `Deboa` client with the configured settings.
     ///
     /// This consumes the builder and returns a new `Deboa` instance that can
@@ -439,10 +448,10 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` rust, no_run
-    /// use deboa::Client;
+    /// use deboa::{Client, Result};
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// async fn main() -> Result<()> {
     ///   let client = Client::builder()
     ///     .connection_timeout(10)
     ///     .request_timeout(30)
@@ -464,7 +473,7 @@ impl ClientBuilder {
             identity: self.identity,
             catchers: self.catchers,
             protocol: self.protocol,
-            pool: HttpConnectionPool::new(),
+            pool: self.pool,
         }
     }
 }
@@ -491,10 +500,10 @@ pub type Deboa = Client;
 /// ## Basic Usage
 ///
 /// ``` rust,no_run
-/// use deboa::Client;
+/// use deboa::{Client, Result};
 ///
 /// #[tokio::main]
-/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// async fn main() -> Result<()> {
 ///   // Create a new client with default settings
 ///   let client = Client::new();
 ///
@@ -523,7 +532,7 @@ pub struct Client {
     identity: Option<Identity>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
-    pool: HttpConnectionPool,
+    pool: Option<HttpConnectionPool>,
 }
 
 impl AsRef<Client> for Client {
@@ -548,6 +557,19 @@ impl Debug for Client {
     }
 }
 
+impl Default for Client {
+    fn default() -> Self {
+        Self {
+            connection_timeout: 0,
+            request_timeout: 0,
+            identity: None,
+            catchers: None,
+            protocol: HttpVersion::Http1,
+            pool: None,
+        }
+    }
+}
+
 impl Client {
     /// Creates a new `Deboa` instance with default settings.
     ///
@@ -569,29 +591,33 @@ impl Client {
     /// # Examples
     ///
     /// ``` rust,no_run
-    /// use deboa::Client;
+    /// use deboa::{Client, Result};
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// async fn main() -> Result<()> {
     ///   let client = Client::new();
     ///   // client is ready to make requests
     ///   Ok(())
     /// }
     /// ```
     ///
+    /// # Deprecated
+    ///
+    /// This method is deprecated and will be removed in a future release. Use `Client::default()` instead.
+    ///
     /// # See Also
     ///
     /// - [`Client::builder()`] for custom configuration
     /// - [`Client::default()`] for the same functionality via the `Default` trait
-    #[allow(clippy::new_without_default)]
+    #[deprecated(note = "Use Client::default() instead", since = "0.0.9")]
     pub fn new() -> Self {
-        Client {
+        Self {
             connection_timeout: 0,
             request_timeout: 0,
             identity: None,
             catchers: None,
             protocol: HttpVersion::Http1,
-            pool: HttpConnectionPool::new(),
+            pool: None,
         }
     }
 
@@ -608,6 +634,7 @@ impl Client {
             identity: None,
             catchers: None,
             protocol: HttpVersion::Http1,
+            pool: None,
         }
     }
 
@@ -660,6 +687,32 @@ impl Client {
     ///
     pub fn set_connection_timeout(&mut self, timeout: u64) -> &mut Self {
         self.connection_timeout = timeout;
+        self
+    }
+
+    /// Allow get connection pool at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `Option<&HttpConnectionPool>` - The connection pool.
+    ///
+    #[inline]
+    pub fn connection_pool(&self) -> Option<&HttpConnectionPool> {
+        self.pool.as_ref()
+    }
+
+    /// Set connection pool
+    ///
+    /// # Arguments
+    ///
+    /// * `pool` - The connection pool to be used.
+    ///
+    /// # Return
+    ///
+    /// * `&mut Self` - The Deboa instance.
+    ///
+    pub fn set_connection_pool(&mut self, pool: HttpConnectionPool) -> &mut Self {
+        self.pool = Some(pool);
         self
     }
 
@@ -757,42 +810,32 @@ impl Client {
     ///
     /// # Examples
     ///
-    /// ## Basic Error Logging
+    /// ## Basic Logging
     ///
     /// ```compile_fail
-    /// use deboa::Client;
-    /// use std::error::Error;
+    /// use deboa::{Client, Result};
     ///
-    /// # #[tokio::main]
-    /// # async fn main() -> Result<(), Box<dyn Error>> {
-    /// let builder = Client::builder()
-    ///     .catch(|e: std::io::Error| {
-    ///         eprintln!("Network error: {}", e);
-    ///         Ok(())  // Continue execution
-    ///     });
-    /// # Ok(()) }
-    /// ```
+    /// struct TestMonitor;
     ///
-    /// ## Automatic Retries
+    /// #[deboa::async_trait]
+    /// impl DeboaCatcher for TestMonitor {
+    ///     async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
+    ///         println!("Request: {:?}", request.url());
+    ///         Ok(None)
+    ///     }
     ///
-    /// ```compile_fail
-    /// use deboa::Client;
-    /// use std::error::Error;
+    ///     async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
+    ///         println!("Response: {:?}", response.status());
+    ///         Ok(())
+    ///     }
+    /// }
     ///
-    /// # #[tokio::main]
-    /// # async fn main() -> Result<(), Box<dyn Error>> {
-    /// let builder = Client::builder()
-    ///     .catch(|e: std::io::Error| {
-    ///         if e.kind() == std::io::ErrorKind::TimedOut {
-    ///             eprintln!("Request timed out, will retry...");
-    ///             // Return error to trigger retry logic
-    ///             Err(Box::new(e))
-    ///         } else {
-    ///             // For other errors, continue with the error
-    ///             Ok(())
-    ///         }
-    ///     });
-    /// # Ok(()) }
+    /// #[tokio::main]
+    /// async fn main() -> Result<()> {
+    ///   let builder = Client::builder()
+    ///     .catch(TestMonitor);
+    ///   Ok(())
+    /// }
     /// ```
     ///
     /// # Notes
@@ -801,6 +844,7 @@ impl Client {
     /// - If a catcher returns `Ok(())`, error handling continues to the next catcher
     /// - If a catcher returns `Err(e)`, error propagation stops and the error is returned
     /// - The default error handler will be called if no catcher handles the error
+    ///
     /// # Returns
     ///
     /// * `&mut Self` - The Deboa instance.
@@ -837,10 +881,10 @@ impl Client {
     /// ## Simple GET Request
     ///
     /// ```rust,no_run
-    /// use deboa::Client;
+    /// use deboa::{Client, Result};
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// async fn main() -> Result<()> {
     ///   let mut client = Client::new();
     ///   let response = client.execute("https://httpbin.org/get").await?;
     ///   println!("Status: {}", response.status());
@@ -852,11 +896,11 @@ impl Client {
     /// ## POST Request with JSON Body
     ///
     /// ```compile_fail
-    /// use deboa::{Client, request::post};
+    /// use deboa::{Client, Result, request::post};
     /// use serde_json::json;
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// async fn main() -> Result<()> {
     ///   let mut client = Client::new();
     ///   let response = client
     ///     .execute(
@@ -881,10 +925,10 @@ impl Client {
     /// By default, failed requests are not automatically retried. To enable retries:
     ///
     /// ```compile_fail
-    /// use deboa::{Client, request::get};
+    /// use deboa::{Client, Result, request::get};
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// async fn main() -> Result<()> {
     ///   let mut client = Client::new();
     ///   let request = get("https://example.com").retries(3); // Retry up to 3 times
     ///   let response = client.execute(request).await?;
@@ -1081,20 +1125,38 @@ impl Client {
 
         let request = request.unwrap();
 
-        let conn = self
-            .pool
-            .create_connection(url, &self.protocol, &self.identity)
-            .await?;
-        match conn {
-            #[cfg(feature = "http1")]
-            DeboaConnection::Http1(ref mut conn) => {
-                conn.send_request(request)
-                    .await
+        if let Some(pool) = &mut self.pool {
+            let conn = pool
+                .create_connection(url, &self.protocol, &self.identity)
+                .await?;
+            match conn {
+                #[cfg(feature = "http1")]
+                DeboaConnection::Http1(ref mut conn) => {
+                    conn.send_request(request)
+                        .await
+                }
+                #[cfg(feature = "http2")]
+                DeboaConnection::Http2(ref mut conn) => {
+                    conn.send_request(request)
+                        .await
+                }
             }
-            #[cfg(feature = "http2")]
-            DeboaConnection::Http2(ref mut conn) => {
-                conn.send_request(request)
-                    .await
+        } else {
+            match self.protocol {
+                HttpVersion::Http1 => {
+                    let mut connection =
+                        BaseHttpConnection::<Http1Request>::connect(url, &self.identity).await?;
+                    connection
+                        .send_request(request)
+                        .await
+                }
+                HttpVersion::Http2 => {
+                    let mut connection =
+                        BaseHttpConnection::<Http2Request>::connect(url, &self.identity).await?;
+                    connection
+                        .send_request(request)
+                        .await
+                }
             }
         }
     }
