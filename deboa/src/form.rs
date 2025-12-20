@@ -328,13 +328,12 @@ impl DeboaForm for MultiPartForm {
                 if let Some(kind) = kind {
                     let file_name = path.file_name();
                     let file_content = std::fs::read(value).unwrap();
-                    if file_name.is_some() {
+                    if let Some(file_name) = file_name {
                         form.extend_from_slice(
                             &format!(
                                 "Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"",
                                 key,
                                 file_name
-                                    .unwrap()
                                     .to_str()
                                     .unwrap()
                             )
