@@ -104,7 +104,7 @@ use crate::{
 /// assert_eq!(response.status(), 200);
 /// ```
 #[async_trait]
-pub trait IntoRequest: private::Sealed {
+pub trait IntoRequest: private::IntoRequestSealed {
     fn into_request(self) -> Result<DeboaRequest>;
 }
 
@@ -1502,13 +1502,13 @@ impl DeboaRequest {
 }
 
 mod private {
-    pub trait Sealed {}
+    pub trait IntoRequestSealed {}
 }
 
-impl private::Sealed for DeboaRequest {}
+impl private::IntoRequestSealed for DeboaRequest {}
 
-impl private::Sealed for &str {}
+impl private::IntoRequestSealed for &str {}
 
-impl private::Sealed for String {}
+impl private::IntoRequestSealed for String {}
 
-impl private::Sealed for Url {}
+impl private::IntoRequestSealed for Url {}
