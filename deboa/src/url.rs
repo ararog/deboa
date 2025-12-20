@@ -3,7 +3,7 @@ use url::Url;
 use crate::{errors::RequestError, DeboaError, Result};
 
 /// Trait to convert a value into a Url.
-pub trait IntoUrl: private::Sealed {
+pub trait IntoUrl: private::IntoUrlSealed {
     /// Convert the value into a Url.
     ///
     /// # Returns
@@ -21,19 +21,14 @@ pub trait IntoUrl: private::Sealed {
     where
         Self: AsRef<str>,
     {
-        if !self
-            .as_ref()
-            .starts_with("http")
-            && !self
-                .as_ref()
-                .starts_with("ws")
-        {
+        let url_ref = self.as_ref();
+        if !url_ref.starts_with("http") && !url_ref.starts_with("ws") {
             return Err(DeboaError::Request(RequestError::UrlParse {
                 message: "Scheme must be http or https or ws or wss".to_string(),
             }));
         }
 
-        let url = Url::parse(self.as_ref());
+        let url = Url::parse(url_ref);
 
         if url.is_err() {
             return Err(DeboaError::Request(RequestError::UrlParse {
@@ -80,16 +75,16 @@ impl IntoUrl for String {
 /// This is used to ensure that the `IntoUrl` trait can only be implemented
 /// for types that are defined in this crate.
 mod private {
-    pub trait Sealed {}
+    pub trait IntoUrlSealed {}
 }
 
 /// Implement the `IntoUrl` trait for `Url`, `&str`, `&mut String`, and `String`.
-impl private::Sealed for Url {}
+impl private::IntoUrlSealed for Url {}
 
-impl private::Sealed for &str {}
+impl private::IntoUrlSealed for &str {}
 
-impl private::Sealed for &String {}
+impl private::IntoUrlSealed for &String {}
 
-impl private::Sealed for &mut String {}
+impl private::IntoUrlSealed for &mut String {}
 
-impl private::Sealed for String {}
+impl private::IntoUrlSealed for String {}
