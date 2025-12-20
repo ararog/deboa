@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use std::{collections::HashMap, sync::Arc};
+use time::Duration;
 use url::Url;
 
 #[cfg(feature = "http1")]
@@ -20,6 +21,8 @@ use crate::{
 ///
 /// * `connections` - The connections.
 pub struct HttpConnectionPool {
+    max_idle_connections: u32,
+    keep_alive_duration: Duration,
     connections: HashMap<String, DeboaConnection>,
 }
 
@@ -29,16 +32,26 @@ impl AsMut<HttpConnectionPool> for HttpConnectionPool {
     }
 }
 
+impl Default for HttpConnectionPool {
+    fn default() -> Self {
+        Self {
+            max_idle_connections: 5,
+            keep_alive_duration: Duration::minutes(5),
+            connections: HashMap::new(),
+        }
+    }
+}
+
 #[async_trait]
 /// Trait that represents the HTTP connection pool.
-pub trait DeboaHttpConnectionPool: private::Sealed {
+pub trait DeboaHttpConnectionPool: private::DeboaHttpConnectionPoolSealed {
     /// Allow create a new connection pool.
     ///
     /// # Returns
     ///
     /// * `HttpConnectionPool` - The new connection pool.
     ///
-    fn new() -> Self;
+    fn new(max_idle_connections: u32, keep_alive_duration: Duration) -> Self;
 
     /// Allow get connections.
     ///
@@ -47,6 +60,14 @@ pub trait DeboaHttpConnectionPool: private::Sealed {
     /// * `&HashMap<String, DeboaConnection>` - The connections.
     ///
     fn connections(&self) -> &HashMap<String, DeboaConnection>;
+
+    /// Returns the number of connections.
+    ///
+    /// # Returns
+    ///
+    /// * `u32` - The number of connections.
+    ///
+    fn connection_count(&self) -> u32;
 
     /// Allow create a new connection.
     ///
@@ -70,13 +91,19 @@ pub trait DeboaHttpConnectionPool: private::Sealed {
 
 #[async_trait]
 impl DeboaHttpConnectionPool for HttpConnectionPool {
-    fn new() -> Self {
-        Self { connections: HashMap::new() }
+    fn new(max_idle_connections: u32, keep_alive_duration: Duration) -> Self {
+        Self { max_idle_connections, keep_alive_duration, connections: HashMap::new() }
     }
 
     #[inline]
     fn connections(&self) -> &HashMap<String, DeboaConnection> {
         &self.connections
+    }
+
+    #[inline]
+    fn connection_count(&self) -> u32 {
+        self.connections
+            .len() as u32
     }
 
     async fn create_connection(
@@ -144,7 +171,7 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
 }
 
 mod private {
-    pub trait Sealed {}
+    pub trait DeboaHttpConnectionPoolSealed {}
 }
 
-impl private::Sealed for HttpConnectionPool {}
+impl private::DeboaHttpConnectionPoolSealed for HttpConnectionPool {}
