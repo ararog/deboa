@@ -1,4 +1,4 @@
-use crate::{request::DeboaRequest, Deboa, Result};
+use crate::{request::DeboaRequest, Client, Result};
 use http::{header, StatusCode};
 
 use httpmock::Method::PATCH;
@@ -23,7 +23,7 @@ async fn do_patch() -> Result<()> {
             .body("ping");
     });
 
-    let mut client: Deboa = Deboa::new();
+    let mut client: Client = Client::default();
 
     let request = DeboaRequest::patch(
         server

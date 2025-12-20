@@ -8,7 +8,7 @@
 //!
 //! ## Example
 //! ```rust, compile_fail
-//! use deboa::{Deboa, Result, request::DeboaRequestBuilder};
+//! use deboa::{Client, Result, request::DeboaRequestBuilder};
 //! use deboa_extras::ws::{
 //!     io::socket::DeboaWebSocket,
 //!     protocol::{self},
@@ -16,7 +16,7 @@
 //!     response::IntoWebSocket,
 //! };
 //!
-//! let mut client = Deboa::new();
+//! let mut client = Client::new();
 //!
 //! let websocket = DeboaRequestBuilder::websocket("wss://echo.websocket.org")?
 //!     .send_with(&mut client)

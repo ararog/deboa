@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use deboa::{Deboa, Result, request::DeboaRequest, response::DeboaResponse};
+use deboa::{Client, Result, request::DeboaRequest, response::DeboaResponse};
 use http::header;
 use vamo::Vamo;
 
@@ -28,7 +28,7 @@ impl DeboaCatcher for AuthCatcher {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut client = Deboa::new();
+    let mut client = Client::default();
     client.catch(AuthCatcher);
 
     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;

@@ -27,7 +27,9 @@
 //!
 //! ```compile_fail
 //! use serde::{Deserialize, Serialize};
+//! use vamo::Vamo;
 //! use vamo_macros::Resource;
+//! use deboa::Result;
 //! use deboa_extras::http::serde::json::JsonBody;
 //!
 //! #[derive(Debug, Serialize, Deserialize, Resource)]
@@ -42,8 +44,8 @@
 //! }
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let mut vamo = vamo::Vamo::new("https://jsonplaceholder.typicode.com")?;
+//! async fn main() -> Result<()> {
+//!     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
 //!
 //!     // Create a new post
 //!     let new_post = Post {
@@ -52,6 +54,7 @@
 //!         body: "This is a test post".into(),
 //!         user_id: 1,
 //!     };
+//!
 //!     let created: Post = vamo.create(&new_post).await?;
 //!     println!("Created post with ID: {}", created.id.unwrap());
 //!

@@ -60,7 +60,7 @@ println!("{:?}", posts.raw_body());
 use deboa::{Deboa, errors::DeboaError, request::post};
 use deboa_extras::http::serde::json::JsonBody;
 
-let client = Deboa::new();
+let client = Deboa::default();
 
 let data = Post {
     id: 1,
@@ -83,7 +83,7 @@ println!("Response Status Code: {}", response.status());
 use deboa::{Deboa, Result};
 use deboa_extras::http::sse::response::{IntoEventStream};
 
-let mut client = Deboa::new();
+let mut client = Deboa::default();
 
 let response = client.execute("https://sse.dev/test").await?.into_event_stream();
 
@@ -107,7 +107,7 @@ use deboa_extras::ws::{
     response::IntoWebSocket,
 };
 
-let mut client = Deboa::new();
+let mut client = Deboa::default();
 
 let websocket = DeboaRequestBuilder::websocket("wss://echo.websocket.org")?
     .send_with(&mut client)

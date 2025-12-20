@@ -1,10 +1,10 @@
-use crate::{Deboa, Result};
+use crate::{Client, Result};
 
 use deboa_tests::utils::JSONPLACEHOLDER;
 
 #[test]
 fn test_set_connection_timeout() -> Result<()> {
-    let api = Deboa::builder()
+    let api = Client::builder()
         .connection_timeout(5)
         .build();
 
@@ -15,7 +15,7 @@ fn test_set_connection_timeout() -> Result<()> {
 
 #[test]
 fn test_set_request_timeout() -> Result<()> {
-    let api = Deboa::builder()
+    let api = Client::builder()
         .request_timeout(5)
         .build();
 
@@ -26,7 +26,7 @@ fn test_set_request_timeout() -> Result<()> {
 
 #[test]
 fn test_set_protocol() -> Result<()> {
-    let api = Deboa::builder()
+    let api = Client::builder()
         .protocol(crate::HttpVersion::Http1)
         .build();
 
@@ -37,7 +37,7 @@ fn test_set_protocol() -> Result<()> {
 
 #[tokio::test]
 async fn test_shl() -> Result<()> {
-    let mut client = Deboa::new();
+    let mut client = Client::default();
     let request = &client << JSONPLACEHOLDER;
     let response = client
         .execute(request)

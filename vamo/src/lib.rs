@@ -21,7 +21,7 @@
 //! ```toml
 //! [dependencies]
 //! vamo = { version = "0.1", path = "../vamo" }
-//! deboa = { version = "0.1", path = ".." }
+//! deboa = { version = "0.1.0", path = ".." }
 //! deboa-extras = { version = "0.1", path = "../deboa-extras" }
 //! serde = { version = "1.0", features = ["derive"] }
 //! tokio = { version = "1.0", features = ["full"] }
@@ -33,10 +33,11 @@
 //!
 //! ```no_run, compile_fail
 //! use vamo::Vamo;
+//! use deboa::Result;
 //! use deboa_extras::http::serde::json::JsonBody;
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! async fn main() -> Result<()> {
 //!     // Create a new Vamo client with a base URL
 //!     let mut vamo = Vamo::new("https://api.example.com")?;
 //!
@@ -47,7 +48,9 @@
 //!         .await?;
 //!     
 //!     // Parse response as JSON
-//!     let user: User = response.body_as(JsonBody).await?;
+//!     let user: User = response
+//!         .body_as(JsonBody)
+//!         .await?;
 //!     println!("User: {:?}", user);
 //!
 //!     // Make a POST request with JSON body
@@ -72,9 +75,10 @@
 //! Vamo provides a `Resource` trait that makes it easy to work with REST resources:
 //!
 //! ```no_run
-//! use vamo::{Vamo, resource::{Resource, ResourceMethod}};
+//! use deboa::Result;
 //! use deboa_extras::http::serde::json::JsonBody;
 //! use serde::{Deserialize, Serialize};
+//! use vamo::{Vamo, resource::{Resource, ResourceMethod}};
 //!
 //! #[derive(Debug, Serialize, Deserialize)]
 //! struct User {
@@ -101,7 +105,7 @@
 //! }
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! async fn main() -> Result<()> {
 //!     let mut vamo = Vamo::new("https://api.example.com")?;
 //!     
 //!     // List all users
@@ -150,7 +154,10 @@
 //!     println!("Updated user: {:?}", updated);
 //!     
 //!     // Delete a user
-//!     vamo.remove(&mut updated_user)?.send().await?;
+//!     vamo
+//!       .remove(&mut updated_user)?
+//!       .send()
+//!       .await?;
 //!     println!("User deleted");
 //!     
 //!     Ok(())
@@ -161,25 +168,29 @@
 //!
 //! Vamo provides convenience methods for common authentication methods:
 //!
-//! ```no_run, compile_fail
-//! # use vamo::Vamo;
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! // Bearer token authentication
-//! let mut vamo = Vamo::new("https://api.example.com")?;
-//! vamo
-//!   .get("/users/1")
-//!   .bearer_auth("your-token-here")
-//!   .send()
-//!   .await?;
+//! ```no_run
+//! use vamo::Vamo;
+//! use deboa::Result;
 //!
-//! // Basic authentication
-//! let mut vamo = Vamo::new("https://api.example.com")?;
-//! vamo
-//!   .get("/users/1")
-//!   .basic_auth("username", "password")
-//!   .send()
-//!   .await?;
-//! # Ok(()) }
+//! #[tokio::main]
+//! async fn main() -> Result<()> {
+//!     // Bearer token authentication
+//!     let mut vamo = Vamo::new("https://api.example.com")?;
+//!     vamo
+//!       .get("/users/1")
+//!       .bearer_auth("your-token-here")
+//!       .send()
+//!       .await?;
+//!
+//!     // Basic authentication
+//!     let mut vamo = Vamo::new("https://api.example.com")?;
+//!     vamo
+//!       .get("/users/1")
+//!       .basic_auth("username", "password")
+//!       .send()
+//!       .await?;
+//!     Ok(())
+//! }
 //! ```
 //!
 //! ## Error Handling
@@ -213,7 +224,7 @@ use deboa::{
     request::DeboaRequest,
     response::DeboaResponse,
     url::IntoUrl,
-    Deboa, Result,
+    Client, Result,
 };
 use http::{
     header::{self, CONTENT_TYPE, HOST},
@@ -229,7 +240,7 @@ mod tests;
 
 /// A builder for HTTP requests.
 pub struct Vamo {
-    client: Deboa,
+    client: Client,
     base_url: Url,
     method: Method,
     path: String,
@@ -288,7 +299,7 @@ impl Vamo {
         headers.insert(CONTENT_TYPE, content_type_header.unwrap());
 
         Ok(Vamo {
-            client: Deboa::new(),
+            client: Client::default(),
             base_url,
             path: String::new(),
             method: Method::GET,
@@ -307,7 +318,7 @@ impl Vamo {
     ///
     /// * `&mut Self` - The builder.
     #[inline]
-    pub fn client(&mut self, client: Deboa) -> &mut Self {
+    pub fn client(&mut self, client: Client) -> &mut Self {
         self.client = client;
         self
     }

@@ -41,7 +41,7 @@ pub struct Post {
     pub body: String,
 }
 
-let mut client = Deboa::new();
+let mut client = Deboa::default();
 
 // fetch macro
 let response: Vec<Post> = fetch!("https://jsonplaceholder.typicode.com/posts", JsonBody, Vec<Post>, &mut client);

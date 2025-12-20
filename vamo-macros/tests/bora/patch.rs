@@ -1,3 +1,4 @@
+use deboa::Result;
 use deboa_tests::utils::JSONPLACEHOLDER;
 use serde::{Deserialize, Serialize};
 use vamo::Vamo;

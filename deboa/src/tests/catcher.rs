@@ -6,7 +6,7 @@ use crate::{
     catcher::{DeboaCatcher, MockDeboaCatcher},
     request::DeboaRequest,
     response::DeboaResponse,
-    Deboa,
+    Client, Deboa,
 };
 
 use deboa_tests::utils::{setup_server, url_from_string};
@@ -55,7 +55,7 @@ async fn test_catcher_response() {
             Ok(())
         });
 
-    let client = Deboa::builder()
+    let client = Client::builder()
         .catch(catcher_mock)
         .build();
     let mut response = DeboaRequest::get(
@@ -113,7 +113,7 @@ async fn test_catcher_early_response() {
         .times(1)
         .return_const(Ok(()));
 
-    let client = Deboa::builder()
+    let client = Client::builder()
         .catch(catcher_mock)
         .build();
     let response = DeboaRequest::get(

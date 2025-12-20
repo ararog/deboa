@@ -1,5 +1,5 @@
 #[cfg(test)]
-use crate::{request::DeboaRequest, Deboa, Result};
+use crate::{request::DeboaRequest, Client, Result};
 use http::StatusCode;
 
 use httpmock::{Method::DELETE, MockServer};
@@ -21,7 +21,7 @@ async fn do_delete() -> Result<()> {
         then.status::<u16>(StatusCode::NO_CONTENT.into());
     });
 
-    let client = Deboa::new();
+    let client = Client::default();
 
     let response = DeboaRequest::delete(
         server

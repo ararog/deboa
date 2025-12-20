@@ -28,13 +28,17 @@
 //! ### Using Server-Sent Events (SSE)
 //!
 //! ```compile_fail
+//! use deboa::{Client, Result};
 //! use deboa_extras::http::sse::SseRequest;
 //! use futures_util::StreamExt;
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!   let mut client = deboa::Deboa::new();
-//!   let response = client.execute("https://sse.dev/test").await?.into_event_stream();
+//! async fn main() -> Result<()> {
+//!   let mut client = Client::default();
+//!   let response = client
+//!     .execute("https://sse.dev/test")
+//!     .await?
+//!     .into_event_stream();
 //!
 //!   // Poll events, until the connection is closed
 //!   // please note that this is a blocking call
@@ -50,7 +54,7 @@
 //! ### Using WebSockets
 //!
 //! ```compile_fail
-//! use deboa::{Deboa, Result, request::DeboaRequestBuilder};
+//! use deboa::{Client, Result};
 //! use deboa_extras::ws::{
 //!     io::socket::DeboaWebSocket,
 //!     protocol::{self},
@@ -60,9 +64,11 @@
 //!
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!   let mut client = deboa::Deboa::new();
-//!   let websocket = DeboaRequestBuilder::connect("wss://echo.websocket.org").send_with(&mut client).await?;
+//! async fn main() -> Result<()> {
+//!   let mut client = Client::default();
+//!   let websocket = WebsocketRequestBuilder::connect("wss://echo.websocket.org")
+//!     .send_with(&mut client)
+//!     .await?;
 //!
 //!   // Send a message
 //!   websocket.send_text("Hello, WebSocket!".into()).await?;

@@ -1,4 +1,4 @@
-use deboa::{Deboa, request::DeboaRequestBuilder};
+use deboa::{Client, request::DeboaRequestBuilder};
 use deboa_extras::ws::{
     io::socket::DeboaWebSocket,
     protocol::{self},
@@ -17,7 +17,7 @@ use std::fmt;
 pub fn connect() -> impl Sipper<Never, Event> {
     sipper(async |mut output| {
         loop {
-            let client = Deboa::new();
+            let client = Client::default();
             let response = DeboaRequestBuilder::websocket("wss://echo.websocket.org")
                 .unwrap()
                 .send_with(client)

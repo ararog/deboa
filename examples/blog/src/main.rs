@@ -1,4 +1,4 @@
-use deboa::{Deboa, Result, async_trait};
+use deboa::{Client, Result, async_trait};
 use deboa_extras::http::serde::json::JsonBody;
 use http::header::AUTHORIZATION;
 use serde::Deserialize;
@@ -33,7 +33,7 @@ impl deboa::catcher::DeboaCatcher for AuthCatcher {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut client = Deboa::new();
+    let mut client = Client::default();
     client.catch(AuthCatcher);
     let vamo = Arc::new(Mutex::new(Vamo::new("https://jsonplaceholder.typicode.com")?));
     vamo.lock()

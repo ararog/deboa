@@ -56,7 +56,7 @@
 //! ```rust, ignore
 //! use deboa::{Deboa, request::post, form::EncodedForm};
 //!
-//! let mut client = Deboa::new();
+//! let mut client = Deboa::default();
 //! let form = EncodedForm::builder()
 //!     .field("name", "John")
 //!     .field("email", "john@example.com")
@@ -181,7 +181,7 @@ pub struct EncodedForm {
 /// ```compile_fail
 /// use deboa::form::MultiPartForm;
 ///
-/// let mut client = Deboa::new();
+/// let mut client = Deboa::default();
 /// let mut form = MultiPartForm::builder();
 /// form.field("name", "deboa");
 /// form.field("version", "0.0.1");
@@ -243,7 +243,7 @@ pub struct MultiPartForm {
 /// ```compile_fail
 /// use deboa::form::MultiPartForm;
 ///
-/// let mut client = Deboa::new();
+/// let mut client = Deboa::default();
 /// let mut form = MultiPartForm::builder();
 /// form.field("name", "deboa");
 /// form.field("version", "0.0.1");

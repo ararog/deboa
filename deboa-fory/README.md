@@ -35,7 +35,7 @@ struct Person {
 let mut fory = Fory::default();
 let _ = fory.register::<Person>(1);
 
-let mut client = Deboa::new();
+let mut client = Deboa::default();
 
 let person = Person {
     name: "John Doe".to_string(),

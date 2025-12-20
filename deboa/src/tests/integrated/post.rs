@@ -1,7 +1,7 @@
 use crate::{
     form::{DeboaForm, EncodedForm, MultiPartForm},
     request::DeboaRequest,
-    Deboa, Result,
+    Client, Result,
 };
 use http::{header, StatusCode};
 use httpmock::{Method::POST, MockServer};
@@ -26,7 +26,7 @@ async fn do_post() -> Result<()> {
             .body("ping");
     });
 
-    let mut client = Deboa::new();
+    let mut client = Client::default();
 
     let request = DeboaRequest::post(
         server
@@ -82,7 +82,7 @@ async fn do_post_encoded_form() -> Result<()> {
             .body("ping");
     });
 
-    let mut client = Deboa::new();
+    let mut client = Client::default();
 
     let mut form = EncodedForm::builder();
     form.field("name", "deboa");
@@ -138,7 +138,7 @@ async fn do_post_multipart_form() -> Result<()> {
             .body("ping");
     });
 
-    let mut client = Deboa::new();
+    let mut client = Client::default();
 
     let mut form = MultiPartForm::builder();
     form.field("name", "deboa");

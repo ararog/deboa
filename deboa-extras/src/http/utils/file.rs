@@ -18,12 +18,19 @@ pub struct ToFile {
 ///
 /// # Example
 /// ``` rust, compile_fail
-/// use deboa::{request::get, Deboa};
+/// use deboa::{request::get, Client};
 /// use deboa_extras::http::utils::file::IntoFile;
 ///
-/// let mut client = Deboa::new();
-/// let response = get("https://example.com").send_with(&mut client).await?;
-/// response.into_file().save("output.txt", None).await?;
+/// let mut client = Client::new();
+/// let response = get("https://example.com")
+///     .send_with(&mut client)
+///     .await
+///     .unwrap();
+/// response
+///     .into_file()
+///     .save("output.txt", None)
+///     .await
+///     .unwrap();
 /// ```
 pub trait IntoFile {
     fn into_file(self) -> ToFile;
@@ -52,7 +59,7 @@ impl ToFile {
     /// use deboa::{request::get, Deboa};
     /// use deboa_extras::http::utils::file::IntoFile;
     ///
-    /// let mut client = Deboa::new();
+    /// let mut client = Deboa::default();
     /// let response = get("https://example.com").send_with(&mut client).await?;
     /// response.into_file().save("output.txt", None).await?;
     /// ```

@@ -20,7 +20,7 @@ pub trait ServerSentEventBuilder {
     /// use deboa::{Deboa, Result, request::{IntoUrl, DeboaRequestBuilder}};
     /// use deboa_extras::http::sse::request::{ServerSentEventBuilder};
     ///
-    /// let mut client = Deboa::new();
+    /// let mut client = Deboa::default();
     /// let request = DeboaRequestBuilder::sse("https://sse.dev/test").unwrap();
     /// let response = request.send_with(&mut client).await.unwrap();
     /// let event_stream = response.into_event_stream().unwrap();
