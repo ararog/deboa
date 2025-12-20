@@ -11,7 +11,7 @@ use tokio::net::TcpStream;
 use tokio_native_tls::native_tls::Certificate;
 use tokio_native_tls::native_tls::Identity;
 use tokio_native_tls::native_tls::TlsConnector;
-use url::{Host, Url};
+use url::Url;
 
 use crate::client::conn::http::DeboaHttpConnection;
 use crate::errors::ConnectionError;

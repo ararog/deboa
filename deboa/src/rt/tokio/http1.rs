@@ -8,7 +8,7 @@ use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
 use tokio_native_tls::native_tls::{Certificate, Identity, TlsConnector};
-use url::{Host, Url};
+use url::Url;
 
 use crate::{
     cert::ClientCert,
