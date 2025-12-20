@@ -23,7 +23,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!   let mut client = Deboa::new();
+//!   let mut client = Deboa::default();
 //!
 //!   match get("https://example.com").and_then(|req| req.send_with(&mut client)) {
 //!     Ok(response) => {

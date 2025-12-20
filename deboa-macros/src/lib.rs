@@ -23,7 +23,7 @@
 //!
 //! ### Basic GET Request
 //! ```compile_fail
-//! use deboa::{Deboa, Result>;
+//! use deboa::{Client, Result};
 //! use deboa_extras::http::serde::json::JsonBody;
 //!
 //! #[derive(serde::Deserialize)]
@@ -36,7 +36,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<()> {
-//!     let mut client = Deboa::new();
+//!     let mut client = Client::new();
 //!     let post: Post = get!("https://jsonplaceholder.typicode.com/posts/1", &mut client, JsonBody, Post);
 //!     println!("Post title: {}", post.title);
 //!     Ok(())
@@ -45,7 +45,7 @@
 //!
 //! ### POST with JSON Body
 //! ```compile_fail
-//! use deboa::{Deboa, Result>;
+//! use deboa::{Client, Result};
 //! use deboa_extras::http::serde::json::JsonBody;
 //! use serde::Serialize;
 //!
@@ -58,7 +58,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<()> {
-//!     let mut client = Deboa::new();
+//!     let mut client = Client::new();
 //!     let new_post = NewPost {
 //!         title: "Hello World".into(),
 //!         body: "This is a test post".into(),
@@ -101,7 +101,7 @@
 /// # Example
 ///
 /// ```compile_fail
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 /// let response = get!("https://jsonplaceholder.typicode.com/posts", &mut client, JsonBody, Vec<Post>);
 /// assert_eq!(response.len(), 100);
 /// ```
@@ -155,7 +155,7 @@ macro_rules! get {
 /// ## Without response body deserialization
 ///
 /// ```compile_fail
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 /// let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &mut client);
 /// assert_eq!(response.id, 1);
 /// ```
@@ -163,7 +163,7 @@ macro_rules! get {
 /// ## With response body deserialization
 ///
 /// ```compile_fail
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 /// let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &mut client, JsonBody, Post);
 /// assert_eq!(response.id, 1);
 /// ```
@@ -242,7 +242,7 @@ macro_rules! post {
 /// # Example
 ///
 /// ```compile_fail
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 /// let response = put!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", &mut client);
 /// assert_eq!(response.id, 1);
 /// ```
@@ -321,7 +321,7 @@ macro_rules! put {
 /// # Example
 ///
 /// ```compile_fail
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 /// let response = patch!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", &mut client);
 /// assert_eq!(response.id, 1);
 /// ```
@@ -388,7 +388,7 @@ macro_rules! patch {
 /// # Example
 ///
 /// ```compile_fail
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 /// let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &mut client);
 /// assert_eq!(response.id, 1);
 /// ```
@@ -432,7 +432,7 @@ macro_rules! delete {
 /// # Example
 ///
 /// ```compile_fail
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 /// let response = fetch!("https://jsonplaceholder.typicode.com/posts", &mut client, JsonBody, Post);
 /// assert_eq!(response.id, 1);
 /// ```
@@ -487,7 +487,7 @@ macro_rules! fetch {
 /// # Example
 ///
 /// ```compile_fail
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 /// let response = submit!("POST", "user=deboa", "https://jsonplaceholder.typicode.com/posts", &mut client);
 /// assert_eq!(response.id, 1);
 /// ```
@@ -523,7 +523,7 @@ macro_rules! submit {
 /// # Example
 ///
 /// ```compile_fail
-/// let mut client = Deboa::new();
+/// let mut client = Client::new();
 /// let response = stream!("https://jsonplaceholder.typicode.com/posts", &mut client);
 /// assert_eq!(response.id, 1);
 /// ```

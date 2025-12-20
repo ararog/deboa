@@ -180,7 +180,7 @@ impl Fetch for &str {
 /// ``` compile_fail
 /// use deboa::{Deboa, request::FetchWith};
 ///
-/// let mut client = Deboa::new();
+/// let mut client = Deboa::default();
 ///
 /// let response = "https://jsonplaceholder.typicode.com"
 ///   .fetch_with(&mut client)

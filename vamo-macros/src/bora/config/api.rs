@@ -33,14 +33,14 @@ fn impl_function(
 ) -> TS2 {
     if res_body_type.eq(unit_type) {
         quote! {
-            pub async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type> {
+            pub async fn #method_name(&mut self, #api_params body: #req_body_type) -> VamoResult<#res_body_type> {
                 self.api.#deboa_method(format!(#api_path).as_ref()).send().await?;
                 Ok(())
             }
         }
     } else {
         quote! {
-            pub async fn #method_name(&mut self, #api_params body: #req_body_type) -> Result<#res_body_type> {
+            pub async fn #method_name(&mut self, #api_params body: #req_body_type) -> VamoResult<#res_body_type> {
                 self.api.#deboa_method(format!(#api_path).as_ref()).set_body_as(#format_module, body)?.send().await?.body_as(#format_module).await?
             }
         }
@@ -108,7 +108,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                 }
 
                 acc.1.extend(quote! {
-                    pub async fn #method_name(&mut self, #api_params) -> Result<#res_body_type> {
+                    pub async fn #method_name(&mut self, #api_params) -> VamoResult<#res_body_type> {
                         self.api.#method(format!(#api_path).as_ref()).send().await?.body_as(#format_module).await
                     }
                 });
@@ -301,7 +301,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
                 acc.0.extend(quote! {});
 
                 acc.1.extend(quote! {
-                    pub async fn #method_name(&mut self, #api_params) -> Result<()> {
+                    pub async fn #method_name(&mut self, #api_params) -> VamoResult<()> {
                         self.api.#method(#api_path).send().await?;
                         Ok(())
                     }
@@ -314,7 +314,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let ts = quote! {
         use vamo::{Vamo as Client};
-        use deboa::{response::DeboaResponse, Result};
+        use deboa::{response::DeboaResponse, Result as VamoResult};
         #imports
 
         pub struct #struct_name {

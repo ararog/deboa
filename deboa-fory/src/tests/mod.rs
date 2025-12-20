@@ -1,5 +1,5 @@
 use crate::{ForyRequestBuilder, ForyResponse};
-use deboa::{errors::DeboaError, request::post, Deboa};
+use deboa::{errors::DeboaError, request::post, Client};
 use fory::{Fory, ForyObject};
 use http::header;
 use httpmock::{Method, MockServer};
@@ -14,7 +14,7 @@ struct Person {
 
 #[tokio::test]
 async fn test_fory_post_request() -> Result<(), DeboaError> {
-    let client = Deboa::new();
+    let client = Client::default();
 
     let server = MockServer::start();
     let method = Method::POST;

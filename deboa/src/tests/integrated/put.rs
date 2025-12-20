@@ -21,7 +21,7 @@ async fn do_put() -> Result<()> {
             .body("ping");
     });
 
-    let mut client = Deboa::new();
+    let mut client = Deboa::default();
 
     let request = DeboaRequest::put(
         server

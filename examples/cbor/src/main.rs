@@ -12,7 +12,7 @@ struct Message {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut client = Client::new();
+    let mut client = Client::default();
     let payload = Message {
         id: 1233,
         message: "Hello, from CBOR!".to_string(),

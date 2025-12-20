@@ -3,7 +3,7 @@ use crate::{
     event::{AppEvent, EventHandler, LocalEvent},
 };
 use crossterm::event::Event;
-use deboa::{Deboa, request::DeboaRequest, response::DeboaResponse};
+use deboa::{Client, request::DeboaRequest, response::DeboaResponse};
 use deboa_extras::http::{serde::json::JsonBody, sse::response::IntoEventStream};
 use futures::StreamExt;
 use http::header;
@@ -16,7 +16,7 @@ const API_KEY: &str = "YOUR_OPENAI_API_KEY";
 /// Application.
 #[derive(Debug)]
 pub struct App {
-    pub http_client: Deboa,
+    pub http_client: Client,
     pub input: Input,
     pub input_mode: InputMode,
     pub messages: Vec<PromptMessage>,
@@ -28,7 +28,7 @@ pub struct App {
 impl Default for App {
     fn default() -> Self {
         Self {
-            http_client: Deboa::new(),
+            http_client: Client::default(),
             input: Input::default(),
             input_mode: InputMode::Normal,
             messages: Vec::new(),

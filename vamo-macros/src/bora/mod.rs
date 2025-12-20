@@ -15,7 +15,7 @@
 //! and need to be specified as [git dependencies].</small>
 //!
 //! ```rust,no_run
-//! use deboa::errors::DeboaError;
+//! use deboa::{errors::DeboaError, Result};
 //! use vamo::Vamo;
 //! use vamo_macros::bora;
 //!

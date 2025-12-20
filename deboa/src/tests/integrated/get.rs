@@ -1,7 +1,7 @@
 use crate::errors::{ConnectionError, ResponseError};
 #[cfg(test)]
 use crate::{
-    errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Deboa, HttpVersion, Result,
+    errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, HttpVersion, Result,
 };
 
 use deboa_tests::utils::setup_server;
@@ -23,7 +23,7 @@ async fn do_get_http1() -> Result<()> {
 
     let http_mock = setup_server(&server, "/posts", httpmock::Method::GET, StatusCode::OK);
 
-    let mut client = Deboa::builder()
+    let mut client = Client::builder()
         .protocol(HttpVersion::Http1)
         .build();
 
@@ -72,7 +72,7 @@ async fn do_get_http2() -> Result<()> {
 
     let http_mock = setup_server(&server, "/posts", httpmock::Method::GET, StatusCode::OK);
 
-    let mut client = Deboa::builder()
+    let mut client = Client::builder()
         .protocol(HttpVersion::Http2)
         .build();
 
@@ -125,7 +125,7 @@ async fn do_get_not_found() -> Result<()> {
     let http_mock =
         setup_server(&server, "/asasa/posts/1ddd", httpmock::Method::GET, StatusCode::NOT_FOUND);
 
-    let client = Deboa::new();
+    let client = Client::default();
 
     let response: Result<DeboaResponse> = DeboaRequest::get(
         server
@@ -167,7 +167,7 @@ async fn test_get_not_found() {
 //
 
 async fn do_get_invalid_server() -> Result<()> {
-    let mut api = Deboa::new();
+    let mut api = Client::default();
 
     let request = DeboaRequest::get("https://invalid-server.com/posts")?
         .text("test")
@@ -216,7 +216,7 @@ async fn do_get_by_query() -> Result<()> {
 
     let http_mock = setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::OK);
 
-    let client = Deboa::new();
+    let client = Client::default();
 
     let response = DeboaRequest::get(
         server
@@ -266,7 +266,7 @@ async fn do_get_by_query_with_retries() -> Result<()> {
     let http_mock =
         setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::BAD_GATEWAY);
 
-    let client = Deboa::new();
+    let client = Client::default();
 
     let response = DeboaRequest::get(
         server
@@ -323,7 +323,7 @@ async fn do_get_with_redirect() -> Result<()> {
             .body("ping");
     });
 
-    let client = Deboa::new();
+    let client = Client::default();
 
     let response = DeboaRequest::get(
         server

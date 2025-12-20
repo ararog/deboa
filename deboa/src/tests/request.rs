@@ -72,7 +72,7 @@ fn test_into_string() -> Result<()> {
 
 #[tokio::test]
 async fn test_try_into() -> Result<()> {
-    let mut client = Deboa::new();
+    let mut client = Deboa::default();
     let response = client
         .execute(JSONPLACEHOLDER)
         .await?;
@@ -234,7 +234,7 @@ fn test_raw_body() -> Result<()> {
 
 #[tokio::test]
 async fn test_fetch_from_str() -> Result<()> {
-    let mut client = Deboa::new();
+    let mut client = Deboa::default();
 
     let response = JSONPLACEHOLDER
         .fetch_with(&mut client)
