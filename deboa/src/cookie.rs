@@ -109,6 +109,7 @@ impl DeboaCookie {
     ///
     /// * `&str` - The cookie name.
     ///
+    #[inline]
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -119,6 +120,7 @@ impl DeboaCookie {
     ///
     /// * `&str` - The cookie value.
     ///
+    #[inline]
     pub fn value(&self) -> &str {
         &self.value
     }
@@ -129,6 +131,7 @@ impl DeboaCookie {
     ///
     /// * `Option<Expiration>` - The cookie expires.
     ///
+    #[inline]
     pub fn expires(&self) -> Option<Expiration> {
         self.expires
     }
@@ -143,6 +146,7 @@ impl DeboaCookie {
     ///
     /// * `&mut Self` - The cookie.
     ///
+    #[inline]
     pub fn set_expires(&mut self, expires: Expiration) -> &mut Self {
         self.expires = Some(expires);
         self
@@ -154,6 +158,7 @@ impl DeboaCookie {
     ///
     /// * `Option<&String>` - The cookie path.
     ///
+    #[inline]
     pub fn path(&self) -> Option<&String> {
         self.path.as_ref()
     }
@@ -168,6 +173,7 @@ impl DeboaCookie {
     ///
     /// * `&mut Self` - The cookie.
     ///
+    #[inline]
     pub fn set_path(&mut self, path: &str) -> &mut Self {
         self.path = Some(path.to_string());
         self
@@ -179,6 +185,7 @@ impl DeboaCookie {
     ///
     /// * `Option<&String>` - The cookie domain.
     ///
+    #[inline]
     pub fn domain(&self) -> Option<&String> {
         self.domain.as_ref()
     }
@@ -193,6 +200,7 @@ impl DeboaCookie {
     ///
     /// * `&mut Self` - The cookie.
     ///
+    #[inline]
     pub fn set_domain(&mut self, domain: &str) -> &mut Self {
         self.domain = Some(domain.to_string());
         self
@@ -204,6 +212,7 @@ impl DeboaCookie {
     ///
     /// * `Option<bool>` - The cookie secure.
     ///
+    #[inline]
     pub fn secure(&self) -> Option<bool> {
         self.secure
     }
@@ -218,6 +227,7 @@ impl DeboaCookie {
     ///
     /// * `&mut Self` - The cookie.
     ///
+    #[inline]
     pub fn set_secure(&mut self, secure: bool) -> &mut Self {
         self.secure = Some(secure);
         self
@@ -229,6 +239,7 @@ impl DeboaCookie {
     ///
     /// * `Option<bool>` - The cookie http only.
     ///
+    #[inline]
     pub fn http_only(&self) -> Option<bool> {
         self.http_only
     }
@@ -243,6 +254,7 @@ impl DeboaCookie {
     ///
     /// * `&mut Self` - The cookie.
     ///
+    #[inline]
     pub fn set_http_only(&mut self, http_only: bool) -> &mut Self {
         self.http_only = Some(http_only);
         self
@@ -258,6 +270,7 @@ impl DeboaCookie {
     ///
     /// * `Result<Self>` - The cookie.
     ///
+    #[inline]
     pub fn parse_from_header(header: &str) -> Result<Self> {
         let cookie = Cookie::parse(header);
         if let Ok(cookie) = cookie {

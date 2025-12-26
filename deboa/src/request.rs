@@ -422,6 +422,7 @@ impl DeboaRequestBuilder {
     ///
     /// * `retries` - The new retries.
     ///
+    #[inline]
     pub fn retries(mut self, retries: u32) -> Self {
         self.retries = retries;
         self
@@ -437,6 +438,7 @@ impl DeboaRequestBuilder {
     ///
     /// * `Self` - The request builder.
     ///
+    #[inline]
     pub fn method(mut self, method: http::Method) -> Self {
         self.method = method;
         self
@@ -452,6 +454,7 @@ impl DeboaRequestBuilder {
     ///
     /// * `Self` - The request builder.
     ///
+    #[inline]
     pub fn raw_body(mut self, body: &[u8]) -> Self {
         self.body = body.into();
         self
@@ -467,6 +470,7 @@ impl DeboaRequestBuilder {
     ///
     /// * `Self` - The request builder.
     ///
+    #[inline]
     pub fn headers(mut self, headers: HeaderMap) -> Self {
         self.headers = headers;
         self
@@ -497,6 +501,7 @@ impl DeboaRequestBuilder {
     /// assert_eq!(response.status(), 201);
     /// ```
     ///
+    #[inline]
     pub fn header(mut self, key: HeaderName, value: &str) -> Self {
         self.headers
             .insert(key, HeaderValue::from_str(value).unwrap());
@@ -513,6 +518,7 @@ impl DeboaRequestBuilder {
     ///
     /// * `Self` - The request builder.
     ///
+    #[inline]
     pub fn cookies(mut self, cookies: HashMap<String, DeboaCookie>) -> Self {
         self.cookies = Some(cookies);
         self
@@ -528,6 +534,7 @@ impl DeboaRequestBuilder {
     ///
     /// * `Self` - The request builder.
     ///
+    #[inline]
     pub fn cookie(mut self, cookie: DeboaCookie) -> Self {
         if let Some(cookies) = &mut self.cookies {
             cookies.insert(
@@ -575,6 +582,7 @@ impl DeboaRequestBuilder {
     /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
+    #[inline]
     pub fn form(mut self, form: Form) -> Self {
         self.form = Some(form);
         self
@@ -602,6 +610,7 @@ impl DeboaRequestBuilder {
     /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
+    #[inline]
     pub fn text(mut self, text: &str) -> Self {
         self.body = text
             .as_bytes()
@@ -638,6 +647,7 @@ impl DeboaRequestBuilder {
     /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 200);
     /// ```
+    #[inline]
     pub fn body_as<T: RequestBody, B: Serialize>(mut self, body_type: T, body: B) -> Result<Self> {
         self.body = body_type
             .serialize(body)?
@@ -697,6 +707,7 @@ impl DeboaRequestBuilder {
     /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
+    #[inline]
     pub fn basic_auth(self, username: &str, password: &str) -> Self {
         self.header(
             header::AUTHORIZATION,
@@ -714,6 +725,7 @@ impl DeboaRequestBuilder {
     ///
     /// * If an error occurs while building the request
     ///
+    #[inline]
     pub fn build(self) -> Result<DeboaRequest> {
         let mut request = DeboaRequest {
             url: self.url,
@@ -754,6 +766,7 @@ impl DeboaRequestBuilder {
     /// assert_eq!(response.status(), 201);
     /// ```
     #[deprecated(note = "Use `send_with` method instead", since = "0.0.8")]
+    #[inline]
     pub async fn go<T>(self, mut client: T) -> Result<DeboaResponse>
     where
         T: AsMut<Client>,
@@ -790,7 +803,7 @@ impl DeboaRequestBuilder {
     /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 201);
     /// ```
-    ///
+    #[inline]
     pub async fn send_with<T>(self, mut client: T) -> Result<DeboaResponse>
     where
         T: AsMut<Client>,
@@ -1001,6 +1014,7 @@ impl DeboaRequest {
     /// assert_eq!(response.status(), 201);
     /// ```
     ///
+    #[inline]
     pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
@@ -1167,6 +1181,7 @@ impl DeboaRequest {
     ///
     /// * `&mut Self` - The request.
     ///
+    #[inline]
     pub fn set_method(&mut self, method: http::Method) -> &mut Self {
         self.method = method;
         self
@@ -1193,6 +1208,7 @@ impl DeboaRequest {
     ///
     /// * `Result<&mut Self>` - The request.
     ///
+    #[inline]
     pub fn set_url<T: IntoUrl>(&mut self, url: T) -> Result<&mut Self> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
@@ -1266,6 +1282,7 @@ impl DeboaRequest {
     ///
     /// * `&mut Self` - The request.
     ///
+    #[inline]
     pub fn add_header(&mut self, key: HeaderName, value: &str) -> &mut Self {
         self.headers
             .insert(key, HeaderValue::from_str(value).unwrap());
@@ -1298,6 +1315,7 @@ impl DeboaRequest {
     ///
     /// * `&mut Self` - The request.
     ///
+    #[inline]
     pub fn add_bearer_auth(&mut self, token: &str) -> &mut Self {
         let auth = format!("Bearer {token}");
         self.add_header(header::AUTHORIZATION, &auth);
@@ -1315,6 +1333,7 @@ impl DeboaRequest {
     ///
     /// * `&mut Self` - The request.
     ///
+    #[inline]
     pub fn add_basic_auth(&mut self, username: &str, password: &str) -> &mut Self {
         let auth = format!("Basic {}", STANDARD.encode(format!("{username}:{password}")));
         self.add_header(header::AUTHORIZATION, &auth);
@@ -1331,6 +1350,7 @@ impl DeboaRequest {
     ///
     /// * `&mut Self` - The request.
     ///
+    #[inline]
     pub fn add_cookie(&mut self, cookie: DeboaCookie) -> &mut Self {
         if let Some(cookies) = &mut self.cookies {
             cookies.insert(
@@ -1360,6 +1380,7 @@ impl DeboaRequest {
     ///
     /// * `&mut Self` - The request.
     ///
+    #[inline]
     pub fn remove_cookie(&mut self, name: &str) -> &mut Self {
         if let Some(cookies) = &mut self.cookies {
             cookies.remove(name);
@@ -1377,6 +1398,7 @@ impl DeboaRequest {
     ///
     /// * `bool` - True if the cookie exists, false otherwise.
     ///
+    #[inline]
     pub fn has_cookie(&self, name: &str) -> bool {
         if let Some(cookies) = &self.cookies {
             cookies.contains_key(name)
@@ -1395,6 +1417,7 @@ impl DeboaRequest {
     ///
     /// * `&mut Self` - The request.
     ///
+    #[inline]
     pub fn set_cookies(&mut self, cookies: HashMap<String, DeboaCookie>) -> &mut Self {
         self.cookies = Some(cookies);
         self
@@ -1406,6 +1429,7 @@ impl DeboaRequest {
     ///
     /// * `Option<&HashMap<String, DeboaCookie>>` - The cookies.
     ///
+    #[inline]
     pub fn cookies(&self) -> Option<&HashMap<String, DeboaCookie>> {
         self.cookies
             .as_ref()
@@ -1421,6 +1445,7 @@ impl DeboaRequest {
     ///
     /// * `&mut Self` - The request.
     ///
+    #[inline]
     pub fn set_form(&mut self, form: Form) -> &mut Self {
         let (content_type, body) = match form {
             Form::EncodedForm(form) => (form.content_type(), form.build()),
@@ -1441,6 +1466,7 @@ impl DeboaRequest {
     ///
     /// * `&mut Self` - The request.
     ///
+    #[inline]
     pub fn set_text(&mut self, text: String) -> &mut Self {
         self.set_raw_body(text.as_bytes());
         self
@@ -1456,6 +1482,7 @@ impl DeboaRequest {
     ///
     /// * `&mut Self` - The request.
     ///
+    #[inline]
     pub fn set_raw_body(&mut self, body: &[u8]) -> &mut Self {
         self.add_header(
             header::CONTENT_LENGTH,
@@ -1489,6 +1516,7 @@ impl DeboaRequest {
     ///
     /// * `Result<&mut Self>` - The request.
     ///
+    #[inline]
     pub fn set_body_as<T: RequestBody, B: Serialize>(
         &mut self,
         body_type: T,

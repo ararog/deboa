@@ -250,6 +250,7 @@ impl ClientBuilder {
     ///
     /// # Note
     /// A value of 0 means no timeout (not recommended in production).
+    #[inline]
     pub fn connection_timeout(mut self, connection_timeout: u64) -> Self {
         self.connection_timeout = connection_timeout;
         self
@@ -274,6 +275,7 @@ impl ClientBuilder {
     ///
     /// # Note
     /// A value of 0 means no timeout (not recommended in production).
+    #[inline]
     pub fn request_timeout(mut self, request_timeout: u64) -> Self {
         self.request_timeout = request_timeout;
         self
@@ -303,6 +305,7 @@ impl ClientBuilder {
     ///     Ok(())
     /// }
     /// ```
+    #[inline]
     pub fn client_cert(mut self, client_cert: ClientCert) -> Self {
         self.identity = Some(client_cert);
         self
@@ -332,6 +335,7 @@ impl ClientBuilder {
     ///     Ok(())
     /// }
     /// ```
+    #[inline]
     pub fn identity(mut self, identity: Identity) -> Self {
         self.identity = Some(identity);
         self
@@ -407,6 +411,7 @@ impl ClientBuilder {
     /// # Note
     /// The actual protocol version used may be negotiated with the server
     /// during the TLS handshake.
+    #[inline]
     pub fn protocol(mut self, protocol: HttpVersion) -> Self {
         self.protocol = protocol;
         self
@@ -431,6 +436,7 @@ impl ClientBuilder {
     ///     .pool(HttpConnectionPool::default())
     ///     .build();
     /// ```
+    #[inline]
     pub fn pool(mut self, pool: HttpConnectionPool) -> Self {
         self.pool = Some(pool);
         self
@@ -466,6 +472,7 @@ impl ClientBuilder {
     ///
     /// This method may panic if the underlying HTTP client cannot be created
     /// with the specified configuration.
+    #[inline]
     pub fn build(self) -> Client {
         Client {
             connection_timeout: self.connection_timeout,
@@ -627,6 +634,7 @@ impl Client {
     ///
     /// * `ClientBuilder` - The new ClientBuilder instance.
     ///
+    #[inline]
     pub fn builder() -> ClientBuilder {
         ClientBuilder {
             connection_timeout: 0,
@@ -659,6 +667,7 @@ impl Client {
     ///
     /// * `&mut Self` - The Deboa instance.
     ///
+    #[inline]
     pub fn set_protocol(&mut self, protocol: HttpVersion) -> &mut Self {
         self.protocol = protocol;
         self
@@ -685,6 +694,7 @@ impl Client {
     ///
     /// * `&mut Self` - The Deboa instance.
     ///
+    #[inline]
     pub fn set_connection_timeout(&mut self, timeout: u64) -> &mut Self {
         self.connection_timeout = timeout;
         self
@@ -711,6 +721,7 @@ impl Client {
     ///
     /// * `&mut Self` - The Deboa instance.
     ///
+    #[inline]
     pub fn set_connection_pool(&mut self, pool: HttpConnectionPool) -> &mut Self {
         self.pool = Some(pool);
         self
@@ -737,6 +748,7 @@ impl Client {
     ///
     /// * `&mut Self` - The Deboa instance.
     ///
+    #[inline]
     pub fn set_request_timeout(&mut self, timeout: u64) -> &mut Self {
         self.request_timeout = timeout;
         self
@@ -778,6 +790,7 @@ impl Client {
     /// * `&mut Self` - The Deboa instance.
     ///
     #[deprecated(note = "Use set_identity instead", since = "0.0.8")]
+    #[inline]
     pub fn set_client_cert(&mut self, client_cert: Option<ClientCert>) -> &mut Self {
         self.identity = client_cert;
         self
@@ -793,6 +806,7 @@ impl Client {
     ///
     /// * `&mut Self` - The Deboa instance.
     ///
+    #[inline]
     pub fn set_identity(&mut self, identity: Option<Identity>) -> &mut Self {
         self.identity = identity;
         self
@@ -945,6 +959,7 @@ impl Client {
     /// - Uses connection pooling for better performance
     /// - Automatically reuses connections when possible
     /// - Supports HTTP/1.1 and HTTP/2
+    #[deprecated(note = "Use call instead", since = "0.1.0")]
     pub async fn execute<R>(&mut self, request: R) -> Result<DeboaResponse>
     where
         R: IntoRequest,
