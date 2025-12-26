@@ -205,16 +205,19 @@ impl EncodedForm {
 }
 
 impl DeboaForm for EncodedForm {
+    #[inline]
     fn content_type(&self) -> String {
         "application/x-www-form-urlencoded".to_string()
     }
 
+    #[inline]
     fn field(&mut self, key: &str, value: &str) -> &mut Self {
         self.fields
             .insert(key.to_string(), value.to_string());
         self
     }
 
+    #[inline]
     fn build(self) -> Bytes {
         self.fields
             .iter()
@@ -261,6 +264,7 @@ impl MultiPartForm {
     ///
     /// * `Self` - The multi part form.
     ///
+    #[inline]
     pub fn builder() -> Self {
         let boundary = Alphanumeric.sample_string(&mut rand::rng(), 10);
         Self { fields: IndexMap::new(), boundary: format!("DeboaFormBdry{}", boundary) }
@@ -277,6 +281,7 @@ impl MultiPartForm {
     ///
     /// * `&mut Self` - The form.
     ///
+    #[inline]
     pub fn file<F>(mut self, key: &str, value: F) -> Self
     where
         F: AsRef<std::path::Path>,
@@ -298,6 +303,7 @@ impl MultiPartForm {
     ///
     /// * `String` - The boundary.
     ///
+    #[inline]
     pub fn boundary(&self) -> String {
         self.boundary
             .to_string()
@@ -305,10 +311,12 @@ impl MultiPartForm {
 }
 
 impl DeboaForm for MultiPartForm {
+    #[inline]
     fn content_type(&self) -> String {
         format!("multipart/form-data; boundary={}", self.boundary)
     }
 
+    #[inline]
     fn field(&mut self, key: &str, value: &str) -> &mut Self {
         self.fields
             .insert(key.to_string(), value.to_string());

@@ -65,6 +65,7 @@ impl Identity {
     ///
     /// * `&str` - The client certificate.
     ///
+    #[inline]
     pub fn cert(&self) -> &str {
         &self.cert
     }
@@ -75,6 +76,7 @@ impl Identity {
     ///
     /// * `&str` - The client certificate password.
     ///
+    #[inline]
     pub fn pw(&self) -> &str {
         &self.pw
     }
@@ -85,6 +87,7 @@ impl Identity {
     ///
     /// * `Option<&str>` - The client certificate authority.
     ///
+    #[inline]
     pub fn ca(&self) -> Option<&str> {
         self.ca.as_deref()
     }

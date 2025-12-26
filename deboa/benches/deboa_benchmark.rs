@@ -1,3 +1,7 @@
+use bytes::Bytes;
+use http_body_util::Full;
+use hyper_util::client::legacy::Client as HyperClient;
+use hyper_util::rt::TokioExecutor;
 #[cfg(feature = "tokio-rt")]
 use tokio::runtime::Runtime;
 
@@ -8,10 +12,15 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use deboa::{request::DeboaRequest, Client, Result};
 
 async fn get_async() -> Result<()> {
-    let client = Client::new();
-    let _ = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")?
+    let client = Client::default();
+    let res = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")?
         .send_with(client)
         .await;
+
+    if let Err(e) = res {
+        println!("Error: {:#?}", e);
+    }
+
     Ok(())
 }
 

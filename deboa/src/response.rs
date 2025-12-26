@@ -168,6 +168,7 @@ impl DeboaResponseBuilder {
     ///
     /// * `Self` - The response builder.
     ///
+    #[inline]
     pub fn status(mut self, status: http::StatusCode) -> Self {
         *self
             .inner
@@ -185,6 +186,7 @@ impl DeboaResponseBuilder {
     ///
     /// * `Self` - The response builder.
     ///
+    #[inline]
     pub fn headers(mut self, headers: http::HeaderMap) -> Self {
         *self
             .inner
@@ -203,6 +205,7 @@ impl DeboaResponseBuilder {
     ///
     /// * `Self` - The response builder.
     ///
+    #[inline]
     pub fn header(mut self, name: HeaderName, value: &str) -> Self {
         let header_value = HeaderValue::from_str(value);
         if let Ok(header_value) = header_value {
@@ -223,6 +226,7 @@ impl DeboaResponseBuilder {
     ///
     /// * `Self` - The response builder.
     ///
+    #[inline]
     pub fn body<B: IntoBody>(mut self, body: B) -> Self {
         *self
             .inner
@@ -236,6 +240,7 @@ impl DeboaResponseBuilder {
     ///
     /// * `DeboaResponse` - The response.
     ///
+    #[inline]
     pub fn build(self) -> DeboaResponse {
         DeboaResponse { url: self.url, inner: self.inner }
     }
@@ -678,6 +683,7 @@ impl DeboaResponse {
     ///     .await?;
     /// ```
     ///
+    #[inline]
     pub async fn to_file(mut self, path: &str) -> Result<()> {
         let body = self
             .raw_body()
@@ -691,6 +697,7 @@ impl DeboaResponse {
     }
 
     #[cfg(feature = "tokio-rt")]
+    #[inline]
     pub async fn upgrade(self) -> Result<hyper_util::rt::TokioIo<hyper::upgrade::Upgraded>> {
         if self.inner.version() != http::Version::HTTP_11 {
             error!("Upgrade is only supported for HTTP/1.1");
@@ -710,6 +717,7 @@ impl DeboaResponse {
     }
 
     #[cfg(feature = "smol-rt")]
+    #[inline]
     pub async fn upgrade(self) -> Result<FuturesIo<hyper::upgrade::Upgraded>> {
         if self.inner.version() != http::Version::HTTP_11 {
             error!("Upgrade is only supported for HTTP/1.1");
