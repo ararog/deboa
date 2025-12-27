@@ -105,30 +105,30 @@ use crate::{
 /// ```
 #[async_trait]
 pub trait IntoRequest: private::IntoRequestSealed {
-    fn into_request(self) -> Result<DeboaRequest>;
+    fn into_request(self) -> DeboaRequest;
 }
 
 impl IntoRequest for DeboaRequest {
-    fn into_request(self) -> Result<DeboaRequest> {
-        Ok(self)
+    fn into_request(self) -> DeboaRequest {
+        self
     }
 }
 
 impl IntoRequest for &str {
-    fn into_request(self) -> Result<DeboaRequest> {
-        DeboaRequest::get(self)?.build()
+    fn into_request(self) -> DeboaRequest {
+        DeboaRequest::get(self).build()
     }
 }
 
 impl IntoRequest for String {
-    fn into_request(self) -> Result<DeboaRequest> {
-        DeboaRequest::get(self)?.build()
+    fn into_request(self) -> DeboaRequest {
+        DeboaRequest::get(self).build()
     }
 }
 
 impl IntoRequest for Url {
-    fn into_request(self) -> Result<DeboaRequest> {
-        DeboaRequest::get(self)?.build()
+    fn into_request(self) -> DeboaRequest {
+        DeboaRequest::get(self).build()
     }
 }
 
@@ -167,7 +167,7 @@ impl Fetch for &str {
     where
         T: AsMut<Client> + Send,
     {
-        DeboaRequest::get(*self)?
+        DeboaRequest::get(*self)
             .send_with(client)
             .await
     }
@@ -219,7 +219,7 @@ impl FetchWith for &str {
     where
         T: AsMut<Client> + Send,
     {
-        DeboaRequest::get(*self)?
+        DeboaRequest::get(*self)
             .send_with(client)
             .await
     }
@@ -231,7 +231,7 @@ impl FetchWith for String {
     where
         T: AsMut<Client> + Send,
     {
-        DeboaRequest::get(self)?
+        DeboaRequest::get(self)
             .send_with(client)
             .await
     }
@@ -260,7 +260,7 @@ impl FetchWith for String {
 /// ```
 ///
 #[inline]
-pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
+pub fn get<T: IntoUrl>(url: T) -> DeboaRequestBuilder {
     DeboaRequest::get(url)
 }
 
@@ -289,7 +289,7 @@ pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// ```
 ///
 #[inline]
-pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
+pub fn post<T: IntoUrl>(url: T) -> DeboaRequestBuilder {
     DeboaRequest::post(url)
 }
 
@@ -317,7 +317,7 @@ pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// assert_eq!(response.status(), 200);
 /// ```
 #[inline]
-pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
+pub fn put<T: IntoUrl>(url: T) -> DeboaRequestBuilder {
     DeboaRequest::put(url)
 }
 
@@ -338,12 +338,12 @@ pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 ///
 /// let mut client = Client::new();
 ///
-/// let request = delete("https://jsonplaceholder.typicode.com/posts/1")?.build()?;
+/// let request = delete("https://jsonplaceholder.typicode.com/posts/1").build();
 /// let response = request.send_with(&mut client).await?;
 /// assert_eq!(response.status(), 200);
 /// ```
 #[inline]
-pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
+pub fn delete<T: IntoUrl>(url: T) -> DeboaRequestBuilder {
     DeboaRequest::delete(url)
 }
 
@@ -371,7 +371,7 @@ pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// assert_eq!(response.status(), 200);
 /// ```
 #[inline]
-pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
+pub fn patch<T: IntoUrl>(url: T) -> DeboaRequestBuilder {
     DeboaRequest::patch(url)
 }
 
@@ -388,11 +388,11 @@ pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 ///
 /// # #[tokio::main]
 /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// let request = post("https://httpbin.org/post")?
+/// let request = post("https://httpbin.org/post")
 ///     .header(header::CONTENT_TYPE, "application/json")
 ///     .header(header::ACCEPT, "application/json")
 ///     .text(r#"{"key":"value"}"#)
-///     .build()?;
+///     .build();
 /// # Ok(()) }
 /// ```
 ///
@@ -726,7 +726,7 @@ impl DeboaRequestBuilder {
     /// * If an error occurs while building the request
     ///
     #[inline]
-    pub fn build(self) -> Result<DeboaRequest> {
+    pub fn build(self) -> DeboaRequest {
         let mut request = DeboaRequest {
             url: self.url,
             headers: self.headers,
@@ -740,7 +740,7 @@ impl DeboaRequestBuilder {
             request.set_form(form);
         }
 
-        Ok(request)
+        request
     }
 
     /// Send the request. Consuming the builder.
@@ -773,7 +773,7 @@ impl DeboaRequestBuilder {
     {
         client
             .as_mut()
-            .execute(self.build()?)
+            .execute(self.build())
             .await
     }
 
@@ -810,7 +810,7 @@ impl DeboaRequestBuilder {
     {
         client
             .as_mut()
-            .execute(self.build()?)
+            .execute(self.build())
             .await
     }
 }
@@ -1015,11 +1015,11 @@ impl DeboaRequest {
     /// ```
     ///
     #[inline]
-    pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
+    pub fn at<T: IntoUrl>(url: T, method: http::Method) -> DeboaRequestBuilder {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
             error!("Failed to parse url: {}", e);
-            return Err(DeboaError::Request(RequestError::UrlParse { message: e.to_string() }));
+            panic!("Failed to parse url: {}", e);
         }
 
         let url = parsed_url.unwrap();
@@ -1027,7 +1027,7 @@ impl DeboaRequest {
         let mut headers = HeaderMap::new();
         headers.insert(header::HOST, HeaderValue::from_str(authority).unwrap());
 
-        Ok(DeboaRequestBuilder {
+        DeboaRequestBuilder {
             url: url.into(),
             headers,
             cookies: None,
@@ -1035,7 +1035,7 @@ impl DeboaRequest {
             method,
             body: Arc::new([]),
             form: None,
-        })
+        }
     }
 
     /// Allow make a GET request.
@@ -1053,7 +1053,7 @@ impl DeboaRequest {
     /// * If URL is invalid
     ///
     #[inline]
-    pub fn from<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
+    pub fn from<T: IntoUrl>(url: T) -> DeboaRequestBuilder {
         DeboaRequest::at(url, Method::GET)
     }
 
@@ -1072,7 +1072,7 @@ impl DeboaRequest {
     /// * If URL is invalid
     ///
     #[inline]
-    pub fn to<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
+    pub fn to<T: IntoUrl>(url: T) -> DeboaRequestBuilder {
         DeboaRequest::at(url, Method::POST)
     }
 
@@ -1091,8 +1091,8 @@ impl DeboaRequest {
     /// * If URL is invalid
     ///
     #[inline]
-    pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
-        Ok(DeboaRequest::from(url)?.method(Method::GET))
+    pub fn get<T: IntoUrl>(url: T) -> DeboaRequestBuilder {
+        DeboaRequest::from(url).method(Method::GET)
     }
 
     /// Allow make a POST request.
@@ -1110,8 +1110,8 @@ impl DeboaRequest {
     /// * If URL is invalid
     ///
     #[inline]
-    pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
-        Ok(DeboaRequest::to(url)?.method(Method::POST))
+    pub fn post<T: IntoUrl>(url: T) -> DeboaRequestBuilder {
+        DeboaRequest::to(url).method(Method::POST)
     }
 
     /// Allow make a PUT request.
@@ -1129,8 +1129,8 @@ impl DeboaRequest {
     /// * If URL is invalid
     ///
     #[inline]
-    pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
-        Ok(DeboaRequest::to(url)?.method(Method::PUT))
+    pub fn put<T: IntoUrl>(url: T) -> DeboaRequestBuilder {
+        DeboaRequest::to(url).method(Method::PUT)
     }
 
     /// Allow make a PATCH request.
@@ -1148,8 +1148,8 @@ impl DeboaRequest {
     /// * If URL is invalid
     ///
     #[inline]
-    pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
-        Ok(DeboaRequest::to(url)?.method(Method::PATCH))
+    pub fn patch<T: IntoUrl>(url: T) -> DeboaRequestBuilder {
+        DeboaRequest::to(url).method(Method::PATCH)
     }
 
     /// Allow make a DELETE request.
@@ -1167,8 +1167,8 @@ impl DeboaRequest {
     /// * If URL is invalid
     ///
     #[inline]
-    pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
-        Ok(DeboaRequest::from(url)?.method(Method::DELETE))
+    pub fn delete<T: IntoUrl>(url: T) -> DeboaRequestBuilder {
+        DeboaRequest::from(url).method(Method::DELETE)
     }
 
     /// Allow change request method at any time.

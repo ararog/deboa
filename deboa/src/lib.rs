@@ -22,7 +22,7 @@
 //!     let mut client = Client::builder()
 //!         .build();
 //!
-//!     let response = DeboaRequest::get("https://httpbin.org/get")?
+//!     let response = DeboaRequest::get("https://httpbin.org/get")
 //!         .send_with(&mut client)
 //!         .await?;
 //!
@@ -67,6 +67,8 @@ compile_error!("At least one HTTP version feature must be enabled.");
 
 pub(crate) const MAX_ERROR_MESSAGE_SIZE: usize = 50000;
 
+use cfg_if::cfg_if;
+
 use std::fmt::{Debug, Display};
 
 use std::ops::Shl;
@@ -78,9 +80,13 @@ use hyper::body::Incoming;
 use log::{error, info};
 
 use crate::cert::{ClientCert, Identity};
-use crate::client::conn::http::{
-    BaseHttpConnection, DeboaConnection, DeboaHttpConnection, Http1Request, Http2Request,
-};
+use crate::client::conn::http::{BaseHttpConnection, DeboaConnection, DeboaHttpConnection};
+
+#[cfg(feature = "http1")]
+use crate::client::conn::http::Http1Request;
+
+#[cfg(feature = "http2")]
+use crate::client::conn::http::Http2Request;
 
 use crate::catcher::DeboaCatcher;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
@@ -151,10 +157,7 @@ impl Shl<&str> for &Client {
     type Output = DeboaRequest;
 
     fn shl(self, other: &str) -> Self::Output {
-        DeboaRequest::get(other)
-            .expect("Invalid url!")
-            .build()
-            .expect("Could not build request!")
+        DeboaRequest::get(other).build()
     }
 }
 
@@ -564,6 +567,16 @@ impl Debug for Client {
     }
 }
 
+const fn default_protocol() -> HttpVersion {
+    cfg_if! {
+      if #[cfg(feature = "http1")] {
+          HttpVersion::Http1
+      } else {
+          HttpVersion::Http2
+      }
+    }
+}
+
 impl Default for Client {
     fn default() -> Self {
         Self {
@@ -571,7 +584,7 @@ impl Default for Client {
             request_timeout: 0,
             identity: None,
             catchers: None,
-            protocol: HttpVersion::Http1,
+            protocol: default_protocol(),
             pool: None,
         }
     }
@@ -623,7 +636,7 @@ impl Client {
             request_timeout: 0,
             identity: None,
             catchers: None,
-            protocol: HttpVersion::Http1,
+            protocol: default_protocol(),
             pool: None,
         }
     }
@@ -641,7 +654,7 @@ impl Client {
             request_timeout: 0,
             identity: None,
             catchers: None,
-            protocol: HttpVersion::Http1,
+            protocol: default_protocol(),
             pool: None,
         }
     }
@@ -959,12 +972,11 @@ impl Client {
     /// - Uses connection pooling for better performance
     /// - Automatically reuses connections when possible
     /// - Supports HTTP/1.1 and HTTP/2
-    #[deprecated(note = "Use call instead", since = "0.1.0")]
     pub async fn execute<R>(&mut self, request: R) -> Result<DeboaResponse>
     where
         R: IntoRequest,
     {
-        let mut request = request.into_request()?;
+        let mut request = request.into_request();
 
         if let Some(catchers) = &self.catchers {
             let mut response = None;
@@ -1175,6 +1187,7 @@ impl Client {
             }
         } else {
             match self.protocol {
+                #[cfg(feature = "http1")]
                 HttpVersion::Http1 => {
                     let mut connection = BaseHttpConnection::<Http1Request>::connect(
                         is_secure,
@@ -1186,6 +1199,7 @@ impl Client {
                         .send_request(request)
                         .await
                 }
+                #[cfg(feature = "http2")]
                 HttpVersion::Http2 => {
                     let mut connection = BaseHttpConnection::<Http2Request>::connect(
                         is_secure,

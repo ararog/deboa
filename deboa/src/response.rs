@@ -262,7 +262,7 @@ impl DeboaResponseBuilder {
 /// # #[tokio::main]
 /// async fn main() -> Result<()> {
 ///     let mut client = Client::new();
-///     let response = get("https://httpbin.org/get")?
+///     let response = get("https://httpbin.org/get")
 ///       .send_with(&mut client)
 ///       .await?;
 ///
@@ -289,7 +289,7 @@ impl DeboaResponseBuilder {
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
 ///     let mut client = Client::new();
-///     let response = get("https://httpbin.org/get")?
+///     let response = get("https://httpbin.org/get")
 ///       .send_with(&mut client)
 ///       .await?;
 ///     let data: Data = response

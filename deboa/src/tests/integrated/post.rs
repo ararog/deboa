@@ -32,9 +32,9 @@ async fn do_post() -> Result<()> {
         server
             .url("/posts")
             .as_str(),
-    )?
+    )
     .text("ping")
-    .build()?;
+    .build();
 
     let mut response = client
         .execute(request)
@@ -92,9 +92,9 @@ async fn do_post_encoded_form() -> Result<()> {
         server
             .url("/posts")
             .as_str(),
-    )?
+    )
     .form(form.into())
-    .build()?;
+    .build();
 
     let mut response = client
         .execute(request)
@@ -148,10 +148,10 @@ async fn do_post_multipart_form() -> Result<()> {
         server
             .url("/posts")
             .as_str(),
-    )?
+    )
     .header(header::CONTENT_TYPE, mime::MULTIPART_FORM_DATA.essence_str())
     .form(form.into())
-    .build()?;
+    .build();
 
     let mut response = client
         .execute(request)

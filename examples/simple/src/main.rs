@@ -23,7 +23,7 @@ async fn main() -> Result<()> {
 
     println!("post: {response:#?}");
 
-    let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
+    let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")
         .send_with(&mut client)
         .await?
         .body_as(JsonBody)
