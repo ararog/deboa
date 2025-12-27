@@ -1,7 +1,3 @@
-use bytes::Bytes;
-use http_body_util::Full;
-use hyper_util::client::legacy::Client as HyperClient;
-use hyper_util::rt::TokioExecutor;
 #[cfg(feature = "tokio-rt")]
 use tokio::runtime::Runtime;
 

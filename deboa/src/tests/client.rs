@@ -1,4 +1,4 @@
-use crate::{Client, Result};
+use crate::{default_protocol, Client, Result};
 
 use deboa_tests::utils::JSONPLACEHOLDER;
 
@@ -27,10 +27,10 @@ fn test_set_request_timeout() -> Result<()> {
 #[test]
 fn test_set_protocol() -> Result<()> {
     let api = Client::builder()
-        .protocol(crate::HttpVersion::Http1)
+        .protocol(default_protocol())
         .build();
 
-    assert_eq!(api.protocol, crate::HttpVersion::Http1);
+    assert_eq!(api.protocol, default_protocol());
 
     Ok(())
 }

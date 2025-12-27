@@ -1,4 +1,7 @@
-use crate::errors::{ConnectionError, ResponseError};
+use crate::{
+    default_protocol,
+    errors::{ConnectionError, ResponseError},
+};
 #[cfg(test)]
 use crate::{
     errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, HttpVersion, Result,
@@ -24,7 +27,7 @@ async fn do_get_http1() -> Result<()> {
     let http_mock = setup_server(&server, "/posts", httpmock::Method::GET, StatusCode::OK);
 
     let mut client = Client::builder()
-        .protocol(HttpVersion::Http1)
+        .protocol(default_protocol())
         .build();
 
     let request = DeboaRequest::get(
