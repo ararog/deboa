@@ -567,7 +567,7 @@ impl Debug for Client {
     }
 }
 
-const fn default_protocol() -> HttpVersion {
+pub(crate) const fn default_protocol() -> HttpVersion {
     cfg_if! {
       if #[cfg(feature = "http1")] {
           HttpVersion::Http1
