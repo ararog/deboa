@@ -181,7 +181,7 @@ async fn do_get_invalid_server() -> Result<()> {
     assert_eq!(
         response.unwrap_err(),
         DeboaError::Connection(ConnectionError::Tcp {
-            host: "invalid-server.com".to_string(),
+            host: "invalid-server.com:443".to_string(),
             #[cfg(target_os = "linux")]
             message: "failed to lookup address information: Name or service not known".to_string(),
             #[cfg(target_os = "macos")]
