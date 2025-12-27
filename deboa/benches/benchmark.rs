@@ -17,10 +17,6 @@ async fn get_async() -> Result<()> {
         .send_with(client)
         .await;
 
-    if let Err(e) = res {
-        println!("Error: {:#?}", e);
-    }
-
     Ok(())
 }
 

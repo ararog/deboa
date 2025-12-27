@@ -41,69 +41,8 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
             .unwrap_or("localhost");
         let io = {
             match url.scheme() {
-                "http" => {
-                    let stream = {
-                        let port = url
-                            .port()
-                            .unwrap_or(80);
-                        TcpStream::connect((host, port)).await
-                    };
-
-                    if let Err(e) = stream {
-                        return Err(DeboaError::Connection(ConnectionError::Tcp {
-                            host: host.to_string(),
-                            message: e.to_string(),
-                        }));
-                    }
-
-                    let stream = stream.unwrap();
-                    SmolStream::Plain(stream)
-                }
-                "https" => {
-                    // In case of HTTPS, establish a secure TLS connection first.
-                    let stream = {
-                        let port = url
-                            .port()
-                            .unwrap_or(443);
-                        TcpStream::connect((host, port)).await
-                    };
-
-                    if let Err(e) = stream {
-                        return Err(DeboaError::Connection(ConnectionError::Tcp {
-                            host: host.to_string(),
-                            message: e.to_string(),
-                        }));
-                    }
-
-                    let stream = stream.unwrap();
-                    let connector = if let Some(client_cert) = client_cert {
-                        let file = std::fs::read(client_cert.cert());
-                        if let Err(e) = file {
-                            return Err(DeboaError::ClientCert { message: e.to_string() });
-                        }
-                        let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.pw());
-                        if let Err(e) = identity {
-                            return Err(DeboaError::ClientCert { message: e.to_string() });
-                        }
-                        TlsConnector::new().identity(identity.unwrap())
-                    } else {
-                        TlsConnector::new()
-                    };
-
-                    let stream = connector
-                        .connect(host, stream)
-                        .await;
-
-                    if let Err(e) = stream {
-                        return Err(DeboaError::Connection(ConnectionError::Tls {
-                            host: host.to_string(),
-                            message: e.to_string(),
-                        }));
-                    }
-
-                    let stream = stream.unwrap();
-                    SmolStream::Tls(stream)
-                }
+                "ws" | "http" => Self::plain_connection(Arc::clone(&url)).await,
+                "wss" | "https" => Self::tls_connection(Arc::clone(&url), client_cert).await,
                 scheme => {
                     return Err(DeboaError::Connection(ConnectionError::UnsupportedScheme {
                         message: format!("unsupported scheme: {scheme:?}"),
@@ -112,7 +51,11 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
             }
         };
 
-        let result = handshake(FuturesIo::new(io)).await;
+        if let Err(e) = io {
+            return Err(e);
+        }
+
+        let result = handshake(FuturesIo::new(io.unwrap())).await;
 
         let (sender, conn) = result.unwrap();
 
