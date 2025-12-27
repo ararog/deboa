@@ -1,7 +1,6 @@
 use async_trait::async_trait;
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 use time::Duration;
-use url::Url;
 
 #[cfg(feature = "http1")]
 use crate::client::conn::http::Http1Request;
@@ -83,7 +82,8 @@ pub trait DeboaHttpConnectionPool: private::DeboaHttpConnectionPoolSealed {
     ///
     async fn create_connection<'a>(
         &'a mut self,
-        url: Arc<Url>,
+        is_secure: bool,
+        host: &'a str,
         protocol: &HttpVersion,
         client_cert: &Option<ClientCert>,
     ) -> Result<&'a mut DeboaConnection>;
@@ -106,66 +106,54 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
             .len() as u32
     }
 
-    async fn create_connection(
-        &mut self,
-        url: Arc<Url>,
+    async fn create_connection<'a>(
+        &'a mut self,
+        is_secure: bool,
+        host: &'a str,
         protocol: &HttpVersion,
         client_cert: &Option<ClientCert>,
-    ) -> Result<&mut DeboaConnection> {
-        let mut host = url
-            .host_str()
-            .unwrap()
-            .to_string();
-        if url.port().is_some() {
-            let port = url.port().unwrap();
-            host = format!("{}:{}", host, port);
-        } else {
-            match url.scheme() {
-                "http" | "ws" => host = format!("{}:80", host),
-                "https" | "wss" => host = format!("{}:443", host),
-                _ => panic!("Unsupported scheme: {}", url.scheme()),
-            }
-        }
-
-        let host_key = host;
+    ) -> Result<&'a mut DeboaConnection> {
         if self
             .connections
-            .contains_key(&host_key)
+            .contains_key(host)
         {
-            log::debug!("Connection already exists for {}, reusing.", host_key);
+            log::debug!("Connection already exists for {}, reusing.", host);
             return Ok(self
                 .connections
-                .get_mut(&host_key)
+                .get_mut(host)
                 .unwrap());
         }
 
-        log::debug!("Creating new connection for {}", host_key);
+        log::debug!("Creating new connection for {}", host);
         let connection = match protocol {
             #[cfg(feature = "http1")]
             HttpVersion::Http1 => {
                 let connection =
-                    BaseHttpConnection::<Http1Request>::connect(url, client_cert).await?;
+                    BaseHttpConnection::<Http1Request>::connect(is_secure, host, client_cert)
+                        .await?;
                 DeboaConnection::Http1(Box::new(connection))
             }
             #[cfg(feature = "http2")]
             HttpVersion::Http2 => {
                 let connection =
-                    BaseHttpConnection::<Http2Request>::connect(url, client_cert).await?;
+                    BaseHttpConnection::<Http2Request>::connect(is_secure, host, client_cert)
+                        .await?;
                 DeboaConnection::Http2(Box::new(connection))
             }
             #[cfg(feature = "http3")]
             HttpVersion::Http3 => {
                 let connection =
-                    BaseHttpConnection::<Http3Request>::connect(url, client_cert).await?;
+                    BaseHttpConnection::<Http3Request>::connect(is_secure, host, client_cert)
+                        .await?;
                 DeboaConnection::Http3(Box::new(connection))
             }
         };
 
         self.connections
-            .insert(host_key.to_string(), connection);
+            .insert(host.to_string(), connection);
         Ok(self
             .connections
-            .get_mut(&host_key)
+            .get_mut(host)
             .unwrap())
     }
 }

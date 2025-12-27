@@ -5,11 +5,19 @@ use bytes::Bytes;
 use http::{Request, Response, StatusCode, Version};
 use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
-use url::Url;
+#[cfg(feature = "smol-rt")]
+use smol::net::TcpStream;
+#[cfg(feature = "tokio-rt")]
+use tokio::net::TcpStream;
+#[cfg(feature = "tokio-native-tls")]
+use tokio_native_tls::native_tls::{Certificate, Identity, TlsConnector};
+#[cfg(feature = "tokio-rust-tls")]
+use tokio_rustls::TlsConnector;
 
 use crate::{
     cert::ClientCert,
-    errors::{DeboaError, RequestError, ResponseError},
+    errors::{ConnectionError, DeboaError, RequestError, ResponseError},
+    rt::tokio::stream::TokioStream,
     Result, MAX_ERROR_MESSAGE_SIZE,
 };
 
@@ -32,10 +40,8 @@ pub enum DeboaConnection {
 ///
 /// # Fields
 ///
-/// * `url` - The url to connect.
 /// * `sender` - The sender to use.
 pub struct BaseHttpConnection<T> {
-    pub(crate) url: Arc<Url>,
     pub(crate) sender: T,
 }
 
@@ -54,6 +60,226 @@ pub type Http2Request = hyper::client::conn::http2::SendRequest<Full<Bytes>>;
 pub trait DeboaHttpConnection: private::DeboaHttpConnectionSealed {
     type Sender;
 
+    #[cfg(feature = "tokio-rt")]
+    async fn plain_connection(host: &str) -> Result<TokioStream> {
+        let stream = { TcpStream::connect(host).await };
+
+        if let Err(e) = stream {
+            return Err(DeboaError::Connection(ConnectionError::Tcp {
+                host: host.to_string(),
+                message: e.to_string(),
+            }));
+        }
+
+        Ok(TokioStream::Plain(stream.unwrap()))
+    }
+
+    #[cfg(feature = "smol-rt")]
+    async fn plain_connection(host: &str) -> Result<SmolStream> {
+        let stream = { TcpStream::connect(host).await };
+
+        if let Err(e) = stream {
+            return Err(DeboaError::Connection(ConnectionError::Tcp {
+                host: host.to_string(),
+                message: e.to_string(),
+            }));
+        }
+
+        Ok(SmolStream::Plain(stream.unwrap()))
+    }
+
+    #[cfg(all(feature = "tokio-rt", feature = "tokio-native-tls"))]
+    async fn tls_connection(host: &str, client_cert: &Option<ClientCert>) -> Result<TokioStream> {
+        let stream = { TcpStream::connect(host).await };
+
+        if let Err(e) = stream {
+            return Err(DeboaError::Connection(ConnectionError::Tcp {
+                host: host.to_string(),
+                message: e.to_string(),
+            }));
+        }
+
+        let socket = stream.unwrap();
+        let mut builder = TlsConnector::builder();
+        if let Some(client_cert) = client_cert {
+            let file = std::fs::read(client_cert.cert());
+            if let Err(e) = file {
+                return Err(DeboaError::ClientCert { message: e.to_string() });
+            }
+            let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.pw());
+            if let Err(e) = identity {
+                return Err(DeboaError::ClientCert { message: e.to_string() });
+            }
+            builder.identity(identity.unwrap());
+
+            if let Some(ca) = client_cert.ca() {
+                let pem = std::fs::read(ca);
+                if let Err(e) = pem {
+                    return Err(DeboaError::ClientCert { message: e.to_string() });
+                }
+                let cert = Certificate::from_pem(&pem.unwrap());
+                builder.add_root_certificate(cert.unwrap());
+            }
+        }
+
+        let connector = builder
+            .build()
+            .unwrap();
+        let connector = tokio_native_tls::TlsConnector::from(connector);
+        let stream = connector
+            .connect(host, socket)
+            .await;
+
+        if let Err(e) = stream {
+            return Err(DeboaError::Connection(ConnectionError::Tls {
+                host: host.to_string(),
+                message: e.to_string(),
+            }));
+        }
+
+        let stream = stream.unwrap();
+        Ok(TokioStream::Tls(stream))
+    }
+
+    #[cfg(all(feature = "tokio-rt", feature = "tokio-rust-tls"))]
+    #[hotpath::measure]
+    async fn tls_connection(host: &str, client_cert: &Option<ClientCert>) -> Result<TokioStream> {
+        use rustls::pki_types::ServerName;
+
+        let stream = { TcpStream::connect(host).await };
+
+        if let Err(e) = stream {
+            return Err(DeboaError::Connection(ConnectionError::Tcp {
+                host: host.to_string(),
+                message: e.to_string(),
+            }));
+        }
+
+        let socket = stream.unwrap();
+        let root_store = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
+        let config = rustls::ClientConfig::builder()
+            .with_root_certificates(root_store)
+            .with_no_client_auth();
+
+        let connector = TlsConnector::from(Arc::new(config));
+
+        let hostname = if let Some((hostname, _)) = host.split_once(':') { hostname } else { host };
+
+        let parsed_hostname = ServerName::try_from(hostname.to_string());
+
+        if let Err(e) = parsed_hostname {
+            return Err(DeboaError::Connection(ConnectionError::Tls {
+                host: hostname.to_string(),
+                message: e.to_string(),
+            }));
+        }
+
+        let stream = connector
+            .connect(parsed_hostname.unwrap(), socket)
+            .await;
+
+        if let Err(e) = stream {
+            return Err(DeboaError::Connection(ConnectionError::Tls {
+                host: hostname.to_string(),
+                message: e.to_string(),
+            }));
+        }
+
+        let stream = stream.unwrap();
+        Ok(TokioStream::Tls(Box::new(stream)))
+    }
+
+    #[cfg(all(feature = "smol-rt", feature = "smol-native-tls"))]
+    async fn tls_connection(host: &str, client_cert: &Option<ClientCert>) -> Result<SmolStream> {
+        let stream = { TcpStream::connect(host).await };
+
+        if let Err(e) = stream {
+            return Err(DeboaError::Connection(ConnectionError::Tcp {
+                host: host.to_string(),
+                message: e.to_string(),
+            }));
+        }
+
+        let socket = stream.unwrap();
+        let root_store = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
+        let config = rustls::ClientConfig::builder()
+            .with_root_certificates(root_store)
+            .with_no_client_auth();
+
+        let connector = TlsConnector::from(Arc::new(config));
+
+        let hostname = if let Some((hostname, _)) = host.split_once(':') { hostname } else { host };
+
+        let parsed_hostname = ServerName::try_from(hostname.to_string());
+
+        if let Err(e) = parsed_hostname {
+            return Err(DeboaError::Connection(ConnectionError::Tls {
+                host: hostname,
+                message: e.to_string(),
+            }));
+        }
+
+        let stream = connector
+            .connect(parsed_hostname.unwrap(), socket)
+            .await;
+
+        if let Err(e) = stream {
+            return Err(DeboaError::Connection(ConnectionError::Tls {
+                host: host.to_string(),
+                message: e.to_string(),
+            }));
+        }
+
+        let stream = stream.unwrap();
+        SmolStream::Tls(stream)
+    }
+
+    #[cfg(all(feature = "smol-rt", feature = "smol-rust-tls"))]
+    async fn tls_connection(host: &str, client_cert: &Option<ClientCert>) -> Result<SmolStream> {
+        let stream = { TcpStream::connect(host).await };
+
+        if let Err(e) = stream {
+            return Err(DeboaError::Connection(ConnectionError::Tcp {
+                host: host.to_string(),
+                message: e.to_string(),
+            }));
+        }
+
+        let socket = stream.unwrap();
+        let root_store = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
+        let config = rustls::ClientConfig::builder()
+            .with_root_certificates(root_store)
+            .with_no_client_auth();
+        let connector = TlsConnector::from(Arc::new(config));
+
+        let hostname = if let Some((hostname, _)) = host.split_once(':') {
+            hostname
+        };
+
+        let hostname = ServerName::try_from(hostname.to_string());
+
+        if let Err(e) = hostname {
+            return Err(DeboaError::Connection(ConnectionError::Tls {
+                host: hostname,
+                message: e.to_string(),
+            }));
+        }
+
+        let stream = connector
+            .connect(hostname.unwrap(), socket)
+            .await;
+
+        if let Err(e) = stream {
+            return Err(DeboaError::Connection(ConnectionError::Tls {
+                host: host.to_string(),
+                message: e.to_string(),
+            }));
+        }
+
+        let stream = stream.unwrap();
+        SmolStream::Tls(stream)
+    }
+
     /// Create a new connection.
     ///
     /// # Arguments
@@ -65,17 +291,10 @@ pub trait DeboaHttpConnection: private::DeboaHttpConnectionSealed {
     /// * `Result<BaseHttpConnection<Self::Sender>>` - The connection or error.
     ///
     async fn connect(
-        url: Arc<Url>,
+        is_secure: bool,
+        host: &str,
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Self::Sender>>;
-
-    /// Get connection url.
-    ///
-    /// # Returns
-    ///
-    /// * `&Url` - The connection url.
-    ///
-    fn url(&self) -> &Url;
 
     /// Get connection protocol.
     ///
@@ -109,15 +328,15 @@ pub trait DeboaHttpConnection: private::DeboaHttpConnectionSealed {
     ///
     /// * `Result<Response<Incoming>>` - The response or error.
     ///
+    #[hotpath::measure]
     async fn process_response(
         &self,
-        url: &Url,
         method: &str,
         response: std::result::Result<Response<Incoming>, hyper::Error>,
     ) -> Result<Response<Incoming>> {
         if let Err(err) = response {
             return Err(DeboaError::Request(RequestError::Send {
-                url: url.to_string(),
+                url: "".to_string(),
                 method: method.to_string(),
                 message: err.to_string(),
             }));

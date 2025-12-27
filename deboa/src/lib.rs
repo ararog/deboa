@@ -1140,9 +1140,26 @@ impl Client {
 
         let request = request.unwrap();
 
+        let scheme = url.scheme();
+
+        let host = url
+            .host_str()
+            .unwrap_or("localhost");
+
+        let (host_owned, is_secure) = if let Some(port) = url.port() {
+            let is_secure = scheme == "https" || scheme == "wss";
+            (format!("{}:{}", host, port), is_secure)
+        } else {
+            match scheme {
+                "http" | "ws" => (format!("{}:80", host), false),
+                "https" | "wss" => (format!("{}:443", host), true),
+                _ => panic!("Unsupported scheme: {}", scheme),
+            }
+        };
+
         if let Some(pool) = &mut self.pool {
             let conn = pool
-                .create_connection(url, &self.protocol, &self.identity)
+                .create_connection(is_secure, &host_owned, &self.protocol, &self.identity)
                 .await?;
             match conn {
                 #[cfg(feature = "http1")]
@@ -1159,15 +1176,23 @@ impl Client {
         } else {
             match self.protocol {
                 HttpVersion::Http1 => {
-                    let mut connection =
-                        BaseHttpConnection::<Http1Request>::connect(url, &self.identity).await?;
+                    let mut connection = BaseHttpConnection::<Http1Request>::connect(
+                        is_secure,
+                        &host_owned,
+                        &self.identity,
+                    )
+                    .await?;
                     connection
                         .send_request(request)
                         .await
                 }
                 HttpVersion::Http2 => {
-                    let mut connection =
-                        BaseHttpConnection::<Http2Request>::connect(url, &self.identity).await?;
+                    let mut connection = BaseHttpConnection::<Http2Request>::connect(
+                        is_secure,
+                        &host_owned,
+                        &self.identity,
+                    )
+                    .await?;
                     connection
                         .send_request(request)
                         .await
