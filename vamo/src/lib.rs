@@ -585,11 +585,11 @@ impl Vamo {
             base_url.set_path(&format!("{}{}", base_path, path));
         }
 
-        let request = DeboaRequest::from(base_url.as_str())?
+        let request = DeboaRequest::from(base_url.as_str())
             .method(self.method.clone())
             .headers(self.headers.clone())
             .raw_body(&self.body)
-            .build()?;
+            .build();
 
         self.client
             .execute(request)

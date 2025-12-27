@@ -8,7 +8,7 @@ use url::Url;
 
 #[test]
 fn test_sse_request() -> Result<()> {
-    let request = DeboaRequestBuilder::sse("https://sse.dev/test")?.build()?;
+    let request = DeboaRequestBuilder::sse("https://sse.dev/test")?.build();
     assert_eq!(request.method(), Method::GET);
     assert_eq!(request.url(), Arc::new(Url::parse("https://sse.dev/test").unwrap()));
     assert_eq!(
