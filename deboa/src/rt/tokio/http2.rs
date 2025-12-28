@@ -7,6 +7,8 @@ use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
 
 use crate::client::conn::http::DeboaHttpConnection;
+use crate::client::conn::stream::plain_connection;
+use crate::client::conn::stream::tls_connection;
 use crate::errors::ConnectionError;
 use crate::{
     cert::ClientCert,
@@ -24,16 +26,15 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
         Version::HTTP_2
     }
 
-    #[hotpath::measure]
     async fn connect(
         is_secure: bool,
         host: &str,
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Http2Request>> {
         let stream = if is_secure {
-            Self::tls_connection(&host, client_cert).await
+            tls_connection(host, client_cert).await
         } else {
-            Self::plain_connection(&host).await
+            plain_connection(host).await
         };
 
         if let Err(e) = stream {
@@ -61,7 +62,6 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
         Ok(BaseHttpConnection::<Http2Request> { sender })
     }
 
-    #[hotpath::measure]
     async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {
         let method = request
             .method()

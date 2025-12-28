@@ -7,7 +7,10 @@ use hyper_util::rt::TokioIo;
 
 use crate::{
     cert::ClientCert,
-    client::conn::http::{BaseHttpConnection, DeboaHttpConnection, Http1Request},
+    client::conn::{
+        http::{BaseHttpConnection, DeboaHttpConnection, Http1Request},
+        stream::{plain_connection, tls_connection},
+    },
     errors::{ConnectionError, DeboaError},
     Result,
 };
@@ -28,9 +31,9 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
         let stream = if is_secure {
-            Self::tls_connection(&host, client_cert).await
+            tls_connection(host, client_cert).await
         } else {
-            Self::plain_connection(&host).await
+            plain_connection(host).await
         };
 
         if let Err(e) = stream {
