@@ -35,7 +35,7 @@ async fn test_fory_post_request() -> Result<(), DeboaError> {
 
     let person = Person { name: "John Doe".to_string(), age: 30 };
 
-    let request = post(server.url(path)).body_as_fory(&fory, person)?;
+    let request = post(server.url(path))?.body_as_fory(&fory, person)?;
 
     let response: Person = request
         .send_with(client)

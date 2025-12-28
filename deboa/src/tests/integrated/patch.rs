@@ -29,9 +29,9 @@ async fn do_patch() -> Result<()> {
         server
             .url("/posts/1")
             .as_str(),
-    )
+    )?
     .text("")
-    .build();
+    .build()?;
 
     let response = client
         .execute(request)

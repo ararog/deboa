@@ -166,6 +166,7 @@ impl App {
 
     async fn make_request(&mut self) -> Result<DeboaResponse, String> {
         let response = DeboaRequest::post("https://api.openai.com/v1/chat/completions")
+            .unwrap()
             .bearer_auth(API_KEY)
             .header(header::CONTENT_TYPE, "application/json")
             .body_as(

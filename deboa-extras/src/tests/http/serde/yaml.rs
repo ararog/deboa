@@ -5,9 +5,9 @@ use deboa_tests::utils::fake_url;
 
 #[test]
 fn test_set_yaml() -> Result<()> {
-    let request = DeboaRequest::post(fake_url())
+    let request = DeboaRequest::post(fake_url())?
         .body_as(YamlBody, sample_post())?
-        .build();
+        .build()?;
 
     assert_eq!(*request.raw_body(), YAML_POST[..]);
 
