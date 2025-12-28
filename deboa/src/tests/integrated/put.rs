@@ -27,9 +27,9 @@ async fn do_put() -> Result<()> {
         server
             .url("/posts/1")
             .as_str(),
-    )
+    )?
     .text("ping")
-    .build();
+    .build()?;
 
     let response = client
         .execute(request)

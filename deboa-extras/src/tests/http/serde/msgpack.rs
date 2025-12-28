@@ -6,9 +6,9 @@ use deboa_tests::utils::fake_url;
 
 #[test]
 fn test_set_msgpack() -> Result<()> {
-    let request = DeboaRequest::post(fake_url())
+    let request = DeboaRequest::post(fake_url())?
         .body_as(MsgPackBody, sample_post())?
-        .build();
+        .build()?;
 
     assert_eq!(*request.raw_body(), MSGPACK_POST[..]);
 

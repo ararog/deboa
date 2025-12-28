@@ -22,7 +22,7 @@
 //!     let mut client = Client::builder()
 //!         .build();
 //!
-//!     let response = DeboaRequest::get("https://httpbin.org/get")
+//!     let response = DeboaRequest::get("https://httpbin.org/get")?
 //!         .send_with(&mut client)
 //!         .await?;
 //!
@@ -157,7 +157,10 @@ impl Shl<&str> for &Client {
     type Output = DeboaRequest;
 
     fn shl(self, other: &str) -> Self::Output {
-        DeboaRequest::get(other).build()
+        DeboaRequest::get(other)
+            .expect("Invalid URL!")
+            .build()
+            .expect("Invalid request!")
     }
 }
 
@@ -976,7 +979,7 @@ impl Client {
     where
         R: IntoRequest,
     {
-        let mut request = request.into_request();
+        let mut request = request.into_request()?;
 
         if let Some(catchers) = &self.catchers {
             let mut response = None;

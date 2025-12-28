@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
 
     let url = "http://localhost:8080";
 
-    let response: Message = post(url)
+    let response: Message = post(url)?
         .body_as(CborBody, &payload)?
         .send_with(&mut client)
         .await?

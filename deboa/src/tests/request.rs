@@ -12,7 +12,7 @@ use url::Url;
 #[test]
 fn test_into_url() -> Result<()> {
     let url = Url::parse(JSONPLACEHOLDER).unwrap();
-    let request = DeboaRequest::get(url).build();
+    let request = DeboaRequest::get(url)?.build()?;
     assert_eq!(
         request
             .url()
@@ -24,7 +24,7 @@ fn test_into_url() -> Result<()> {
 
 #[test]
 fn test_into_request_from_str() -> Result<()> {
-    let request = JSONPLACEHOLDER.into_request();
+    let request = JSONPLACEHOLDER.into_request()?;
     assert_eq!(
         request
             .url()
@@ -36,7 +36,7 @@ fn test_into_request_from_str() -> Result<()> {
 
 #[test]
 fn test_into_request_from_string() -> Result<()> {
-    let request = format!("{}/posts/{}", JSONPLACEHOLDER, 1).into_request();
+    let request = format!("{}/posts/{}", JSONPLACEHOLDER, 1).into_request()?;
     assert_eq!(
         request
             .url()
@@ -48,7 +48,7 @@ fn test_into_request_from_string() -> Result<()> {
 
 #[test]
 fn test_into_str() -> Result<()> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER).build();
+    let request = DeboaRequest::get(JSONPLACEHOLDER)?.build()?;
     assert_eq!(
         request
             .url()
@@ -60,7 +60,7 @@ fn test_into_str() -> Result<()> {
 
 #[test]
 fn test_into_string() -> Result<()> {
-    let request = DeboaRequest::get(String::from(JSONPLACEHOLDER)).build();
+    let request = DeboaRequest::get(String::from(JSONPLACEHOLDER))?.build()?;
     assert_eq!(
         request
             .url()
@@ -74,7 +74,7 @@ fn test_into_string() -> Result<()> {
 async fn test_try_into() -> Result<()> {
     let mut client = Client::default();
     let response = client
-        .execute(JSONPLACEHOLDER)
+        .execute(JSONPLACEHOLDER.into_request()?)
         .await?;
     assert_eq!(response.status(), 200);
     Ok(())
@@ -128,16 +128,16 @@ fn test_from_str_body() -> Result<()> {
 
 #[test]
 fn test_set_retries() -> Result<()> {
-    let api = DeboaRequest::get(JSONPLACEHOLDER)
+    let api = DeboaRequest::get(JSONPLACEHOLDER)?
         .retries(5)
-        .build();
+        .build()?;
     assert_eq!(api.retries(), 5);
     Ok(())
 }
 
 #[test]
 fn test_base_url() -> Result<()> {
-    let api = DeboaRequest::get(String::from(JSONPLACEHOLDER)).build();
+    let api = DeboaRequest::get(String::from(JSONPLACEHOLDER))?.build()?;
     assert_eq!(
         api.url()
             .to_string(),
@@ -148,9 +148,26 @@ fn test_base_url() -> Result<()> {
 
 #[test]
 fn test_set_headers() -> Result<()> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER)
+    let request = DeboaRequest::get(JSONPLACEHOLDER)?
         .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-        .build();
+        .build()?;
+
+    assert_eq!(
+        request
+            .headers()
+            .get(&header::CONTENT_TYPE),
+        Some(&HeaderValue::from_str(mime::APPLICATION_JSON.as_ref()).unwrap())
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_set_headers_as_tuple() -> Result<()> {
+    let headers = vec![(header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string())];
+    let request = DeboaRequest::get(JSONPLACEHOLDER)?
+        .headers(headers)
+        .build()?;
 
     assert_eq!(
         request
@@ -164,9 +181,9 @@ fn test_set_headers() -> Result<()> {
 
 #[test]
 fn test_set_basic_auth() -> Result<()> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER)
+    let request = DeboaRequest::get(JSONPLACEHOLDER)?
         .basic_auth("username", "password")
-        .build();
+        .build()?;
 
     assert_eq!(
         request
@@ -180,9 +197,9 @@ fn test_set_basic_auth() -> Result<()> {
 
 #[test]
 fn test_set_bearer_auth() -> Result<()> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER)
+    let request = DeboaRequest::get(JSONPLACEHOLDER)?
         .bearer_auth("token")
-        .build();
+        .build()?;
 
     assert_eq!(
         request
@@ -196,9 +213,9 @@ fn test_set_bearer_auth() -> Result<()> {
 
 #[test]
 fn test_add_header() -> Result<()> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER)
+    let request = DeboaRequest::get(JSONPLACEHOLDER)?
         .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-        .build();
+        .build()?;
 
     assert_eq!(
         request
@@ -212,9 +229,9 @@ fn test_add_header() -> Result<()> {
 
 #[test]
 fn test_set_text_body() -> Result<()> {
-    let request = DeboaRequest::post(JSONPLACEHOLDER)
+    let request = DeboaRequest::post(JSONPLACEHOLDER)?
         .text("test")
-        .build();
+        .build()?;
 
     assert_eq!(*request.raw_body(), b"test"[..]);
 
@@ -223,9 +240,9 @@ fn test_set_text_body() -> Result<()> {
 
 #[test]
 fn test_raw_body() -> Result<()> {
-    let request = DeboaRequest::post(JSONPLACEHOLDER)
+    let request = DeboaRequest::post(JSONPLACEHOLDER)?
         .raw_body(b"test")
-        .build();
+        .build()?;
 
     assert_eq!(request.raw_body(), b"test");
 

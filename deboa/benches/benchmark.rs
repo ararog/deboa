@@ -9,7 +9,7 @@ use deboa::{request::DeboaRequest, Client, Result};
 
 async fn get_async() -> Result<()> {
     let client = Client::default();
-    let res = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")
+    let res = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")?
         .send_with(client)
         .await;
 
@@ -18,7 +18,7 @@ async fn get_async() -> Result<()> {
 
 async fn post_async() -> Result<()> {
     let client = Client::new();
-    let _ = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts")
+    let _ = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts")?
         .text("Some test to do")
         .send_with(client)
         .await;

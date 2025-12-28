@@ -181,9 +181,9 @@ macro_rules! post {
     ($input:ident, $url:expr, &mut $client:ident) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::post($url)
+                deboa::request::DeboaRequest::post($url)?
                     .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
     };
@@ -191,9 +191,9 @@ macro_rules! post {
     ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::post($url)
+                deboa::request::DeboaRequest::post($url)?
                     .body_as($req_body_ty, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
     };
@@ -201,9 +201,9 @@ macro_rules! post {
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::post($url)
+                deboa::request::DeboaRequest::post($url)?
                     .body_as($req_body_ty, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
     };
@@ -211,9 +211,9 @@ macro_rules! post {
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::post($url)
+                deboa::request::DeboaRequest::post($url)?
                     .body_as($req_body_ty, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
             .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
@@ -250,9 +250,9 @@ macro_rules! put {
     ($input:ident, $url:literal, &mut $client:ident) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::put($url)
+                deboa::request::DeboaRequest::put($url)?
                     .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
     };
@@ -260,9 +260,9 @@ macro_rules! put {
     ($input:ident, $url:expr, &mut $client:ident) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::put($url)
+                deboa::request::DeboaRequest::put($url)?
                     .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
     };
@@ -270,9 +270,9 @@ macro_rules! put {
     ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::put($url)
+                deboa::request::DeboaRequest::put($url)?
                     .body_as($req_body_ty, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
     };
@@ -280,9 +280,9 @@ macro_rules! put {
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::put($url)
+                deboa::request::DeboaRequest::put($url)?
                     .body_as($req_body_ty, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
     };
@@ -290,9 +290,9 @@ macro_rules! put {
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::put($url)
+                deboa::request::DeboaRequest::put($url)?
                     .body_as($req_body_ty, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
             .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
@@ -329,9 +329,9 @@ macro_rules! patch {
     ($input:ident, $url:literal, &mut $client:ident) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::patch($url)
+                deboa::request::DeboaRequest::patch($url)?
                     .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
     };
@@ -339,9 +339,9 @@ macro_rules! patch {
     ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::patch($url)
+                deboa::request::DeboaRequest::patch($url)?
                     .body_as($req_body_ty, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
     };
@@ -349,9 +349,9 @@ macro_rules! patch {
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::patch($url)
+                deboa::request::DeboaRequest::patch($url)?
                     .body_as($req_body_ty, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
     };
@@ -359,9 +359,9 @@ macro_rules! patch {
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::patch($url)
+                deboa::request::DeboaRequest::patch($url)?
                     .body_as($req_body_ty, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
             .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
@@ -395,13 +395,13 @@ macro_rules! patch {
 macro_rules! delete {
     ($url:literal, &mut $client:ident) => {
         $client
-            .execute(deboa::request::DeboaRequest::delete($url).build())
+            .execute(deboa::request::DeboaRequest::delete($url)?.build()?)
             .await?
     };
 
     ($url:expr, &mut $client:ident) => {
         $client
-            .execute(deboa::request::DeboaRequest::delete($url).build())
+            .execute(deboa::request::DeboaRequest::delete($url)?.build()?)
             .await?
     };
 }

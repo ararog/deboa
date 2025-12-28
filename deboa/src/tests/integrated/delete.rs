@@ -27,7 +27,7 @@ async fn do_delete() -> Result<()> {
         server
             .url("/posts/1")
             .as_str(),
-    )
+    )?
     .send_with(client)
     .await?;
 

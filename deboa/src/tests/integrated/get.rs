@@ -34,8 +34,8 @@ async fn do_get_http1() -> Result<()> {
         server
             .url("/posts")
             .as_str(),
-    )
-    .build();
+    )?
+    .build()?;
 
     let response: DeboaResponse = client
         .execute(request)
@@ -83,8 +83,8 @@ async fn do_get_http2() -> Result<()> {
         server
             .url("/posts")
             .as_str(),
-    )
-    .build();
+    )?
+    .build()?;
 
     let response: DeboaResponse = client
         .execute(request)
@@ -134,7 +134,7 @@ async fn do_get_not_found() -> Result<()> {
         server
             .url("/asasa/posts/1ddd")
             .as_str(),
-    )
+    )?
     .send_with(client)
     .await;
 
@@ -172,9 +172,9 @@ async fn test_get_not_found() {
 async fn do_get_invalid_server() -> Result<()> {
     let mut api = Client::default();
 
-    let request = DeboaRequest::get("https://invalid-server.com/posts")
+    let request = DeboaRequest::get("https://invalid-server.com/posts")?
         .text("test")
-        .build();
+        .build()?;
 
     let response: Result<DeboaResponse> = api
         .execute(request)
@@ -225,7 +225,7 @@ async fn do_get_by_query() -> Result<()> {
         server
             .url("/comments/1")
             .as_str(),
-    )
+    )?
     .send_with(client)
     .await?;
 
@@ -275,7 +275,7 @@ async fn do_get_by_query_with_retries() -> Result<()> {
         server
             .url("/comments/1")
             .as_str(),
-    )
+    )?
     .retries(2)
     .send_with(client)
     .await;
@@ -332,7 +332,7 @@ async fn do_get_with_redirect() -> Result<()> {
         server
             .url("/comments/one")
             .as_str(),
-    )
+    )?
     .send_with(client)
     .await?;
 

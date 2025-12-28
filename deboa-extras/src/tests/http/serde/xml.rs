@@ -8,9 +8,9 @@ use deboa_tests::{
 
 #[tokio::test]
 async fn test_set_xml() -> Result<()> {
-    let request = DeboaRequest::post(fake_url())
+    let request = DeboaRequest::post(fake_url())?
         .body_as(XmlBody, sample_post())?
-        .build();
+        .build()?;
 
     assert_eq!(*request.raw_body(), XML_POST[..]);
 

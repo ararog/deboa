@@ -13,9 +13,9 @@ fn build_sample_cbor_body() -> Vec<u8> {
 
 #[test]
 fn test_set_cbor() -> Result<()> {
-    let request = DeboaRequest::post(fake_url())
+    let request = DeboaRequest::post(fake_url())?
         .body_as(CborBody, sample_post())?
-        .build();
+        .build()?;
 
     assert_eq!(*request.raw_body(), build_sample_cbor_body());
 
@@ -24,7 +24,7 @@ fn test_set_cbor() -> Result<()> {
 
 #[test]
 fn test_set_cbor_registers_headers() -> Result<()> {
-    let mut request = DeboaRequest::post(fake_url()).build();
+    let mut request = DeboaRequest::post(fake_url())?.build()?;
     request.set_body_as(CborBody, sample_post())?;
 
     assert_eq!(

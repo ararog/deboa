@@ -14,7 +14,10 @@ use deboa_tests::utils::{setup_server, url_from_string};
 #[tokio::test]
 async fn test_catcher_request() {
     let mut mock = MockDeboaCatcher::new();
-    let mut request = DeboaRequest::get("https://httpbin.org/get").build();
+    let mut request = DeboaRequest::get("https://httpbin.org/get")
+        .unwrap()
+        .build()
+        .unwrap();
     mock.expect_on_request()
         .returning(move |req| {
             req.headers_mut()
@@ -60,6 +63,7 @@ async fn test_catcher_response() {
             .url("/get")
             .as_str(),
     )
+    .unwrap()
     .send_with(client)
     .await
     .unwrap();
@@ -117,6 +121,7 @@ async fn test_catcher_early_response() {
             .url("/get")
             .as_str(),
     )
+    .unwrap()
     .send_with(client)
     .await
     .unwrap();
