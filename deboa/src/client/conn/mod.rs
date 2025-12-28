@@ -42,3 +42,25 @@ pub mod http;
 /// - Thread-safe operation
 /// - Configurable pool size (coming soon)
 pub mod pool;
+
+/// Internal stream handling utilities for connection establishment.
+/// Provides low-level connection creation functions for both secure and insecure connections.
+/// Used internally by the HTTP connection implementations.
+///
+/// # Modules
+///
+/// - `plain_connection`: Creates plain (non-TLS) TCP connections
+/// - `tls_connection`: Creates TLS-encrypted connections with optional client certificates
+///
+/// # Examples
+///
+/// ```compile_fail, rust
+/// use deboa::client::conn::stream::{plain_connection, tls_connection};
+///
+/// // Create a plain TCP connection
+/// let stream = plain_connection("example.com:80").await?;
+///
+/// // Create a TLS connection
+/// let stream = tls_connection("example.com:443", None).await?;
+/// ```
+pub(crate) mod stream;

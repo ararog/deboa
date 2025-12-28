@@ -1,4 +1,9 @@
+#[cfg(feature = "smol-native-tls")]
 use async_native_tls::TlsStream;
+
+#[cfg(feature = "smol-rust-tls")]
+use futures_rustls::client::TlsStream;
+
 use std::{
     pin::Pin,
     task::{Context, Poll},
@@ -13,8 +18,13 @@ pub enum SmolStream {
     /// A plain TCP connection.
     Plain(TcpStream),
 
-    /// A TCP connection secured by TLS.
+    /// A TCP connection secured by native TLS.
+    #[cfg(feature = "smol-native-tls")]
     Tls(TlsStream<TcpStream>),
+
+    /// A TCP connection secured by rustls.
+    #[cfg(feature = "smol-rust-tls")]
+    Tls(Box<TlsStream<TcpStream>>),
 }
 
 impl AsyncRead for SmolStream {

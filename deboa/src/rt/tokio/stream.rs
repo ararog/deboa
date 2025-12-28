@@ -1,13 +1,13 @@
-use std::{
-    pin::Pin,
-    task::{Context, Poll},
-};
-
 #[cfg(feature = "tokio-native-tls")]
 use tokio_native_tls::TlsStream;
 
 #[cfg(feature = "tokio-rust-tls")]
 use tokio_rustls::client::TlsStream;
+
+use std::{
+    pin::Pin,
+    task::{Context, Poll},
+};
 
 use tokio::{
     io::{self, AsyncRead, AsyncWrite},
@@ -18,10 +18,11 @@ pub enum TokioStream {
     /// A plain TCP connection.
     Plain(TcpStream),
 
-    /// A TCP connection secured by TLS.
+    /// A TCP connection secured by native TLS.
     #[cfg(feature = "tokio-native-tls")]
     Tls(TlsStream<TcpStream>),
 
+    /// A TCP connection secured by rustls.
     #[cfg(feature = "tokio-rust-tls")]
     Tls(Box<TlsStream<TcpStream>>),
 }
