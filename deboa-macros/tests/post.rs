@@ -11,10 +11,21 @@ pub struct Post {
 }
 
 #[tokio::test]
-async fn test_post() -> Result<()> {
+async fn test_only_post() -> Result<()> {
     let mut client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &mut client);
+    assert_eq!(response.status(), 201);
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_post_with_headers() -> Result<()> {
+    let mut client = Client::default();
+    let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
+    let headers = vec![("Content-Type", "application/json")];
+    let response =
+        post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", headers, &mut client);
     assert_eq!(response.status(), 201);
     Ok(())
 }

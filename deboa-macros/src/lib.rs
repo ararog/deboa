@@ -137,13 +137,14 @@ macro_rules! get {
 ///
 /// To help understand the macro arguments, here is an example:
 ///
-/// post!(input, req_body_ty, url, &mut client, res_body_ty, res_ty)
+/// post!(input, req_body_ty, url, headers, &mut client, res_body_ty, res_ty)
 ///
 /// # Arguments
 ///
 /// * `input`       - The input to send with the request.
 /// * `req_body_ty` - The body serialization type of the request.
 /// * `url`         - The URL to make the POST request to.
+/// * `headers`     - The headers to send with the request.
 /// * `client`      - The client variable to use for the request.
 /// * `res_body_ty` - The body type of the response.
 /// * `res_ty`      - The type of the response.
@@ -156,7 +157,12 @@ macro_rules! get {
 ///
 /// ```compile_fail
 /// let mut client = Client::new();
-/// let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &mut client);
+/// let response = post!(data,
+///     JsonBody,
+///     "https://jsonplaceholder.typicode.com/posts",
+///     vec!(("Content-Type", "application/json")),
+///     &mut client
+/// );
 /// assert_eq!(response.id, 1);
 /// ```
 ///
@@ -208,10 +214,33 @@ macro_rules! post {
             .await?
     };
 
+    ($input:ident, $req_body_ty:ident, $url:expr, $headers:ident, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::post($url)?
+                    .headers($headers)
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
+            .await?
+    };
+
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::post($url)?
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
+            .await?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+    };
+
+    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::post($url)?
+                    .headers($headers)
                     .body_as($req_body_ty, $input)?
                     .build()?,
             )
