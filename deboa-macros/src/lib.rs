@@ -106,6 +106,21 @@
 /// assert_eq!(response.len(), 100);
 /// ```
 macro_rules! get {
+    ($url:expr, &mut $client:ident) => {
+        $client
+            .execute($url)
+            .await?
+            .text()
+    };
+
+    ($url:expr, $headers:expr, &mut $client:ident) => {
+        deboa::request::DeboaRequest::get($url)
+            .headers($headers)
+            .send_with($client)
+            .await?
+            .text()
+    };
+
     ($url:literal, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute($url)
@@ -122,11 +137,13 @@ macro_rules! get {
             .await?
     };
 
-    ($url:expr, &mut $client:ident) => {
-        $client
-            .execute($url)
+    ($url:expr, $headers:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+        deboa::request::DeboaRequest::get($url)
+            .headers($headers)
+            .send_with($client)
             .await?
-            .text()
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+            .await?
     };
 }
 
@@ -135,18 +152,30 @@ macro_rules! get {
 ///
 /// The `post!` macro is used to make a POST request to the specified URL.
 ///
-/// To help understand the macro arguments, here is an example:
+/// It can be either:
+///
+/// post!(input, req_body_ty, url, &mut client)
+///
+/// or
+///   
+/// post!(input, req_body_ty, url, headers, &mut client)
+///
+/// or
+///
+/// post!(input, req_body_ty, url, &mut client, res_body_ty, res_ty)
+///
+/// or
 ///
 /// post!(input, req_body_ty, url, headers, &mut client, res_body_ty, res_ty)
 ///
 /// # Arguments
 ///
 /// * `input`       - The input to send with the request.
-/// * `req_body_ty` - The body serialization type of the request.
+/// * `req_body_ty` - The body serialization format of the request.
 /// * `url`         - The URL to make the POST request to.
 /// * `headers`     - The headers to send with the request.
 /// * `client`      - The client variable to use for the request.
-/// * `res_body_ty` - The body type of the response.
+/// * `res_body_ty` - The body serialization format of the response.
 /// * `res_ty`      - The type of the response.
 ///
 /// Please note url can be a string literal or a variable.
@@ -194,6 +223,17 @@ macro_rules! post {
             .await?
     };
 
+    ($input:ident, $url:literal, $headers:expr, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::post($url)?
+                    .headers($headers)
+                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                    .build()?,
+            )
+            .await?
+    };
+
     ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
         $client
             .execute(
@@ -214,7 +254,7 @@ macro_rules! post {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, $headers:ident, &mut $client:ident) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::post($url)?
@@ -261,10 +301,11 @@ macro_rules! post {
 ///
 /// # Arguments
 ///
-/// * `input`       - The input to send with the request.
-/// * `req_body_ty` - The body serialization type of the request.
+/// * `input`       - The input to send with request.
+/// * `req_body_ty` - The body serialization format of request.
 /// * `url`         - The URL to make the PUT request to.
-/// * `client`      - The client variable to use for the request.
+/// * `headers`     - The headers to send with request.
+/// * `client`      - The client variable to use for request.
 ///
 /// Please note url can be a string literal or a variable.
 ///
@@ -340,10 +381,11 @@ macro_rules! put {
 ///
 /// # Arguments
 ///
-/// * `input`       - The input to send with the request.
-/// * `req_body_ty` - The body serialization type of the request.
+/// * `input`       - The input to send with request.
+/// * `req_body_ty` - The body serialization format of request.
 /// * `url`         - The URL to make the PATCH request to.
-/// * `client`      - The client variable to use for the request.
+/// * `headers`     - The headers to send with request.
+/// * `client`      - The client variable to use for request.
 ///
 /// Please note url can be a string literal or a variable.
 ///
@@ -410,7 +452,8 @@ macro_rules! patch {
 /// # Arguments
 ///
 /// * `url`    - The URL to make the DELETE request to.
-/// * `client` - The client variable to use for the request.
+/// * `headers` - The headers to send with request.
+/// * `client` - The client variable to use for request.
 ///
 /// Please note url can be a string literal or a variable.
 ///
@@ -452,9 +495,10 @@ macro_rules! delete {
 /// # Arguments
 ///
 /// * `url`         - The URL to make the GET request to.
-/// * `client`      - The client variable to use for the request.
-/// * `res_body_ty` - The body type of the response.
-/// * `res_ty`      - The type of the response.
+/// * `headers`     - The headers to send with request.
+/// * `client`      - The client variable to use request.
+/// * `res_body_ty` - The body serialization format of response.
+/// * `res_ty`      - The type of response.
 ///
 /// Please note url can be a string literal or a variable.
 ///
@@ -505,11 +549,12 @@ macro_rules! fetch {
 /// # Arguments
 ///
 /// * `method`      - The HTTP method to use.
-/// * `input`       - The input to send with the request.
+/// * `input`       - The input to send with request.
 /// * `url`         - The URL to make the GET request to.
-/// * `client`      - The client variable to use for the request.
-/// * `res_body_ty` - The body type of the response.
-/// * `res_ty`      - The type of the response.
+/// * `headers`     - The headers to send with request.
+/// * `client`      - The client variable to use for request.
+/// * `res_body_ty` - The body serialization format of response.
+/// * `res_ty`      - The type of response.
 ///
 /// Please note url can be a string literal or a variable.
 ///
@@ -545,7 +590,8 @@ macro_rules! submit {
 /// # Arguments
 ///
 /// * `url`    - The URL to make the GET request to.
-/// * `client` - The client variable to use for the request.
+/// * `headers` - The headers to send with request.
+/// * `client` - The client variable to use for request.
 ///
 /// Please note url can be a string literal or a variable.
 ///

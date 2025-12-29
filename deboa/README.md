@@ -27,6 +27,17 @@ This release has a major api change. Please check the [migration guide](https://
 - http1/2 support
 - http3 support (soon)
 
+## Benchmark Results
+
+### Get Request
+
+|            | `Deboa`                  | `Reqwest`                        |
+|:-----------|:-------------------------|:-------------------------------- |
+| **`100`**  | `50.53 ms` (✅ **1.00x**) | `70.92 ms` (❌ *1.40x slower*)    |
+| **`500`**  | `46.44 ms` (✅ **1.00x**) | `71.23 ms` (❌ *1.53x slower*)    |
+| **`1000`** | `96.79 ms` (✅ **1.00x**) | `99.82 ms` (✅ **1.03x slower**)  |
+
+
 ## Install
 
 Either run from command line:

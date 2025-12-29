@@ -37,18 +37,22 @@
 //! To avoid compiling unused dependencies, Deboa feature-gates optional
 //! functionality, some enabled by default:
 //!
-//! | Feature         | Default? | Description                                             |
-//! |-----------------|----------|---------------------------------------------------------|
-//! | `tokio_rt`      | Yes      | Support tokio runtime (enabled by default).             |
-//! | `smol_rt`       | No       | Support smol runtime.                                   |
-//! | `http1`         | Yes      | Support for HTTP/1 (enabled by default).                |
-//! | `http2`         | Yes      | Support for HTTP/2 (enabled by default).                |
+//! | Feature           | Default? | Description                                             |
+//! |-------------------|----------|---------------------------------------------------------|
+//! | `tokio_rt`        | Yes      | Support tokio runtime (enabled by default).             |
+//! | `smol_rt`         | No       | Support smol runtime.                                   |
+//! | `http1`           | Yes      | Support for HTTP/1 (enabled by default).                |
+//! | `http2`           | Yes      | Support for HTTP/2 (enabled by default).                |
+//! | `tokio-rust-tls`  | Yes      | Support for tokio-rust-tls (enabled by default).        |
+//! | `tokio-native-tls`| No       | Support for tokio-native-tls.                           |
+//! | `smol-rust-tls`   | No       | Support for smol-rust-tls.                              |
+//! | `smol-native-tls` | No       | Support for smol-native-tls.                            |
 //!
 //! Disabled features can be selectively enabled in `Cargo.toml`:
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = { version = "0.1.0", features = ["tokio_rt", "http1", "http2"] }
+//! deboa = { version = "0.1.0", features = ["tokio_rt", "http1", "http2", "tokio-rust-tls"] }
 //! ```
 //!
 //! Conversely, HTTP/2 can be disabled:
