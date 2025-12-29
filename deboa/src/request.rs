@@ -117,19 +117,19 @@ impl IntoRequest for DeboaRequest {
 
 impl IntoRequest for &str {
     fn into_request(self) -> Result<DeboaRequest> {
-        Ok(DeboaRequest::get(self)?.build()?)
+        DeboaRequest::get(self)?.build()
     }
 }
 
 impl IntoRequest for String {
     fn into_request(self) -> Result<DeboaRequest> {
-        Ok(DeboaRequest::get(self)?.build()?)
+        DeboaRequest::get(self)?.build()
     }
 }
 
 impl IntoRequest for Url {
     fn into_request(self) -> Result<DeboaRequest> {
-        Ok(DeboaRequest::get(self)?.build()?)
+        DeboaRequest::get(self)?.build()
     }
 }
 
@@ -160,6 +160,19 @@ impl IntoHeaders for Vec<(String, String)> {
             headers.insert(
                 HeaderName::from_str(&key).expect("Invalid header name"),
                 HeaderValue::from_str(&value).expect("Invalid header value"),
+            );
+        }
+        Ok(headers)
+    }
+}
+
+impl<'a> IntoHeaders for Vec<(&'a str, &'a str)> {
+    fn into_headers(self) -> Result<HeaderMap> {
+        let mut headers = HeaderMap::new();
+        for (key, value) in self {
+            headers.insert(
+                HeaderName::from_str(key).expect("Invalid header name"),
+                HeaderValue::from_str(value).expect("Invalid header value"),
             );
         }
         Ok(headers)
@@ -776,6 +789,19 @@ impl DeboaRequestBuilder {
             body: self.body,
         };
 
+        if let Some(host) = request.url().host() {
+            request.add_header(
+                header::HOST,
+                host.to_string()
+                    .as_str(),
+            );
+        }
+
+        let content_length = request
+            .raw_body()
+            .len();
+        request.add_header(header::CONTENT_LENGTH, &content_length.to_string());
+
         if let Some(form) = self.form {
             request.set_form(form);
         }
@@ -1055,11 +1081,11 @@ impl DeboaRequest {
     /// ```
     ///
     #[inline]
-    pub fn at<T: IntoUrl>(url: T, method: http::Method) -> DeboaRequestBuilder {
+    pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
         let parsed_url = url.into_url();
         if let Err(e) = parsed_url {
             error!("Failed to parse url: {}", e);
-            panic!("Failed to parse url: {}", e);
+            return Err(DeboaError::Request(RequestError::UrlParse { message: e.to_string() }));
         }
 
         let url = parsed_url.unwrap();
@@ -1067,7 +1093,7 @@ impl DeboaRequest {
         let mut headers = HeaderMap::new();
         headers.insert(header::HOST, HeaderValue::from_str(authority).unwrap());
 
-        DeboaRequestBuilder {
+        Ok(DeboaRequestBuilder {
             url: url.into(),
             headers,
             cookies: None,
@@ -1075,7 +1101,7 @@ impl DeboaRequest {
             method,
             body: Arc::new([]),
             form: None,
-        }
+        })
     }
 
     /// Allow make a GET request.
@@ -1094,7 +1120,7 @@ impl DeboaRequest {
     ///
     #[inline]
     pub fn from<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
-        Ok(DeboaRequest::at(url, Method::GET))
+        DeboaRequest::at(url, Method::GET)
     }
 
     /// Allow make a POST request.
@@ -1113,7 +1139,7 @@ impl DeboaRequest {
     ///
     #[inline]
     pub fn to<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
-        Ok(DeboaRequest::at(url, Method::POST))
+        DeboaRequest::at(url, Method::POST)
     }
 
     /// Allow make a GET request.
@@ -1586,3 +1612,5 @@ impl private::IntoHeadersSealed for HeaderMap {}
 impl private::IntoHeadersSealed for Vec<(HeaderName, String)> {}
 
 impl private::IntoHeadersSealed for Vec<(String, String)> {}
+
+impl<'a> private::IntoHeadersSealed for Vec<(&'a str, &'a str)> {}

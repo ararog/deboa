@@ -42,7 +42,7 @@ impl WebsocketRequestBuilder for DeboaRequestBuilder {
     fn websocket<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
         let rnd: [u8; 16] = rand::random();
         let key = STANDARD.encode(rnd);
-        Ok(DeboaRequest::at(url, Method::GET)
+        Ok(DeboaRequest::at(url, Method::GET)?
             .header(header::UPGRADE, "websocket")
             .header(header::CONNECTION, "Upgrade")
             .header(header::SEC_WEBSOCKET_KEY, &key)
