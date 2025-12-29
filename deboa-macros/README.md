@@ -3,7 +3,8 @@
 [![Crates.io downloads](https://img.shields.io/crates/d/deboa-macros)](https://crates.io/crates/deboa-macros) [![crates.io](https://img.shields.io/crates/v/deboa-macros?style=flat-square)](https://crates.io/crates/deboa-macros) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) ![Crates.io MSRV](https://img.shields.io/crates/msrv/deboa-macros) [![Documentation](https://docs.rs/deboa-macros/badge.svg)](https://docs.rs/deboa-macros/latest/deboa-macros) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ararog/deboa/blob/main/LICENSE.md)  ![Codecov](https://img.shields.io/codecov/c/github/ararog/deboa-macros) 
 
 
-**deboa-macros** is a collection of macros for deboa.
+**deboa-macros** is a collection of macros for deboa. It is close equivalent to
+apisauce for axios, where one macro does it all, from request to response.
 It used to be the home of bora macro, which has been moved to vamo-macros crate.
 
 ## Features
@@ -21,7 +22,7 @@ Either run from command line:
 Or add to your `Cargo.toml`:
 
 ```toml
-deboa-macros = "0.0.1"
+deboa-macros = "0.0.8"
 ```
 
 ## Usage
@@ -59,11 +60,6 @@ let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts
 let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &mut client);
 
 ```
-
-## Notes
-
-It is not possible to use the same name for different operations.
-Please keep struct names unique and in separate modules if possible.
 
 ## License
 

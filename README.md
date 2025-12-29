@@ -62,7 +62,7 @@ async fn main() -> Result<()> {
 
 ## Subprojects
 
-### deboa
+### [deboa](https://github.com/ararog/deboa/tree/develop/deboa)
 
 The core create of http client.
 
@@ -70,23 +70,27 @@ The core create of http client.
 
 A crate with bora macro, for easy rest client generation. Bora macro is now part of vamo-macros.
 
-### deboa-extras
+### [deboa-extras](https://github.com/ararog/deboa/tree/develop/deboa-extras)
 
-Pluggable compression/decompression, serializers and catchers.
+Pluggable compression/decompression, serializers, sse, websockets and catchers.
+All of them are optional. This is the place to contribute with your own pluggable features.
 
-### deboa-macros
+### [deboa-macros](https://github.com/ararog/deboa/tree/develop/deboa-macros)
 
-A crate with set of convenience macros. Please note this crate no longer provides bora macro.
+A crate with collection of convenience macros for deboa. It is close equivalent to
+apisauce for axios, where one macro does it all, from request to response.
+It used to be the home of bora macro, which has been moved to vamo-macros crate.
 
-### deboa-tests
+### [deboa-tests](https://github.com/ararog/deboa/tree/develop/deboa-tests)
 
-A crate with testing utilities.
+A crate with testing utilities to be used with deboa and other crates.
 
-### vamo
+### [vamo](https://github.com/ararog/deboa/tree/develop/vamo)
 
-Nice wrapper on top of deboa for dry rest client.
+Nice wrapper on top of deboa for dry rest client. Set base url once
+and use it for all requests.
 
-### vamo-macros
+### [vamo-macros](https://github.com/ararog/deboa/tree/develop/vamo-macros)
 
 Vamo macros is a collection of macros to make possible use structs as resources to be sent over vamo as client.
 It is also the new home of bora macro.
