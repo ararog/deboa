@@ -142,6 +142,12 @@ async fn main() -> Result<()> {
 }
 ```
 
+## Create project from template
+
+You can create a new project from the template using `cargo generate`:
+
+`cargo generate ararog/deboa-templates`
+
 ## License
 
 MIT
