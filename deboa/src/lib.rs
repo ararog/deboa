@@ -43,6 +43,7 @@
 //! | `smol_rt`         | No       | Support smol runtime.                                   |
 //! | `http1`           | Yes      | Support for HTTP/1 (enabled by default).                |
 //! | `http2`           | Yes      | Support for HTTP/2 (enabled by default).                |
+//! | `http3`           | No       | Support for HTTP/3.                                     |
 //! | `tokio-rust-tls`  | Yes      | Support for tokio-rust-tls (enabled by default).        |
 //! | `tokio-native-tls`| No       | Support for tokio-native-tls.                           |
 //! | `smol-rust-tls`   | No       | Support for smol-rust-tls.                              |
@@ -62,6 +63,15 @@
 //! deboa = { version = "0.1.0", default-features = false }
 //! ```
 //!
+
+#[cfg(all(feature = "smol-rt", feature = "http3"))]
+compile_error!("HTTP3 is not supported with smol runtime.");
+
+#[cfg(all(feature = "http1", feature = "http2", feature = "http3"))]
+compile_error!("HTTP3 is not supported with HTTP/1 and HTTP/2.");
+
+#[cfg(all(feature = "tokio-native-tls", feature = "http3"))]
+compile_error!("HTTP3 is not supported with tokio-native-tls runtime.");
 
 #[cfg(all(feature = "tokio-rt", feature = "smol-rt"))]
 compile_error!("Only one runtime feature can be enabled at a time.");
@@ -1195,7 +1205,7 @@ impl Client {
 
         if let Some(pool) = &mut self.pool {
             let conn = pool
-                .create_connection(is_secure, &host, port, &self.protocol, &self.identity)
+                .create_connection(is_secure, host, port, &self.protocol, &self.identity)
                 .await?;
             match conn {
                 #[cfg(feature = "http1")]
@@ -1215,7 +1225,7 @@ impl Client {
                 HttpVersion::Http1 => {
                     let mut connection = BaseHttpConnection::<Http1Request>::connect(
                         is_secure,
-                        &host,
+                        host,
                         port,
                         &self.identity,
                     )
@@ -1228,7 +1238,7 @@ impl Client {
                 HttpVersion::Http2 => {
                     let mut connection = BaseHttpConnection::<Http2Request>::connect(
                         is_secure,
-                        &host,
+                        host,
                         port,
                         &self.identity,
                     )
@@ -1330,7 +1340,7 @@ impl Client {
 
         if let Some(pool) = &mut self.pool {
             let conn = pool
-                .create_connection(is_secure, &host, port, &self.protocol, &self.identity)
+                .create_connection(is_secure, host, port, &self.protocol, &self.identity)
                 .await?;
             match conn {
                 #[cfg(feature = "http3")]
@@ -1345,7 +1355,7 @@ impl Client {
                 HttpVersion::Http3 => {
                     let mut connection = BaseHttpConnection::<Http3Request>::connect(
                         is_secure,
-                        &host,
+                        host,
                         port,
                         &self.identity,
                     )

@@ -10,7 +10,7 @@
 
 ## Description
 
-**deboa** is a straightforward, non opinionated, developer-centric HTTP client library for Rust. It offers a rich array of modern features—from flexible authentication and serialization formats to runtime compatibility and middleware support—while maintaining simplicity and ease of use. It’s especially well-suited for Rust projects that require a lightweight, efficient HTTP client without sacrificing control or extensibility.
+**deboa** ("fine" portuguese slang) is a straightforward, non opinionated, developer-centric HTTP client library for Rust. It offers a rich array of modern features—from flexible authentication and serialization formats to runtime compatibility and middleware support—while maintaining simplicity and ease of use. It’s especially well-suited for Rust projects that require a lightweight, efficient HTTP client without sacrificing control or extensibility.
 
 Built using [hyper](https://github.com/hyperium/hyper).
 
@@ -21,7 +21,7 @@ This release has a major api change. Please check the [migration guide](https://
 ## Install
 
 ```rust
-deboa = { version = "0.0.9", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.0.9", features = ["http1", "http2", "tokio-rt"] }
 ```
 
 ## Runtimes
@@ -34,7 +34,8 @@ deboa = { version = "0.0.9", features = ["http1", "tokio-rt"] }
 - tokio-rt (default)
 - smol-rt
 - http1 (default)
-- http2
+- http2 (default)
+- http3 (tokio only)
 
 ## Usage
 

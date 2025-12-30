@@ -51,9 +51,10 @@ pub(crate) async fn plain_connection(host: &str, port: u16) -> Result<SmolStream
 #[cfg(all(feature = "tokio-rt", feature = "tokio-native-tls"))]
 pub(crate) async fn tls_connection(
     host: &str,
+    port: u16,
     client_cert: &Option<ClientCert>,
 ) -> Result<TokioStream> {
-    let stream = { TcpStream::connect(host).await };
+    let stream = { TcpStream::connect(format!("{}:{}", host, port)).await };
 
     if let Err(e) = stream {
         return Err(DeboaError::Connection(ConnectionError::Tcp {
