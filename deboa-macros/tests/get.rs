@@ -18,3 +18,17 @@ async fn test_get() -> Result<()> {
     assert_eq!(response.len(), 100);
     Ok(())
 }
+
+#[tokio::test]
+async fn test_get_with_headers() -> Result<()> {
+    let client = Client::default();
+    let response = get!(
+        "https://jsonplaceholder.typicode.com/posts",
+        vec![("User-Agent", "deboa")],
+        &mut client,
+        JsonBody,
+        Vec<Post>
+    );
+    assert_eq!(response.len(), 100);
+    Ok(())
+}

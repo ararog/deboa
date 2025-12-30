@@ -21,8 +21,8 @@ use crate::{
 };
 
 #[cfg(feature = "tokio-rt")]
-pub(crate) async fn plain_connection(host: &str) -> Result<TokioStream> {
-    let stream = { TcpStream::connect(host).await };
+pub(crate) async fn plain_connection(host: &str, port: u16) -> Result<TokioStream> {
+    let stream = { TcpStream::connect(format!("{}:{}", host, port)).await };
 
     if let Err(e) = stream {
         return Err(DeboaError::Connection(ConnectionError::Tcp {
@@ -35,8 +35,8 @@ pub(crate) async fn plain_connection(host: &str) -> Result<TokioStream> {
 }
 
 #[cfg(feature = "smol-rt")]
-pub(crate) async fn plain_connection(host: &str) -> Result<SmolStream> {
-    let stream = { TcpStream::connect(host).await };
+pub(crate) async fn plain_connection(host: &str, port: u16) -> Result<SmolStream> {
+    let stream = { TcpStream::connect(format!("{}:{}", host, port)).await };
 
     if let Err(e) = stream {
         return Err(DeboaError::Connection(ConnectionError::Tcp {
@@ -107,11 +107,12 @@ pub(crate) async fn tls_connection(
 #[cfg(all(feature = "tokio-rt", feature = "tokio-rust-tls"))]
 pub(crate) async fn tls_connection(
     host: &str,
+    port: u16,
     client_cert: &Option<ClientCert>,
 ) -> Result<TokioStream> {
     use rustls::pki_types::ServerName;
 
-    let stream = { TcpStream::connect(host).await };
+    let stream = { TcpStream::connect(format!("{}:{}", host, port)).await };
 
     if let Err(e) = stream {
         return Err(DeboaError::Connection(ConnectionError::Tcp {
@@ -131,13 +132,11 @@ pub(crate) async fn tls_connection(
 
     let connector = TlsConnector::from(Arc::new(config));
 
-    let hostname = if let Some((hostname, _)) = host.split_once(':') { hostname } else { host };
-
-    let parsed_hostname = ServerName::try_from(hostname.to_string());
+    let parsed_hostname = ServerName::try_from(host.to_string());
 
     if let Err(e) = parsed_hostname {
         return Err(DeboaError::Connection(ConnectionError::Tls {
-            host: hostname.to_string(),
+            host: host.to_string(),
             message: e.to_string(),
         }));
     }
@@ -148,7 +147,7 @@ pub(crate) async fn tls_connection(
 
     if let Err(e) = stream {
         return Err(DeboaError::Connection(ConnectionError::Tls {
-            host: hostname.to_string(),
+            host: host.to_string(),
             message: e.to_string(),
         }));
     }
@@ -160,9 +159,10 @@ pub(crate) async fn tls_connection(
 #[cfg(all(feature = "smol-rt", feature = "smol-native-tls"))]
 pub(crate) async fn tls_connection(
     host: &str,
+    port: u16,
     client_cert: &Option<ClientCert>,
 ) -> Result<SmolStream> {
-    let stream = { TcpStream::connect(host).await };
+    let stream = { TcpStream::connect(format!("{}:{}", host, port)).await };
 
     if let Err(e) = stream {
         return Err(DeboaError::Connection(ConnectionError::Tcp {
@@ -179,13 +179,11 @@ pub(crate) async fn tls_connection(
 
     let connector = TlsConnector::from(Arc::new(config));
 
-    let hostname = if let Some((hostname, _)) = host.split_once(':') { hostname } else { host };
-
-    let parsed_hostname = ServerName::try_from(hostname.to_string());
+    let parsed_hostname = ServerName::try_from(host.to_string());
 
     if let Err(e) = parsed_hostname {
         return Err(DeboaError::Connection(ConnectionError::Tls {
-            host: hostname,
+            host: host.to_string(),
             message: e.to_string(),
         }));
     }
@@ -208,12 +206,13 @@ pub(crate) async fn tls_connection(
 #[cfg(all(feature = "smol-rt", feature = "smol-rust-tls"))]
 pub(crate) async fn tls_connection(
     host: &str,
+    port: u16,
     _client_cert: &Option<ClientCert>,
 ) -> Result<SmolStream> {
     use futures_rustls::TlsConnector;
     use rustls::pki_types::ServerName;
 
-    let stream = { TcpStream::connect(host).await };
+    let stream = { TcpStream::connect(format!("{}:{}", host, port)).await };
 
     if let Err(e) = stream {
         return Err(DeboaError::Connection(ConnectionError::Tcp {
@@ -232,9 +231,7 @@ pub(crate) async fn tls_connection(
         .with_no_client_auth();
     let connector = TlsConnector::from(Arc::new(config));
 
-    let hostname = if let Some((hostname, _)) = host.split_once(':') { hostname } else { host };
-
-    let hostname = ServerName::try_from(hostname.to_string());
+    let hostname = ServerName::try_from(host.to_string());
 
     if let Err(e) = hostname {
         return Err(DeboaError::Connection(ConnectionError::Tls {

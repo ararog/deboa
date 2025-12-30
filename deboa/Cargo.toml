@@ -13,7 +13,7 @@ publish = true
 rust-version = "1.64.0"
 
 [features]
-default = ["tokio-rt", "http1", "http2", "tokio-rust-tls"]
+default = ["tokio-rt", "http2", "tokio-rust-tls"]
 
 # runtimes
 tokio-rt = ["dep:tokio"]
@@ -47,8 +47,9 @@ cfg-if = "1.0.4"
 cookie = "0.15.2"
 futures = "0.3.31"
 futures-rustls = { version = "0.26.0", optional = true }
-h3 = { version = "0.0.6", optional = true }
-h3-quinn = { version = "0.0.5", optional = true }
+h3 = { version = "0.0.8", optional = true }
+h3-quinn = { version = "0.0.10", optional = true }
+hickory-resolver = "0.1.0"
 hotpath = "0.9.2"
 http = "1"
 http-body = "1"
@@ -66,7 +67,7 @@ log = "0.4.28"
 macro_rules_attribute = { version = "0.2.2", optional = true }
 minimime = "1.0.0"
 mockall = "0.14.0"
-quinn = { version = "0.10.2", optional = true }
+quinn = { version = "0.11.7", optional = true, features = ["rustls-aws-lc-rs"] }
 rand = "0.9.2"
 regex = "1.9.6"
 rustls = { version = "0.23.19", optional = true }

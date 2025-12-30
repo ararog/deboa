@@ -3,43 +3,13 @@ use bytes::Bytes;
 use http::{Request, Response, StatusCode, Version};
 use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
-#[cfg(feature = "tokio-native-tls")]
-use tokio_native_tls::native_tls::{Certificate, Identity, TlsConnector};
 
 use crate::{
     cert::ClientCert,
+    client::conn::BaseHttpConnection,
     errors::{DeboaError, RequestError, ResponseError},
     Result, MAX_ERROR_MESSAGE_SIZE,
 };
-
-#[derive(Debug)]
-/// Enum that represents the connection type.
-///
-/// # Variants
-///
-/// * `Http1` - The HTTP/1.1 connection.
-/// * `Http2` - The HTTP/2 connection.
-pub enum DeboaConnection {
-    #[cfg(feature = "http1")]
-    Http1(Box<BaseHttpConnection<Http1Request>>),
-    #[cfg(feature = "http2")]
-    Http2(Box<BaseHttpConnection<Http2Request>>),
-}
-
-#[derive(Debug, Clone)]
-/// Struct that represents the connection.
-///
-/// # Fields
-///
-/// * `sender` - The sender to use.
-pub struct BaseHttpConnection<T> {
-    pub(crate) sender: T,
-}
-
-#[cfg(feature = "http1")]
-pub type Http1Request = hyper::client::conn::http1::SendRequest<Full<Bytes>>;
-#[cfg(feature = "http2")]
-pub type Http2Request = hyper::client::conn::http2::SendRequest<Full<Bytes>>;
 
 #[async_trait]
 /// Trait that represents the HTTP connection.
@@ -48,7 +18,7 @@ pub type Http2Request = hyper::client::conn::http2::SendRequest<Full<Bytes>>;
 ///
 /// * `Sender` - The sender to use.
 ///
-pub trait DeboaHttpConnection: private::DeboaHttpConnectionSealed {
+pub trait DeboaTcpConnection: private::DeboaTcpConnectionSealed {
     type Sender;
 
     /// Create a new connection.
@@ -70,6 +40,7 @@ pub trait DeboaHttpConnection: private::DeboaHttpConnectionSealed {
     async fn connect(
         is_secure: bool,
         host: &str,
+        port: u16,
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Self::Sender>>;
 
@@ -105,7 +76,6 @@ pub trait DeboaHttpConnection: private::DeboaHttpConnectionSealed {
     ///
     /// * `Result<Response<Incoming>>` - The response or error.
     ///
-    #[hotpath::measure]
     async fn process_response(
         &self,
         method: &str,
@@ -155,5 +125,5 @@ pub trait DeboaHttpConnection: private::DeboaHttpConnectionSealed {
 }
 
 pub(crate) mod private {
-    pub trait DeboaHttpConnectionSealed {}
+    pub trait DeboaTcpConnectionSealed {}
 }

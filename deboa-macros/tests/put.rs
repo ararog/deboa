@@ -10,10 +10,20 @@ pub struct Post {
 }
 
 #[tokio::test]
-async fn test_post() -> Result<()> {
+async fn test_put() -> Result<()> {
     let mut client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = put!(data, "https://jsonplaceholder.typicode.com/posts/1", &mut client);
+    assert_eq!(response.status(), 200);
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_put_with_headers() -> Result<()> {
+    let mut client = Client::default();
+    let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
+    let headers = vec![("Content-Type", "application/json")];
+    let response = put!(data, "https://jsonplaceholder.typicode.com/posts/1", headers, &mut client);
     assert_eq!(response.status(), 200);
     Ok(())
 }

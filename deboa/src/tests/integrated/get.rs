@@ -30,12 +30,11 @@ async fn do_get_http1() -> Result<()> {
         .protocol(default_protocol())
         .build();
 
-    let request = DeboaRequest::get(
-        server
-            .url("/posts")
-            .as_str(),
-    )?
-    .build()?;
+    let url = server.url("/posts");
+
+    println!("URL: {}", url);
+
+    let request = DeboaRequest::get(url)?.build()?;
 
     let response: DeboaResponse = client
         .execute(request)
@@ -184,7 +183,7 @@ async fn do_get_invalid_server() -> Result<()> {
     assert_eq!(
         response.unwrap_err(),
         DeboaError::Connection(ConnectionError::Tcp {
-            host: "invalid-server.com:443".to_string(),
+            host: "invalid-server.com".to_string(),
             #[cfg(target_os = "linux")]
             message: "failed to lookup address information: Name or service not known".to_string(),
             #[cfg(target_os = "macos")]

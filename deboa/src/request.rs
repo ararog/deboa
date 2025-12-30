@@ -65,12 +65,18 @@
 use std::{collections::HashMap, fmt::Debug, str::FromStr, sync::Arc};
 
 use async_trait::async_trait;
+#[cfg(all(feature = "http1", feature = "http2"))]
+use bytes::Bytes;
+#[cfg(feature = "http3")]
+use h3_quinn::OpenStreams;
 use http::{
     header::{self, HOST},
     HeaderMap, HeaderName, HeaderValue, Method,
 };
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
+#[cfg(all(feature = "http1", feature = "http2"))]
+use http_body_util::Full;
 use log::error;
 use regex::Regex;
 use serde::Serialize;
@@ -85,6 +91,13 @@ use crate::{
     url::IntoUrl,
     Client, Result,
 };
+
+#[cfg(feature = "http1")]
+pub type Http1Request = hyper::client::conn::http1::SendRequest<Full<Bytes>>;
+#[cfg(feature = "http2")]
+pub type Http2Request = hyper::client::conn::http2::SendRequest<Full<Bytes>>;
+#[cfg(feature = "http3")]
+pub type Http3Request = h3::client::SendRequest<OpenStreams, Bytes>;
 
 /// Trait to allow making a request from different types.
 ///

@@ -1,40 +1,50 @@
-use std::fmt::format;
+use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::sync::Arc;
 
 use async_trait::async_trait;
 use bytes::Bytes;
-use h3_quinn::Connection as QuinnConnection;
+use futures::future;
+use h3::client::{Connection, SendRequest};
 use http::version::Version;
-use http_body_util::Full;
-use hyper::{body::Incoming, Request, Response};
-use hyper_util::rt::TokioExecutor;
-use hyper_util::rt::TokioIo;
+use hyper::{Request, Response};
+use quinn::crypto::rustls::QuicClientConfig;
 use quinn::Endpoint;
-use tokio::net::lookup_host;
-use tokio::net::TcpStream;
-use tokio_native_tls::native_tls::Certificate;
-use tokio_native_tls::native_tls::Identity;
-use tokio_native_tls::native_tls::TlsConnector;
-use url::{Host, Url};
 
-use crate::client::conn::http::DeboaHttpConnection;
-use crate::errors::ConnectionError;
-use crate::rt::tokio::stream::TokioStream;
+use crate::request::Http3Request;
 use crate::{
     cert::ClientCert,
-    client::conn::http::{BaseHttpConnection, Http3Request},
-    errors::DeboaError,
+    client::conn::{udp::DeboaUdpConnection, BaseHttpConnection},
+    errors::{ConnectionError, DeboaError},
     Result,
 };
 
-#[async_trait]
-impl DeboaHttpConnection for BaseHttpConnection<Http3Request> {
-    type Sender = Http3Request;
+async fn lookup_and_connect(
+    host: &str,
+    port: u16,
+    client_endpoint: Endpoint,
+) -> std::result::Result<
+    (Connection<h3_quinn::Connection, Bytes>, SendRequest<h3_quinn::OpenStreams, Bytes>),
+    Box<dyn std::error::Error>,
+> {
+    let addr = tokio::net::lookup_host((host, port))
+        .await?
+        .next()
+        .unwrap();
 
-    #[inline]
-    fn url(&self) -> &Url {
-        &self.url
-    }
+    let conn = client_endpoint
+        .connect(addr, host)?
+        .await?;
+
+    let quinn_conn: h3_quinn::Connection = h3_quinn::Connection::new(conn);
+
+    let http_conn = h3::client::new(quinn_conn).await?;
+
+    Ok(http_conn)
+}
+
+#[async_trait]
+impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
+    type Sender = Http3Request;
 
     #[inline]
     fn protocol(&self) -> Version {
@@ -42,127 +52,63 @@ impl DeboaHttpConnection for BaseHttpConnection<Http3Request> {
     }
 
     async fn connect(
-        url: Arc<Url>,
+        is_secure: bool,
+        host: &str,
+        port: u16,
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Http3Request>> {
-        let host = url
-            .host()
-            .unwrap_or(Host::Domain("localhost"));
-        let stream = {
-            match url.scheme() {
-                "http" => {
-                    let port = url
-                        .port()
-                        .unwrap_or(80);
-                    let addr = lookup_host(format!("{}:{}", host, port))
-                        .await?
-                        .next()
-                        .ok_or("dns found no addresses")?;
+        let mut client_endpoint =
+            Endpoint::client(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 0)));
 
-                    let mut endpoint = Endpoint::client(addr);
-
-                    if let Err(e) = endpoint {
-                        return Err(DeboaError::Connection(ConnectionError::Tcp {
-                            host: host.to_string(),
-                            message: e.to_string(),
-                        }));
-                    }
-
-                    let conn = endpoint
-                        .unwrap()
-                        .connect(addr, &host.to_string())?
-                        .await?;
-
-                    let quinn_conn = QuinnConnection::new(conn);
-
-                    TokioStream::Plain(stream.unwrap())
-                }
-                "https" => {
-                    let stream = {
-                        let port = url
-                            .port()
-                            .unwrap_or(443);
-                        TcpStream::connect((host.to_string(), port)).await
-                    };
-
-                    if let Err(e) = stream {
-                        return Err(DeboaError::Connection(ConnectionError::Tcp {
-                            host: host.to_string(),
-                            message: e.to_string(),
-                        }));
-                    }
-
-                    let socket = stream.unwrap();
-                    let mut builder = TlsConnector::builder();
-                    if let Some(client_cert) = client_cert {
-                        let file = std::fs::read(client_cert.cert());
-                        if let Err(e) = file {
-                            return Err(DeboaError::ClientCert { message: e.to_string() });
-                        }
-                        let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.pw());
-                        if let Err(e) = identity {
-                            return Err(DeboaError::ClientCert { message: e.to_string() });
-                        }
-                        builder.identity(identity.unwrap());
-
-                        if let Some(ca) = client_cert.ca() {
-                            let pem = std::fs::read(ca);
-                            if let Err(e) = pem {
-                                return Err(DeboaError::ClientCert { message: e.to_string() });
-                            }
-                            let cert = Certificate::from_pem(&pem.unwrap());
-                            builder.add_root_certificate(cert.unwrap());
-                        }
-                    }
-
-                    let connector = builder
-                        .build()
-                        .unwrap();
-                    let connector = tokio_native_tls::TlsConnector::from(connector);
-                    let stream = connector
-                        .connect(&host.to_string(), socket)
-                        .await;
-
-                    if let Err(e) = stream {
-                        return Err(DeboaError::Connection(ConnectionError::Tls {
-                            host: host.to_string(),
-                            message: e.to_string(),
-                        }));
-                    }
-
-                    let stream = stream.unwrap();
-                    TokioStream::Tls(stream)
-                }
-                scheme => {
-                    return Err(DeboaError::Connection(ConnectionError::UnsupportedScheme {
-                        message: format!("unsupported scheme: {scheme:?}"),
-                    }));
-                }
-            }
-        };
-
-        let result = handshake(TokioExecutor::new(), TokioIo::new(stream)).await;
-
-        if let Err(err) = result {
-            return Err(DeboaError::Connection(ConnectionError::Handshake {
-                host: host.to_string(),
-                message: err.to_string(),
-            }));
+        if let Err(e) = client_endpoint {
+            return Err(DeboaError::Connection(ConnectionError::Udp { message: e.to_string() }));
         }
 
-        let (sender, conn) = result.unwrap();
+        let mut client_endpoint = client_endpoint.unwrap();
+
+        if is_secure {
+            let root_store =
+                rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
+            let provider = rustls::crypto::aws_lc_rs::default_provider();
+            let mut tls_config = rustls::ClientConfig::builder_with_provider(Arc::new(provider))
+                .with_protocol_versions(&[&rustls::version::TLS13])
+                .expect("Failed to set TLS version")
+                .with_root_certificates(root_store)
+                .with_no_client_auth();
+
+            tls_config.enable_early_data = true;
+            tls_config.alpn_protocols = vec![b"h3".to_vec()];
+
+            let quic_config = QuicClientConfig::try_from(tls_config);
+            if let Err(e) = quic_config {
+                return Err(DeboaError::Connection(ConnectionError::Tls {
+                    host: host.to_string(),
+                    message: e.to_string(),
+                }));
+            }
+
+            let quic_config = quic_config.unwrap();
+
+            let client_config = quinn::ClientConfig::new(Arc::new(quic_config));
+            client_endpoint.set_default_client_config(client_config);
+        }
+
+        let result = lookup_and_connect(host, port, client_endpoint).await;
+
+        if let Err(e) = result {
+            return Err(DeboaError::Connection(ConnectionError::Udp { message: e.to_string() }));
+        }
+
+        let (mut conn, sender) = result.unwrap();
 
         tokio::spawn(async move {
-            match conn.await {
-                Ok(_) => (),
-                Err(_err) => {}
-            };
+            Err::<(), h3::error::ConnectionError>(future::poll_fn(|cx| conn.poll_close(cx)).await)
         });
 
-        Ok(BaseHttpConnection::<Http3Request> { url, sender })
+        Ok(BaseHttpConnection::<Http3Request> { sender })
     }
 
-    async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {
+    async fn send_request(&mut self, request: Request<()>) -> Result<Response<Bytes>> {
         let method = request
             .method()
             .to_string();
@@ -171,7 +117,12 @@ impl DeboaHttpConnection for BaseHttpConnection<Http3Request> {
             .send_request(request)
             .await;
 
-        self.process_response(&self.url, &method, result)
+        self.process_response(&method, result)
             .await
     }
+}
+
+impl crate::client::conn::udp::private::DeboaUdpConnectionSealed
+    for BaseHttpConnection<Http3Request>
+{
 }

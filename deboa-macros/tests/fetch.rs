@@ -27,3 +27,13 @@ async fn test_fetch_ident() -> Result<()> {
     assert_eq!(response.len(), 100);
     Ok(())
 }
+
+#[tokio::test]
+async fn test_fetch_ident_with_headers() -> Result<()> {
+    let mut client = Client::default();
+    let url = "https://jsonplaceholder.typicode.com/posts";
+    let headers = vec![("User-Agent", "deboa")];
+    let response = fetch!(url, headers, &mut client, JsonBody, Vec<Post>);
+    assert_eq!(response.len(), 100);
+    Ok(())
+}

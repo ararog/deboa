@@ -16,7 +16,16 @@
 //! - Thread-safe connection handling
 //! ```
 
-/// HTTP protocol implementations.
+#[cfg(feature = "http1")]
+use crate::request::Http1Request;
+
+#[cfg(feature = "http2")]
+use crate::request::Http2Request;
+
+#[cfg(feature = "http3")]
+use crate::request::Http3Request;
+
+/// TCP protocol implementations.
 ///
 /// This module contains the core HTTP protocol implementations, including:
 /// - HTTP/1.1 support
@@ -28,7 +37,22 @@
 ///
 /// - `http1`: Enables HTTP/1.1 support
 /// - `http2`: Enables HTTP/2 support (requires TLS)
-pub mod http;
+#[cfg(not(feature = "http3"))]
+pub mod tcp;
+
+/// UDP protocol implementations.
+///
+/// This module contains the core HTTP protocol implementations, including:
+/// - HTTP/1.1 support
+/// - HTTP/2 support (when enabled)
+/// - Connection management
+/// - Request/response handling
+///
+/// # Features
+///
+/// - `http3`: Enables HTTP/3 support (requires TLS)
+#[cfg(feature = "http3")]
+pub mod udp;
 
 /// Connection pooling for efficient HTTP connections.
 ///
@@ -64,3 +88,28 @@ pub mod pool;
 /// let stream = tls_connection("example.com:443", None).await?;
 /// ```
 pub(crate) mod stream;
+
+/// Enum that represents the connection type.
+///
+/// # Variants
+///
+/// * `Http1` - The HTTP/1.1 connection.
+/// * `Http2` - The HTTP/2 connection.
+pub enum DeboaConnection {
+    #[cfg(feature = "http1")]
+    Http1(Box<BaseHttpConnection<Http1Request>>),
+    #[cfg(feature = "http2")]
+    Http2(Box<BaseHttpConnection<Http2Request>>),
+    #[cfg(feature = "http3")]
+    Http3(Box<BaseHttpConnection<Http3Request>>),
+}
+
+#[derive(Debug, Clone)]
+/// Struct that represents the connection.
+///
+/// # Fields
+///
+/// * `sender` - The sender to use.
+pub struct BaseHttpConnection<T> {
+    pub(crate) sender: T,
+}

@@ -3,17 +3,23 @@ use std::collections::HashMap;
 use time::Duration;
 
 #[cfg(feature = "http1")]
-use crate::client::conn::http::Http1Request;
+use crate::request::Http1Request;
 #[cfg(feature = "http2")]
-use crate::client::conn::http::Http2Request;
+use crate::request::Http2Request;
+#[cfg(feature = "http3")]
+use crate::request::Http3Request;
+
+#[cfg(not(feature = "http3"))]
+use crate::client::conn::tcp::DeboaTcpConnection;
+#[cfg(feature = "http3")]
+use crate::client::conn::udp::DeboaUdpConnection;
 
 use crate::{
     cert::ClientCert,
-    client::conn::http::{BaseHttpConnection, DeboaConnection, DeboaHttpConnection},
+    client::conn::{BaseHttpConnection, DeboaConnection},
     HttpVersion, Result,
 };
 
-#[derive(Debug)]
 /// Struct that represents the HTTP connection pool.
 ///
 /// # Fields
@@ -84,6 +90,7 @@ pub trait DeboaHttpConnectionPool: private::DeboaHttpConnectionPoolSealed {
         &'a mut self,
         is_secure: bool,
         host: &'a str,
+        port: u16,
         protocol: &HttpVersion,
         client_cert: &Option<ClientCert>,
     ) -> Result<&'a mut DeboaConnection>;
@@ -110,6 +117,7 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         &'a mut self,
         is_secure: bool,
         host: &'a str,
+        port: u16,
         protocol: &HttpVersion,
         client_cert: &Option<ClientCert>,
     ) -> Result<&'a mut DeboaConnection> {
@@ -129,21 +137,21 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
             #[cfg(feature = "http1")]
             HttpVersion::Http1 => {
                 let connection =
-                    BaseHttpConnection::<Http1Request>::connect(is_secure, host, client_cert)
+                    BaseHttpConnection::<Http1Request>::connect(is_secure, host, port, client_cert)
                         .await?;
                 DeboaConnection::Http1(Box::new(connection))
             }
             #[cfg(feature = "http2")]
             HttpVersion::Http2 => {
                 let connection =
-                    BaseHttpConnection::<Http2Request>::connect(is_secure, host, client_cert)
+                    BaseHttpConnection::<Http2Request>::connect(is_secure, host, port, client_cert)
                         .await?;
                 DeboaConnection::Http2(Box::new(connection))
             }
             #[cfg(feature = "http3")]
             HttpVersion::Http3 => {
                 let connection =
-                    BaseHttpConnection::<Http3Request>::connect(is_secure, host, client_cert)
+                    BaseHttpConnection::<Http3Request>::connect(is_secure, host, port, client_cert)
                         .await?;
                 DeboaConnection::Http3(Box::new(connection))
             }

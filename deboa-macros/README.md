@@ -53,6 +53,9 @@ let response: Vec<Post> = get!("https://jsonplaceholder.typicode.com/posts", Jso
 //get macro, returning text
 let response: String = get!("https://rust-lang.org", &mut client);
 
+//get macro with headers
+let response: String = get!("https://rust-lang.org", vec![("User-Agent", "deboa")], &mut client);
+
 // post macro
 let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &mut client);
 
