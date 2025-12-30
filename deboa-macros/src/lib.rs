@@ -87,7 +87,15 @@
 ///
 /// To help understand the macro arguments, here is an example:
 ///
+/// get!(url, headers, &mut client)
+///
+/// or
+///
 /// get!(url, &mut client, JsonBody, ty)
+///
+/// or
+///
+/// get!(url, vec![("User-Agent", "deboa")], &mut client, JsonBody, ty)
 ///
 /// # Arguments
 ///
@@ -138,7 +146,7 @@ macro_rules! get {
     };
 
     ($url:expr, $headers:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        deboa::request::DeboaRequest::get($url)
+        deboa::request::DeboaRequest::get($url)?
             .headers($headers)
             .send_with($client)
             .await?
@@ -337,6 +345,17 @@ macro_rules! put {
             .await?
     };
 
+    ($input:ident, $url:literal, $headers:expr, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::put($url)?
+                    .headers($headers)
+                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                    .build()?,
+            )
+            .await?
+    };
+
     ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
         $client
             .execute(
@@ -357,10 +376,33 @@ macro_rules! put {
             .await?
     };
 
+    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::put($url)?
+                    .headers($headers)
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
+            .await?
+    };
+
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::put($url)?
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
+            .await?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+    };
+
+    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::put($url)?
+                    .headers($headers)
                     .body_as($req_body_ty, $input)?
                     .build()?,
             )
@@ -407,6 +449,17 @@ macro_rules! patch {
             .await?
     };
 
+    ($input:ident, $url:expr, $headers:expr, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::patch($url)?
+                    .headers($headers)
+                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                    .build()?,
+            )
+            .await?
+    };
+
     ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
         $client
             .execute(
@@ -427,10 +480,44 @@ macro_rules! patch {
             .await?
     };
 
+    ($input:ident, $req_body_ty:ident, $url:literal, $headers:expr, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::patch($url)?
+                    .headers($headers)
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
+            .await?
+    };
+
+    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::patch($url)?
+                    .headers($headers)
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
+            .await?
+    };
+
     ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::patch($url)?
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
+            .await?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+    };
+
+    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::patch($url)?
+                    .headers($headers)
                     .body_as($req_body_ty, $input)?
                     .build()?,
             )
@@ -476,6 +563,16 @@ macro_rules! delete {
             .execute(deboa::request::DeboaRequest::delete($url)?.build()?)
             .await?
     };
+
+    ($url:expr, $headers:expr, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::delete($url)?
+                    .headers($headers)
+                    .build()?,
+            )
+            .await?
+    };
 }
 
 #[macro_export]
@@ -510,6 +607,22 @@ macro_rules! delete {
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! fetch {
+    ($url:expr, &mut $client:ident) => {
+        $client
+            .execute($url)
+            .await?
+    };
+
+    ($url:expr, $headers:expr, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::get($url)?
+                    .headers($headers)?
+                    .build()?,
+            )
+            .await?
+    };
+
     ($url:literal, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute($url)
@@ -526,9 +639,15 @@ macro_rules! fetch {
             .await?
     };
 
-    ($url:expr, &mut $client:ident) => {
+    ($url:expr, $headers:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
-            .execute($url)
+            .execute(
+                deboa::request::DeboaRequest::get($url)?
+                    .headers($headers)
+                    .build()?,
+            )
+            .await?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
             .await?
     };
 }
@@ -575,6 +694,17 @@ macro_rules! submit {
             )
             .await?
     };
+
+    ($method:expr, $input:expr, $url:expr, $headers:expr, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::at($url, $method)?
+                    .headers($headers)?
+                    .text($input)
+                    .build()?,
+            )
+            .await?
+    };
 }
 
 #[macro_export]
@@ -606,6 +736,17 @@ macro_rules! stream {
     ($url:expr, &mut $client:ident) => {
         $client
             .execute($url)
+            .await?
+            .stream()
+    };
+
+    ($url:expr, $headers:expr, &mut $client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::get($url)?
+                    .headers($headers)?
+                    .build()?,
+            )
             .await?
             .stream()
     };

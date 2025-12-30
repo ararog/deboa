@@ -116,6 +116,9 @@ pub enum ConnectionError {
     #[error("Tls connection error: {host} {message}")]
     Tls { host: String, message: String },
 
+    #[error("Udp connection error: {message}")]
+    Udp { message: String },
+
     #[error("Connection handshake error: {host} {message}")]
     Handshake { host: String, message: String },
 

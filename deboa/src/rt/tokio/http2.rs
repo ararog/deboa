@@ -2,23 +2,25 @@ use async_trait::async_trait;
 use bytes::Bytes;
 use http::version::Version;
 use http_body_util::Full;
+use hyper::StatusCode;
 use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
 use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
 
-use crate::client::conn::http::DeboaHttpConnection;
-use crate::client::conn::stream::plain_connection;
-use crate::client::conn::stream::tls_connection;
-use crate::errors::ConnectionError;
 use crate::{
     cert::ClientCert,
-    client::conn::http::{BaseHttpConnection, Http2Request},
-    errors::DeboaError,
+    client::conn::{
+        stream::{plain_connection, tls_connection},
+        tcp::DeboaTcpConnection,
+        BaseHttpConnection,
+    },
+    errors::{ConnectionError, DeboaError, RequestError, ResponseError},
+    request::Http2Request,
     Result,
 };
 
 #[async_trait]
-impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
+impl DeboaTcpConnection for BaseHttpConnection<Http2Request> {
     type Sender = Http2Request;
 
     #[inline]
@@ -29,12 +31,13 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
     async fn connect(
         is_secure: bool,
         host: &str,
+        port: u16,
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Http2Request>> {
         let stream = if is_secure {
-            tls_connection(host, client_cert).await
+            tls_connection(host, port, client_cert).await
         } else {
-            plain_connection(host).await
+            plain_connection(host, port).await
         };
 
         if let Err(e) = stream {
@@ -76,7 +79,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
     }
 }
 
-impl crate::client::conn::http::private::DeboaHttpConnectionSealed
+impl crate::client::conn::tcp::private::DeboaTcpConnectionSealed
     for BaseHttpConnection<Http2Request>
 {
 }

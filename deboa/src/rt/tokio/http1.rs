@@ -8,15 +8,17 @@ use hyper_util::rt::TokioIo;
 use crate::{
     cert::ClientCert,
     client::conn::{
-        http::{BaseHttpConnection, DeboaHttpConnection, Http1Request},
         stream::{plain_connection, tls_connection},
+        tcp::DeboaTcpConnection,
+        BaseHttpConnection,
     },
-    errors::{ConnectionError, DeboaError},
+    errors::{ConnectionError, DeboaError, RequestError, ResponseError},
+    request::Http1Request,
     Result,
 };
 
 #[async_trait]
-impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
+impl DeboaTcpConnection for BaseHttpConnection<Http1Request> {
     type Sender = Http1Request;
 
     #[inline]
@@ -28,12 +30,13 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
     async fn connect(
         is_secure: bool,
         host: &str,
+        port: u16,
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
         let stream = if is_secure {
-            tls_connection(host, client_cert).await
+            tls_connection(host, port, client_cert).await
         } else {
-            plain_connection(host).await
+            plain_connection(host, port).await
         };
 
         if let Err(e) = stream {
@@ -73,12 +76,13 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
             .sender
             .send_request(request)
             .await;
+
         self.process_response(&method, result)
             .await
     }
 }
 
-impl crate::client::conn::http::private::DeboaHttpConnectionSealed
+impl crate::client::conn::tcp::private::DeboaTcpConnectionSealed
     for BaseHttpConnection<Http1Request>
 {
 }
