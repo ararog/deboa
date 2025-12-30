@@ -22,8 +22,8 @@ The core HTTP client library for Rust, providing a simple yet powerful interface
 - response streaming
 - upgrade support (websocket, etc.)
 - runtime compatibility (tokio and smol)
-- http1/2 support 
-- http3 support (planned)
+- http1/2 support
+- http3 support (tokio only)
 
 ## Installation
 
@@ -31,7 +31,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-deboa = { version = "0.0.9", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.0.9", features = ["http1", "http2", "tokio-rt", "tokio-rust-tls"] }
 ```
 
 ## Basic Usage
@@ -156,7 +156,8 @@ match deboa::get("https://api.example.com/data").send_with(&client).await {
 ## Features
 
 - `http1`: Enable HTTP/1 support (enabled by default)
-- `http2`: Enable HTTP/2 support
+- `http2`: Enable HTTP/2 support (enabled by default)
+- `http3`: Enable HTTP/3 support (tokio only)
 - `tokio-rt`: Use Tokio as the async runtime (enabled by default)
 - `smol-rt`: Use smol as the async runtime
 
