@@ -29,14 +29,15 @@ This release has a major api change. Please check the [migration guide](https://
 
 ## Benchmark Results
 
+As of the latest benchmark run, Deboa demonstrates competitive performance compared to Reqwest.
+
 ### Get Request
 
 |            | `Deboa`                  | `Reqwest`                        |
 |:-----------|:-------------------------|:-------------------------------- |
-| **`100`**  | `50.53 ms` (✅ **1.00x**) | `70.92 ms` (❌ *1.40x slower*)    |
-| **`500`**  | `46.44 ms` (✅ **1.00x**) | `71.23 ms` (❌ *1.53x slower*)    |
-| **`1000`** | `96.79 ms` (✅ **1.00x**) | `99.82 ms` (✅ **1.03x slower**)  |
-
+| **`100`**  | `46.37 ms` (✅ **1.00x**) | `48.67 ms` (✅ **1.05x slower**)  |
+| **`500`**  | `46.47 ms` (✅ **1.00x**) | `47.32 ms` (✅ **1.02x slower**)  |
+| **`1000`** | `46.36 ms` (✅ **1.00x**) | `47.34 ms` (✅ **1.02x slower**)  |
 
 ## Install
 
