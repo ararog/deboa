@@ -100,6 +100,12 @@ async fn main() -> Result<()> {
 
 Check out the [examples](./examples.md) for complete examples of how to use Deboa in your projects.
 
+## Create project from template
+
+You can create a new project from the template using `cargo generate`:
+
+`cargo generate ararog/deboa-templates`
+
 ## Documentation
 
 - [API Reference](https://docs.rs/deboa)
