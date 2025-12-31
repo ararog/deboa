@@ -38,6 +38,18 @@ Built on top of [hyper](https://github.com/hyperium/hyper).
 - http1/2 support 
 - http3 support (planned)
 
+## Benchmark Results
+
+As of the latest benchmark run, Deboa demonstrates competitive performance compared to Reqwest.
+
+### Get Request
+
+|            | `Deboa`                  | `Reqwest`                        |
+|:-----------|:-------------------------|:-------------------------------- |
+| **`100`**  | `46.37 ms` (✅ **1.00x**) | `48.67 ms` (✅ **1.05x slower**)  |
+| **`500`**  | `46.47 ms` (✅ **1.00x**) | `47.32 ms` (✅ **1.02x slower**)  |
+| **`1000`** | `46.36 ms` (✅ **1.00x**) | `47.34 ms` (✅ **1.02x slower**)  |
+
 ## Quick Start
 
 Add to your `Cargo.toml`:
