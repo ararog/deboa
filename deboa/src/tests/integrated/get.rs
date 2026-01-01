@@ -20,6 +20,32 @@ use smol_macros::test;
 //
 // GET
 //
+#[cfg(feature = "http3")]
+#[tokio::test]
+
+async fn get_http3() -> Result<()> {
+    let mut client = Client::builder()
+        .protocol(HttpVersion::Http3)
+        .build();
+
+    let request = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts/1")?.build()?;
+
+    let response: DeboaResponse = client
+        .execute(request)
+        .await?;
+
+    assert_eq!(
+        response.status(),
+        StatusCode::OK,
+        "Status code is {} and should be {}",
+        response
+            .status()
+            .as_u16(),
+        StatusCode::OK.as_u16()
+    );
+
+    Ok(())
+}
 
 async fn do_get_http1() -> Result<()> {
     let server = MockServer::start();
@@ -31,8 +57,6 @@ async fn do_get_http1() -> Result<()> {
         .build();
 
     let url = server.url("/posts");
-
-    println!("URL: {}", url);
 
     let request = DeboaRequest::get(url)?.build()?;
 

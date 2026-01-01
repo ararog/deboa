@@ -16,6 +16,9 @@
 //! - Thread-safe connection handling
 //! ```
 
+#[cfg(feature = "http3")]
+use std::marker::PhantomData;
+
 #[cfg(feature = "http1")]
 use crate::request::Http1Request;
 
@@ -23,7 +26,7 @@ use crate::request::Http1Request;
 use crate::request::Http2Request;
 
 #[cfg(feature = "http3")]
-use crate::request::Http3Request;
+use crate::{client::conn::udp::UdpLink, request::Http3Request};
 
 /// TCP protocol implementations.
 ///
@@ -104,7 +107,6 @@ pub enum DeboaConnection {
     Http3(Box<BaseHttpConnection<Http3Request>>),
 }
 
-#[derive(Debug, Clone)]
 /// Struct that represents the connection.
 ///
 /// # Fields

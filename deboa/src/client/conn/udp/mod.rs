@@ -1,10 +1,11 @@
 use async_trait::async_trait;
-use bytes::Bytes;
+use bytes::{Buf, Bytes, BytesMut};
+#[cfg(feature = "http3")]
 use h3::{client::RequestStream, error::StreamError};
 use h3_quinn::BidiStream;
+#[cfg(feature = "http3")]
 use http::{Request, Response, StatusCode, Version};
-use http_body_util::BodyExt;
-use hyper::body::Incoming;
+use http_body_util::Full;
 
 use crate::{
     cert::ClientCert,
@@ -12,6 +13,13 @@ use crate::{
     errors::{DeboaError, RequestError, ResponseError},
     Result, MAX_ERROR_MESSAGE_SIZE,
 };
+
+#[cfg(feature = "http3")]
+pub(crate) struct UdpLink {
+    pub host: String,
+    pub port: u16,
+    pub endpoint: quinn::Endpoint,
+}
 
 #[async_trait]
 /// Trait that represents the HTTP connection.
@@ -41,7 +49,6 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     /// * `Result<BaseHttpConnection<Self::Sender>>` - The connection or error.
     ///
     async fn connect(
-        is_secure: bool,
         host: &str,
         port: u16,
         client_cert: &Option<ClientCert>,
@@ -63,9 +70,9 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     ///
     /// # Returns
     ///
-    /// * `Result<Response<Bytes>>` - The response or error.
+    /// * `Result<Response<Full<Bytes>>>` - The response or error.
     ///
-    async fn send_request(&mut self, request: Request<()>) -> Result<Response<Bytes>>;
+    async fn send_request(&mut self, request: Request<()>) -> Result<Response<Full<Bytes>>>;
 
     /// Process a response.
     ///
@@ -77,13 +84,13 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     ///
     /// # Returns
     ///
-    /// * `Result<Response<Bytes>>` - The response or error.
+    /// * `Result<Response<Full<Bytes>>>` - The response or error.
     ///
     async fn process_response(
         &self,
         method: &str,
         response: std::result::Result<RequestStream<BidiStream<Bytes>, Bytes>, StreamError>,
-    ) -> Result<Response<Bytes>> {
+    ) -> Result<Response<Full<Bytes>>> {
         if let Err(err) = response {
             return Err(DeboaError::Request(RequestError::Send {
                 url: "".to_string(),
@@ -92,42 +99,85 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
             }));
         }
 
-        /*
-        let response = response.unwrap();
+        let mut request_stream = response.unwrap();
+
+        let finish_request = request_stream
+            .finish()
+            .await;
+        if let Err(err) = finish_request {
+            return Err(DeboaError::Request(RequestError::Send {
+                url: "".to_string(),
+                method: method.to_string(),
+                message: err.to_string(),
+            }));
+        }
+
+        let recv_response = request_stream
+            .recv_response()
+            .await;
+        if let Err(err) = recv_response {
+            return Err(DeboaError::Response(ResponseError::Receive {
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+                message: err.to_string(),
+            }));
+        }
+
+        let response = recv_response.unwrap();
+
         let status_code = response.status();
+
         if (!status_code.is_success()
             && !status_code.is_informational()
             && !status_code.is_redirection())
             || status_code == StatusCode::TOO_MANY_REQUESTS
         {
-            let mut body = response.into_body();
             let mut error_message = Vec::new();
             let mut downloaded = 0;
-            while let Some(chunk) = body.frame().await {
-                if let Ok(frame) = chunk {
-                    if let Some(data) = frame.data_ref() {
-                        if downloaded + data.len() > MAX_ERROR_MESSAGE_SIZE {
-                            break;
-                        }
-                        error_message.extend_from_slice(data);
-                        downloaded += data.len();
-                    }
+            while let Ok(Some(chunk)) = request_stream
+                .recv_data()
+                .await
+            {
+                if downloaded + error_message.len() > MAX_ERROR_MESSAGE_SIZE {
+                    break;
                 }
+                error_message.extend_from_slice(chunk.chunk());
+                downloaded += error_message.len();
             }
+
             return Err(DeboaError::Response(ResponseError::Receive {
                 status_code,
                 message: format!(
-                    "Could not process request ({}): {}",
+                    "Could not process response ({}): {}",
                     status_code,
                     String::from_utf8_lossy(&error_message)
                 ),
             }));
         }
-        */
 
-        let response = Response::new(Bytes::new());
+        let mut response_builder = Response::builder().status(status_code);
+        let headers = response_builder
+            .headers_mut()
+            .unwrap();
+        *headers = response
+            .headers()
+            .clone();
+        let mut body = BytesMut::new();
+        while let Ok(Some(chunk)) = request_stream
+            .recv_data()
+            .await
+        {
+            body.extend_from_slice(chunk.chunk());
+        }
 
-        Ok(response)
+        let response = response_builder.body(Full::new(body.freeze()));
+        if let Err(err) = response {
+            return Err(DeboaError::Response(ResponseError::Receive {
+                status_code,
+                message: format!("Could not process response ({}): {}", status_code, err),
+            }));
+        }
+
+        Ok(response.unwrap())
     }
 }
 

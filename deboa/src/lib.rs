@@ -82,6 +82,8 @@ compile_error!("At least one HTTP version feature must be enabled.");
 pub(crate) const MAX_ERROR_MESSAGE_SIZE: usize = 50000;
 
 use cfg_if::cfg_if;
+#[cfg(feature = "http3")]
+use http_body_util::Full;
 
 use std::fmt::{Debug, Display};
 
@@ -1252,7 +1254,7 @@ impl Client {
     }
 
     #[cfg(feature = "http3")]
-    async fn send_request<R>(&mut self, request: &R) -> Result<Response<Bytes>>
+    async fn send_request<R>(&mut self, request: &R) -> Result<Response<Full<Bytes>>>
     where
         R: AsRef<DeboaRequest>,
     {
@@ -1328,19 +1330,18 @@ impl Client {
             .host_str()
             .unwrap_or("localhost");
 
-        let (port, is_secure) = if let Some(port) = url.port() {
-            (port, scheme == "https" || scheme == "wss")
+        let port = if let Some(port) = url.port() {
+            port
         } else {
             match scheme {
-                "http" | "ws" => (80, false),
-                "https" | "wss" => (443, true),
+                "https" | "wss" => 443,
                 _ => panic!("Unsupported scheme: {}", scheme),
             }
         };
 
         if let Some(pool) = &mut self.pool {
             let conn = pool
-                .create_connection(is_secure, host, port, &self.protocol, &self.identity)
+                .create_connection(true, host, port, &self.protocol, &self.identity)
                 .await?;
             match conn {
                 #[cfg(feature = "http3")]
@@ -1353,13 +1354,9 @@ impl Client {
             match self.protocol {
                 #[cfg(feature = "http3")]
                 HttpVersion::Http3 => {
-                    let mut connection = BaseHttpConnection::<Http3Request>::connect(
-                        is_secure,
-                        host,
-                        port,
-                        &self.identity,
-                    )
-                    .await?;
+                    let mut connection =
+                        BaseHttpConnection::<Http3Request>::connect(host, port, &self.identity)
+                            .await?;
                     connection
                         .send_request(request)
                         .await
@@ -1393,7 +1390,11 @@ impl Client {
     }
 
     #[cfg(feature = "http3")]
-    async fn process_response<U>(&self, url: U, response: Response<Bytes>) -> Result<DeboaResponse>
+    async fn process_response<U>(
+        &self,
+        url: U,
+        response: Response<Full<Bytes>>,
+    ) -> Result<DeboaResponse>
     where
         U: IntoUrl,
     {

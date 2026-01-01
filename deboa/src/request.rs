@@ -65,7 +65,6 @@
 use std::{collections::HashMap, fmt::Debug, str::FromStr, sync::Arc};
 
 use async_trait::async_trait;
-#[cfg(all(feature = "http1", feature = "http2"))]
 use bytes::Bytes;
 #[cfg(feature = "http3")]
 use h3_quinn::OpenStreams;
@@ -75,7 +74,7 @@ use http::{
 };
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-#[cfg(all(feature = "http1", feature = "http2"))]
+#[cfg(any(feature = "http1", feature = "http2"))]
 use http_body_util::Full;
 use log::error;
 use regex::Regex;
