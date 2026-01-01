@@ -10,8 +10,7 @@ Collection of procedural macros for Deboa HTTP client. It is close equivalent to
 apisauce for axios, where one macro does it all, from request to response.
 It used to be the home of bora macro, which has been moved to vamo-macros crate.
 
-
-Available macros include:
+Available macros includes:
 
 - `fetch!`
 - `get!`

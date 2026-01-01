@@ -24,8 +24,7 @@ This release has a major api change. Please check the [migration guide](https://
 - response streaming
 - upgrade support (websocket, etc.)
 - runtime compatibility (tokio and smol)
-- http1/2 support
-- http3 support (soon)
+- http1/2/3 support
 
 ## Benchmark Results
 
@@ -57,8 +56,12 @@ http = "1.3.1"
 - tokio-rt (default)
 - smol-rt
 - http1 (default)
-- http2
-- http3 (soon)
+- http2 (default)
+- http3
+- tokio-rust-tls (default)
+- tokio-native-tls
+- smol-rust-tls
+- smol-native-tls
 
 ## Usage
 

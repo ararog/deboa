@@ -68,10 +68,10 @@
 compile_error!("HTTP3 is not supported with smol runtime.");
 
 #[cfg(all(feature = "http1", feature = "http2", feature = "http3"))]
-compile_error!("HTTP3 is not supported with HTTP/1 and HTTP/2.");
+compile_error!("HTTP3 is not supported within HTTP/1 and HTTP/2.");
 
 #[cfg(all(feature = "tokio-native-tls", feature = "http3"))]
-compile_error!("HTTP3 is not supported with tokio-native-tls runtime.");
+compile_error!("HTTP3 is not supported within tokio-native-tls runtime.");
 
 #[cfg(all(feature = "tokio-rt", feature = "smol-rt"))]
 compile_error!("Only one runtime feature can be enabled at a time.");

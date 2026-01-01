@@ -19,7 +19,7 @@ utils = ["dep:deboa"]
 websockets = ["dep:deboa", "dep:base64", "dep:rand", "dep:ws-framer"]
 # serialization
 serialization_all = ["json", "xml", "msgpack", "yaml", "flex", "cbor"]
-serialization = ["json", "yaml", "flex", "cbor"]
+serialization = ["json", "xml", "msgpack"]
 json = ["dep:sonic-rs", "dep:serde", "dep:http", "dep:mime", "dep:deboa"]
 xml = ["dep:serde-xml-rust", "dep:serde", "dep:http", "dep:mime", "dep:deboa"]
 msgpack = ["dep:rmp-serde", "dep:serde", "dep:http", "dep:mime", "dep:deboa"]
