@@ -1,4 +1,4 @@
-# SSE Example
+# SSE
 
 How to use Deboa to make requests to a server-sent events (SSE) endpoint.
 

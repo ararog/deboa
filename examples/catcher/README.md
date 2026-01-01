@@ -1,4 +1,4 @@
-# Catcher Example
+# Catcher
 
 A simple example showing how to use DeboaCatcher trait to implement a middleware.
 
