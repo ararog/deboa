@@ -151,8 +151,7 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
             #[cfg(feature = "http3")]
             HttpVersion::Http3 => {
                 let connection =
-                    BaseHttpConnection::<Http3Request>::connect(is_secure, host, port, client_cert)
-                        .await?;
+                    BaseHttpConnection::<Http3Request>::connect(host, port, client_cert).await?;
                 DeboaConnection::Http3(Box::new(connection))
             }
         };

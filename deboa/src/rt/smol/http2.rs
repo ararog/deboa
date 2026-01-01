@@ -8,15 +8,17 @@ use smol_hyper::rt::FuturesIo;
 use crate::{
     cert::ClientCert,
     client::conn::{
-        http::{BaseHttpConnection, DeboaHttpConnection, Http2Request},
         stream::{plain_connection, tls_connection},
+        tcp::DeboaTcpConnection,
+        BaseHttpConnection,
     },
+    request::Http2Request,
     rt::smol::executor::SmolExecutor,
     Result,
 };
 
 #[async_trait]
-impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
+impl DeboaTcpConnection for BaseHttpConnection<Http2Request> {
     type Sender = Http2Request;
 
     #[inline]
@@ -27,12 +29,13 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
     async fn connect(
         is_secure: bool,
         host: &str,
+        port: u16,
         client_cert: &Option<ClientCert>,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
         let io = if is_secure {
-            tls_connection(host, client_cert).await
+            tls_connection(host, port, client_cert).await
         } else {
-            plain_connection(host).await
+            plain_connection(host, port).await
         };
 
         if let Err(e) = io {
@@ -68,7 +71,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
     }
 }
 
-impl crate::client::conn::http::private::DeboaHttpConnectionSealed
+impl crate::client::conn::tcp::private::DeboaTcpConnectionSealed
     for BaseHttpConnection<Http2Request>
 {
 }
