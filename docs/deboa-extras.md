@@ -17,14 +17,18 @@ deboa-extras = { version = "0.0.5", features = ["json", "websocket", "sse"] }
 
 ## Features
 
-- `json` serialization
-- `msgpack` serialization
-- `xml` serialization
-- `gzip` compression
-- `brotli` compression
-- `deflate` compression
-- `websocket` support
-- `sse` support
+- `json` (default)
+- `msgpack` (default)
+- `xml` (default)
+- `yaml`
+- `flex`
+- `cbor`
+- `gzip` (default)
+- `brotli`
+- `deflate`
+- `sse` (default)
+- `utils` (default)
+- `websocket` (default)
 
 ## Examples
 

@@ -35,8 +35,7 @@ Built on top of [hyper](https://github.com/hyperium/hyper).
 - response streaming
 - upgrade support (websocket, etc.)
 - runtime compatibility (tokio and smol)
-- http1/2 support 
-- http3 support (planned)
+- http1/2/3 support 
 
 ## Benchmark Results
 

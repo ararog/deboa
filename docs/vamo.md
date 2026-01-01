@@ -8,7 +8,7 @@ nav_order: 6
 
 A nice wrapper on top of deboa for creating DRY REST clients.
 
-## Features
+Vamo provides:
 
 - Type-safe REST client generation
 - Resource-based API design

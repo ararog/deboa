@@ -8,7 +8,7 @@ nav_order: 2
 
 The core HTTP client library for Rust, providing a simple yet powerful interface for making HTTP requests.
 
-## Features
+With Deboa, you can:
 
 - easily add, remove and update headers
 - helpers to add basic and bearer auth
@@ -22,8 +22,7 @@ The core HTTP client library for Rust, providing a simple yet powerful interface
 - response streaming
 - upgrade support (websocket, etc.)
 - runtime compatibility (tokio and smol)
-- http1/2 support
-- http3 support (tokio only)
+- http1/2/3 support
 
 ## Installation
 
@@ -33,6 +32,18 @@ Add to your `Cargo.toml`:
 [dependencies]
 deboa = { version = "0.0.9", features = ["http1", "http2", "tokio-rt", "tokio-rust-tls"] }
 ```
+
+## Features
+
+- `http1`: Enable HTTP/1 support (enabled by default)
+- `http2`: Enable HTTP/2 support (enabled by default)
+- `http3`: Enable HTTP/3 support (tokio only)
+- `tokio-rt`: Use Tokio as the async runtime (enabled by default)
+- `smol-rt`: Use smol as the async runtime
+- `tokio-rust-tls`: Use tokio-rust-tls as the TLS implementation (enabled by default)
+- `tokio-native-tls`: Use tokio-native-tls as the TLS implementation
+- `smol-rust-tls`: Use smol-rust-tls as the TLS implementation
+- `smol-native-tls`: Use smol-native-tls as the TLS implementation
 
 ## Basic Usage
 
@@ -152,14 +163,6 @@ match deboa::get("https://api.example.com/data").send_with(&client).await {
     }
 }
 ```
-
-## Features
-
-- `http1`: Enable HTTP/1 support (enabled by default)
-- `http2`: Enable HTTP/2 support (enabled by default)
-- `http3`: Enable HTTP/3 support (tokio only)
-- `tokio-rt`: Use Tokio as the async runtime (enabled by default)
-- `smol-rt`: Use smol as the async runtime
 
 ## Examples
 
