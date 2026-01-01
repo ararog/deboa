@@ -1,4 +1,4 @@
-# CBOR Example
+# CBOR
 
 To try this example you need a server running locally. You can start the provided Python script by running:
 

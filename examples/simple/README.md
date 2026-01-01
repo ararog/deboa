@@ -1,4 +1,4 @@
-# Simple Example
+# Simple
 
 This example illustrates how to use Deboa to make requests in several different ways,
 using FetchWith trait and more.

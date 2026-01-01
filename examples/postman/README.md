@@ -1,4 +1,4 @@
-# Postman Example
+# Postman
 
 A showcase of how to use bora attribute macro from vamo-macro crate to build
 a client to make requests to a REST api.

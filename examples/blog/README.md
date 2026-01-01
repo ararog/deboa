@@ -1,4 +1,4 @@
-# Blog Example
+# Blog
 
 A simple blog application using Deboa.
 

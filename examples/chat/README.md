@@ -1,4 +1,4 @@
-# Chat Example
+# Chat
 
 A very basic chat application using Deboa and WebSocket from deboa-extras crate.
 Application app is built with iced crate.
