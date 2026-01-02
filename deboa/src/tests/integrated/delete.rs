@@ -13,7 +13,7 @@ use smol_macros::test;
 //
 // DELETE
 //
-#[cfg(feature = "http3")]
+#[cfg(feature = "http3-tokio")]
 #[tokio::test]
 
 async fn delete_http3() -> Result<()> {
