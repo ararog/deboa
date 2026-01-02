@@ -1343,7 +1343,7 @@ impl Client {
                 .create_connection(true, host, port, &self.protocol, &self.identity)
                 .await?;
             match conn {
-                #[cfg(feature = "http3")]
+                #[cfg(feature = "http3-tokio")]
                 DeboaConnection::Http3(ref mut conn) => {
                     conn.send_request(request)
                         .await
@@ -1351,7 +1351,7 @@ impl Client {
             }
         } else {
             match self.protocol {
-                #[cfg(feature = "http3")]
+                #[cfg(feature = "http3-tokio")]
                 HttpVersion::Http3 => {
                     let mut connection =
                         BaseHttpConnection::<Http3Request>::connect(host, port, &self.identity)
