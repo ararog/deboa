@@ -19,7 +19,7 @@ members = [
 ]
 
 [profile.release]
-strip = true  # Automatically strip symbols from the binary.
+strip = true
 opt-level = "z" 
 lto = true
 codegen-units = 1
