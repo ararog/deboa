@@ -44,3 +44,14 @@ jobs:
         ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VERSION }}
         CC_aarch64_linux_android: ${{ env.ANDROID_NDK_HOME }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang
         CXX_aarch64_linux_android: ${{ env.ANDROID_NDK_HOME }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install Rust toolchains
+      run: rustup target add x86_64-pc-windows-msvc
+
+    - name: Build for x86_64-pc-windows-msvc
+      run: cargo build --target x86_64-pc-windows-msvc --release
