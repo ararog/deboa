@@ -20,7 +20,7 @@ use smol_macros::test;
 //
 // GET
 //
-#[cfg(feature = "http3")]
+#[cfg(feature = "http3-tokio")]
 #[tokio::test]
 
 async fn get_http3() -> Result<()> {
