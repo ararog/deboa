@@ -14,8 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6
+
     - name: Build
       run: cargo build --verbose
+
     - name: Run tests
       run: cargo test --verbose
   build-android:
@@ -23,5 +25,23 @@ jobs:
     container: instrumentisto/cargo-ndk:latest
     steps:
     - uses: actions/checkout@v6
-    - name: Build Android libraries for all targets
-      run: cargo ndk -t armv7-linux-androideabi -t aarch64-linux-android -t i686-linux-android -t x86_64-linux-android -- build --release
+
+    - name: Install Rust toolchains
+      run: rustup target add aarch64-linux-android armv7-linux-androideabi
+
+    - name: Install Android NDK
+      uses: android-actions/setup-android@v2
+      with:
+        ndk-version: r25c # Use a compatible NDK version
+
+    - name: Install cargo-ndk and other build dependencies
+      run: |
+        cargo install cargo-ndk
+        sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev gcc
+
+    - name: Build for aarch64-linux-android with cargo-ndk
+      run: cargo ndk -t aarch64-linux-android build --release
+      env:
+        ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VERSION }}
+        CC_aarch64_linux_android: ${{ env.ANDROID_NDK_HOME }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang
+        CXX_aarch64_linux_android: ${{ env.ANDROID_NDK_HOME }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++
