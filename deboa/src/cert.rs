@@ -35,7 +35,8 @@
 #[derive(Debug, Clone)]
 pub struct Identity {
     cert: String,
-    pw: String,
+    key: Option<String>,
+    pw: Option<String>,
     ca: Option<String>,
 }
 
@@ -55,8 +56,41 @@ impl Identity {
     ///
     /// * `Identity` - The new Identity instance.
     ///
+    #[deprecated(note = "Use `Identity::new_with_pw` instead")]
     pub fn new(cert: String, pw: String, ca: Option<String>) -> Self {
-        Identity { cert, pw, ca }
+        Identity { cert, key: None, pw: Some(pw), ca }
+    }
+
+    /// Create a new Identity instance with optional password.
+    ///
+    /// # Arguments
+    ///
+    /// * `cert` - The client certificate.
+    /// * `pw` - The client certificate password.
+    /// * `ca` - The client certificate authority.
+    ///
+    /// # Returns
+    ///
+    /// * `Identity` - The new Identity instance.
+    ///
+    pub fn new_with_pw(cert: String, pw: Option<String>, ca: Option<String>) -> Self {
+        Identity { cert, key: None, pw, ca }
+    }
+
+    /// Create a new Identity instance with key file.
+    ///
+    /// # Arguments
+    ///
+    /// * `cert` - The client certificate.
+    /// * `key` - The client certificate key file.
+    /// * `ca` - The client certificate authority.
+    ///
+    /// # Returns
+    ///
+    /// * `Identity` - The new Identity instance.
+    ///
+    pub fn new_with_key(cert: String, key: String, ca: Option<String>) -> Self {
+        Identity { cert, key: Some(key), pw: None, ca }
     }
 
     /// Allow get the client certificate.
@@ -70,15 +104,26 @@ impl Identity {
         &self.cert
     }
 
+    /// Allow get the client certificate key.
+    ///
+    /// # Returns
+    ///
+    /// * `Option<&str>` - The client certificate key.
+    ///
+    #[inline]
+    pub fn key(&self) -> Option<&str> {
+        self.key.as_deref()
+    }
+
     /// Allow get the client certificate password.
     ///
     /// # Returns
     ///
-    /// * `&str` - The client certificate password.
+    /// * `Option<&str>` - The client certificate password.
     ///
     #[inline]
-    pub fn pw(&self) -> &str {
-        &self.pw
+    pub fn pw(&self) -> Option<&str> {
+        self.pw.as_deref()
     }
 
     /// Allow get the client certificate authority.

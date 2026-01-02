@@ -6,7 +6,7 @@ use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
 use hyper_util::rt::TokioIo;
 
 use crate::{
-    cert::ClientCert,
+    cert::Identity,
     client::conn::{
         stream::{plain_connection, tls_connection},
         tcp::DeboaTcpConnection,
@@ -31,7 +31,7 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request> {
         is_secure: bool,
         host: &str,
         port: u16,
-        client_cert: &Option<ClientCert>,
+        client_cert: &Option<Identity>,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
         let stream = if is_secure {
             tls_connection(host, port, client_cert).await

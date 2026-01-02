@@ -6,7 +6,7 @@ use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
 use smol_hyper::rt::FuturesIo;
 
 use crate::{
-    cert::ClientCert,
+    cert::Identity,
     client::conn::{
         stream::{plain_connection, tls_connection},
         tcp::DeboaTcpConnection,
@@ -30,7 +30,7 @@ impl DeboaTcpConnection for BaseHttpConnection<Http2Request> {
         is_secure: bool,
         host: &str,
         port: u16,
-        client_cert: &Option<ClientCert>,
+        client_cert: &Option<Identity>,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
         let io = if is_secure {
             tls_connection(host, port, client_cert).await

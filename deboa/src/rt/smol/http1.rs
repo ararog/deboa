@@ -6,18 +6,20 @@ use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
 use smol_hyper::rt::FuturesIo;
 
 use crate::{
-    cert::ClientCert,
+    cert::Identity,
     client::conn::{
-        http::{BaseHttpConnection, DeboaHttpConnection, Http1Request},
         stream::{plain_connection, tls_connection},
+        tcp::DeboaTcpConnection,
+        BaseHttpConnection,
     },
     errors::{ConnectionError, DeboaError},
+    request::Http1Request,
     rt::smol::stream::SmolStream,
     Result,
 };
 
 #[async_trait]
-impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
+impl DeboaTcpConnection for BaseHttpConnection<Http1Request> {
     type Sender = Http1Request;
 
     #[inline]
@@ -28,12 +30,13 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
     async fn connect(
         is_secure: bool,
         host: &str,
-        client_cert: &Option<ClientCert>,
+        port: u16,
+        client_cert: &Option<Identity>,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
         let io = if is_secure {
-            tls_connection(host, client_cert).await
+            tls_connection(host, port, client_cert).await
         } else {
-            plain_connection(host).await
+            plain_connection(host, port).await
         };
 
         if let Err(e) = io {
@@ -72,7 +75,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http1Request> {
     }
 }
 
-impl crate::client::conn::http::private::DeboaHttpConnectionSealed
+impl crate::client::conn::tcp::private::DeboaTcpConnectionSealed
     for BaseHttpConnection<Http1Request>
 {
 }

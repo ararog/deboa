@@ -1,4 +1,4 @@
-use crate::{request::DeboaRequest, Deboa, Result};
+use crate::{request::DeboaRequest, Client, Result};
 use http::{header, StatusCode};
 use httpmock::{Method::PUT, MockServer};
 #[cfg(feature = "smol-rt")]
@@ -21,7 +21,7 @@ async fn do_put() -> Result<()> {
             .body("ping");
     });
 
-    let mut client = Deboa::default();
+    let mut client = Client::default();
 
     let request = DeboaRequest::put(
         server
