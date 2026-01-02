@@ -35,7 +35,8 @@ smol-native-tls = ["dep:async-native-tls"]
 # protocols
 http1 = []
 http2 = []
-http3 = ["dep:h3", "dep:h3-quinn", "dep:quinn"]
+http3-tokio = ["dep:h3", "dep:h3-quinn", "dep:quinn", "quinn/runtime-tokio"]
+http3-smol = ["dep:h3", "dep:h3-quinn", "dep:quinn", "quinn/runtime-smol"]
 
 [dependencies]
 async-executor = { version = "1.13.3", optional = true }

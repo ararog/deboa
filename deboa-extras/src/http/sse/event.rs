@@ -9,6 +9,12 @@ pub struct ServerEvent {
     retry: Option<u64>,
 }
 
+impl Default for ServerEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ServerEvent {
     pub fn new() -> Self {
         Self { id: None, event: None, data: Vec::new(), retry: None }

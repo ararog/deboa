@@ -96,6 +96,28 @@ pub trait DeboaHttpConnectionPool: private::DeboaHttpConnectionPoolSealed {
     ) -> Result<&'a mut DeboaConnection>;
 }
 
+impl HttpConnectionPool {
+    /// Allow set max idle connections
+    ///
+    /// # Arguments
+    ///
+    /// * `max_idle_connections` - The max idle connections.
+    ///
+    pub fn set_max_idle_connections(&mut self, max_idle_connections: u32) {
+        self.max_idle_connections = max_idle_connections;
+    }
+
+    /// Allow set keep alive duration
+    ///
+    /// # Arguments
+    ///
+    /// * `keep_alive_duration` - The keep alive duration.
+    ///
+    pub fn set_keep_alive_duration(&mut self, keep_alive_duration: Duration) {
+        self.keep_alive_duration = keep_alive_duration;
+    }
+}
+
 #[async_trait]
 impl DeboaHttpConnectionPool for HttpConnectionPool {
     fn new(max_idle_connections: u32, keep_alive_duration: Duration) -> Self {

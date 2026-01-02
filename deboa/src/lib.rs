@@ -1131,8 +1131,6 @@ impl Client {
             .as_ref()
             .method();
 
-        let protocol = self.protocol();
-
         info!("Building request: {} {}", method, uri);
         let mut builder = Request::builder()
             .uri(uri)
