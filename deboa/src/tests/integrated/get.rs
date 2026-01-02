@@ -209,7 +209,7 @@ async fn do_get_invalid_server() -> Result<()> {
         DeboaError::Connection(ConnectionError::Tcp {
             host: "invalid-server.com".to_string(),
             #[cfg(target_os = "windows")]
-            message: "failed to lookup address information: Name or service not known".to_string(),
+            message: "No such host is known. (os error 11001)".to_string(),
             #[cfg(target_os = "linux")]
             message: "failed to lookup address information: Name or service not known".to_string(),
             #[cfg(target_os = "macos")]
