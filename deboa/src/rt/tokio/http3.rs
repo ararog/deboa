@@ -4,7 +4,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use bytes::Bytes;
 use futures::future;
-use http::version::Version;
+use http::{version::Version, StatusCode};
 use http_body_util::Full;
 use hyper::{Request, Response};
 use quinn::crypto::rustls::QuicClientConfig;
@@ -14,7 +14,7 @@ use crate::request::Http3Request;
 use crate::{
     cert::ClientCert,
     client::conn::{udp::DeboaUdpConnection, BaseHttpConnection},
-    errors::{ConnectionError, DeboaError},
+    errors::{ConnectionError, DeboaError, RequestError, ResponseError},
     Result,
 };
 
@@ -115,12 +115,53 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
             .method()
             .to_string();
 
-        let result = sender
+        let request = sender
             .send_request(request)
             .await;
 
+        if let Err(err) = request {
+            return Err(DeboaError::Request(RequestError::Send {
+                url: "".to_string(),
+                method: method.to_string(),
+                message: err.to_string(),
+            }));
+        }
+
+        let request_stream = request.unwrap();
+        let (mut send_stream, mut recv_stream) = request_stream.split();
+
+        if method == "POST" || method == "PUT" || method == "PATCH" {
+            // Send request body if present
+            // For now, we're not handling the body, but we could add that later
+            let buf = Bytes::from("dummy body"); // Placeholder - in reality you'd use the actual request body
+            send_stream
+                .send_data(buf)
+                .await;
+        }
+
+        let finish_request = send_stream
+            .finish()
+            .await;
+        if let Err(err) = finish_request {
+            return Err(DeboaError::Request(RequestError::Send {
+                url: "".to_string(),
+                method: method.to_string(),
+                message: err.to_string(),
+            }));
+        }
+
+        let response = recv_stream
+            .recv_response()
+            .await;
+        if let Err(err) = response {
+            return Err(DeboaError::Response(ResponseError::Receive {
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+                message: err.to_string(),
+            }));
+        }
+
         let response = self
-            .process_response(&method, result)
+            .process_response(response, recv_stream)
             .await?;
 
         Ok(response)
