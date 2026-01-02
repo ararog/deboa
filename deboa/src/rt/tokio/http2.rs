@@ -2,7 +2,6 @@ use async_trait::async_trait;
 use bytes::Bytes;
 use http::version::Version;
 use http_body_util::Full;
-use hyper::StatusCode;
 use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
 use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
@@ -14,7 +13,7 @@ use crate::{
         tcp::DeboaTcpConnection,
         BaseHttpConnection,
     },
-    errors::{ConnectionError, DeboaError, RequestError, ResponseError},
+    errors::{ConnectionError, DeboaError},
     request::Http2Request,
     Result,
 };

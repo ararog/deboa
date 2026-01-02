@@ -3933,6 +3933,7 @@ version = "0.11.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9e20a958963c291dc322d98411f541009df2ced7b5a4f2bd52337638cfccf20"
 dependencies = [
+ "async-io",
  "bytes",
  "cfg_aliases",
  "futures-io",
@@ -3941,7 +3942,8 @@ dependencies = [
  "quinn-udp",
  "rustc-hash 2.1.1",
  "rustls",
- "socket2",
+ "smol",
+ "socket2 0.5.10",
  "thiserror 2.0.17",
  "tokio",
  "tracing",

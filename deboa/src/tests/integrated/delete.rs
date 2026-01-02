@@ -1,5 +1,6 @@
 #[cfg(test)]
 use crate::{request::DeboaRequest, Client, Result};
+#[cfg(feature = "http3")]
 use crate::{response::DeboaResponse, HttpVersion};
 use http::StatusCode;
 

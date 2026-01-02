@@ -12,7 +12,7 @@ use crate::{
         tcp::DeboaTcpConnection,
         BaseHttpConnection,
     },
-    errors::{ConnectionError, DeboaError, RequestError, ResponseError},
+    errors::{ConnectionError, DeboaError},
     request::Http1Request,
     Result,
 };
