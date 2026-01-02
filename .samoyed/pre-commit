@@ -4,3 +4,4 @@
 # exit 0
 cargo fmt --check
 cargo test --release --features "deboa-extras/serialization_all deboa-extras/compression_all" 
+cd deboa && cargo test --features "smol-rt smol-rust-tls http1 http2" --no-default-features

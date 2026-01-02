@@ -49,7 +49,10 @@ async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
     Ok(stream.unwrap())
 }
 
-#[cfg(all(any(feature = "http1", feature = "http2"), feature = "tokio-rust-tls"))]
+#[cfg(all(
+    any(feature = "http1", feature = "http2"),
+    any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
+))]
 fn setup_rust_tls(host: &str, client_cert: &Option<Identity>) -> Result<ClientConfig> {
     let root_store = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
     let provider = rustls::crypto::aws_lc_rs::default_provider();
