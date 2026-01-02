@@ -22,7 +22,6 @@ jobs:
       run: cargo test --verbose
   build-android:
     runs-on: ubuntu-latest
-    container: instrumentisto/cargo-ndk:latest
     steps:
     - uses: actions/checkout@v6
 
