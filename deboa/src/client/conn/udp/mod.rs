@@ -2,24 +2,17 @@ use async_trait::async_trait;
 use bytes::{Buf, Bytes, BytesMut};
 #[cfg(feature = "http3")]
 use h3::{client::RequestStream, error::StreamError};
-use h3_quinn::BidiStream;
+use h3_quinn::RecvStream;
 #[cfg(feature = "http3")]
 use http::{Request, Response, StatusCode, Version};
 use http_body_util::Full;
 
 use crate::{
-    cert::ClientCert,
+    cert::Identity,
     client::conn::BaseHttpConnection,
-    errors::{DeboaError, RequestError, ResponseError},
+    errors::{DeboaError, ResponseError},
     Result, MAX_ERROR_MESSAGE_SIZE,
 };
-
-#[cfg(feature = "http3")]
-pub(crate) struct UdpLink {
-    pub host: String,
-    pub port: u16,
-    pub endpoint: quinn::Endpoint,
-}
 
 #[async_trait]
 /// Trait that represents the HTTP connection.
@@ -51,7 +44,7 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     async fn connect(
         host: &str,
         port: u16,
-        client_cert: &Option<ClientCert>,
+        client_cert: &Option<Identity>,
     ) -> Result<BaseHttpConnection<Self::Sender>>;
 
     /// Get connection protocol.
@@ -78,8 +71,6 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     ///
     /// # Arguments
     ///
-    /// * `url` - The url to connect.
-    /// * `method` - The method to use.
     /// * `response` - The response to process.
     ///
     /// # Returns
@@ -88,41 +79,10 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     ///
     async fn process_response(
         &self,
-        method: &str,
-        response: std::result::Result<RequestStream<BidiStream<Bytes>, Bytes>, StreamError>,
+        response: std::result::Result<Response<()>, StreamError>,
+        mut stream: RequestStream<RecvStream, Bytes>,
     ) -> Result<Response<Full<Bytes>>> {
-        if let Err(err) = response {
-            return Err(DeboaError::Request(RequestError::Send {
-                url: "".to_string(),
-                method: method.to_string(),
-                message: err.to_string(),
-            }));
-        }
-
-        let mut request_stream = response.unwrap();
-
-        let finish_request = request_stream
-            .finish()
-            .await;
-        if let Err(err) = finish_request {
-            return Err(DeboaError::Request(RequestError::Send {
-                url: "".to_string(),
-                method: method.to_string(),
-                message: err.to_string(),
-            }));
-        }
-
-        let recv_response = request_stream
-            .recv_response()
-            .await;
-        if let Err(err) = recv_response {
-            return Err(DeboaError::Response(ResponseError::Receive {
-                status_code: StatusCode::INTERNAL_SERVER_ERROR,
-                message: err.to_string(),
-            }));
-        }
-
-        let response = recv_response.unwrap();
+        let response = response.unwrap();
 
         let status_code = response.status();
 
@@ -133,7 +93,7 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
         {
             let mut error_message = Vec::new();
             let mut downloaded = 0;
-            while let Ok(Some(chunk)) = request_stream
+            while let Ok(Some(chunk)) = stream
                 .recv_data()
                 .await
             {
@@ -162,7 +122,7 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
             .headers()
             .clone();
         let mut body = BytesMut::new();
-        while let Ok(Some(chunk)) = request_stream
+        while let Ok(Some(chunk)) = stream
             .recv_data()
             .await
         {

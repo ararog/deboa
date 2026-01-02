@@ -26,7 +26,7 @@ use crate::request::Http1Request;
 use crate::request::Http2Request;
 
 #[cfg(feature = "http3")]
-use crate::{client::conn::udp::UdpLink, request::Http3Request};
+use crate::request::Http3Request;
 
 /// TCP protocol implementations.
 ///
