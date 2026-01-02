@@ -15,7 +15,7 @@ use crate::client::conn::tcp::DeboaTcpConnection;
 use crate::client::conn::udp::DeboaUdpConnection;
 
 use crate::{
-    cert::ClientCert,
+    cert::Identity,
     client::conn::{BaseHttpConnection, DeboaConnection},
     HttpVersion, Result,
 };
@@ -92,7 +92,7 @@ pub trait DeboaHttpConnectionPool: private::DeboaHttpConnectionPoolSealed {
         host: &'a str,
         port: u16,
         protocol: &HttpVersion,
-        client_cert: &Option<ClientCert>,
+        client_cert: &Option<Identity>,
     ) -> Result<&'a mut DeboaConnection>;
 }
 
@@ -119,7 +119,7 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         host: &'a str,
         port: u16,
         protocol: &HttpVersion,
-        client_cert: &Option<ClientCert>,
+        client_cert: &Option<Identity>,
     ) -> Result<&'a mut DeboaConnection> {
         if self
             .connections

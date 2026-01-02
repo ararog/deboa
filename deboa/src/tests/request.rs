@@ -2,7 +2,7 @@ use std::{str::FromStr, sync::Arc};
 
 use crate::{
     request::{DeboaRequest, FetchWith, IntoRequest},
-    Client, Deboa, Result,
+    Client, Result,
 };
 
 use deboa_tests::utils::JSONPLACEHOLDER;
@@ -251,7 +251,7 @@ fn test_raw_body() -> Result<()> {
 
 #[tokio::test]
 async fn test_fetch_from_str() -> Result<()> {
-    let mut client = Deboa::default();
+    let mut client = Client::default();
 
     let response = JSONPLACEHOLDER
         .fetch_with(&mut client)

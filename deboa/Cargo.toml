@@ -72,6 +72,7 @@ rand = "0.9.2"
 regex = "1.9.6"
 rustls = { version = "0.23.36", optional = true }
 rustls-native-certs = { version = "0.8.0", optional = true }
+rustls-pemfile = "2.2.0"
 serde = { version = "1.0.217", features = ["derive"] }
 smol = { version = "2.0.2", optional = true }
 smol-hyper = { version = "0.1.0", optional = true, features = ["smol"] }

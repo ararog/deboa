@@ -1229,6 +1229,7 @@ dependencies = [
  "regex",
  "rustls",
  "rustls-native-certs",
+ "rustls-pemfile",
  "serde",
  "smol",
  "smol-hyper",
