@@ -262,6 +262,7 @@ pub struct ClientBuilder {
     identity: Option<Identity>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
+    skip_cert_verification: bool,
     pool: Option<HttpConnectionPool>,
 }
 
@@ -452,6 +453,39 @@ impl ClientBuilder {
         self
     }
 
+    /// Skip certificate verification.
+    ///
+    /// # Arguments
+    ///
+    /// * `skip` - Whether to skip certificate verification.
+    ///
+    /// # Examples
+    ///
+    /// ``` rust, no_run
+    /// use deboa::Client;
+    ///
+    /// let builder = Client::builder()
+    ///     .skip_cert_verification(true);  // Skip certificate verification
+    /// ```
+    ///
+    /// # Warning
+    /// This should only be used in development or testing environments.
+    /// Never use this in production as it makes your application vulnerable to man-in-the-middle attacks.
+    ///
+    /// # Note
+    /// This setting affects all connections made by the client.
+    /// It is recommended to use this only for testing purposes.
+    ///
+    /// # Safety
+    /// This function bypasses SSL certificate validation, which can expose your application to security risks.
+    /// Only use this in controlled environments where you trust all network traffic.
+    ///
+    #[inline]
+    pub fn skip_cert_verification(mut self, skip: bool) -> Self {
+        self.skip_cert_verification = skip;
+        self
+    }
+
     /// Set a connection pool.
     ///
     /// # Arguments
@@ -515,6 +549,7 @@ impl ClientBuilder {
             identity: self.identity,
             catchers: self.catchers,
             protocol: self.protocol,
+            skip_cert_verification: self.skip_cert_verification,
             pool: self.pool,
         }
     }
@@ -574,6 +609,7 @@ pub struct Client {
     identity: Option<Identity>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
+    skip_cert_verification: bool,
     pool: Option<HttpConnectionPool>,
 }
 
@@ -619,6 +655,7 @@ impl Default for Client {
             identity: None,
             catchers: None,
             protocol: default_protocol(),
+            skip_cert_verification: false,
             pool: None,
         }
     }
@@ -671,6 +708,7 @@ impl Client {
             identity: None,
             catchers: None,
             protocol: default_protocol(),
+            skip_cert_verification: false,
             pool: None,
         }
     }
@@ -689,8 +727,34 @@ impl Client {
             identity: None,
             catchers: None,
             protocol: default_protocol(),
+            skip_cert_verification: false,
             pool: None,
         }
+    }
+
+    /// Check if certificate verification is skipped.
+    ///
+    /// # Returns
+    ///
+    /// * `bool` - `true` if certificate verification is skipped, `false` otherwise.
+    #[inline]
+    pub fn skip_cert_verification(&self) -> bool {
+        self.skip_cert_verification
+    }
+
+    /// Set whether to skip certificate verification.
+    ///
+    /// # Arguments
+    ///
+    /// * `skip` - Whether to skip certificate verification.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The Deboa instance.
+    #[inline]
+    pub fn set_skip_cert_verification(&mut self, skip: bool) -> &mut Self {
+        self.skip_cert_verification = skip;
+        self
     }
 
     /// Allow get protocol at any time.
@@ -1206,7 +1270,14 @@ impl Client {
 
         if let Some(pool) = &mut self.pool {
             let conn = pool
-                .create_connection(is_secure, host, port, &self.protocol, &self.identity)
+                .create_connection(
+                    is_secure,
+                    host,
+                    port,
+                    &self.protocol,
+                    &self.identity,
+                    self.skip_cert_verification,
+                )
                 .await?;
             match conn {
                 #[cfg(feature = "http1")]
@@ -1229,6 +1300,7 @@ impl Client {
                         host,
                         port,
                         &self.identity,
+                        self.skip_cert_verification,
                     )
                     .await?;
                     connection
@@ -1242,6 +1314,7 @@ impl Client {
                         host,
                         port,
                         &self.identity,
+                        self.skip_cert_verification,
                     )
                     .await?;
                     connection
@@ -1340,7 +1413,14 @@ impl Client {
 
         if let Some(pool) = &mut self.pool {
             let conn = pool
-                .create_connection(true, host, port, &self.protocol, &self.identity)
+                .create_connection(
+                    true,
+                    host,
+                    port,
+                    &self.protocol,
+                    &self.identity,
+                    self.skip_cert_verification,
+                )
                 .await?;
             match conn {
                 #[cfg(feature = "http3-tokio")]
@@ -1353,9 +1433,13 @@ impl Client {
             match self.protocol {
                 #[cfg(feature = "http3-tokio")]
                 HttpVersion::Http3 => {
-                    let mut connection =
-                        BaseHttpConnection::<Http3Request>::connect(host, port, &self.identity)
-                            .await?;
+                    let mut connection = BaseHttpConnection::<Http3Request>::connect(
+                        host,
+                        port,
+                        &self.identity,
+                        self.skip_cert_verification,
+                    )
+                    .await?;
                     connection
                         .send_request(request)
                         .await

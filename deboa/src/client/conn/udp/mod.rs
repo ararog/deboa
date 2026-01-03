@@ -45,6 +45,7 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
         host: &str,
         port: u16,
         client_cert: &Option<Identity>,
+        skip_cert_verification: bool,
     ) -> Result<BaseHttpConnection<Self::Sender>>;
 
     /// Get connection protocol.

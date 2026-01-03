@@ -11,6 +11,7 @@ use std::{fs::File, io::BufReader, sync::Arc};
 use crate::rt::smol::stream::SmolStream;
 #[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
 use crate::rt::tokio::stream::TokioStream;
+#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
 use rustls::ClientConfig;
 #[cfg(feature = "smol-rt")]
 use smol::net::TcpStream;
@@ -30,7 +31,7 @@ use rustls::pki_types::{CertificateDer, PrivateKeyDer, ServerName};
 use tokio_rustls::TlsConnector;
 
 use crate::{
-    cert::Identity,
+    cert::Identity as DeboaIdentity,
     errors::{ConnectionError, DeboaError},
     Result,
 };
@@ -55,7 +56,7 @@ async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
 ))]
 fn setup_rust_tls(
     host: &str,
-    client_cert: &Option<Identity>,
+    client_cert: &Option<DeboaIdentity>,
     skip_server_verification: bool,
 ) -> Result<ClientConfig> {
     let root_store = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
@@ -158,16 +159,28 @@ pub(crate) async fn plain_connection(host: &str, port: u16) -> Result<SmolStream
 pub(crate) async fn tls_connection(
     host: &str,
     port: u16,
-    client_cert: &Option<ClientCert>,
+    client_cert: &Option<DeboaIdentity>,
+    skip_server_verification: bool,
 ) -> Result<TokioStream> {
     let socket = create_stream(host, port).await?;
     let mut builder = TlsConnector::builder();
+
+    if skip_server_verification {
+        builder.danger_accept_invalid_certs(true);
+        builder.danger_accept_invalid_hostnames(true);
+    }
+
     if let Some(client_cert) = client_cert {
         let file = std::fs::read(client_cert.cert());
         if let Err(e) = file {
             return Err(DeboaError::ClientCert { message: e.to_string() });
         }
-        let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.pw());
+        let identity = Identity::from_pkcs12(
+            &file.unwrap(),
+            client_cert
+                .pw()
+                .unwrap_or_default(),
+        );
         if let Err(e) = identity {
             return Err(DeboaError::ClientCert { message: e.to_string() });
         }
@@ -210,10 +223,11 @@ pub(crate) async fn tls_connection(
 pub(crate) async fn tls_connection(
     host: &str,
     port: u16,
-    client_cert: &Option<Identity>,
+    client_cert: &Option<DeboaIdentity>,
+    skip_server_verification: bool,
 ) -> Result<TokioStream> {
     let socket = create_stream(host, port).await?;
-    let config = setup_rust_tls(host, client_cert, false)?;
+    let config = setup_rust_tls(host, client_cert, skip_server_verification)?;
     let connector = TlsConnector::from(Arc::new(config));
     let hostname = ServerName::try_from(host.to_string());
 
@@ -247,35 +261,52 @@ pub(crate) async fn tls_connection(
 pub(crate) async fn tls_connection(
     host: &str,
     port: u16,
-    client_cert: &Option<Identity>,
+    client_cert: &Option<DeboaIdentity>,
+    skip_server_verification: bool,
 ) -> Result<SmolStream> {
     let socket = create_stream(host, port).await?;
-    let connector = if let Some(client_cert) = client_cert {
-        let builder = TlsConnector::new();
-        if let Some(ca) = client_cert.ca() {
+    let builder = TlsConnector::new();
+
+    let builder = if skip_server_verification {
+        builder
+            .danger_accept_invalid_certs(true)
+            .danger_accept_invalid_hostnames(true)
+    } else {
+        builder
+    };
+
+    let builder = if let Some(client_cert) = client_cert {
+        let builder = if let Some(ca) = client_cert.ca() {
             let pem = std::fs::read(ca);
             if let Err(e) = pem {
                 return Err(DeboaError::ClientCert { message: e.to_string() });
             }
             let cert = Certificate::from_pem(&pem.unwrap());
-            builder.add_root_certificate(cert.unwrap());
-        }
+            builder.add_root_certificate(cert.unwrap())
+        } else {
+            builder
+        };
 
         let file = std::fs::read(client_cert.cert());
         if let Err(e) = file {
             return Err(DeboaError::ClientCert { message: e.to_string() });
         }
-        let identity = Identity::from_pkcs12(&file.unwrap(), client_cert.pw());
+        let identity = Identity::from_pkcs12(
+            &file.unwrap(),
+            client_cert
+                .pw()
+                .unwrap_or_default(),
+        );
         if let Err(e) = identity {
             return Err(DeboaError::ClientCert { message: e.to_string() });
         }
 
         builder.identity(identity.unwrap())
     } else {
-        TlsConnector::new()
+        builder
     };
 
-    let stream = connector
+    let stream = builder
         .connect(host.to_string(), socket)
         .await;
 
@@ -298,10 +329,11 @@ pub(crate) async fn tls_connection(
 pub(crate) async fn tls_connection(
     host: &str,
     port: u16,
-    client_cert: &Option<Identity>,
+    client_cert: &Option<DeboaIdentity>,
+    skip_server_verification: bool,
 ) -> Result<SmolStream> {
     let socket = create_stream(host, port).await?;
-    let config = setup_rust_tls(host, client_cert, false)?;
+    let config = setup_rust_tls(host, client_cert, skip_server_verification)?;
     let connector = TlsConnector::from(Arc::new(config));
     let hostname = ServerName::try_from(host.to_string());
 

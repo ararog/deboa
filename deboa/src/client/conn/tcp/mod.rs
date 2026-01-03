@@ -28,6 +28,7 @@ pub trait DeboaTcpConnection: private::DeboaTcpConnectionSealed {
     /// * `is_secure` - Whether the connection is secure.
     /// * `host` - The host to connect.
     /// * `client_cert` - The client certificate to use.
+    /// * `skip_cert_verification` - Whether to skip certificate verification.
     ///
     /// # Errors
     ///
@@ -42,6 +43,7 @@ pub trait DeboaTcpConnection: private::DeboaTcpConnectionSealed {
         host: &str,
         port: u16,
         client_cert: &Option<Identity>,
+        skip_cert_verification: bool,
     ) -> Result<BaseHttpConnection<Self::Sender>>;
 
     /// Get connection protocol.

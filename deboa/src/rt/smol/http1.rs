@@ -12,9 +12,7 @@ use crate::{
         tcp::DeboaTcpConnection,
         BaseHttpConnection,
     },
-    errors::{ConnectionError, DeboaError},
     request::Http1Request,
-    rt::smol::stream::SmolStream,
     Result,
 };
 
@@ -32,9 +30,10 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request> {
         host: &str,
         port: u16,
         client_cert: &Option<Identity>,
+        skip_cert_verification: bool,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
         let io = if is_secure {
-            tls_connection(host, port, client_cert).await
+            tls_connection(host, port, client_cert, skip_cert_verification).await
         } else {
             plain_connection(host, port).await
         };
