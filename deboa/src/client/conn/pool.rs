@@ -93,6 +93,7 @@ pub trait DeboaHttpConnectionPool: private::DeboaHttpConnectionPoolSealed {
         port: u16,
         protocol: &HttpVersion,
         client_cert: &Option<Identity>,
+        skip_cert_verification: bool,
     ) -> Result<&'a mut DeboaConnection>;
 }
 
@@ -142,6 +143,7 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         port: u16,
         protocol: &HttpVersion,
         client_cert: &Option<Identity>,
+        skip_cert_verification: bool,
     ) -> Result<&'a mut DeboaConnection> {
         if self
             .connections
@@ -158,22 +160,37 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         let connection = match protocol {
             #[cfg(feature = "http1")]
             HttpVersion::Http1 => {
-                let connection =
-                    BaseHttpConnection::<Http1Request>::connect(is_secure, host, port, client_cert)
-                        .await?;
+                let connection = BaseHttpConnection::<Http1Request>::connect(
+                    is_secure,
+                    host,
+                    port,
+                    client_cert,
+                    skip_cert_verification,
+                )
+                .await?;
                 DeboaConnection::Http1(Box::new(connection))
             }
             #[cfg(feature = "http2")]
             HttpVersion::Http2 => {
-                let connection =
-                    BaseHttpConnection::<Http2Request>::connect(is_secure, host, port, client_cert)
-                        .await?;
+                let connection = BaseHttpConnection::<Http2Request>::connect(
+                    is_secure,
+                    host,
+                    port,
+                    client_cert,
+                    skip_cert_verification,
+                )
+                .await?;
                 DeboaConnection::Http2(Box::new(connection))
             }
             #[cfg(feature = "http3-tokio")]
             HttpVersion::Http3 => {
-                let connection =
-                    BaseHttpConnection::<Http3Request>::connect(host, port, client_cert).await?;
+                let connection = BaseHttpConnection::<Http3Request>::connect(
+                    host,
+                    port,
+                    client_cert,
+                    skip_cert_verification,
+                )
+                .await?;
                 DeboaConnection::Http3(Box::new(connection))
             }
         };

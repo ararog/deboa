@@ -35,6 +35,17 @@ fn test_set_protocol() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn test_set_skip_cert_verification() -> Result<()> {
+    let api = Client::builder()
+        .skip_cert_verification(true)
+        .build();
+
+    assert!(api.skip_cert_verification);
+
+    Ok(())
+}
+
 #[tokio::test]
 async fn test_shl() -> Result<()> {
     let mut client = Client::default();

@@ -50,7 +50,6 @@ futures = "0.3.31"
 futures-rustls = { version = "0.26.0", optional = true }
 h3 = { version = "0.0.8", optional = true }
 h3-quinn = { version = "0.0.10", optional = true }
-hickory-resolver = "0.1.0"
 hotpath = "0.9.2"
 http = "1"
 http-body = "1"

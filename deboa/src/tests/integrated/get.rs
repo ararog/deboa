@@ -10,7 +10,7 @@ use crate::{
 use deboa_tests::utils::setup_server;
 
 use http::{header, StatusCode};
-use httpmock::MockServer;
+use httpmock::{server::HttpMockServerBuilder, MockServer};
 
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
@@ -20,57 +20,6 @@ use smol_macros::test;
 //
 // GET
 //
-#[cfg(feature = "http3-tokio")]
-#[tokio::test]
-async fn get_http3() -> Result<()> {
-    let mut client = Client::builder()
-        .protocol(HttpVersion::Http3)
-        .build();
-
-    let request = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts/1")?.build()?;
-
-    let response: DeboaResponse = client
-        .execute(request)
-        .await?;
-
-    assert_eq!(
-        response.status(),
-        StatusCode::OK,
-        "Status code is {} and should be {}",
-        response
-            .status()
-            .as_u16(),
-        StatusCode::OK.as_u16()
-    );
-
-    Ok(())
-}
-
-#[cfg(feature = "http3-tokio")]
-#[tokio::test]
-async fn local_get_http3() -> Result<()> {
-    let mut client = Client::builder()
-        .protocol(HttpVersion::Http3)
-        .build();
-
-    let request = DeboaRequest::get("https://localhost:8698")?.build()?;
-
-    let response: DeboaResponse = client
-        .execute(request)
-        .await?;
-
-    assert_eq!(
-        response.status(),
-        StatusCode::OK,
-        "Status code is {} and should be {}",
-        response
-            .status()
-            .as_u16(),
-        StatusCode::OK.as_u16()
-    );
-
-    Ok(())
-}
 
 async fn do_get_http1() -> Result<()> {
     let server = MockServer::start();
@@ -165,6 +114,118 @@ async fn test_get_http2() -> Result<()> {
 async fn test_get_http2() {
     let _ = do_get_http2().await;
 }
+
+#[cfg(feature = "http3-tokio")]
+#[tokio::test]
+async fn get_http3() -> Result<()> {
+    let mut client = Client::builder()
+        .protocol(HttpVersion::Http3)
+        .build();
+
+    let request = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts/1")?.build()?;
+
+    let response: DeboaResponse = client
+        .execute(request)
+        .await?;
+
+    assert_eq!(
+        response.status(),
+        StatusCode::OK,
+        "Status code is {} and should be {}",
+        response
+            .status()
+            .as_u16(),
+        StatusCode::OK.as_u16()
+    );
+
+    Ok(())
+}
+
+#[cfg(feature = "http3-tokio")]
+#[tokio::test]
+async fn local_get_http3() -> Result<()> {
+    let mut client = Client::builder()
+        .protocol(HttpVersion::Http3)
+        .build();
+
+    let request = DeboaRequest::get("https://localhost:8698")?.build()?;
+
+    let response: DeboaResponse = client
+        .execute(request)
+        .await?;
+
+    assert_eq!(
+        response.status(),
+        StatusCode::OK,
+        "Status code is {} and should be {}",
+        response
+            .status()
+            .as_u16(),
+        StatusCode::OK.as_u16()
+    );
+
+    Ok(())
+}
+
+//
+// Test TLS cert verification
+//
+
+/*
+async fn test_tls_verification_helper(skip: bool) -> Result<()> {
+    // This function would contain the common logic for both skip and non-skip verification tests
+    let ca_path = "src/tests/integrated/certs/cert.pem";
+    let key_path = "src/tests/integrated/certs/key.pem";
+
+    let mut server = HttpMockServerBuilder::new();
+    server.https_ca_key_pair_files(Some(ca_path), Some(key_path));
+
+    let server = server.start();
+
+    let http_mock = setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::OK);
+
+    let client = Client::builder()
+        .skip_cert_verification(skip)
+        .build();
+
+    let response = DeboaRequest::get(
+        server
+            .url("/comments/1")
+            .as_str(),
+    )?
+    .send_with(client)
+    .await?;
+
+    http_mock.assert();
+
+    assert_eq!(
+        response.status(),
+        StatusCode::OK,
+        "Status code is {} and should be {}",
+        response
+            .status()
+            .as_u16(),
+        StatusCode::OK.as_u16()
+    );
+
+    let comments = response
+        .text()
+        .await;
+
+    assert!(comments.is_ok());
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_tls_skip_cert_verification() -> Result<()> {
+    test_tls_verification_helper(true).await
+}
+
+#[tokio::test]
+async fn test_tls_cert_verification() -> Result<()> {
+    test_tls_verification_helper(false).await
+}
+*/
 
 //
 // GET NOT FOUND

@@ -19,10 +19,12 @@ jobs:
       run: cargo build --verbose
 
     - name: Run all tests with tokio
-      run: cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all"    
-    
-    - name: Run smol tests
-      run: cd deboa && cargo test --release --features "smol-rt smol-rust-tls http1 http2" --no-default-features
+      run: |
+        cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all"
+        cd deboa && \
+        cargo test --features "smol-rt smol-rust-tls http1 http2" --no-default-features && \
+        cargo test --features "smol-rt smol-native-tls http1 http2" --no-default-features && \
+        cargo test --features "tokio-rt tokio-native-tls http1 http2" --no-default-features
 
   build-android:
     runs-on: ubuntu-latest
@@ -60,8 +62,10 @@ jobs:
     - name: Build for x86_64-pc-windows-msvc
       run: cargo build --target x86_64-pc-windows-msvc --release
     
-    - name: Run all tests with tokio
-      run: cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all"    
-    
-    - name: Run smol tests
-      run: cd deboa && cargo test --release --features "smol-rt smol-rust-tls http1 http2" --no-default-features
+    - name: Run all tests
+      run: |
+        cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all"
+        cd deboa && \
+        cargo test --features "smol-rt smol-rust-tls http1 http2" --no-default-features && \
+        cargo test --features "smol-rt smol-native-tls http1 http2" --no-default-features && \
+        cargo test --features "tokio-rt tokio-native-tls http1 http2" --no-default-features
