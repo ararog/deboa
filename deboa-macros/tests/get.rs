@@ -11,6 +11,26 @@ pub struct Post {
 }
 
 #[tokio::test]
+async fn test_get_minimal() -> Result<()> {
+    let mut client = Client::default();
+    let response = get!("https://jsonplaceholder.typicode.com/posts", &mut client);
+    assert!(!response.is_empty());
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_get_minimal_headers() -> Result<()> {
+    let client = Client::default();
+    let response = get!(
+        "https://jsonplaceholder.typicode.com/posts",
+        vec![("Content-Type", "application/json")],
+        &mut client
+    );
+    assert!(!response.is_empty());
+    Ok(())
+}
+
+#[tokio::test]
 async fn test_get() -> Result<()> {
     let mut client = Client::default();
     let response =
