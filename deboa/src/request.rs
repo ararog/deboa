@@ -145,6 +145,21 @@ impl IntoRequest for Url {
     }
 }
 
+/// Trait to allow adding headers to a request.
+///
+/// This trait provides a flexible way to convert various input types into
+/// HTTP headers.
+///
+/// # Examples
+///
+/// ``` compile_fail
+/// use deboa::request::{IntoHeaders, DeboaRequest, DeboaRequestBuilder};
+///
+/// let headers = vec![("User-Agent", "deboa/0.1")];
+/// let request = DeboaRequest::get("https://example.com")?
+///     .headers(headers)
+///     .build()?;
+/// ```
 pub trait IntoHeaders: private::IntoHeadersSealed {
     fn into_headers(self) -> Result<HeaderMap>;
 }
@@ -188,6 +203,59 @@ impl<'a> IntoHeaders for Vec<(&'a str, &'a str)> {
             );
         }
         Ok(headers)
+    }
+}
+
+/// Extension trait for HTTP methods to create requests.
+/// Allows creating requests using method names as strings or Method enum values.
+///
+/// # Examples
+/// ``` compile_fail
+/// use http::Method;
+/// use deboa::request::MethodExt;
+///
+/// // Using Method enum
+/// let request = Method::GET.from_url("https://example.com")?;
+///
+/// // Using string
+/// let request = "GET".from_url("https://example.com")?;
+/// ```
+pub trait MethodExt: private::MethodExtSealed {
+    fn from_url(self, url: &str) -> Result<DeboaRequestBuilder>;
+    fn to_url(self, url: &str) -> Result<DeboaRequestBuilder>;
+}
+
+impl MethodExt for Method {
+    fn from_url(self, url: &str) -> Result<DeboaRequestBuilder> {
+        match self {
+            Method::GET => DeboaRequest::get(url),
+            Method::POST => DeboaRequest::post(url),
+            Method::PUT => DeboaRequest::put(url),
+            Method::DELETE => DeboaRequest::delete(url),
+            Method::PATCH => DeboaRequest::patch(url),
+            _ => panic!("Method not supported"),
+        }
+    }
+
+    fn to_url(self, url: &str) -> Result<DeboaRequestBuilder> {
+        self.from_url(url)
+    }
+}
+
+impl MethodExt for &str {
+    fn from_url(self, url: &str) -> Result<DeboaRequestBuilder> {
+        match self {
+            "GET" => DeboaRequest::get(url),
+            "POST" => DeboaRequest::post(url),
+            "PUT" => DeboaRequest::put(url),
+            "DELETE" => DeboaRequest::delete(url),
+            "PATCH" => DeboaRequest::patch(url),
+            _ => panic!("Method not supported"),
+        }
+    }
+
+    fn to_url(self, url: &str) -> Result<DeboaRequestBuilder> {
+        self.from_url(url)
     }
 }
 
@@ -1609,6 +1677,7 @@ impl DeboaRequest {
 mod private {
     pub trait IntoRequestSealed {}
     pub trait IntoHeadersSealed {}
+    pub trait MethodExtSealed {}
 }
 
 impl private::IntoRequestSealed for DeboaRequest {}
@@ -1626,3 +1695,7 @@ impl private::IntoHeadersSealed for Vec<(HeaderName, String)> {}
 impl private::IntoHeadersSealed for Vec<(String, String)> {}
 
 impl<'a> private::IntoHeadersSealed for Vec<(&'a str, &'a str)> {}
+
+impl private::MethodExtSealed for Method {}
+
+impl private::MethodExtSealed for &str {}

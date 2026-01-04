@@ -7,13 +7,12 @@ use smol_hyper::rt::FuturesIo;
 
 use crate::{
     cert::Identity,
-    client::conn::{
-        stream::{plain_connection, tls_connection},
-        tcp::DeboaTcpConnection,
-        BaseHttpConnection,
-    },
+    client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection},
     request::Http2Request,
-    rt::smol::executor::SmolExecutor,
+    rt::smol::{
+        executor::SmolExecutor,
+        tls::{plain_connection, tls_connection},
+    },
     Result,
 };
 

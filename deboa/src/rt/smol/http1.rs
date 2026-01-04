@@ -7,12 +7,9 @@ use smol_hyper::rt::FuturesIo;
 
 use crate::{
     cert::Identity,
-    client::conn::{
-        stream::{plain_connection, tls_connection},
-        tcp::DeboaTcpConnection,
-        BaseHttpConnection,
-    },
+    client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection},
     request::Http1Request,
+    rt::smol::tls::{plain_connection, tls_connection},
     Result,
 };
 
@@ -64,6 +61,7 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request> {
         let method = request
             .method()
             .to_string();
+
         let result = self
             .sender
             .send_request(request)
