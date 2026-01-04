@@ -130,6 +130,7 @@ impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
         let method = request
             .method()
             .to_string();
+
         let result = self
             .sender
             .send_request(request)

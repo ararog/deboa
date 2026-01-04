@@ -8,13 +8,10 @@ use hyper_util::rt::TokioIo;
 
 use crate::{
     cert::Identity,
-    client::conn::{
-        stream::{plain_connection, tls_connection},
-        tcp::DeboaTcpConnection,
-        BaseHttpConnection,
-    },
+    client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection},
     errors::{ConnectionError, DeboaError},
     request::Http2Request,
+    rt::tokio::tls::{plain_connection, tls_connection},
     Result,
 };
 

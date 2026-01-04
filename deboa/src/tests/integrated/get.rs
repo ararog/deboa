@@ -10,7 +10,7 @@ use crate::{
 use deboa_tests::utils::setup_server;
 
 use http::{header, StatusCode};
-use httpmock::{server::HttpMockServerBuilder, MockServer};
+use httpmock::MockServer;
 
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;

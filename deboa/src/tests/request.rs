@@ -1,13 +1,73 @@
 use std::{str::FromStr, sync::Arc};
 
 use crate::{
-    request::{DeboaRequest, FetchWith, IntoRequest},
+    request::{DeboaRequest, FetchWith, IntoRequest, MethodExt},
     Client, Result,
 };
 
 use deboa_tests::utils::JSONPLACEHOLDER;
 use http::{header, HeaderValue, Method};
 use url::Url;
+
+#[test]
+fn test_method_ext_from_url() -> Result<()> {
+    let request = Method::GET
+        .from_url(JSONPLACEHOLDER)?
+        .build()?;
+    assert_eq!(request.method(), &Method::GET);
+    assert_eq!(
+        request
+            .url()
+            .to_string(),
+        JSONPLACEHOLDER
+    );
+    Ok(())
+}
+
+#[test]
+fn test_method_ext_to_url() -> Result<()> {
+    let request = Method::POST
+        .to_url(JSONPLACEHOLDER)?
+        .build()?;
+    assert_eq!(request.method(), &Method::POST);
+    assert_eq!(
+        request
+            .url()
+            .to_string(),
+        JSONPLACEHOLDER
+    );
+    Ok(())
+}
+
+#[test]
+fn test_str_method_ext_from_url() -> Result<()> {
+    let request = "GET"
+        .from_url(JSONPLACEHOLDER)?
+        .build()?;
+    assert_eq!(request.method(), &Method::GET);
+    assert_eq!(
+        request
+            .url()
+            .to_string(),
+        JSONPLACEHOLDER
+    );
+    Ok(())
+}
+
+#[test]
+fn test_str_method_ext_to_url() -> Result<()> {
+    let request = "POST"
+        .to_url(JSONPLACEHOLDER)?
+        .build()?;
+    assert_eq!(request.method(), &Method::POST);
+    assert_eq!(
+        request
+            .url()
+            .to_string(),
+        JSONPLACEHOLDER
+    );
+    Ok(())
+}
 
 #[test]
 fn test_into_url() -> Result<()> {

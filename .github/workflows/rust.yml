@@ -63,10 +63,9 @@ jobs:
       run: cargo build --target x86_64-pc-windows-msvc --release
     
     - name: Run all tests
-      shell: bash
       run: |
         cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all"
-        cd deboa && \
-        cargo test --features "smol-rt smol-rust-tls http1 http2" --no-default-features && \
-        cargo test --features "smol-rt smol-native-tls http1 http2" --no-default-features && \
+        cd deboa
+        cargo test --features "smol-rt smol-rust-tls http1 http2" --no-default-features
+        cargo test --features "smol-rt smol-native-tls http1 http2" --no-default-features
         cargo test --features "tokio-rt tokio-native-tls http1 http2" --no-default-features

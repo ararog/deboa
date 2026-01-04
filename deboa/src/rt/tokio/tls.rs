@@ -1,0 +1,137 @@
+#[cfg(all(feature = "tokio-rust-tls", any(feature = "http1", feature = "http2")))]
+use std::sync::Arc;
+
+#[cfg(any(feature = "http1", feature = "http2"))]
+use crate::rt::tokio::stream::TokioStream;
+#[cfg(any(feature = "http1", feature = "http2"))]
+use tokio::net::TcpStream;
+
+#[cfg(feature = "tokio-native-tls")]
+use tokio_native_tls::native_tls::{Certificate, Identity, TlsConnector};
+
+#[cfg(feature = "tokio-rust-tls")]
+use crate::client::conn::stream::setup_rust_tls;
+#[cfg(feature = "tokio-rust-tls")]
+use rustls::pki_types::ServerName;
+#[cfg(all(feature = "tokio-rust-tls", any(feature = "http1", feature = "http2")))]
+use tokio_rustls::TlsConnector;
+
+use crate::{
+    cert::Identity as DeboaIdentity,
+    errors::{ConnectionError, DeboaError},
+    Result,
+};
+
+#[cfg(any(feature = "http1", feature = "http2"))]
+async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
+    let stream = { TcpStream::connect(format!("{}:{}", host, port)).await };
+
+    if let Err(e) = stream {
+        return Err(DeboaError::Connection(ConnectionError::Tcp {
+            host: host.to_string(),
+            message: e.to_string(),
+        }));
+    }
+
+    Ok(stream.unwrap())
+}
+
+#[cfg(any(feature = "http1", feature = "http2"))]
+pub(crate) async fn plain_connection(host: &str, port: u16) -> Result<TokioStream> {
+    let stream = create_stream(host, port).await?;
+    Ok(TokioStream::Plain(stream))
+}
+
+#[cfg(all(any(feature = "http1", feature = "http2"), feature = "tokio-native-tls"))]
+pub(crate) async fn tls_connection(
+    host: &str,
+    port: u16,
+    client_cert: &Option<DeboaIdentity>,
+    skip_server_verification: bool,
+) -> Result<TokioStream> {
+    let socket = create_stream(host, port).await?;
+    let mut builder = TlsConnector::builder();
+
+    if skip_server_verification {
+        builder.danger_accept_invalid_certs(true);
+        builder.danger_accept_invalid_hostnames(true);
+    }
+
+    if let Some(client_cert) = client_cert {
+        let file = std::fs::read(client_cert.cert());
+        if let Err(e) = file {
+            return Err(DeboaError::ClientCert { message: e.to_string() });
+        }
+        let identity = Identity::from_pkcs12(
+            &file.unwrap(),
+            client_cert
+                .pw()
+                .unwrap_or_default(),
+        );
+        if let Err(e) = identity {
+            return Err(DeboaError::ClientCert { message: e.to_string() });
+        }
+        builder.identity(identity.unwrap());
+
+        if let Some(ca) = client_cert.ca() {
+            let pem = std::fs::read(ca);
+            if let Err(e) = pem {
+                return Err(DeboaError::ClientCert { message: e.to_string() });
+            }
+            let cert = Certificate::from_pem(&pem.unwrap());
+            builder.add_root_certificate(cert.unwrap());
+        }
+    }
+
+    let connector = builder
+        .build()
+        .unwrap();
+    let connector = tokio_native_tls::TlsConnector::from(connector);
+    let stream = connector
+        .connect(host, socket)
+        .await;
+
+    if let Err(e) = stream {
+        return Err(DeboaError::Connection(ConnectionError::Tls {
+            host: host.to_string(),
+            message: e.to_string(),
+        }));
+    }
+
+    let stream = stream.unwrap();
+    Ok(TokioStream::Tls(stream))
+}
+
+#[cfg(all(any(feature = "http1", feature = "http2"), feature = "tokio-rust-tls"))]
+pub(crate) async fn tls_connection(
+    host: &str,
+    port: u16,
+    client_cert: &Option<DeboaIdentity>,
+    skip_server_verification: bool,
+) -> Result<TokioStream> {
+    let socket = create_stream(host, port).await?;
+    let config = setup_rust_tls(host, client_cert, skip_server_verification)?;
+    let connector = TlsConnector::from(Arc::new(config));
+    let hostname = ServerName::try_from(host.to_string());
+
+    if let Err(e) = hostname {
+        return Err(DeboaError::Connection(ConnectionError::Tls {
+            host: host.to_string(),
+            message: e.to_string(),
+        }));
+    }
+
+    let stream = connector
+        .connect(hostname.unwrap(), socket)
+        .await;
+
+    if let Err(e) = stream {
+        return Err(DeboaError::Connection(ConnectionError::Tls {
+            host: host.to_string(),
+            message: e.to_string(),
+        }));
+    }
+
+    let stream = stream.unwrap();
+    Ok(TokioStream::Tls(Box::new(stream)))
+}
