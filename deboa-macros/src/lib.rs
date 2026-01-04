@@ -119,14 +119,16 @@ macro_rules! get {
             .execute($url)
             .await?
             .text()
+            .await?
     };
 
     ($url:expr, $headers:expr, &mut $client:ident) => {
-        deboa::request::DeboaRequest::get($url)
+        deboa::request::DeboaRequest::get($url)?
             .headers($headers)
             .send_with($client)
             .await?
             .text()
+            .await?
     };
 
     ($url:literal, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
@@ -214,9 +216,9 @@ macro_rules! post {
     ($input:ident, $url:literal, &mut $client:ident) => {
         $client
             .execute(
-                deboa::request::DeboaRequest::post($url)
+                deboa::request::DeboaRequest::post($url)?
                     .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                    .build(),
+                    .build()?,
             )
             .await?
     };
@@ -395,7 +397,8 @@ macro_rules! put {
                     .build()?,
             )
             .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+            .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
@@ -407,7 +410,8 @@ macro_rules! put {
                     .build()?,
             )
             .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+            .await?
     };
 }
 
@@ -510,7 +514,8 @@ macro_rules! patch {
                     .build()?,
             )
             .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+            .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
@@ -522,7 +527,8 @@ macro_rules! patch {
                     .build()?,
             )
             .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+            .await?
     };
 }
 
@@ -617,7 +623,7 @@ macro_rules! fetch {
         $client
             .execute(
                 deboa::request::DeboaRequest::get($url)?
-                    .headers($headers)?
+                    .headers($headers)
                     .build()?,
             )
             .await?
@@ -699,7 +705,7 @@ macro_rules! submit {
         $client
             .execute(
                 deboa::request::DeboaRequest::at($url, $method)?
-                    .headers($headers)?
+                    .headers($headers)
                     .text($input)
                     .build()?,
             )

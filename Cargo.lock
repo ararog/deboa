@@ -783,6 +783,7 @@ version = "0.0.7"
 dependencies = [
  "deboa",
  "deboa-extras",
+ "http",
  "httpmock",
  "serde",
  "tokio",
