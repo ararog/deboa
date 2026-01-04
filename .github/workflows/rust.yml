@@ -63,6 +63,7 @@ jobs:
       run: cargo build --target x86_64-pc-windows-msvc --release
     
     - name: Run all tests
+      shell: bash
       run: |
         cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all"
         cd deboa && \
