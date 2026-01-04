@@ -245,11 +245,11 @@ impl MethodExt for Method {
 impl MethodExt for &str {
     fn from_url(self, url: &str) -> Result<DeboaRequestBuilder> {
         match self {
-            "GET" => DeboaRequest::get(url),
-            "POST" => DeboaRequest::post(url),
-            "PUT" => DeboaRequest::put(url),
-            "DELETE" => DeboaRequest::delete(url),
-            "PATCH" => DeboaRequest::patch(url),
+            "GET" | "get" => DeboaRequest::get(url),
+            "POST" | "post" => DeboaRequest::post(url),
+            "PUT" | "put" => DeboaRequest::put(url),
+            "DELETE" | "delete" => DeboaRequest::delete(url),
+            "PATCH" | "patch" => DeboaRequest::patch(url),
             _ => panic!("Method not supported"),
         }
     }
