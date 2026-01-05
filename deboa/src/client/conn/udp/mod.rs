@@ -66,7 +66,10 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     ///
     /// * `Result<Response<Full<Bytes>>>` - The response or error.
     ///
-    async fn send_request(&mut self, request: Request<()>) -> Result<Response<Full<Bytes>>>;
+    async fn send_request(
+        &mut self,
+        request: Request<Full<Bytes>>,
+    ) -> Result<Response<Full<Bytes>>>;
 
     /// Process a response.
     ///

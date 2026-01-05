@@ -10,6 +10,7 @@ use crate::{
 use deboa_tests::utils::setup_server;
 
 use http::{header, StatusCode};
+use httpmock::server::HttpMockServerBuilder;
 use httpmock::MockServer;
 
 #[cfg(feature = "smol-rt")]
@@ -177,10 +178,12 @@ async fn test_tls_verification_helper(skip: bool) -> Result<()> {
     let ca_path = "src/tests/integrated/certs/cert.pem";
     let key_path = "src/tests/integrated/certs/key.pem";
 
-    let mut server = HttpMockServerBuilder::new();
-    server.https_ca_key_pair_files(Some(ca_path), Some(key_path));
+    let server = HttpMockServerBuilder::new()
+      .port(8698)
+      .https_ca_key_pair_option(Some(ca_path), Some(key_path))
+      .build().unwrap();
 
-    let server = server.start();
+    let server = MockServer::connect_async("localhost:8698").await;
 
     let http_mock = setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::OK);
 

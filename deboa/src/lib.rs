@@ -1383,7 +1383,12 @@ impl Client {
             }
         }
 
-        let request = builder.body(());
+        let request = builder.body(Full::new(Bytes::from(
+            request
+                .as_ref()
+                .raw_body()
+                .to_vec(),
+        )));
 
         if let Err(err) = request {
             error!("Failed to send request: {}", err);

@@ -5,11 +5,12 @@ use async_trait::async_trait;
 use bytes::Bytes;
 use futures::future;
 use http::{version::Version, StatusCode};
-use http_body_util::Full;
+use http_body_util::{BodyExt, Full};
 use hyper::{Request, Response};
 use quinn::crypto::rustls::QuicClientConfig;
 use quinn::Endpoint;
 
+use crate::client::conn::stream::setup_rust_tls;
 use crate::request::Http3Request;
 use crate::{
     cert::ClientCert,
@@ -50,6 +51,7 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
         host: &str,
         port: u16,
         client_cert: &Option<ClientCert>,
+        skip_cert_verification: bool,
     ) -> Result<BaseHttpConnection<Http3Request>> {
         let client_endpoint =
             Endpoint::client(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), 0)));
@@ -60,14 +62,7 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
 
         let mut client_endpoint = client_endpoint.unwrap();
 
-        let root_store = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
-        let provider = rustls::crypto::aws_lc_rs::default_provider();
-        let mut tls_config = rustls::ClientConfig::builder_with_provider(Arc::new(provider))
-            .with_protocol_versions(&[&rustls::version::TLS13])
-            .expect("Failed to set TLS version")
-            .with_root_certificates(root_store)
-            .with_no_client_auth();
-
+        let mut tls_config = setup_rust_tls(host, client_cert, skip_cert_verification)?;
         tls_config.enable_early_data = true;
         tls_config.alpn_protocols = vec![b"h3".to_vec()];
 
@@ -108,20 +103,31 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
         Ok(BaseHttpConnection::<Http3Request> { sender: send_request })
     }
 
-    async fn send_request(&mut self, request: Request<()>) -> Result<Response<Full<Bytes>>> {
+    async fn send_request(
+        &mut self,
+        request: Request<Full<Bytes>>,
+    ) -> Result<Response<Full<Bytes>>> {
         let mut sender = self.sender.clone();
+
+        let url = request
+            .uri()
+            .to_string();
 
         let method = request
             .method()
             .to_string();
 
+        let (parts, mut body) = request.into_parts();
+
+        let bodyless_request = Request::from_parts(parts, ());
+
         let request = sender
-            .send_request(request)
+            .send_request(bodyless_request)
             .await;
 
         if let Err(err) = request {
             return Err(DeboaError::Request(RequestError::Send {
-                url: "".to_string(),
+                url: url.to_string(),
                 method: method.to_string(),
                 message: err.to_string(),
             }));
@@ -131,12 +137,22 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
         let (mut send_stream, mut recv_stream) = request_stream.split();
 
         if method == "POST" || method == "PUT" || method == "PATCH" {
-            // Send request body if present
-            // For now, we're not handling the body, but we could add that later
-            let buf = Bytes::from("dummy body"); // Placeholder - in reality you'd use the actual request body
-            send_stream
-                .send_data(buf)
-                .await;
+            while let Some(chunk) = body.frame().await {
+                let frame = chunk.unwrap();
+                if let Some(bytes) = frame.data_ref() {
+                    let result = send_stream
+                        .send_data(bytes.clone())
+                        .await;
+
+                    if let Err(err) = result {
+                        return Err(DeboaError::Request(RequestError::Send {
+                            url: url.to_string(),
+                            method: method.to_string(),
+                            message: err.to_string(),
+                        }));
+                    }
+                }
+            }
         }
 
         let finish_request = send_stream
@@ -144,7 +160,7 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
             .await;
         if let Err(err) = finish_request {
             return Err(DeboaError::Request(RequestError::Send {
-                url: "".to_string(),
+                url: url.to_string(),
                 method: method.to_string(),
                 message: err.to_string(),
             }));
