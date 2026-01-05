@@ -31,13 +31,13 @@ deboa-macros = "0.1.0"
 ### get!
 
 ```rust
-let mut client = Client::new();
+let client = Client::new();
 
 let response: Vec<Post> = get!(
   "https://jsonplaceholder.typicode.com/posts", 
   JsonBody, 
   Vec<Post>, 
-  &mut client
+  &client
 );
 ```
 
@@ -49,7 +49,7 @@ let response = post!(
     data, 
     JsonBody, 
     "https://jsonplaceholder.typicode.com/posts", 
-    &mut client
+    &client
 );
 ```
 
@@ -60,14 +60,14 @@ let response: Vec<Post> = fetch!(
     "https://jsonplaceholder.typicode.com/posts", 
     JsonBody, 
     Vec<Post>, 
-    &mut client
+    &client
 );
 ```
 
 ### delete!
 
 ```rust
-let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &mut client);
+let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
 ```
 
 ### put!
@@ -78,7 +78,7 @@ let response = put!(
     data, 
     JsonBody, 
     "https://jsonplaceholder.typicode.com/posts/1", 
-    &mut client
+    &client
 );
 ```
 
@@ -90,7 +90,7 @@ let response = patch!(
     data, 
     JsonBody, 
     "https://jsonplaceholder.typicode.com/posts/1", 
-    &mut client
+    &client
 );
 ```
 

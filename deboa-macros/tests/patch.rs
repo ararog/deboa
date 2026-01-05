@@ -17,69 +17,62 @@ pub struct PostWithId {
 
 #[tokio::test]
 async fn test_only_patch_minimal() -> Result<()> {
-    let mut client = Client::default();
+    let client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
-    let response = patch!(data, "https://jsonplaceholder.typicode.com/posts/1", &mut client);
+    let response = patch!(data, "https://jsonplaceholder.typicode.com/posts/1", &client);
     assert_eq!(response.status(), 200);
     Ok(())
 }
 
 #[tokio::test]
 async fn test_only_patch_minimal_headers() -> Result<()> {
-    let mut client = Client::default();
+    let client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
-    let response =
-        patch!(data, "https://jsonplaceholder.typicode.com/posts/1", headers, &mut client);
+    let response = patch!(data, "https://jsonplaceholder.typicode.com/posts/1", headers, &client);
     assert_eq!(response.status(), 200);
     Ok(())
 }
 
 #[tokio::test]
 async fn test_patch() -> Result<()> {
-    let mut client = Client::default();
+    let client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
-    let response = patch!(data, "https://jsonplaceholder.typicode.com/posts/1", &mut client);
+    let response = patch!(data, "https://jsonplaceholder.typicode.com/posts/1", &client);
     assert_eq!(response.status(), 200);
     Ok(())
 }
 
 #[tokio::test]
 async fn test_patch_with_headers() -> Result<()> {
-    let mut client = Client::default();
+    let client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
-    let response =
-        patch!(data, "https://jsonplaceholder.typicode.com/posts/1", headers, &mut client);
+    let response = patch!(data, "https://jsonplaceholder.typicode.com/posts/1", headers, &client);
     assert_eq!(response.status(), 200);
     Ok(())
 }
 
 #[tokio::test]
 async fn test_patch_with_json_body_request() -> Result<()> {
-    let mut client = Client::default();
+    let client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
-    let response = patch!(
-        data,
-        JsonBody,
-        "https://jsonplaceholder.typicode.com/posts/1",
-        headers,
-        &mut client
-    );
+    let response =
+        patch!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", headers, &client);
     assert_eq!(response.status(), 200);
     Ok(())
 }
 
 #[tokio::test]
 async fn test_patch_with_json_body_no_headers() -> Result<()> {
-    let mut client = Client::default();
+    let client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = patch!(
         data,
         JsonBody,
         "https://jsonplaceholder.typicode.com/posts/1",
-        &mut client,
+        &client,
         JsonBody,
         PostWithId
     );
@@ -89,7 +82,7 @@ async fn test_patch_with_json_body_no_headers() -> Result<()> {
 
 #[tokio::test]
 async fn test_patch_with_json_body_response() -> Result<()> {
-    let mut client = Client::default();
+    let client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = patch!(
@@ -97,7 +90,7 @@ async fn test_patch_with_json_body_response() -> Result<()> {
         JsonBody,
         "https://jsonplaceholder.typicode.com/posts/1",
         headers,
-        &mut client,
+        &client,
         JsonBody,
         Post
     );

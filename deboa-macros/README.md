@@ -42,25 +42,25 @@ pub struct Post {
     pub body: String,
 }
 
-let mut client = Deboa::default();
+let client = Deboa::default();
 
 // fetch macro
-let response: Vec<Post> = fetch!("https://jsonplaceholder.typicode.com/posts", JsonBody, Vec<Post>, &mut client);
+let response: Vec<Post> = fetch!("https://jsonplaceholder.typicode.com/posts", JsonBody, Vec<Post>, &client);
 
 // get macro, returning posts serialized as json
-let response: Vec<Post> = get!("https://jsonplaceholder.typicode.com/posts", JsonBody, Vec<Post>, &mut client);
+let response: Vec<Post> = get!("https://jsonplaceholder.typicode.com/posts", JsonBody, Vec<Post>, &client);
 
 //get macro, returning text
-let response: String = get!("https://rust-lang.org", &mut client);
+let response: String = get!("https://rust-lang.org", &client);
 
 //get macro with headers
-let response: String = get!("https://rust-lang.org", vec![("User-Agent", "deboa")], &mut client);
+let response: String = get!("https://rust-lang.org", vec![("User-Agent", "deboa")], &client);
 
 // post macro
-let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &mut client);
+let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &client);
 
 // delete macro
-let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &mut client);
+let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
 
 ```
 

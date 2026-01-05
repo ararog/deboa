@@ -132,7 +132,7 @@ fn test_into_string() -> Result<()> {
 
 #[tokio::test]
 async fn test_try_into() -> Result<()> {
-    let mut client = Client::default();
+    let client = Client::default();
     let response = client
         .execute(JSONPLACEHOLDER.into_request()?)
         .await?;
