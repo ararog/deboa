@@ -46,11 +46,11 @@ use deboa_extras::http::serde::json::JsonBody;
 #[tokio::main]
 async fn main() -> Result<()> {
   // Create a new Client instance, set timeouts, catches and protocol.
-  let mut client = Client::new();
+  let client = Client::new();
 
   let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
     .header(header::CONTENT_TYPE, "application/json")
-    .send_with(&mut client)
+    .send_with(&client)
     .await?
     .body_as(JsonBody)
     .await?;

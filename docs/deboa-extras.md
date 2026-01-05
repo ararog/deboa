@@ -62,7 +62,7 @@ let response: User = request
 use deboa::{Client, Result};
 use deboa_extras::http::sse::response::{IntoEventStream};
 
-let mut client = Client::new();
+let client = Client::new();
 
 let response = client.execute("https://sse.dev/test").await?.into_event_stream();
 
@@ -86,10 +86,10 @@ use deboa_extras::ws::{
     response::IntoWebSocket,
 };
 
-let mut client = Client::new();
+let client = Client::new();
 
 let websocket = DeboaRequestBuilder::websocket("wss://echo.websocket.org")?
-    .send_with(&mut client)
+    .send_with(&client)
     .await?
     .into_websocket()
     .await;

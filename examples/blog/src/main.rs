@@ -33,8 +33,9 @@ impl deboa::catcher::DeboaCatcher for AuthCatcher {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut client = Client::default();
-    client.catch(AuthCatcher);
+    let client = Client::builder()
+        .catch(AuthCatcher)
+        .build();
     let vamo = Arc::new(Mutex::new(Vamo::new("https://jsonplaceholder.typicode.com")?));
     vamo.lock()
         .await

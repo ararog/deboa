@@ -23,7 +23,7 @@ async fn do_patch() -> Result<()> {
             .body("ping");
     });
 
-    let mut client: Client = Client::default();
+    let client: Client = Client::default();
 
     let request = DeboaRequest::patch(
         server

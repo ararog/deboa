@@ -82,7 +82,7 @@ pub struct Post {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut client = Client::new();
+    let client = Client::new();
 
     /*
 

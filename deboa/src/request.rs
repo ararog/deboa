@@ -274,17 +274,17 @@ pub trait Fetch {
     /// ``` compile_fail
     /// use deboa::{Client, request::Fetch};
     ///
-    /// let mut client = Client::new();
+    /// let client = Client::new();
     ///
     /// let response = "https://jsonplaceholder.typicode.com"
-    ///   .fetch(&mut client)
+    ///   .fetch(&client)
     ///   .await?;
     /// assert_eq!(response.status(), 200);
     /// ```
     ///
     async fn fetch<T>(&self, client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Client> + Send;
+        T: AsRef<Client> + Send;
 }
 
 #[async_trait]
@@ -292,7 +292,7 @@ pub trait Fetch {
 impl Fetch for &str {
     async fn fetch<T>(&self, client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Client> + Send,
+        T: AsRef<Client> + Send,
     {
         DeboaRequest::get(*self)?
             .send_with(client)
@@ -307,10 +307,10 @@ impl Fetch for &str {
 /// ``` compile_fail
 /// use deboa::{Deboa, request::FetchWith};
 ///
-/// let mut client = Deboa::default();
+/// let client = Deboa::default();
 ///
 /// let response = "https://jsonplaceholder.typicode.com"
-///   .fetch_with(&mut client)
+///   .fetch_with(&client)
 ///   .await?;
 /// assert_eq!(response.status(), 200);
 /// ```
@@ -327,24 +327,24 @@ pub trait FetchWith {
     /// ``` compile_fail
     /// use deboa::{Client, request::FetchWith};
     ///
-    /// let mut client = Client::new();
+    /// let client = Client::new();
     ///
     /// let response = "https://jsonplaceholder.typicode.com"
-    ///   .fetch_with(&mut client)
+    ///   .fetch_with(&client)
     ///   .await?;
     /// assert_eq!(response.status(), 200);
     /// ```
     ///
     async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Client> + Send;
+        T: AsRef<Client> + Send;
 }
 
 #[async_trait]
 impl FetchWith for &str {
     async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Client> + Send,
+        T: AsRef<Client> + Send,
     {
         DeboaRequest::get(*self)?
             .send_with(client)
@@ -356,7 +356,7 @@ impl FetchWith for &str {
 impl FetchWith for String {
     async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Client> + Send,
+        T: AsRef<Client> + Send,
     {
         DeboaRequest::get(self)?
             .send_with(client)
@@ -379,10 +379,10 @@ impl FetchWith for String {
 /// ``` compile_fail
 /// use deboa::{Client, request::get};
 ///
-/// let mut client = Client::new();
+/// let client = Client::new();
 ///
 /// let request = get("https://jsonplaceholder.typicode.com").unwrap();
-/// let response = request.send_with(&mut client).await?;
+/// let response = request.send_with(&client).await?;
 /// assert_eq!(response.status(), 200);
 /// ```
 ///
@@ -406,12 +406,12 @@ pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// ``` compile_fail
 /// use deboa::{Client, request::post};
 ///
-/// let mut client = Client::new();
+/// let client = Client::new();
 ///
 /// let request = post("https://jsonplaceholder.typicode.com/posts")?
 ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
 ///   .build()?;
-/// let response = request.send_with(&mut client).await?;
+/// let response = request.send_with(&client).await?;
 /// assert_eq!(response.status(), 201);
 /// ```
 ///
@@ -435,12 +435,12 @@ pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// ``` compile_fail
 /// use deboa::{Client, request::put};
 ///
-/// let mut client = Client::new();
+/// let client = Client::new();
 ///
 /// let request = put("https://jsonplaceholder.typicode.com/posts/1")?
 ///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
 ///   .build()?;
-/// let response = request.send_with(&mut client).await?;
+/// let response = request.send_with(&client).await?;
 /// assert_eq!(response.status(), 200);
 /// ```
 #[inline]
@@ -463,10 +463,10 @@ pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// ``` compile_fail
 /// use deboa::{Client, request::delete};
 ///
-/// let mut client = Client::new();
+/// let client = Client::new();
 ///
 /// let request = delete("https://jsonplaceholder.typicode.com/posts/1").build();
-/// let response = request.send_with(&mut client).await?;
+/// let response = request.send_with(&client).await?;
 /// assert_eq!(response.status(), 200);
 /// ```
 #[inline]
@@ -489,12 +489,12 @@ pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// ``` compile_fail
 /// use deboa::{Client, request::patch};
 ///
-/// let mut client = Client::new();
+/// let client = Client::new();
 ///
 /// let request = patch("https://jsonplaceholder.typicode.com/posts/1")?
 ///   .raw_body(b"{\"title\": \"foo\"}")
 ///   .build()?;
-/// let response = request.send_with(&mut client).await?;
+/// let response = request.send_with(&client).await?;
 /// assert_eq!(response.status(), 200);
 /// ```
 #[inline]
@@ -913,12 +913,12 @@ impl DeboaRequestBuilder {
     /// ```
     #[deprecated(note = "Use `send_with` method instead", since = "0.0.8")]
     #[inline]
-    pub async fn go<T>(self, mut client: T) -> Result<DeboaResponse>
+    pub async fn go<T>(self, client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Client>,
+        T: AsRef<Client>,
     {
         client
-            .as_mut()
+            .as_ref()
             .execute(self.build()?)
             .await
     }
@@ -950,12 +950,12 @@ impl DeboaRequestBuilder {
     /// assert_eq!(response.status(), 201);
     /// ```
     #[inline]
-    pub async fn send_with<T>(self, mut client: T) -> Result<DeboaResponse>
+    pub async fn send_with<T>(self, client: T) -> Result<DeboaResponse>
     where
-        T: AsMut<Client>,
+        T: AsRef<Client>,
     {
         client
-            .as_mut()
+            .as_ref()
             .execute(self.build()?)
             .await
     }

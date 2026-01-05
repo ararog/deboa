@@ -28,9 +28,9 @@ impl DeboaCatcher for AuthCatcher {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut client = Client::default();
-    client.catch(AuthCatcher);
-
+    let client = Client::builder()
+        .catch(AuthCatcher)
+        .build();
     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
     vamo.client(client);
 

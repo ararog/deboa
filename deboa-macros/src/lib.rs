@@ -36,8 +36,8 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<()> {
-//!     let mut client = Client::new();
-//!     let post: Post = get!("https://jsonplaceholder.typicode.com/posts/1", &mut client, JsonBody, Post);
+//!     let client = Client::new();
+//!     let post: Post = get!("https://jsonplaceholder.typicode.com/posts/1", &client, JsonBody, Post);
 //!     println!("Post title: {}", post.title);
 //!     Ok(())
 //! }
@@ -58,7 +58,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<()> {
-//!     let mut client = Client::new();
+//!     let client = Client::new();
 //!     let new_post = NewPost {
 //!         title: "Hello World".into(),
 //!         body: "This is a test post".into(),
@@ -68,7 +68,7 @@
 //!         new_post,
 //!         JsonBody,
 //!         "https://jsonplaceholder.typicode.com/posts",
-//!         &mut client
+//!         &client
 //!     );
 //!     println!(200, response.status());
 //!     Ok(())
@@ -110,11 +110,11 @@
 ///
 /// ```compile_fail
 /// let mut client = Client::new();
-/// let response = get!("https://jsonplaceholder.typicode.com/posts", &mut client, JsonBody, Vec<Post>);
+/// let response = get!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
 /// assert_eq!(response.len(), 100);
 /// ```
 macro_rules! get {
-    ($url:expr, &mut $client:ident) => {
+    ($url:expr, &$client:ident) => {
         $client
             .execute($url)
             .await?
@@ -122,7 +122,7 @@ macro_rules! get {
             .await?
     };
 
-    ($url:expr, $headers:expr, &mut $client:ident) => {
+    ($url:expr, $headers:expr, &$client:ident) => {
         deboa::request::DeboaRequest::get($url)?
             .headers($headers)
             .send_with($client)
@@ -131,7 +131,7 @@ macro_rules! get {
             .await?
     };
 
-    ($url:literal, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($url:literal, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute($url)
             .await?
@@ -139,7 +139,7 @@ macro_rules! get {
             .await?
     };
 
-    ($url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute($url)
             .await?
@@ -147,7 +147,7 @@ macro_rules! get {
             .await?
     };
 
-    ($url:expr, $headers:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
         deboa::request::DeboaRequest::get($url)?
             .headers($headers)
             .send_with($client)
@@ -164,19 +164,19 @@ macro_rules! get {
 ///
 /// It can be either:
 ///
-/// post!(input, req_body_ty, url, &mut client)
+/// post!(input, req_body_ty, url, &client)
 ///
 /// or
 ///   
-/// post!(input, req_body_ty, url, headers, &mut client)
+/// post!(input, req_body_ty, url, headers, &client)
 ///
 /// or
 ///
-/// post!(input, req_body_ty, url, &mut client, res_body_ty, res_ty)
+/// post!(input, req_body_ty, url, &client, res_body_ty, res_ty)
 ///
 /// or
 ///
-/// post!(input, req_body_ty, url, headers, &mut client, res_body_ty, res_ty)
+/// post!(input, req_body_ty, url, headers, &client, res_body_ty, res_ty)
 ///
 /// # Arguments
 ///
@@ -195,12 +195,12 @@ macro_rules! get {
 /// ## Without response body deserialization
 ///
 /// ```compile_fail
-/// let mut client = Client::new();
+/// let client = Client::new();
 /// let response = post!(data,
 ///     JsonBody,
 ///     "https://jsonplaceholder.typicode.com/posts",
 ///     vec!(("Content-Type", "application/json")),
-///     &mut client
+///     &client
 /// );
 /// assert_eq!(response.id, 1);
 /// ```
@@ -208,12 +208,12 @@ macro_rules! get {
 /// ## With response body deserialization
 ///
 /// ```compile_fail
-/// let mut client = Client::new();
-/// let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &mut client, JsonBody, Post);
+/// let client = Client::new();
+/// let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Post);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! post {
-    ($input:ident, $url:literal, &mut $client:ident) => {
+    ($input:ident, $url:literal, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::post($url)?
@@ -223,7 +223,7 @@ macro_rules! post {
             .await?
     };
 
-    ($input:ident, $url:expr, &mut $client:ident) => {
+    ($input:ident, $url:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::post($url)?
@@ -233,7 +233,7 @@ macro_rules! post {
             .await?
     };
 
-    ($input:ident, $url:literal, $headers:expr, &mut $client:ident) => {
+    ($input:ident, $url:literal, $headers:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::post($url)?
@@ -244,7 +244,7 @@ macro_rules! post {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
+    ($input:ident, $req_body_ty:ident, $url:literal, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::post($url)?
@@ -254,7 +254,7 @@ macro_rules! post {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::post($url)?
@@ -264,7 +264,7 @@ macro_rules! post {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::post($url)?
@@ -275,7 +275,7 @@ macro_rules! post {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::post($url)?
@@ -286,7 +286,7 @@ macro_rules! post {
             .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::post($url)?
@@ -322,12 +322,12 @@ macro_rules! post {
 /// # Example
 ///
 /// ```compile_fail
-/// let mut client = Client::new();
-/// let response = put!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", &mut client);
+/// let client = Client::new();
+/// let response = put!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", &client);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! put {
-    ($input:ident, $url:literal, &mut $client:ident) => {
+    ($input:ident, $url:literal, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::put($url)?
@@ -337,7 +337,7 @@ macro_rules! put {
             .await?
     };
 
-    ($input:ident, $url:expr, &mut $client:ident) => {
+    ($input:ident, $url:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::put($url)?
@@ -347,7 +347,7 @@ macro_rules! put {
             .await?
     };
 
-    ($input:ident, $url:literal, $headers:expr, &mut $client:ident) => {
+    ($input:ident, $url:literal, $headers:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::put($url)?
@@ -358,7 +358,7 @@ macro_rules! put {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
+    ($input:ident, $req_body_ty:ident, $url:literal, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::put($url)?
@@ -368,7 +368,7 @@ macro_rules! put {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::put($url)?
@@ -378,7 +378,7 @@ macro_rules! put {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::put($url)?
@@ -389,7 +389,7 @@ macro_rules! put {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::put($url)?
@@ -401,7 +401,7 @@ macro_rules! put {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::put($url)?
@@ -438,12 +438,12 @@ macro_rules! put {
 /// # Example
 ///
 /// ```compile_fail
-/// let mut client = Client::new();
-/// let response = patch!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", &mut client);
+/// let client = Client::new();
+/// let response = patch!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", &client);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! patch {
-    ($input:ident, $url:literal, &mut $client:ident) => {
+    ($input:ident, $url:literal, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::patch($url)?
@@ -453,7 +453,7 @@ macro_rules! patch {
             .await?
     };
 
-    ($input:ident, $url:expr, $headers:expr, &mut $client:ident) => {
+    ($input:ident, $url:expr, $headers:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::patch($url)?
@@ -464,7 +464,7 @@ macro_rules! patch {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:literal, &mut $client:ident) => {
+    ($input:ident, $req_body_ty:ident, $url:literal, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::patch($url)?
@@ -474,7 +474,7 @@ macro_rules! patch {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::patch($url)?
@@ -484,18 +484,7 @@ macro_rules! patch {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:literal, $headers:expr, &mut $client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::patch($url)?
-                    .headers($headers)
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
-    };
-
-    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident) => {
+    ($input:ident, $req_body_ty:ident, $url:literal, $headers:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::patch($url)?
@@ -506,7 +495,18 @@ macro_rules! patch {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident) => {
+        $client
+            .execute(
+                deboa::request::DeboaRequest::patch($url)?
+                    .headers($headers)
+                    .body_as($req_body_ty, $input)?
+                    .build()?,
+            )
+            .await?
+    };
+
+    ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::patch($url)?
@@ -518,7 +518,7 @@ macro_rules! patch {
             .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::patch($url)?
@@ -553,24 +553,24 @@ macro_rules! patch {
 /// # Example
 ///
 /// ```compile_fail
-/// let mut client = Client::new();
-/// let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &mut client);
+/// let client = Client::new();
+/// let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! delete {
-    ($url:literal, &mut $client:ident) => {
+    ($url:literal, &$client:ident) => {
         $client
             .execute(deboa::request::DeboaRequest::delete($url)?.build()?)
             .await?
     };
 
-    ($url:expr, &mut $client:ident) => {
+    ($url:expr, &$client:ident) => {
         $client
             .execute(deboa::request::DeboaRequest::delete($url)?.build()?)
             .await?
     };
 
-    ($url:expr, $headers:expr, &mut $client:ident) => {
+    ($url:expr, $headers:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::delete($url)?
@@ -608,18 +608,18 @@ macro_rules! delete {
 /// # Example
 ///
 /// ```compile_fail
-/// let mut client = Client::new();
-/// let response = fetch!("https://jsonplaceholder.typicode.com/posts", &mut client, JsonBody, Post);
+/// let client = Client::new();
+/// let response = fetch!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Post);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! fetch {
-    ($url:expr, &mut $client:ident) => {
+    ($url:expr, &$client:ident) => {
         $client
             .execute($url)
             .await?
     };
 
-    ($url:expr, $headers:expr, &mut $client:ident) => {
+    ($url:expr, $headers:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::get($url)?
@@ -629,7 +629,7 @@ macro_rules! fetch {
             .await?
     };
 
-    ($url:literal, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($url:literal, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute($url)
             .await?
@@ -637,7 +637,7 @@ macro_rules! fetch {
             .await?
     };
 
-    ($url:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute($url)
             .await?
@@ -645,7 +645,7 @@ macro_rules! fetch {
             .await?
     };
 
-    ($url:expr, $headers:expr, &mut $client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    ($url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::get($url)?
@@ -686,12 +686,12 @@ macro_rules! fetch {
 /// # Example
 ///
 /// ```compile_fail
-/// let mut client = Client::new();
-/// let response = submit!("POST", "user=deboa", "https://jsonplaceholder.typicode.com/posts", &mut client);
+/// let client = Client::new();
+/// let response = submit!("POST", "user=deboa", "https://jsonplaceholder.typicode.com/posts", &client);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! submit {
-    ($method:expr, $input:expr, $url:expr, &mut $client:ident) => {
+    ($method:expr, $input:expr, $url:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::at($url, $method)?
@@ -701,7 +701,7 @@ macro_rules! submit {
             .await?
     };
 
-    ($method:expr, $input:expr, $url:expr, $headers:expr, &mut $client:ident) => {
+    ($method:expr, $input:expr, $url:expr, $headers:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::at($url, $method)?
@@ -734,19 +734,19 @@ macro_rules! submit {
 /// # Example
 ///
 /// ```compile_fail
-/// let mut client = Client::new();
-/// let response = stream!("https://jsonplaceholder.typicode.com/posts", &mut client);
+/// let client = Client::new();
+/// let response = stream!("https://jsonplaceholder.typicode.com/posts", &client);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! stream {
-    ($url:expr, &mut $client:ident) => {
+    ($url:expr, &$client:ident) => {
         $client
             .execute($url)
             .await?
             .stream()
     };
 
-    ($url:expr, $headers:expr, &mut $client:ident) => {
+    ($url:expr, $headers:expr, &$client:ident) => {
         $client
             .execute(
                 deboa::request::DeboaRequest::get($url)?

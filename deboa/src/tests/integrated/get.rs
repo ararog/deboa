@@ -27,7 +27,7 @@ async fn do_get_http1() -> Result<()> {
 
     let http_mock = setup_server(&server, "/posts", httpmock::Method::GET, StatusCode::OK);
 
-    let mut client = Client::builder()
+    let client = Client::builder()
         .protocol(default_protocol())
         .build();
 
@@ -73,7 +73,7 @@ async fn do_get_http2() -> Result<()> {
 
     let http_mock = setup_server(&server, "/posts", httpmock::Method::GET, StatusCode::OK);
 
-    let mut client = Client::builder()
+    let client = Client::builder()
         .protocol(HttpVersion::Http2)
         .build();
 
@@ -119,37 +119,11 @@ async fn test_get_http2() {
 #[cfg(feature = "http3-tokio")]
 #[tokio::test]
 async fn get_http3() -> Result<()> {
-    let mut client = Client::builder()
+    let client = Client::builder()
         .protocol(HttpVersion::Http3)
         .build();
 
     let request = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts/1")?.build()?;
-
-    let response: DeboaResponse = client
-        .execute(request)
-        .await?;
-
-    assert_eq!(
-        response.status(),
-        StatusCode::OK,
-        "Status code is {} and should be {}",
-        response
-            .status()
-            .as_u16(),
-        StatusCode::OK.as_u16()
-    );
-
-    Ok(())
-}
-
-#[cfg(feature = "http3-tokio")]
-#[tokio::test]
-async fn local_get_http3() -> Result<()> {
-    let mut client = Client::builder()
-        .protocol(HttpVersion::Http3)
-        .build();
-
-    let request = DeboaRequest::get("https://localhost:8698")?.build()?;
 
     let response: DeboaResponse = client
         .execute(request)
@@ -282,7 +256,7 @@ async fn test_get_not_found() {
 //
 
 async fn do_get_invalid_server() -> Result<()> {
-    let mut api = Client::default();
+    let api = Client::default();
 
     let request = DeboaRequest::get("https://invalid-server.com/posts")?
         .text("test")

@@ -13,10 +13,10 @@ pub struct Post {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut client = Client::default();
+    let client = Client::default();
 
     let response: Post = format!("https://jsonplaceholder.typicode.com/posts/{}", 1)
-        .fetch_with(&mut client)
+        .fetch_with(&client)
         .await?
         .body_as(JsonBody)
         .await?;
@@ -24,7 +24,7 @@ async fn main() -> Result<()> {
     println!("post: {response:#?}");
 
     let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
-        .send_with(&mut client)
+        .send_with(&client)
         .await?
         .body_as(JsonBody)
         .await?;

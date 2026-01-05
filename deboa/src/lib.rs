@@ -86,6 +86,12 @@ use cfg_if::cfg_if;
 #[cfg(feature = "http3-tokio")]
 use http_body_util::Full;
 
+#[cfg(feature = "tokio-rt")]
+use tokio::sync::{RwLock, RwLockWriteGuard};
+
+#[cfg(feature = "smol-rt")]
+use smol::lock::{RwLock, RwLockWriteGuard};
+
 use std::fmt::{Debug, Display};
 
 use std::ops::Shl;
@@ -263,7 +269,7 @@ pub struct ClientBuilder {
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     skip_cert_verification: bool,
-    pool: Option<HttpConnectionPool>,
+    pool: Option<RwLock<HttpConnectionPool>>,
 }
 
 impl ClientBuilder {
@@ -507,7 +513,7 @@ impl ClientBuilder {
     /// ```
     #[inline]
     pub fn pool(mut self, pool: HttpConnectionPool) -> Self {
-        self.pool = Some(pool);
+        self.pool = Some(RwLock::new(pool));
         self
     }
 
@@ -610,7 +616,7 @@ pub struct Client {
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     skip_cert_verification: bool,
-    pool: Option<HttpConnectionPool>,
+    pool: Option<RwLock<HttpConnectionPool>>,
 }
 
 impl AsRef<Client> for Client {
@@ -742,21 +748,6 @@ impl Client {
         self.skip_cert_verification
     }
 
-    /// Set whether to skip certificate verification.
-    ///
-    /// # Arguments
-    ///
-    /// * `skip` - Whether to skip certificate verification.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The Deboa instance.
-    #[inline]
-    pub fn set_skip_cert_verification(&mut self, skip: bool) -> &mut Self {
-        self.skip_cert_verification = skip;
-        self
-    }
-
     /// Allow get protocol at any time.
     ///
     /// # Returns
@@ -766,22 +757,6 @@ impl Client {
     #[inline]
     pub fn protocol(&self) -> &HttpVersion {
         &self.protocol
-    }
-
-    /// Allow change protocol at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `protocol` - The protocol to be used.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The Deboa instance.
-    ///
-    #[inline]
-    pub fn set_protocol(&mut self, protocol: HttpVersion) -> &mut Self {
-        self.protocol = protocol;
-        self
     }
 
     /// Allow get request connection timeout at any time.
@@ -795,47 +770,22 @@ impl Client {
         self.connection_timeout
     }
 
-    /// Allow change request connection timeout at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `timeout` - The new timeout.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The Deboa instance.
-    ///
-    #[inline]
-    pub fn set_connection_timeout(&mut self, timeout: u64) -> &mut Self {
-        self.connection_timeout = timeout;
-        self
-    }
-
     /// Allow get connection pool at any time.
     ///
     /// # Returns
     ///
-    /// * `Option<&HttpConnectionPool>` - The connection pool.
+    /// * `Option<std::cell::Ref<'_, HttpConnectionPool>>` - The connection pool.
     ///
     #[inline]
-    pub fn connection_pool(&self) -> Option<&HttpConnectionPool> {
+    #[cfg(feature = "tokio-rt")]
+    pub async fn connection_pool(&self) -> Option<&tokio::sync::RwLock<HttpConnectionPool>> {
         self.pool.as_ref()
     }
 
-    /// Set connection pool
-    ///
-    /// # Arguments
-    ///
-    /// * `pool` - The connection pool to be used.
-    ///
-    /// # Return
-    ///
-    /// * `&mut Self` - The Deboa instance.
-    ///
     #[inline]
-    pub fn set_connection_pool(&mut self, pool: HttpConnectionPool) -> &mut Self {
-        self.pool = Some(pool);
-        self
+    #[cfg(feature = "smol-rt")]
+    pub async fn connection_pool(&self) -> Option<&smol::lock::RwLock<HttpConnectionPool>> {
+        self.pool.as_ref()
     }
 
     /// Allow get request request timeout at any time.
@@ -847,22 +797,6 @@ impl Client {
     #[inline]
     pub fn request_timeout(&self) -> u64 {
         self.request_timeout
-    }
-
-    /// Allow change request request timeout at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `timeout` - The new timeout.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The Deboa instance.
-    ///
-    #[inline]
-    pub fn set_request_timeout(&mut self, timeout: u64) -> &mut Self {
-        self.request_timeout = timeout;
-        self
     }
 
     /// Allow get client certificate at any time.
@@ -888,99 +822,6 @@ impl Client {
     pub fn identity(&self) -> Option<&Identity> {
         self.identity
             .as_ref()
-    }
-
-    /// Allow change client certificate at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `client_cert` - The client certificate to be used.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The Deboa instance.
-    ///
-    #[deprecated(note = "Use set_identity instead", since = "0.0.8")]
-    #[inline]
-    pub fn set_client_cert(&mut self, client_cert: Option<Identity>) -> &mut Self {
-        self.identity = client_cert;
-        self
-    }
-
-    /// Allow change identity at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `identity` - The identity to be used.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The Deboa instance.
-    ///
-    #[inline]
-    pub fn set_identity(&mut self, identity: Option<Identity>) -> &mut Self {
-        self.identity = identity;
-        self
-    }
-
-    /// Adds an error handler for specific types of errors.
-    ///
-    /// Catchers are called when an error occurs during request execution.
-    /// They can be used to implement custom error handling logic, such as
-    /// automatic retries, logging, or error transformation.
-    ///
-    /// # Arguments
-    ///
-    /// * `catcher` - A function or closure that handles specific error types.
-    ///
-    /// # Examples
-    ///
-    /// ## Basic Logging
-    ///
-    /// ```compile_fail
-    /// use deboa::{Client, Result};
-    ///
-    /// struct TestMonitor;
-    ///
-    /// #[deboa::async_trait]
-    /// impl DeboaCatcher for TestMonitor {
-    ///     async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
-    ///         println!("Request: {:?}", request.url());
-    ///         Ok(None)
-    ///     }
-    ///
-    ///     async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
-    ///         println!("Response: {:?}", response.status());
-    ///         Ok(())
-    ///     }
-    /// }
-    ///
-    /// #[tokio::main]
-    /// async fn main() -> Result<()> {
-    ///   let builder = Client::builder()
-    ///     .catch(TestMonitor);
-    ///   Ok(())
-    /// }
-    /// ```
-    ///
-    /// # Notes
-    /// - Multiple catchers can be added for different error types
-    /// - Catchers are called in the order they are added
-    /// - If a catcher returns `Ok(())`, error handling continues to the next catcher
-    /// - If a catcher returns `Err(e)`, error propagation stops and the error is returned
-    /// - The default error handler will be called if no catcher handles the error
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The Deboa instance.
-    ///
-    pub fn catch<C: DeboaCatcher>(&mut self, catcher: C) -> &mut Self {
-        if let Some(catchers) = &mut self.catchers {
-            catchers.push(Box::new(catcher));
-        } else {
-            self.catchers = Some(vec![Box::new(catcher)]);
-        }
-        self
     }
 
     /// Executes an HTTP request and returns the response.
@@ -1070,7 +911,7 @@ impl Client {
     /// - Uses connection pooling for better performance
     /// - Automatically reuses connections when possible
     /// - Supports HTTP/1.1 and HTTP/2
-    pub async fn execute<R>(&mut self, request: R) -> Result<DeboaResponse>
+    pub async fn execute<R>(&self, request: R) -> Result<DeboaResponse>
     where
         R: IntoRequest,
     {
@@ -1177,7 +1018,7 @@ impl Client {
     /// * `Result<Response<ResponseType>>` - The response.
     ///
     #[cfg(not(feature = "http3-tokio"))]
-    async fn send_request<R>(&mut self, request: &R) -> Result<Response<Incoming>>
+    async fn send_request<R>(&self, request: &R) -> Result<Response<Incoming>>
     where
         R: AsRef<DeboaRequest>,
     {
@@ -1268,7 +1109,12 @@ impl Client {
             }
         };
 
-        if let Some(pool) = &mut self.pool {
+        if let Some(pool) = &self.pool {
+            #[cfg(feature = "tokio-rt")]
+            let mut pool = RwLockWriteGuard::map(pool.write().await, |f| f);
+            #[cfg(feature = "smol-rt")]
+            let mut pool = pool.write().await;
+
             let conn = pool
                 .create_connection(
                     is_secure,

@@ -42,12 +42,12 @@ use deboa_extras::{
 
 let encoding_catcher = EncodingCatcher::register_decoders(vec![Box::new(BrotliDecompressor)]);
 
-let mut client = Deboa::builder()
+let client = Deboa::builder()
   .catch(encoding_catcher)
   .build()?
 
 let posts = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts/1")?
-  .send_with(&mut client)
+  .send_with(&client)
   .await?
   .body_as(JsonBody)?;
 
@@ -83,7 +83,7 @@ println!("Response Status Code: {}", response.status());
 use deboa::{Deboa, Result};
 use deboa_extras::http::sse::response::{IntoEventStream};
 
-let mut client = Deboa::default();
+let client = Deboa::default();
 
 let response = client.execute("https://sse.dev/test").await?.into_event_stream();
 
@@ -107,10 +107,10 @@ use deboa_extras::ws::{
     response::IntoWebSocket,
 };
 
-let mut client = Deboa::default();
+let client = Deboa::default();
 
 let websocket = DeboaRequestBuilder::websocket("wss://echo.websocket.org")?
-    .send_with(&mut client)
+    .send_with(&client)
     .await?
     .into_websocket()
     .await;

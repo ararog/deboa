@@ -48,7 +48,7 @@ fn test_set_skip_cert_verification() -> Result<()> {
 
 #[tokio::test]
 async fn test_shl() -> Result<()> {
-    let mut client = Client::default();
+    let client = Client::default();
     let request = &client << JSONPLACEHOLDER;
     let response = client
         .execute(request)

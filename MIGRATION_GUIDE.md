@@ -1,5 +1,20 @@
 # Migration guide
 
+## From 0.0.9 to 0.1.0
+
+### Breaking changes
+
+* Client no longer need to be mutable, you might need update all client usages
+* Removed set methods from ClientBuilder
+
+### Non-breaking changes
+
+* Alias to raw_body method on DeboaResponse
+* MethodExt trait
+* Added skip_cert_verification to ClientBuilder
+* Deboa now supports HTTP/3
+* Support to use either native-tls or rustls via feature flags
+
 ## From 0.0.8 to 0.0.9
 
 ### Breaking changes

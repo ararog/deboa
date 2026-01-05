@@ -12,7 +12,7 @@ struct Message {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut client = Client::default();
+    let client = Client::default();
     let payload = Message {
         id: 1233,
         message: "Hello, from CBOR!".to_string(),
@@ -24,7 +24,7 @@ async fn main() -> Result<()> {
 
     let response: Message = post(url)?
         .body_as(CborBody, &payload)?
-        .send_with(&mut client)
+        .send_with(client)
         .await?
         .body_as(CborBody)
         .await?;
