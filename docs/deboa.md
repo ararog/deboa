@@ -71,7 +71,16 @@ async fn main() -> Result<(), Result> {
 ### GET Request
 
 ```rust
-let response = deboa::get("https://api.example.com/data")
+use deboa::request::get;
+
+let response = get("https://api.example.com/data")
+    .header("Accept", "application/json")
+    .send_with(&client)
+    .await?;
+
+// OR
+
+let response = "GET".from_url("https://api.example.com/data")
     .header("Accept", "application/json")
     .send_with(&client)
     .await?;
@@ -80,12 +89,13 @@ let response = deboa::get("https://api.example.com/data")
 ### POST Request with JSON
 
 ```rust
+use deboa_extras::http::serde::json::JsonBody;
 use serde_json::json;
 
 let data = json!({ "name": "John Doe", "age": 30 });
 
 let response = deboa::post("https://api.example.com/users")
-    .json(&data)?
+    .body_as(JsonBody, &data)?
     .send_with(&client)
     .await?;
 ```
@@ -104,7 +114,7 @@ struct User {
 let user: User = deboa::get("https://api.example.com/users/1")
     .send_with(&client)
     .await?
-    .body_as_json()?;
+    .body_as(JsonBody)?;
 
 // Get response as text
 let text = response.text().await?;
