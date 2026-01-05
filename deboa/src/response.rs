@@ -581,6 +581,18 @@ impl DeboaResponse {
             .body_mut() = Either::Right(Full::<Bytes>::from(body));
     }
 
+    /// Convenient alias to raw_body.
+    ///
+    /// # Returns
+    ///
+    /// * `Vec<u8>` - The raw body of the response.
+    ///
+    #[inline]
+    pub async fn bytes(&mut self) -> Vec<u8> {
+        self.raw_body()
+            .await
+    }
+
     /// Allow get stream body at any time.
     ///
     /// # Returns
