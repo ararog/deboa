@@ -9,13 +9,17 @@ use tokio::net::TcpStream;
 #[cfg(feature = "tokio-native-tls")]
 use tokio_native_tls::native_tls::{Certificate, Identity, TlsConnector};
 
-#[cfg(feature = "tokio-rust-tls")]
+#[cfg(all(feature = "tokio-rust-tls", any(feature = "http1", feature = "http2")))]
 use crate::client::conn::stream::setup_rust_tls;
-#[cfg(feature = "tokio-rust-tls")]
+#[cfg(all(feature = "tokio-rust-tls", any(feature = "http1", feature = "http2")))]
 use rustls::pki_types::ServerName;
 #[cfg(all(feature = "tokio-rust-tls", any(feature = "http1", feature = "http2")))]
 use tokio_rustls::TlsConnector;
 
+#[cfg(all(
+    any(feature = "tokio-rust-tls", feature = "tokio-native-tls"),
+    any(feature = "http1", feature = "http2")
+))]
 use crate::{
     cert::Identity as DeboaIdentity,
     errors::{ConnectionError, DeboaError},

@@ -1,5 +1,5 @@
 #[cfg(all(
-    any(feature = "http1", feature = "http2"),
+    any(feature = "http1", feature = "http2", feature = "http3-tokio"),
     any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
 ))]
 use std::{fs::File, io::BufReader, sync::Arc};
@@ -11,7 +11,7 @@ use rustls::ClientConfig;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
 #[cfg(all(
-    any(feature = "http1", feature = "http2"),
+    any(feature = "http1", feature = "http2", feature = "http3-tokio"),
     any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
 ))]
 use crate::{
@@ -21,7 +21,7 @@ use crate::{
 };
 
 #[cfg(all(
-    any(feature = "http1", feature = "http2"),
+    any(feature = "http1", feature = "http2", feature = "http3-tokio"),
     any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
 ))]
 pub fn setup_rust_tls(
@@ -32,7 +32,7 @@ pub fn setup_rust_tls(
     let root_store = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
     let provider = rustls::crypto::aws_lc_rs::default_provider();
     let config = rustls::ClientConfig::builder_with_provider(Arc::new(provider))
-        .with_protocol_versions(&[&rustls::version::TLS12])
+        .with_protocol_versions(&[&rustls::version::TLS13])
         .expect("Failed to set TLS version");
 
     if skip_server_verification {
