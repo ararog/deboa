@@ -35,7 +35,7 @@ Built on top of [hyper](https://github.com/hyperium/hyper).
 - response streaming
 - upgrade support (websocket, etc.)
 - runtime compatibility (tokio and smol)
-- http1/2/3 support 
+- http1/2/3 support
 
 ## Benchmark Results
 
@@ -62,6 +62,7 @@ Basic usage:
 
 ```rust
 use deboa::{Client, request::get, Result};
+use deboa_extras::http::serde::json::JsonBody;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -78,7 +79,7 @@ async fn main() -> Result<()> {
     let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")
         .send_with(&client)
         .await?
-        .body_as_json()?;
+        .body_as(JsonBody, Post)?;
     
     println!("First post: {}", posts[0].title);
     Ok(())
