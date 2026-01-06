@@ -7,7 +7,7 @@ edition = "2024"
 deboa = { path = "../../deboa" }
 deboa-extras = { path = "../../deboa-extras" }
 vamo = { path = "../../vamo" }
-tokio = { version = "1.47.2", features = ["macros", "rt-multi-thread"], default-features = false }
+tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"], default-features = false }
 http = { version = "1.4.0" }
 serde = "1.0.226"
 serde_json = "1.0.145"

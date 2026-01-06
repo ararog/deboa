@@ -36,4 +36,4 @@ titlecase = "2.2.1"
 [dev-dependencies]
 deboa-tests = { path = "../deboa-tests", version = "0.0.1" }
 httpmock = { version = "0.8.2", features = ["http2"] }
-tokio = { version = "1.47.2", features = ["rt-multi-thread"] }
+tokio = { version = "1.49.0", features = ["rt-multi-thread"] }
