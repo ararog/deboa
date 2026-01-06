@@ -28,6 +28,7 @@ pub fn setup_rust_tls(
     host: &str,
     client_cert: &Option<DeboaIdentity>,
     skip_server_verification: bool,
+    alpn: Option<&str>,
 ) -> Result<ClientConfig> {
     let root_store = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
     let provider = rustls::crypto::aws_lc_rs::default_provider();
@@ -45,7 +46,7 @@ pub fn setup_rust_tls(
         return Ok(config);
     }
 
-    let config = if let Some(client_cert) = client_cert {
+    let mut config = if let Some(client_cert) = client_cert {
         let config = if let Some(ca) = client_cert.ca() {
             let file = File::open(ca);
             if file.is_err() {
@@ -105,6 +106,14 @@ pub fn setup_rust_tls(
             .with_root_certificates(root_store)
             .with_no_client_auth()
     };
+
+    config.enable_early_data = true;
+
+    if let Some(alpn) = alpn {
+        config.alpn_protocols = vec![alpn
+            .as_bytes()
+            .to_vec()];
+    }
 
     Ok(config)
 }

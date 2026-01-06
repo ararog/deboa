@@ -10,10 +10,10 @@ use hyper::{Request, Response};
 use quinn::crypto::rustls::QuicClientConfig;
 use quinn::Endpoint;
 
+use crate::cert::Identity;
 use crate::client::conn::stream::setup_rust_tls;
 use crate::request::Http3Request;
 use crate::{
-    cert::ClientCert,
     client::conn::{udp::DeboaUdpConnection, BaseHttpConnection},
     errors::{ConnectionError, DeboaError, RequestError, ResponseError},
     Result,
@@ -50,21 +50,22 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
     async fn connect(
         host: &str,
         port: u16,
-        client_cert: &Option<ClientCert>,
+        client_cert: &Option<Identity>,
         skip_cert_verification: bool,
     ) -> Result<BaseHttpConnection<Http3Request>> {
         let client_endpoint =
             Endpoint::client(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), 0)));
 
         if let Err(e) = client_endpoint {
-            return Err(DeboaError::Connection(ConnectionError::Udp { message: e.to_string() }));
+            return Err(DeboaError::Connection(ConnectionError::Udp {
+                host: host.to_string(),
+                message: e.to_string(),
+            }));
         }
 
         let mut client_endpoint = client_endpoint.unwrap();
 
-        let mut tls_config = setup_rust_tls(host, client_cert, skip_cert_verification)?;
-        tls_config.enable_early_data = true;
-        tls_config.alpn_protocols = vec![b"h3".to_vec()];
+        let tls_config = setup_rust_tls(host, client_cert, skip_cert_verification, Some("h3"))?;
 
         let quic_config = QuicClientConfig::try_from(tls_config);
         if let Err(e) = quic_config {
@@ -82,7 +83,10 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
         let result = lookup_and_connect(host, port, &client_endpoint).await;
 
         if let Err(e) = result {
-            return Err(DeboaError::Connection(ConnectionError::Udp { message: e.to_string() }));
+            return Err(DeboaError::Connection(ConnectionError::Udp {
+                host: host.to_string(),
+                message: e.to_string(),
+            }));
         }
 
         let conn = result.unwrap();
@@ -90,7 +94,10 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
         let client = h3::client::new(conn).await;
 
         if let Err(e) = client {
-            return Err(DeboaError::Connection(ConnectionError::Udp { message: e.to_string() }));
+            return Err(DeboaError::Connection(ConnectionError::Udp {
+                host: host.to_string(),
+                message: e.to_string(),
+            }));
         }
 
         let (mut conn, send_request) = client.unwrap();

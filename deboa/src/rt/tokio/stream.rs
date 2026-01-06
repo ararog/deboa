@@ -1,5 +1,5 @@
 #[cfg(feature = "tokio-native-tls")]
-use tokio_native_tls::TlsStream;
+use async_native_tls::TlsStream;
 
 #[cfg(feature = "tokio-rust-tls")]
 use tokio_rustls::client::TlsStream;
