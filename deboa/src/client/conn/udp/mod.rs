@@ -111,7 +111,7 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
             return Err(DeboaError::Response(ResponseError::Receive {
                 status_code,
                 message: format!(
-                    "Could not process response ({}): {}",
+                    "Could not process request ({}): {}",
                     status_code,
                     String::from_utf8_lossy(&error_message)
                 ),

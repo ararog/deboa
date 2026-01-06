@@ -83,14 +83,12 @@ compile_error!("At least one HTTP version feature must be enabled.");
 pub(crate) const MAX_ERROR_MESSAGE_SIZE: usize = 50000;
 
 use cfg_if::cfg_if;
-#[cfg(feature = "http3-tokio")]
-use http_body_util::Full;
 
 #[cfg(feature = "tokio-rt")]
 use tokio::sync::{RwLock, RwLockWriteGuard};
 
 #[cfg(feature = "smol-rt")]
-use smol::lock::{RwLock, RwLockWriteGuard};
+use smol::lock::RwLock;
 
 use std::fmt::{Debug, Display};
 
@@ -98,7 +96,7 @@ use std::ops::Shl;
 
 use bytes::Bytes;
 use http::{header, HeaderValue, Request, Response};
-#[cfg(any(feature = "http1", feature = "http2"))]
+#[cfg(any(feature = "http1", feature = "http2", feature = "http3-tokio"))]
 use http_body_util::Full;
 #[cfg(any(feature = "http1", feature = "http2"))]
 use hyper::body::Incoming;
@@ -1172,7 +1170,7 @@ impl Client {
     }
 
     #[cfg(feature = "http3-tokio")]
-    async fn send_request<R>(&mut self, request: &R) -> Result<Response<Full<Bytes>>>
+    async fn send_request<R>(&self, request: &R) -> Result<Response<Full<Bytes>>>
     where
         R: AsRef<DeboaRequest>,
     {
@@ -1262,7 +1260,8 @@ impl Client {
             }
         };
 
-        if let Some(pool) = &mut self.pool {
+        if let Some(pool) = &self.pool {
+            let mut pool = RwLockWriteGuard::map(pool.write().await, |f| f);
             let conn = pool
                 .create_connection(
                     true,
