@@ -30,7 +30,7 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request> {
         skip_cert_verification: bool,
     ) -> Result<BaseHttpConnection<Self::Sender>> {
         let io = if is_secure {
-            tls_connection(host, port, client_cert, skip_cert_verification).await
+            tls_connection(host, port, client_cert, skip_cert_verification, None).await
         } else {
             plain_connection(host, port).await
         };

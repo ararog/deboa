@@ -7,7 +7,7 @@ use crate::rt::tokio::stream::TokioStream;
 use tokio::net::TcpStream;
 
 #[cfg(feature = "tokio-native-tls")]
-use tokio_native_tls::native_tls::{Certificate, Identity, TlsConnector};
+use async_native_tls::{Certificate, Identity, TlsConnector};
 
 #[cfg(all(feature = "tokio-rust-tls", any(feature = "http1", feature = "http2")))]
 use crate::client::conn::stream::setup_rust_tls;
@@ -52,16 +52,33 @@ pub(crate) async fn tls_connection(
     port: u16,
     client_cert: &Option<DeboaIdentity>,
     skip_server_verification: bool,
+    alpn: Option<&str>,
 ) -> Result<TokioStream> {
     let socket = create_stream(host, port).await?;
-    let mut builder = TlsConnector::builder();
+    let builder = TlsConnector::new();
 
-    if skip_server_verification {
-        builder.danger_accept_invalid_certs(true);
-        builder.danger_accept_invalid_hostnames(true);
-    }
+    let builder = if skip_server_verification {
+        builder
+            .danger_accept_invalid_certs(true)
+            .danger_accept_invalid_hostnames(true)
+    } else {
+        builder
+    };
 
-    if let Some(client_cert) = client_cert {
+    let builder = if let Some(alpn) = alpn { builder.request_alpns(&[alpn]) } else { builder };
+
+    let builder = if let Some(client_cert) = client_cert {
+        let builder = if let Some(ca) = client_cert.ca() {
+            let pem = std::fs::read(ca);
+            if let Err(e) = pem {
+                return Err(DeboaError::ClientCert { message: e.to_string() });
+            }
+            let cert = Certificate::from_pem(&pem.unwrap());
+            builder.add_root_certificate(cert.unwrap())
+        } else {
+            builder
+        };
+
         let file = std::fs::read(client_cert.cert());
         if let Err(e) = file {
             return Err(DeboaError::ClientCert { message: e.to_string() });
@@ -75,24 +92,14 @@ pub(crate) async fn tls_connection(
         if let Err(e) = identity {
             return Err(DeboaError::ClientCert { message: e.to_string() });
         }
-        builder.identity(identity.unwrap());
 
-        if let Some(ca) = client_cert.ca() {
-            let pem = std::fs::read(ca);
-            if let Err(e) = pem {
-                return Err(DeboaError::ClientCert { message: e.to_string() });
-            }
-            let cert = Certificate::from_pem(&pem.unwrap());
-            builder.add_root_certificate(cert.unwrap());
-        }
-    }
+        builder.identity(identity.unwrap())
+    } else {
+        builder
+    };
 
-    let connector = builder
-        .build()
-        .unwrap();
-    let connector = tokio_native_tls::TlsConnector::from(connector);
-    let stream = connector
-        .connect(host, socket)
+    let stream = builder
+        .connect(host.to_string(), socket)
         .await;
 
     if let Err(e) = stream {
@@ -112,9 +119,10 @@ pub(crate) async fn tls_connection(
     port: u16,
     client_cert: &Option<DeboaIdentity>,
     skip_server_verification: bool,
+    alpn: Option<&str>,
 ) -> Result<TokioStream> {
     let socket = create_stream(host, port).await?;
-    let config = setup_rust_tls(host, client_cert, skip_server_verification)?;
+    let config = setup_rust_tls(host, client_cert, skip_server_verification, alpn)?;
     let connector = TlsConnector::from(Arc::new(config));
     let hostname = ServerName::try_from(host.to_string());
 
