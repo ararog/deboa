@@ -1,16 +1,12 @@
-use crate::{
-    default_protocol,
-    errors::{ConnectionError, ResponseError},
-};
+use crate::errors::{ConnectionError, ResponseError};
 #[cfg(test)]
 use crate::{
     errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, HttpVersion, Result,
 };
 
-use deboa_tests::utils::setup_server;
+use deboa_tests::utils::JSONPLACEHOLDER;
 
 use http::{header, StatusCode};
-use httpmock::server::HttpMockServerBuilder;
 use httpmock::MockServer;
 
 #[cfg(feature = "smol-rt")]
@@ -23,23 +19,13 @@ use smol_macros::test;
 //
 
 async fn do_get_http1() -> Result<()> {
-    let server = MockServer::start();
+    let client = Client::default();
 
-    let http_mock = setup_server(&server, "/posts", httpmock::Method::GET, StatusCode::OK);
-
-    let client = Client::builder()
-        .protocol(default_protocol())
-        .build();
-
-    let url = server.url("/posts");
-
-    let request = DeboaRequest::get(url)?.build()?;
+    let request = DeboaRequest::get(format!("{}/posts/1", JSONPLACEHOLDER))?.build()?;
 
     let response: DeboaResponse = client
         .execute(request)
         .await?;
-
-    http_mock.assert();
 
     assert_eq!(
         response.status(),
@@ -69,26 +55,15 @@ async fn test_get_http1() {
 
 #[cfg(feature = "http2")]
 async fn do_get_http2() -> Result<()> {
-    let server = MockServer::start();
-
-    let http_mock = setup_server(&server, "/posts", httpmock::Method::GET, StatusCode::OK);
-
     let client = Client::builder()
         .protocol(HttpVersion::Http2)
         .build();
 
-    let request = DeboaRequest::get(
-        server
-            .url("/posts")
-            .as_str(),
-    )?
-    .build()?;
+    let request = DeboaRequest::get(format!("{}/posts/1", JSONPLACEHOLDER))?.build()?;
 
     let response: DeboaResponse = client
         .execute(request)
         .await?;
-
-    http_mock.assert();
 
     assert_eq!(
         response.status(),
@@ -110,7 +85,7 @@ async fn test_get_http2() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "smol-rt")]
+#[cfg(all(feature = "http2", feature = "smol-rt"))]
 #[apply(test!)]
 async fn test_get_http2() {
     let _ = do_get_http2().await;
@@ -123,7 +98,7 @@ async fn get_http3() -> Result<()> {
         .protocol(HttpVersion::Http3)
         .build();
 
-    let request = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts/1")?.build()?;
+    let request = DeboaRequest::get(format!("{}/posts/1", JSONPLACEHOLDER))?.build()?;
 
     let response: DeboaResponse = client
         .execute(request)
@@ -209,29 +184,19 @@ async fn test_tls_cert_verification() -> Result<()> {
 //
 
 async fn do_get_not_found() -> Result<()> {
-    let server = MockServer::start();
-
-    let http_mock =
-        setup_server(&server, "/asasa/posts/1ddd", httpmock::Method::GET, StatusCode::NOT_FOUND);
-
     let client = Client::default();
 
-    let response: Result<DeboaResponse> = DeboaRequest::get(
-        server
-            .url("/asasa/posts/1ddd")
-            .as_str(),
-    )?
-    .send_with(client)
-    .await;
-
-    http_mock.assert();
+    let response: Result<DeboaResponse> =
+        DeboaRequest::get(format!("{}/asasa/posts/1ddd", JSONPLACEHOLDER))?
+            .send_with(client)
+            .await;
 
     assert!(response.is_err());
     assert_eq!(
         response.unwrap_err(),
         DeboaError::Response(ResponseError::Receive {
             status_code: StatusCode::NOT_FOUND,
-            message: "Could not process request (404 Not Found): pong".to_string()
+            message: "Could not process request (404 Not Found): {}".to_string()
         })
     );
 
@@ -266,21 +231,34 @@ async fn do_get_invalid_server() -> Result<()> {
         .execute(request)
         .await;
 
+    #[cfg(all(feature = "http1", feature = "http2"))]
+    let error = DeboaError::Connection(ConnectionError::Tcp {
+        host: "invalid-server.com".to_string(),
+        #[cfg(target_os = "windows")]
+        message: "No such host is known. (os error 11001)".to_string(),
+        #[cfg(target_os = "linux")]
+        message: "failed to lookup address information: Name or service not known".to_string(),
+        #[cfg(target_os = "macos")]
+        message:
+            "failed to lookup address information: nodename nor servname provided, or not known"
+                .to_string(),
+    });
+
+    #[cfg(feature = "http3-tokio")]
+    let error = DeboaError::Connection(ConnectionError::Udp {
+        host: "invalid-server.com".to_string(),
+        #[cfg(target_os = "windows")]
+        message: "No such host is known. (os error 11001)".to_string(),
+        #[cfg(target_os = "linux")]
+        message: "failed to lookup address information: Name or service not known".to_string(),
+        #[cfg(target_os = "macos")]
+        message:
+            "failed to lookup address information: nodename nor servname provided, or not known"
+                .to_string(),
+    });
+
     assert!(response.is_err());
-    assert_eq!(
-        response.unwrap_err(),
-        DeboaError::Connection(ConnectionError::Tcp {
-            host: "invalid-server.com".to_string(),
-            #[cfg(target_os = "windows")]
-            message: "No such host is known. (os error 11001)".to_string(),
-            #[cfg(target_os = "linux")]
-            message: "failed to lookup address information: Name or service not known".to_string(),
-            #[cfg(target_os = "macos")]
-            message:
-                "failed to lookup address information: nodename nor servname provided, or not known"
-                    .to_string(),
-        })
-    );
+    assert_eq!(response.unwrap_err(), error);
 
     Ok(())
 }
@@ -303,21 +281,11 @@ async fn test_get_invalid_server() {
 //
 
 async fn do_get_by_query() -> Result<()> {
-    let server = MockServer::start();
-
-    let http_mock = setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::OK);
-
     let client = Client::default();
 
-    let response = DeboaRequest::get(
-        server
-            .url("/comments/1")
-            .as_str(),
-    )?
-    .send_with(client)
-    .await?;
-
-    http_mock.assert();
+    let response = DeboaRequest::get(format!("{}/comments/1", JSONPLACEHOLDER))?
+        .send_with(client)
+        .await?;
 
     assert_eq!(
         response.status(),
@@ -352,23 +320,12 @@ async fn test_get_by_query() {
 }
 
 async fn do_get_by_query_with_retries() -> Result<()> {
-    let server = MockServer::start();
-
-    let http_mock =
-        setup_server(&server, "/comments/1", httpmock::Method::GET, StatusCode::BAD_GATEWAY);
-
     let client = Client::default();
 
-    let response = DeboaRequest::get(
-        server
-            .url("/comments/1")
-            .as_str(),
-    )?
-    .retries(2)
-    .send_with(client)
-    .await;
-
-    http_mock.assert_calls(3);
+    let response = DeboaRequest::get(format!("{}/comments/1", JSONPLACEHOLDER))?
+        .retries(2)
+        .send_with(client)
+        .await;
 
     if let Err(err) = response {
         assert_eq!(

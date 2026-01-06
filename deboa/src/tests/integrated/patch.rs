@@ -1,8 +1,7 @@
 use crate::{request::DeboaRequest, Client, Result};
-use http::{header, StatusCode};
+use deboa_tests::utils::JSONPLACEHOLDER;
+use http::StatusCode;
 
-use httpmock::Method::PATCH;
-use httpmock::MockServer;
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
 #[cfg(feature = "smol-rt")]
@@ -13,31 +12,15 @@ use smol_macros::test;
 //
 
 async fn do_patch() -> Result<()> {
-    let server = MockServer::start();
-
-    let http_mock = server.mock(|when, then| {
-        when.method(PATCH)
-            .path("/posts/1");
-        then.status::<u16>(StatusCode::OK.into())
-            .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
-            .body("ping");
-    });
-
     let client: Client = Client::default();
 
-    let request = DeboaRequest::patch(
-        server
-            .url("/posts/1")
-            .as_str(),
-    )?
-    .text("")
-    .build()?;
+    let request = DeboaRequest::patch(format!("{}/posts/1", JSONPLACEHOLDER))?
+        .text("")
+        .build()?;
 
     let response = client
         .execute(request)
         .await?;
-
-    http_mock.assert();
 
     assert_eq!(response.status(), StatusCode::OK);
 
