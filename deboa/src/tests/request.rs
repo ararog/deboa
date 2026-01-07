@@ -133,8 +133,9 @@ fn test_into_string() -> Result<()> {
 #[tokio::test]
 async fn test_try_into() -> Result<()> {
     let client = Client::default();
+    let first_post = "https://jsonplaceholder.typicode.com/posts/1";
     let response = client
-        .execute(JSONPLACEHOLDER.into_request()?)
+        .execute(first_post.into_request()?)
         .await?;
     assert_eq!(response.status(), 200);
     Ok(())
@@ -311,10 +312,12 @@ fn test_raw_body() -> Result<()> {
 
 #[tokio::test]
 async fn test_fetch_from_str() -> Result<()> {
-    let mut client = Client::default();
+    let client = Client::default();
 
-    let response = JSONPLACEHOLDER
-        .fetch_with(&mut client)
+    let first_post = "https://jsonplaceholder.typicode.com/posts/1";
+
+    let response = first_post
+        .fetch_with(&client)
         .await?;
     assert_eq!(response.status(), 200);
 

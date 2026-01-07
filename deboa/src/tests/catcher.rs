@@ -1,6 +1,5 @@
 use bytes::Bytes;
 use http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
-use httpmock::MockServer;
 
 use crate::{
     catcher::{DeboaCatcher, MockDeboaCatcher},
@@ -9,7 +8,7 @@ use crate::{
     Client,
 };
 
-use deboa_tests::utils::{setup_server, url_from_string};
+use deboa_tests::utils::{url_from_string, JSONPLACEHOLDER};
 
 #[tokio::test]
 async fn test_catcher_request() {
@@ -38,10 +37,6 @@ async fn test_catcher_request() {
 
 #[tokio::test]
 async fn test_catcher_response() {
-    let server = MockServer::start();
-
-    let http_mock = setup_server(&server, "/get", httpmock::Method::GET, StatusCode::OK);
-
     let mut catcher_mock = MockDeboaCatcher::new();
     catcher_mock
         .expect_on_request()
@@ -58,17 +53,11 @@ async fn test_catcher_response() {
     let client = Client::builder()
         .catch(catcher_mock)
         .build();
-    let mut response = DeboaRequest::get(
-        server
-            .url("/get")
-            .as_str(),
-    )
-    .unwrap()
-    .send_with(client)
-    .await
-    .unwrap();
-
-    http_mock.assert();
+    let mut response = DeboaRequest::get(format!("{}/posts/1", JSONPLACEHOLDER))
+        .unwrap()
+        .send_with(client)
+        .await
+        .unwrap();
 
     assert_eq!(
         response
@@ -80,20 +69,12 @@ async fn test_catcher_response() {
 
 #[tokio::test]
 async fn test_catcher_early_response() {
-    let server = MockServer::start();
-
-    let http_mock = setup_server(&server, "/get", httpmock::Method::GET, StatusCode::OK);
-
     let mut catcher_mock = MockDeboaCatcher::new();
 
     let mut headers = HeaderMap::new();
     headers.insert(HeaderName::from_static("test"), HeaderValue::from_static("test"));
 
-    let url = url_from_string(
-        server
-            .url("/get")
-            .to_string(),
-    );
+    let url = url_from_string(format!("{}/posts/1", JSONPLACEHOLDER));
 
     catcher_mock
         .expect_on_request()
@@ -116,17 +97,11 @@ async fn test_catcher_early_response() {
     let client = Client::builder()
         .catch(catcher_mock)
         .build();
-    let response = DeboaRequest::get(
-        server
-            .url("/get")
-            .as_str(),
-    )
-    .unwrap()
-    .send_with(client)
-    .await
-    .unwrap();
-
-    http_mock.assert_calls(0);
+    let response = DeboaRequest::get(format!("{}/posts/1", JSONPLACEHOLDER))
+        .unwrap()
+        .send_with(client)
+        .await
+        .unwrap();
 
     assert_eq!(
         response

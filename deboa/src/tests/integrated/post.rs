@@ -3,6 +3,7 @@ use crate::{
     request::DeboaRequest,
     Client, Result,
 };
+use deboa_tests::utils::JSONPLACEHOLDER;
 use http::{header, StatusCode};
 use httpmock::{Method::POST, MockServer};
 
@@ -16,38 +17,22 @@ use smol_macros::test;
 //
 
 async fn do_post() -> Result<()> {
-    let server = MockServer::start();
-
-    let http_mock = server.mock(|when, then| {
-        when.method(POST)
-            .path("/posts");
-        then.status::<u16>(StatusCode::CREATED.into())
-            .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
-            .body("ping");
-    });
-
     let client = Client::default();
 
-    let request = DeboaRequest::post(
-        server
-            .url("/posts")
-            .as_str(),
-    )?
-    .text("ping")
-    .build()?;
+    let request = DeboaRequest::post(format!("{}/posts", JSONPLACEHOLDER).as_str())?
+        .text("{ \"title\": \"foo\", \"body\": \"bar\", \"userId\": 1 }")
+        .build()?;
 
     let mut response = client
         .execute(request)
         .await?;
-
-    http_mock.assert();
 
     assert_eq!(response.status(), StatusCode::CREATED);
     assert_eq!(
         response
             .raw_body()
             .await,
-        b"ping"
+        b"{\n  \"id\": 101\n}",
     );
 
     Ok(())

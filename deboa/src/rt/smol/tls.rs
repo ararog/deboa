@@ -36,7 +36,7 @@ async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
     Ok(stream.unwrap())
 }
 
-#[cfg(all(feature = "http1", feature = "http2"))]
+#[cfg(any(feature = "http1", feature = "http2"))]
 pub(crate) async fn plain_connection(host: &str, port: u16) -> Result<SmolStream> {
     let stream = create_stream(host, port).await?;
     Ok(SmolStream::Plain(stream))
