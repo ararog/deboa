@@ -1310,10 +1310,14 @@ name = "deboa-tests"
 version = "0.0.1"
 dependencies = [
  "http",
+ "http-body-util",
  "httpmock",
+ "hyper",
+ "hyper-util",
  "mime",
  "serde",
  "serde_json",
+ "tokio",
  "url",
 ]
 
