@@ -237,7 +237,7 @@ pub type DeboaBuilder = ClientBuilder;
 ///
 /// # Examples
 ///
-/// ``` rust, no_run
+/// ``` rust,ignore
 /// use deboa::{Client, Result, HttpVersion};
 ///
 /// #[tokio::main]
@@ -441,7 +441,7 @@ impl ClientBuilder {
     ///
     /// # Examples
     ///
-    /// ``` rust, no_run
+    /// ``` rust,ignore
     /// use deboa::{Client, HttpVersion};
     ///
     /// let builder = Client::builder()

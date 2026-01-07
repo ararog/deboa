@@ -6,8 +6,7 @@ use crate::{
 
 use deboa_tests::utils::JSONPLACEHOLDER;
 
-use http::{header, StatusCode};
-use httpmock::MockServer;
+use http::StatusCode;
 
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
@@ -231,7 +230,7 @@ async fn do_get_invalid_server() -> Result<()> {
         .execute(request)
         .await;
 
-    #[cfg(all(feature = "http1", feature = "http2"))]
+    #[cfg(any(feature = "http1", feature = "http2"))]
     let error = DeboaError::Connection(ConnectionError::Tcp {
         host: "invalid-server.com".to_string(),
         #[cfg(target_os = "windows")]
@@ -354,37 +353,30 @@ async fn test_get_by_query_with_retries() {
 }
 
 async fn do_get_with_redirect() -> Result<()> {
-    let server = MockServer::start();
-
-    let http_mock_red = server.mock(|when, then| {
-        when.method(httpmock::Method::GET)
-            .path("/comments/one");
-        then.status::<u16>(StatusCode::MOVED_PERMANENTLY.into())
-            .header(header::LOCATION.as_str(), server.url("/comments/1"));
-    });
-
-    let http_mock_tgt = server.mock(|when, then| {
-        when.method(httpmock::Method::GET)
-            .path("/comments/1");
-        then.status::<u16>(StatusCode::OK.into())
-            .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
-            .body("ping");
-    });
-
     let client = Client::default();
 
-    let response = DeboaRequest::get(
-        server
-            .url("/comments/one")
-            .as_str(),
-    )?
-    .send_with(client)
-    .await?;
+    let url = if cfg!(feature = "http3-tokio") {
+        "https://tinyurl.com/bccjpjd7"
+    } else {
+        "https://tinyurl.com/bp6e548b"
+    };
 
-    http_mock_red.assert();
-    http_mock_tgt.assert();
+    let response = DeboaRequest::get(url)?
+        .send_with(client)
+        .await?;
+
+    let server = if cfg!(feature = "http3-tokio") { "facebook.com" } else { "github.com" };
 
     assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response
+            .headers()
+            .get("server")
+            .unwrap()
+            .to_str()
+            .unwrap(),
+        server
+    );
 
     Ok(())
 }
