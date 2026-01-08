@@ -15,11 +15,12 @@ use tokio::net::TcpListener;
 pub struct HttpServer {
     port: u16,
     task: Option<tokio::task::JoinHandle<()>>,
+    config: Option<ServerConfig>,
 }
 
 impl HttpServer {
-    pub fn new() -> Self {
-        Self { port: rand::random_range(20000..65535), task: None }
+    pub fn new(config: Option<ServerConfig>) -> Self {
+        Self { port: rand::random_range(20000..65535), task: None, config }
     }
 }
 
@@ -36,33 +37,37 @@ impl HttpServer {
 
         let listener = TcpListener::bind(addr).await?;
 
-        self.task = Some(tokio::spawn(async move {
-            let (stream, _) = listener
-                .accept()
-                .await
-                .expect("Failed to accept connection");
-
-            let io = TokioIo::new(stream);
-
-            tokio::task::spawn(async move {
-                // Handle the connection from the client using HTTP/2 with an executor and pass any
-                // HTTP requests received on that connection to the `hello` function
-                #[cfg(feature = "http1")]
-                if let Err(err) = http1::Builder::new()
-                    .serve_connection(io, service_fn(|req| async move { handler(req) }))
+        let handle = tokio::spawn(async move {
+            loop {
+                let (stream, _) = listener
+                    .accept()
                     .await
-                {
-                    eprintln!("Error serving connection: {}", err);
-                }
-                #[cfg(feature = "http2")]
-                if let Err(err) = http2::Builder::new(TokioExecutor::new())
-                    .serve_connection(io, service_fn(|req| async move { handler(req) }))
-                    .await
-                {
-                    eprintln!("Error serving connection: {}", err);
-                }
-            });
-        }));
+                    .expect("Failed to accept connection");
+
+                let io = TokioIo::new(stream);
+
+                tokio::task::spawn(async move {
+                    // Handle the connection from the client using HTTP/2 with an executor and pass any
+                    // HTTP requests received on that connection to the `hello` function
+                    #[cfg(feature = "http1")]
+                    if let Err(err) = http1::Builder::new()
+                        .serve_connection(io, service_fn(|req| async move { handler(req) }))
+                        .await
+                    {
+                        eprintln!("Error serving connection: {}", err);
+                    }
+                    #[cfg(feature = "http2")]
+                    if let Err(err) = http2::Builder::new(TokioExecutor::new())
+                        .serve_connection(io, service_fn(|req| async move { handler(req) }))
+                        .await
+                    {
+                        eprintln!("Error serving connection: {}", err);
+                    }
+                });
+            }
+        });
+
+        self.task = Some(handle);
 
         Ok(())
     }
