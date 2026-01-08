@@ -937,7 +937,7 @@ impl Client {
         let mut retry_count: u32 = 0;
         let response = loop {
             let response = self
-                .send_request(request.as_mut())
+                .send_request(request.as_ref())
                 .await;
             if let Err(err) = response {
                 if retry_count == request.retries() {

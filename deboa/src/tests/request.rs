@@ -5,21 +5,28 @@ use crate::{
     Client, Result,
 };
 
-use deboa_tests::utils::JSONPLACEHOLDER;
-use http::{header, HeaderValue, Method};
+use deboa_tests::utils::{make_response, TEST_HOST};
+
+#[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
+use deboa_tests::server::tcp::tokio::HttpServer;
+
+#[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
+use deboa_tests::server::tcp::smol::HttpServer;
+
+use http::{header, HeaderValue, Method, StatusCode};
 use url::Url;
 
 #[test]
 fn test_method_ext_from_url() -> Result<()> {
     let request = Method::GET
-        .from_url(JSONPLACEHOLDER)?
+        .from_url(TEST_HOST)?
         .build()?;
     assert_eq!(request.method(), &Method::GET);
     assert_eq!(
         request
             .url()
             .to_string(),
-        JSONPLACEHOLDER
+        TEST_HOST
     );
     Ok(())
 }
@@ -27,14 +34,14 @@ fn test_method_ext_from_url() -> Result<()> {
 #[test]
 fn test_method_ext_to_url() -> Result<()> {
     let request = Method::POST
-        .to_url(JSONPLACEHOLDER)?
+        .to_url(TEST_HOST)?
         .build()?;
     assert_eq!(request.method(), &Method::POST);
     assert_eq!(
         request
             .url()
             .to_string(),
-        JSONPLACEHOLDER
+        TEST_HOST
     );
     Ok(())
 }
@@ -42,14 +49,14 @@ fn test_method_ext_to_url() -> Result<()> {
 #[test]
 fn test_str_method_ext_from_url() -> Result<()> {
     let request = "GET"
-        .from_url(JSONPLACEHOLDER)?
+        .from_url(TEST_HOST)?
         .build()?;
     assert_eq!(request.method(), &Method::GET);
     assert_eq!(
         request
             .url()
             .to_string(),
-        JSONPLACEHOLDER
+        TEST_HOST
     );
     Ok(())
 }
@@ -57,87 +64,102 @@ fn test_str_method_ext_from_url() -> Result<()> {
 #[test]
 fn test_str_method_ext_to_url() -> Result<()> {
     let request = "POST"
-        .to_url(JSONPLACEHOLDER)?
+        .to_url(TEST_HOST)?
         .build()?;
     assert_eq!(request.method(), &Method::POST);
     assert_eq!(
         request
             .url()
             .to_string(),
-        JSONPLACEHOLDER
+        TEST_HOST
     );
     Ok(())
 }
 
 #[test]
 fn test_into_url() -> Result<()> {
-    let url = Url::parse(JSONPLACEHOLDER).unwrap();
+    let url = Url::parse(TEST_HOST).unwrap();
     let request = DeboaRequest::get(url)?.build()?;
     assert_eq!(
         request
             .url()
             .to_string(),
-        JSONPLACEHOLDER
+        TEST_HOST
     );
     Ok(())
 }
 
 #[test]
 fn test_into_request_from_str() -> Result<()> {
-    let request = JSONPLACEHOLDER.into_request()?;
+    let request = TEST_HOST.into_request()?;
     assert_eq!(
         request
             .url()
             .to_string(),
-        JSONPLACEHOLDER
+        TEST_HOST
     );
     Ok(())
 }
 
 #[test]
 fn test_into_request_from_string() -> Result<()> {
-    let request = format!("{}/posts/{}", JSONPLACEHOLDER, 1).into_request()?;
+    let request = format!("{}/posts/{}", TEST_HOST, 1).into_request()?;
     assert_eq!(
         request
             .url()
             .to_string(),
-        format!("{}/posts/{}", JSONPLACEHOLDER, 1)
+        format!("{}/posts/{}", TEST_HOST, 1)
     );
     Ok(())
 }
 
 #[test]
 fn test_into_str() -> Result<()> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER)?.build()?;
+    let request = DeboaRequest::get(TEST_HOST)?.build()?;
     assert_eq!(
         request
             .url()
             .to_string(),
-        JSONPLACEHOLDER
+        TEST_HOST
     );
     Ok(())
 }
 
 #[test]
 fn test_into_string() -> Result<()> {
-    let request = DeboaRequest::get(String::from(JSONPLACEHOLDER))?.build()?;
+    let request = DeboaRequest::get(String::from(TEST_HOST))?.build()?;
     assert_eq!(
         request
             .url()
             .to_string(),
-        JSONPLACEHOLDER
+        TEST_HOST
     );
     Ok(())
 }
 
 #[tokio::test]
 async fn test_try_into() -> Result<()> {
+    let mut server = HttpServer::new();
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "GET" && req.uri().path() == "/posts/1" {
+                Ok(make_response(StatusCode::OK, b""))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
+
     let client = Client::default();
-    let first_post = "https://jsonplaceholder.typicode.com/posts/1";
+    let first_post = server.url("/posts/1");
     let response = client
         .execute(first_post.into_request()?)
         .await?;
     assert_eq!(response.status(), 200);
+
+    server.stop().await;
+
     Ok(())
 }
 
@@ -145,14 +167,11 @@ async fn test_try_into() -> Result<()> {
 fn test_from_str_method_and_url() -> Result<()> {
     let request = DeboaRequest::from_str(
         r##"
-    GET https://jsonplaceholder.typicode.com
+    GET https://localhost:8000
     "##,
     )?;
     assert_eq!(request.method(), Method::GET);
-    assert_eq!(
-        request.url(),
-        Arc::new(Url::parse("https://jsonplaceholder.typicode.com").unwrap())
-    );
+    assert_eq!(request.url(), Arc::new(Url::parse("https://localhost:8000").unwrap()));
     Ok(())
 }
 
@@ -160,7 +179,7 @@ fn test_from_str_method_and_url() -> Result<()> {
 fn test_from_str_headers() -> Result<()> {
     let request = DeboaRequest::from_str(
         r##"
-    GET https://jsonplaceholder.typicode.com
+    GET https://localhost:8000
     Content-Type: application/json
     "##,
     )?;
@@ -177,7 +196,7 @@ fn test_from_str_headers() -> Result<()> {
 fn test_from_str_body() -> Result<()> {
     let request = DeboaRequest::from_str(
         r##"
-    GET https://jsonplaceholder.typicode.com
+    GET https://localhost:8000
     Content-Type: application/json
     
     {"title": "foo", "body": "bar", "userId": 1}
@@ -189,7 +208,7 @@ fn test_from_str_body() -> Result<()> {
 
 #[test]
 fn test_set_retries() -> Result<()> {
-    let api = DeboaRequest::get(JSONPLACEHOLDER)?
+    let api = DeboaRequest::get(TEST_HOST)?
         .retries(5)
         .build()?;
     assert_eq!(api.retries(), 5);
@@ -198,18 +217,18 @@ fn test_set_retries() -> Result<()> {
 
 #[test]
 fn test_base_url() -> Result<()> {
-    let api = DeboaRequest::get(String::from(JSONPLACEHOLDER))?.build()?;
+    let api = DeboaRequest::get(String::from(TEST_HOST))?.build()?;
     assert_eq!(
         api.url()
             .to_string(),
-        JSONPLACEHOLDER
+        TEST_HOST
     );
     Ok(())
 }
 
 #[test]
 fn test_set_headers() -> Result<()> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER)?
+    let request = DeboaRequest::get(TEST_HOST)?
         .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
         .build()?;
 
@@ -226,7 +245,7 @@ fn test_set_headers() -> Result<()> {
 #[test]
 fn test_set_headers_as_tuple() -> Result<()> {
     let headers = vec![(header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string())];
-    let request = DeboaRequest::get(JSONPLACEHOLDER)?
+    let request = DeboaRequest::get(TEST_HOST)?
         .headers(headers)
         .build()?;
 
@@ -242,7 +261,7 @@ fn test_set_headers_as_tuple() -> Result<()> {
 
 #[test]
 fn test_set_basic_auth() -> Result<()> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER)?
+    let request = DeboaRequest::get(TEST_HOST)?
         .basic_auth("username", "password")
         .build()?;
 
@@ -258,7 +277,7 @@ fn test_set_basic_auth() -> Result<()> {
 
 #[test]
 fn test_set_bearer_auth() -> Result<()> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER)?
+    let request = DeboaRequest::get(TEST_HOST)?
         .bearer_auth("token")
         .build()?;
 
@@ -274,7 +293,7 @@ fn test_set_bearer_auth() -> Result<()> {
 
 #[test]
 fn test_add_header() -> Result<()> {
-    let request = DeboaRequest::get(JSONPLACEHOLDER)?
+    let request = DeboaRequest::get(TEST_HOST)?
         .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
         .build()?;
 
@@ -290,7 +309,7 @@ fn test_add_header() -> Result<()> {
 
 #[test]
 fn test_set_text_body() -> Result<()> {
-    let request = DeboaRequest::post(JSONPLACEHOLDER)?
+    let request = DeboaRequest::post(TEST_HOST)?
         .text("test")
         .build()?;
 
@@ -301,7 +320,7 @@ fn test_set_text_body() -> Result<()> {
 
 #[test]
 fn test_raw_body() -> Result<()> {
-    let request = DeboaRequest::post(JSONPLACEHOLDER)?
+    let request = DeboaRequest::post(TEST_HOST)?
         .raw_body(b"test")
         .build()?;
 
@@ -312,14 +331,26 @@ fn test_raw_body() -> Result<()> {
 
 #[tokio::test]
 async fn test_fetch_from_str() -> Result<()> {
+    let mut server = HttpServer::new();
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "GET" && req.uri().path() == "/posts/1" {
+                Ok(make_response(StatusCode::OK, b""))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
+
     let client = Client::default();
-
-    let first_post = "https://jsonplaceholder.typicode.com/posts/1";
-
+    let first_post = server.url("/posts/1");
     let response = first_post
         .fetch_with(&client)
         .await?;
     assert_eq!(response.status(), 200);
+
+    server.stop().await;
 
     Ok(())
 }

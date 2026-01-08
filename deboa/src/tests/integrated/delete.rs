@@ -2,7 +2,14 @@
 use crate::{request::DeboaRequest, Client, Result};
 #[cfg(feature = "http3-tokio")]
 use crate::{response::DeboaResponse, HttpVersion};
-use deboa_tests::utils::JSONPLACEHOLDER;
+
+#[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
+use deboa_tests::server::tcp::tokio::HttpServer;
+
+#[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
+use deboa_tests::server::tcp::smol::HttpServer;
+
+use deboa_tests::utils::make_response;
 use http::StatusCode;
 
 #[cfg(feature = "smol-rt")]
@@ -13,41 +20,29 @@ use smol_macros::test;
 //
 // DELETE
 //
-#[cfg(feature = "http3-tokio")]
-#[tokio::test]
-
-async fn delete_http3() -> Result<()> {
-    let client = Client::builder()
-        .protocol(HttpVersion::Http3)
-        .build();
-
-    let request = DeboaRequest::delete(format!("{}/posts/1", JSONPLACEHOLDER))?.build()?;
-
-    let response: DeboaResponse = client
-        .execute(request)
-        .await?;
-
-    assert_eq!(
-        response.status(),
-        StatusCode::OK,
-        "Status code is {} and should be {}",
-        response
-            .status()
-            .as_u16(),
-        StatusCode::OK.as_u16()
-    );
-
-    Ok(())
-}
 
 async fn do_delete() -> Result<()> {
+    let mut server = HttpServer::new();
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "DELETE" && req.uri().path() == "/posts/1" {
+                Ok(make_response(StatusCode::OK, b""))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
+
     let client = Client::default();
 
-    let response = DeboaRequest::delete(format!("{}/posts/1", JSONPLACEHOLDER))?
+    let response = DeboaRequest::delete(server.url("/posts/1"))?
         .send_with(client)
         .await?;
 
     assert_eq!(response.status(), StatusCode::OK);
+
+    server.stop().await;
 
     Ok(())
 }

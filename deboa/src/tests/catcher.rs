@@ -8,7 +8,13 @@ use crate::{
     Client,
 };
 
-use deboa_tests::utils::{url_from_string, JSONPLACEHOLDER};
+use deboa_tests::utils::{make_response, url_from_string, TEST_HOST};
+
+#[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
+use deboa_tests::server::tcp::tokio::HttpServer;
+
+#[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
+use deboa_tests::server::tcp::smol::HttpServer;
 
 #[tokio::test]
 async fn test_catcher_request() {
@@ -37,6 +43,18 @@ async fn test_catcher_request() {
 
 #[tokio::test]
 async fn test_catcher_response() {
+    let mut server = HttpServer::new();
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "GET" && req.uri().path() == "/posts/1" {
+                Ok(make_response(StatusCode::OK, b"Hello World!"))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
+
     let mut catcher_mock = MockDeboaCatcher::new();
     catcher_mock
         .expect_on_request()
@@ -53,7 +71,7 @@ async fn test_catcher_response() {
     let client = Client::builder()
         .catch(catcher_mock)
         .build();
-    let mut response = DeboaRequest::get(format!("{}/posts/1", JSONPLACEHOLDER))
+    let mut response = DeboaRequest::get(server.url("/posts/1"))
         .unwrap()
         .send_with(client)
         .await
@@ -65,6 +83,8 @@ async fn test_catcher_response() {
             .await,
         b"test"
     );
+
+    server.stop().await;
 }
 
 #[tokio::test]
@@ -74,7 +94,7 @@ async fn test_catcher_early_response() {
     let mut headers = HeaderMap::new();
     headers.insert(HeaderName::from_static("test"), HeaderValue::from_static("test"));
 
-    let url = url_from_string(format!("{}/posts/1", JSONPLACEHOLDER));
+    let url = url_from_string(format!("{}/posts/1", TEST_HOST));
 
     catcher_mock
         .expect_on_request()
@@ -97,7 +117,7 @@ async fn test_catcher_early_response() {
     let client = Client::builder()
         .catch(catcher_mock)
         .build();
-    let response = DeboaRequest::get(format!("{}/posts/1", JSONPLACEHOLDER))
+    let response = DeboaRequest::get(format!("{}/posts/1", TEST_HOST))
         .unwrap()
         .send_with(client)
         .await

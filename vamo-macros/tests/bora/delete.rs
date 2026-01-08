@@ -1,5 +1,5 @@
 use deboa::Result;
-use deboa_tests::utils::JSONPLACEHOLDER;
+use deboa_tests::utils::TEST_HOST;
 use vamo::Vamo;
 use vamo_macros::bora;
 
@@ -8,7 +8,7 @@ pub struct PostService;
 
 #[tokio::test]
 async fn test_delete_by_id() -> Result<()> {
-    let client = Vamo::new(JSONPLACEHOLDER)?;
+    let client = Vamo::new(TEST_HOST)?;
 
     let mut post_service = PostService::new(client);
 
