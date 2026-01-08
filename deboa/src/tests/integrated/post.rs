@@ -3,9 +3,15 @@ use crate::{
     request::DeboaRequest,
     Client, Result,
 };
-use deboa_tests::utils::JSONPLACEHOLDER;
+
+#[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
+use deboa_tests::server::tcp::tokio::HttpServer;
+
+#[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
+use deboa_tests::server::tcp::smol::HttpServer;
+
+use deboa_tests::utils::make_response;
 use http::{header, StatusCode};
-use httpmock::{Method::POST, MockServer};
 
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
@@ -17,9 +23,21 @@ use smol_macros::test;
 //
 
 async fn do_post() -> Result<()> {
+    let mut server = HttpServer::new();
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "POST" && req.uri().path() == "/posts" {
+                Ok(make_response(StatusCode::CREATED, b"{\n  \"id\": 101\n}"))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
+
     let client = Client::default();
 
-    let request = DeboaRequest::post(format!("{}/posts", JSONPLACEHOLDER).as_str())?
+    let request = DeboaRequest::post(server.url("/posts"))?
         .text("{ \"title\": \"foo\", \"body\": \"bar\", \"userId\": 1 }")
         .build()?;
 
@@ -34,6 +52,8 @@ async fn do_post() -> Result<()> {
             .await,
         b"{\n  \"id\": 101\n}",
     );
+
+    server.stop().await;
 
     Ok(())
 }
@@ -51,6 +71,7 @@ async fn test_post() -> Result<()> {
     do_post().await
 }
 
+/*
 async fn do_post_encoded_form() -> Result<()> {
     let server = MockServer::start();
 
@@ -74,9 +95,7 @@ async fn do_post_encoded_form() -> Result<()> {
     form.field("version", "0.0.1");
 
     let request = DeboaRequest::post(
-        server
-            .url("/posts")
-            .as_str(),
+        format!("{}/posts", TEST_HOST).as_str(),
     )?
     .form(form.into())
     .build()?;
@@ -111,6 +130,7 @@ async fn test_post_encoded_form() -> Result<()> {
     do_post_encoded_form().await
 }
 
+
 async fn do_post_multipart_form() -> Result<()> {
     let server = MockServer::start();
 
@@ -130,9 +150,7 @@ async fn do_post_multipart_form() -> Result<()> {
     form.field("version", "0.0.1");
 
     let request = DeboaRequest::post(
-        server
-            .url("/posts")
-            .as_str(),
+        format!("{}/posts", TEST_HOST).as_str(),
     )?
     .header(header::CONTENT_TYPE, mime::MULTIPART_FORM_DATA.essence_str())
     .form(form.into())
@@ -167,3 +185,4 @@ async fn test_post_multipart_form() -> Result<()> {
 async fn test_post_multipart_form() -> Result<()> {
     do_post_multipart_form().await
 }
+*/

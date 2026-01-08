@@ -1,5 +1,12 @@
 use crate::{request::DeboaRequest, Client, Result};
-use deboa_tests::utils::JSONPLACEHOLDER;
+
+#[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
+use deboa_tests::server::tcp::tokio::HttpServer;
+
+#[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
+use deboa_tests::server::tcp::smol::HttpServer;
+
+use deboa_tests::utils::make_response;
 use http::StatusCode;
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
@@ -11,9 +18,21 @@ use smol_macros::test;
 //
 
 async fn do_put() -> Result<()> {
+    let mut server = HttpServer::new();
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "PUT" && req.uri().path() == "/posts/1" {
+                Ok(make_response(StatusCode::OK, b""))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
+
     let client = Client::default();
 
-    let request = DeboaRequest::put(format!("{}/posts/1", JSONPLACEHOLDER).as_str())?
+    let request = DeboaRequest::put(server.url("/posts/1"))?
         .text("ping")
         .build()?;
 
@@ -22,6 +41,8 @@ async fn do_put() -> Result<()> {
         .await?;
 
     assert_eq!(response.status(), StatusCode::OK);
+
+    server.stop().await;
 
     Ok(())
 }

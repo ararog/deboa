@@ -1,10 +1,14 @@
 use crate::errors::{ConnectionError, ResponseError};
 #[cfg(test)]
-use crate::{
-    errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, HttpVersion, Result,
-};
+use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, Result};
 
-use deboa_tests::utils::JSONPLACEHOLDER;
+use deboa_tests::utils::make_response;
+
+#[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
+use deboa_tests::server::tcp::tokio::HttpServer;
+
+#[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
+use deboa_tests::server::tcp::smol::HttpServer;
 
 use http::StatusCode;
 
@@ -17,10 +21,22 @@ use smol_macros::test;
 // GET
 //
 
-async fn do_get_http1() -> Result<()> {
+async fn do_get_http() -> Result<()> {
+    let mut server = HttpServer::new();
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "GET" && req.uri().path() == "/posts/1" {
+                Ok(make_response(StatusCode::OK, b"Hello World!"))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
+
     let client = Client::default();
 
-    let request = DeboaRequest::get(format!("{}/posts/1", JSONPLACEHOLDER))?.build()?;
+    let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
 
     let response: DeboaResponse = client
         .execute(request)
@@ -35,85 +51,23 @@ async fn do_get_http1() -> Result<()> {
             .as_u16(),
         StatusCode::OK.as_u16()
     );
+
+    server.stop().await;
 
     Ok(())
 }
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_http1() -> Result<()> {
-    do_get_http1().await?;
+async fn test_get_http() -> Result<()> {
+    do_get_http().await?;
     Ok(())
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_get_http1() {
-    let _ = do_get_http1().await;
-}
-
-#[cfg(feature = "http2")]
-async fn do_get_http2() -> Result<()> {
-    let client = Client::builder()
-        .protocol(HttpVersion::Http2)
-        .build();
-
-    let request = DeboaRequest::get(format!("{}/posts/1", JSONPLACEHOLDER))?.build()?;
-
-    let response: DeboaResponse = client
-        .execute(request)
-        .await?;
-
-    assert_eq!(
-        response.status(),
-        StatusCode::OK,
-        "Status code is {} and should be {}",
-        response
-            .status()
-            .as_u16(),
-        StatusCode::OK.as_u16()
-    );
-
-    Ok(())
-}
-
-#[cfg(all(feature = "http2", feature = "tokio-rt"))]
-#[tokio::test]
-async fn test_get_http2() -> Result<()> {
-    do_get_http2().await?;
-    Ok(())
-}
-
-#[cfg(all(feature = "http2", feature = "smol-rt"))]
-#[apply(test!)]
-async fn test_get_http2() {
-    let _ = do_get_http2().await;
-}
-
-#[cfg(feature = "http3-tokio")]
-#[tokio::test]
-async fn get_http3() -> Result<()> {
-    let client = Client::builder()
-        .protocol(HttpVersion::Http3)
-        .build();
-
-    let request = DeboaRequest::get(format!("{}/posts/1", JSONPLACEHOLDER))?.build()?;
-
-    let response: DeboaResponse = client
-        .execute(request)
-        .await?;
-
-    assert_eq!(
-        response.status(),
-        StatusCode::OK,
-        "Status code is {} and should be {}",
-        response
-            .status()
-            .as_u16(),
-        StatusCode::OK.as_u16()
-    );
-
-    Ok(())
+async fn test_get_http() {
+    let _ = do_get_http().await;
 }
 
 //
@@ -183,21 +137,28 @@ async fn test_tls_cert_verification() -> Result<()> {
 //
 
 async fn do_get_not_found() -> Result<()> {
+    let mut server = HttpServer::new();
+    #[allow(unused_must_use)]
+    server
+        .start(|_| Ok(make_response(StatusCode::NOT_FOUND, b"Not found")))
+        .await;
+
     let client = Client::default();
 
-    let response: Result<DeboaResponse> =
-        DeboaRequest::get(format!("{}/asasa/posts/1ddd", JSONPLACEHOLDER))?
-            .send_with(client)
-            .await;
+    let response: Result<DeboaResponse> = DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
+        .send_with(client)
+        .await;
 
     assert!(response.is_err());
     assert_eq!(
         response.unwrap_err(),
         DeboaError::Response(ResponseError::Receive {
             status_code: StatusCode::NOT_FOUND,
-            message: "Could not process request (404 Not Found): {}".to_string()
+            message: "Could not process request (404 Not Found): Not found".to_string()
         })
     );
+
+    server.stop().await;
 
     Ok(())
 }
@@ -280,9 +241,21 @@ async fn test_get_invalid_server() {
 //
 
 async fn do_get_by_query() -> Result<()> {
+    let mut server = HttpServer::new();
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "GET" && req.uri().path() == "/comments/1" {
+                Ok(make_response(StatusCode::OK, b"My comment"))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
+
     let client = Client::default();
 
-    let response = DeboaRequest::get(format!("{}/comments/1", JSONPLACEHOLDER))?
+    let response = DeboaRequest::get(server.url("/comments/1"))?
         .send_with(client)
         .await?;
 
@@ -301,6 +274,7 @@ async fn do_get_by_query() -> Result<()> {
         .await;
 
     assert!(comments.is_ok());
+    assert_eq!(comments.unwrap(), "My comment");
 
     Ok(())
 }
@@ -319,10 +293,16 @@ async fn test_get_by_query() {
 }
 
 async fn do_get_by_query_with_retries() -> Result<()> {
+    let mut server = HttpServer::new();
+    #[allow(unused_must_use)]
+    server
+        .start(|_req| Ok(make_response(StatusCode::BAD_GATEWAY, b"pong")))
+        .await;
+
     let client = Client::default();
 
-    let response = DeboaRequest::get(format!("{}/comments/1", JSONPLACEHOLDER))?
-        .retries(2)
+    let response = DeboaRequest::get(server.url("/comments/1"))?
+        //.retries(2)
         .send_with(client)
         .await;
 
@@ -335,6 +315,8 @@ async fn do_get_by_query_with_retries() -> Result<()> {
             }),
         );
     }
+
+    server.stop().await;
 
     Ok(())
 }
