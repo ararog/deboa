@@ -13,7 +13,7 @@ publish = true
 rust-version = "1.64.0"
 
 [features]
-default = ["tokio-rt", "http1", "tokio-rust-tls"]
+default = ["tokio-rt", "http2", "tokio-rust-tls"]
 
 # runtimes
 tokio-rt = ["dep:tokio", "deboa-tests/tokio-rt"]
@@ -46,8 +46,22 @@ smol-native-tls = ["dep:async-native-tls", "async-native-tls/runtime-async-std"]
 # protocols
 http1 = ["hyper/http1", "hyper-util/http1", "deboa-tests/http1"]
 http2 = ["hyper/http2", "hyper-util/http2", "deboa-tests/http2"]
-http3-tokio = ["dep:h3", "dep:h3-quinn", "dep:quinn", "quinn/runtime-tokio"]
-http3-smol = ["dep:h3", "dep:h3-quinn", "dep:quinn", "quinn/runtime-smol"]
+http3-tokio = [
+  "dep:h3",
+  "dep:h3-quinn",
+  "dep:quinn",
+  "quinn/runtime-tokio",
+  "deboa-tests/http3",
+  "deboa-tests/rust-tls-tokio",
+]
+http3-smol = [
+  "dep:h3",
+  "dep:h3-quinn",
+  "dep:quinn",
+  "quinn/runtime-smol",
+  "deboa-tests/http3",
+  "deboa-tests/rust-tls-smol",
+]
 
 [dependencies]
 async-executor = { version = "1.13.3", optional = true }
@@ -104,7 +118,7 @@ criterion = { version = "0.8.1", features = [
   "async_smol",
   "async_tokio",
 ] }
-deboa-tests = { path = "../deboa-tests", version = "0.0.1", default-features = false}
+deboa-tests = { path = "../deboa-tests", version = "0.0.1", default-features = false }
 futures-util = "0.3.31"
 mime = { version = "0.3.17" }
 multer = "3.1.0"

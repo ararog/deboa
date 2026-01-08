@@ -2,12 +2,14 @@
 //!
 //! This module provides the `Identity` struct for working with client certificates
 //! in HTTPS connections, enabling mutual TLS (mTLS) authentication.
+//!
+//! It also provides the `Certificate` struct for working with CA certificates.
 
 /// Represents a client certificate and its associated data for mutual TLS authentication.
 ///
-/// `Identity` encapsulates the client certificate, its password, and an optional
-/// certificate authority (CA) certificate. It's used to authenticate the client
-/// to the server during the TLS handshake.
+/// `Identity` encapsulates the client certificate, its password.
+/// It's used to authenticate the client to the server during the
+/// TLS handshake.
 ///
 /// # Examples
 ///
@@ -25,19 +27,16 @@
 /// let cert_with_ca = Identity::new(
 ///     "/path/to/cert.p12".to_string(),
 ///     "cert-password".to_string(),
-///     Some("/path/to/ca.pem".to_string())
 /// );
 ///
 /// // Access certificate properties
 /// println!("Certificate path: {}", cert.cert());
-/// println!("CA path: {:?}", cert.ca());
 /// ```
 #[derive(Debug, Clone)]
 pub struct Identity {
     cert: String,
     key: Option<String>,
     pw: Option<String>,
-    ca: Option<String>,
 }
 
 #[deprecated(note = "Use `Identity` instead")]
@@ -57,8 +56,8 @@ impl Identity {
     /// * `Identity` - The new Identity instance.
     ///
     #[deprecated(note = "Use `Identity::new_with_pw` instead")]
-    pub fn new(cert: String, pw: String, ca: Option<String>) -> Self {
-        Identity { cert, key: None, pw: Some(pw), ca }
+    pub fn new(cert: String, pw: String) -> Self {
+        Identity { cert, key: None, pw: Some(pw) }
     }
 
     /// Create a new Identity instance with optional password.
@@ -67,14 +66,13 @@ impl Identity {
     ///
     /// * `cert` - The client certificate.
     /// * `pw` - The client certificate password.
-    /// * `ca` - The client certificate authority.
     ///
     /// # Returns
     ///
     /// * `Identity` - The new Identity instance.
     ///
-    pub fn new_with_pw(cert: String, pw: Option<String>, ca: Option<String>) -> Self {
-        Identity { cert, key: None, pw, ca }
+    pub fn new_with_pw(cert: String, pw: Option<String>) -> Self {
+        Identity { cert, key: None, pw }
     }
 
     /// Create a new Identity instance with key file.
@@ -83,14 +81,13 @@ impl Identity {
     ///
     /// * `cert` - The client certificate.
     /// * `key` - The client certificate key file.
-    /// * `ca` - The client certificate authority.
     ///
     /// # Returns
     ///
     /// * `Identity` - The new Identity instance.
     ///
-    pub fn new_with_key(cert: String, key: String, ca: Option<String>) -> Self {
-        Identity { cert, key: Some(key), pw: None, ca }
+    pub fn new_with_key(cert: String, key: String) -> Self {
+        Identity { cert, key: Some(key), pw: None }
     }
 
     /// Allow get the client certificate.
@@ -125,15 +122,51 @@ impl Identity {
     pub fn pw(&self) -> Option<&str> {
         self.pw.as_deref()
     }
+}
 
-    /// Allow get the client certificate authority.
+/// Represents a ca certificate.
+///
+/// # Examples
+///
+/// ```
+/// use deboa::cert::Certificate;
+///
+/// // Create a client certificate with a CA
+/// let cert_with_ca = Certificate::new(
+///     "/path/to/cert.p12".to_string(),
+/// );
+///
+/// // Access certificate properties
+/// println!("Certificate path: {}", cert.path());
+/// ```
+#[derive(Debug, Clone)]
+pub struct Certificate {
+    path: String,
+}
+
+impl Certificate {
+    /// Allow create a new Certificate instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The client certificate path.
     ///
     /// # Returns
     ///
-    /// * `Option<&str>` - The client certificate authority.
+    /// * `Certificate` - The new Certificate instance.
+    ///
+    pub fn new(path: String) -> Self {
+        Certificate { path }
+    }
+
+    /// Allow get the client certificate path.
+    ///
+    /// # Returns
+    ///
+    /// * `&str` - The client certificate path.
     ///
     #[inline]
-    pub fn ca(&self) -> Option<&str> {
-        self.ca.as_deref()
+    pub fn path(&self) -> &str {
+        &self.path
     }
 }

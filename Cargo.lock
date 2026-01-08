@@ -698,8 +698,8 @@ dependencies = [
  "futures",
  "futures-rustls",
  "futures-util",
- "h3 0.0.8",
- "h3-quinn 0.0.10",
+ "h3",
+ "h3-quinn",
  "hotpath",
  "http",
  "http-body",
@@ -799,22 +799,24 @@ name = "deboa-tests"
 version = "0.0.1"
 dependencies = [
  "bytes",
- "h3 0.0.6",
- "h3-quinn 0.0.5",
+ "futures-rustls",
+ "h3",
+ "h3-quinn",
  "http",
  "http-body-util",
- "httpmock",
  "hyper",
  "hyper-util",
  "mime",
  "quinn 0.10.2",
  "rand 0.9.2",
+ "rustls 0.23.36",
  "serde",
  "serde_json",
  "smol",
  "smol-hyper",
  "smol-macros",
  "tokio",
+ "tokio-rustls",
  "url",
 ]
 
@@ -1230,35 +1232,6 @@ dependencies = [
 
 [[package]]
 name = "h3"
-version = "0.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1c8886b9e6e93e7ed93d9433f3779e8d07e3ff96bc67b977d14c7b20c849411"
-dependencies = [
- "bytes",
- "fastrand",
- "futures-util",
- "http",
- "pin-project-lite",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "h3"
-version = "0.0.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e7675a0963b47a6d12fe44c279918b4ffb19baee838ac37f48d2722ad5bc6ab"
-dependencies = [
- "bytes",
- "fastrand",
- "futures-util",
- "http",
- "pin-project-lite",
- "tokio",
-]
-
-[[package]]
-name = "h3"
 version = "0.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "10872b55cfb02a821b69dc7cf8dc6a71d6af25eb9a79662bec4a9d016056b3be"
@@ -1273,28 +1246,13 @@ dependencies = [
 
 [[package]]
 name = "h3-quinn"
-version = "0.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73786bcc0e4c2692ba62c650f7b950ac236e5300c5de3b1d26330555e2322046"
-dependencies = [
- "bytes",
- "futures",
- "h3 0.0.4",
- "quinn 0.10.2",
- "quinn-proto 0.10.6",
- "tokio",
- "tokio-util",
-]
-
-[[package]]
-name = "h3-quinn"
 version = "0.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b2e732c8d91a74731663ac8479ab505042fbf547b9a207213ab7fbcbfc4f8b4"
 dependencies = [
  "bytes",
  "futures",
- "h3 0.0.8",
+ "h3",
  "quinn 0.11.9",
  "tokio",
  "tokio-util",
@@ -2153,7 +2111,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8cc2c5017e4b43d5995dcea317bc46c1e09404c0a9664d2908f7f02dfe943d75"
 dependencies = [
  "bytes",
- "futures-io",
  "pin-project-lite",
  "quinn-proto 0.10.6",
  "quinn-udp 0.4.1",

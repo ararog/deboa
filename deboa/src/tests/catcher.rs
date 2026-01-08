@@ -3,18 +3,25 @@ use http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
 
 use crate::{
     catcher::{DeboaCatcher, MockDeboaCatcher},
+    cert::Certificate,
     request::DeboaRequest,
     response::DeboaResponse,
     Client,
 };
 
-use deboa_tests::utils::{make_response, url_from_string, TEST_HOST};
+use deboa_tests::{
+    server::ServerConfig,
+    utils::{make_response, url_from_string, TEST_HOST},
+};
 
 #[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::tokio::HttpServer;
 
 #[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::smol::HttpServer;
+
+#[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+use deboa_tests::server::udp::tokio::HttpServer;
 
 #[tokio::test]
 async fn test_catcher_request() {
@@ -43,7 +50,17 @@ async fn test_catcher_request() {
 
 #[tokio::test]
 async fn test_catcher_response() {
-    let mut server = HttpServer::new();
+    #[cfg(all(
+        any(feature = "tokio-rt", feature = "smol-rt"),
+        any(feature = "http1", feature = "http2")
+    ))]
+    let config: Option<ServerConfig> = None;
+    #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+    let mut server = HttpServer::new(config);
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -69,6 +86,7 @@ async fn test_catcher_response() {
         });
 
     let client = Client::builder()
+        .certificate(Certificate::new("certs/ca.cert".into()))
         .catch(catcher_mock)
         .build();
     let mut response = DeboaRequest::get(server.url("/posts/1"))

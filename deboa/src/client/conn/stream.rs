@@ -14,6 +14,11 @@ use rustls::pki_types::{CertificateDer, PrivateKeyDer};
     any(feature = "http1", feature = "http2", feature = "http3-tokio"),
     any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
 ))]
+use crate::cert::Certificate;
+#[cfg(all(
+    any(feature = "http1", feature = "http2", feature = "http3-tokio"),
+    any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
+))]
 use crate::{
     cert::Identity as DeboaIdentity,
     errors::{ConnectionError, DeboaError},
@@ -26,7 +31,8 @@ use crate::{
 ))]
 pub fn setup_rust_tls(
     host: &str,
-    client_cert: &Option<DeboaIdentity>,
+    identity: &Option<DeboaIdentity>,
+    certificate: &Option<Certificate>,
     skip_server_verification: bool,
     alpn: Option<&str>,
 ) -> Result<ClientConfig> {
@@ -46,31 +52,31 @@ pub fn setup_rust_tls(
         return Ok(config);
     }
 
-    let mut config = if let Some(client_cert) = client_cert {
-        let config = if let Some(ca) = client_cert.ca() {
-            let file = File::open(ca);
-            if file.is_err() {
-                return Err(DeboaError::Connection(ConnectionError::Tls {
-                    host: host.to_string(),
-                    message: format!("Failed to open CA file: {}", ca),
-                }));
-            }
-            let mut ca_file = BufReader::new(file.unwrap());
-            let mut root_store = rustls::RootCertStore::empty();
-            let certs = root_store.add_parsable_certificates(
-                rustls_pemfile::certs(&mut ca_file).filter_map(|c| c.ok()),
-            );
-            if certs.0 == 0 {
-                return Err(DeboaError::Connection(ConnectionError::Tls {
-                    host: host.to_string(),
-                    message: format!("No valid certificates found in CA file: {}", ca),
-                }));
-            }
-            config.with_root_certificates(root_store)
-        } else {
-            config.with_root_certificates(root_store)
-        };
+    let config = if let Some(ca) = certificate {
+        let file = std::fs::read(ca.path());
+        if file.is_err() {
+            return Err(DeboaError::Connection(ConnectionError::Tls {
+                host: host.to_string(),
+                message: format!("Failed to open CA file: {}", ca.path()),
+            }));
+        }
 
+        let ca_file = CertificateDer::from(file.ok().unwrap());
+
+        let mut root_store = rustls::RootCertStore::empty();
+        let certs = root_store.add(ca_file);
+        if certs.is_err() {
+            return Err(DeboaError::Connection(ConnectionError::Tls {
+                host: host.to_string(),
+                message: format!("No valid certificates found in CA file: {}", ca.path()),
+            }));
+        }
+        config.with_root_certificates(root_store)
+    } else {
+        config.with_root_certificates(root_store)
+    };
+
+    let mut config = if let Some(client_cert) = identity {
         let file = File::open(client_cert.cert());
         if file.is_err() {
             return Err(DeboaError::Connection(ConnectionError::Tls {
@@ -102,9 +108,7 @@ pub fn setup_rust_tls(
             .with_client_auth_cert(cert_chain, client_key)
             .unwrap()
     } else {
-        config
-            .with_root_certificates(root_store)
-            .with_no_client_auth()
+        config.with_no_client_auth()
     };
 
     config.enable_early_data = true;
