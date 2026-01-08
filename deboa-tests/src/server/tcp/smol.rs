@@ -14,11 +14,12 @@ use smol_hyper::rt::FuturesIo;
 pub struct HttpServer {
     port: u16,
     task: Option<smol::Task<()>>,
+    config: Option<ServerConfig>,
 }
 
 impl HttpServer {
-    pub fn new() -> Self {
-        Self { port: rand::random_range(20000..65535), task: None }
+    pub fn new(config: Option<ServerConfig>) -> Self {
+        Self { port: rand::random_range(20000..65535), task: None, config }
     }
 }
 
@@ -35,39 +36,43 @@ impl HttpServer {
 
         let listener = TcpListener::bind(addr).await?;
 
-        self.task = Some(smol::spawn(async move {
-            let result = listener
-                .accept()
-                .await;
+        let handle = smol::spawn(async move {
+            loop {
+                let result = listener
+                    .accept()
+                    .await;
 
-            let stream = match result {
-                Ok((stream, _)) => stream,
-                Err(err) => {
-                    eprintln!("Error accepting connection: {}", err);
-                    return;
-                }
-            };
+                let stream = match result {
+                    Ok((stream, _)) => stream,
+                    Err(err) => {
+                        eprintln!("Error accepting connection: {}", err);
+                        return;
+                    }
+                };
 
-            let io = FuturesIo::new(stream);
+                let io = FuturesIo::new(stream);
 
-            smol::spawn(async move {
-                #[cfg(feature = "http1")]
-                if let Err(err) = http1::Builder::new()
-                    .serve_connection(io, service_fn(|req| async move { handler(req) }))
-                    .await
-                {
-                    eprintln!("Error serving connection: {}", err);
-                }
-                #[cfg(feature = "http2")]
-                if let Err(err) = http2::Builder::new(SmolExecutor::new())
-                    .serve_connection(io, service_fn(|req| async move { handler(req) }))
-                    .await
-                {
-                    eprintln!("Error serving connection: {}", err);
-                }
-            })
-            .detach();
-        }));
+                smol::spawn(async move {
+                    #[cfg(feature = "http1")]
+                    if let Err(err) = http1::Builder::new()
+                        .serve_connection(io, service_fn(|req| async move { handler(req) }))
+                        .await
+                    {
+                        eprintln!("Error serving connection: {}", err);
+                    }
+                    #[cfg(feature = "http2")]
+                    if let Err(err) = http2::Builder::new(SmolExecutor::new())
+                        .serve_connection(io, service_fn(|req| async move { handler(req) }))
+                        .await
+                    {
+                        eprintln!("Error serving connection: {}", err);
+                    }
+                })
+                .detach();
+            }
+        });
+
+        self.task = Some(handle);
 
         Ok(())
     }

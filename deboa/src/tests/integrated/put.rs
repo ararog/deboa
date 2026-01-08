@@ -1,4 +1,4 @@
-use crate::{request::DeboaRequest, Client, Result};
+use crate::{cert::Certificate, request::DeboaRequest, Client, Result};
 
 #[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::tokio::HttpServer;
@@ -6,7 +6,10 @@ use deboa_tests::server::tcp::tokio::HttpServer;
 #[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::smol::HttpServer;
 
-use deboa_tests::utils::make_response;
+#[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+use deboa_tests::server::udp::tokio::HttpServer;
+
+use deboa_tests::{server::ServerConfig, utils::make_response};
 use http::StatusCode;
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
@@ -18,7 +21,17 @@ use smol_macros::test;
 //
 
 async fn do_put() -> Result<()> {
-    let mut server = HttpServer::new();
+    #[cfg(all(
+        any(feature = "tokio-rt", feature = "smol-rt"),
+        any(feature = "http1", feature = "http2")
+    ))]
+    let config: Option<ServerConfig> = None;
+    #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+    let mut server = HttpServer::new(config);
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -30,7 +43,9 @@ async fn do_put() -> Result<()> {
         })
         .await;
 
-    let client = Client::default();
+    let client = Client::builder()
+        .certificate(Certificate::new("certs/ca.cert".into()))
+        .build();
 
     let request = DeboaRequest::put(server.url("/posts/1"))?
         .text("ping")
