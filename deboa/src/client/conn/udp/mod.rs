@@ -8,7 +8,7 @@ use http::{Request, Response, StatusCode, Version};
 use http_body_util::Full;
 
 use crate::{
-    cert::Identity,
+    cert::{Certificate, Identity},
     client::conn::BaseHttpConnection,
     errors::{DeboaError, ResponseError},
     Result, MAX_ERROR_MESSAGE_SIZE,
@@ -44,7 +44,8 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     async fn connect(
         host: &str,
         port: u16,
-        client_cert: &Option<Identity>,
+        identity: &Option<Identity>,
+        certificate: &Option<Certificate>,
         skip_cert_verification: bool,
     ) -> Result<BaseHttpConnection<Self::Sender>>;
 

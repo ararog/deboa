@@ -102,7 +102,7 @@ use http_body_util::Full;
 use hyper::body::Incoming;
 use log::{error, info};
 
-use crate::cert::Identity;
+use crate::cert::{Certificate, Identity};
 
 use crate::client::conn::{BaseHttpConnection, DeboaConnection};
 
@@ -264,6 +264,7 @@ pub struct ClientBuilder {
     connection_timeout: u64,
     request_timeout: u64,
     identity: Option<Identity>,
+    certificate: Option<Certificate>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     skip_cert_verification: bool,
@@ -369,7 +370,7 @@ impl ClientBuilder {
     /// #[tokio::main]
     ///
     /// async fn main() -> Result<()> {
-    ///     let cert = Identity::from_pem_file("client.pem")?;
+    ///     let cert = Identity::new("client.pem", Some("pw"))?;
     ///     let builder = Client::builder()
     ///         .identity(cert);
     ///     Ok(())
@@ -378,6 +379,32 @@ impl ClientBuilder {
     #[inline]
     pub fn identity(mut self, identity: Identity) -> Self {
         self.identity = Some(identity);
+        self
+    }
+
+    /// Configures a ca certificate.
+    ///
+    /// # Arguments
+    ///
+    /// * `certificate` - The ca certificate file.
+    ///
+    /// # Examples
+    ///
+    /// ``` compile_fail
+    /// use deboa::{Client, Certificate, Result};
+    ///
+    /// #[tokio::main]
+    ///
+    /// async fn main() -> Result<()> {
+    ///     let cert = Certificate::new("client.pem")?;
+    ///     let builder = Client::builder()
+    ///         .certificate(cert);
+    ///     Ok(())
+    /// }
+    /// ```
+    #[inline]
+    pub fn certificate(mut self, certificate: Certificate) -> Self {
+        self.certificate = Some(certificate);
         self
     }
 
@@ -551,6 +578,7 @@ impl ClientBuilder {
             connection_timeout: self.connection_timeout,
             request_timeout: self.request_timeout,
             identity: self.identity,
+            certificate: self.certificate,
             catchers: self.catchers,
             protocol: self.protocol,
             skip_cert_verification: self.skip_cert_verification,
@@ -611,6 +639,7 @@ pub struct Client {
     connection_timeout: u64,
     request_timeout: u64,
     identity: Option<Identity>,
+    certificate: Option<Certificate>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     skip_cert_verification: bool,
@@ -657,6 +686,7 @@ impl Default for Client {
             connection_timeout: 0,
             request_timeout: 0,
             identity: None,
+            certificate: None,
             catchers: None,
             protocol: default_protocol(),
             skip_cert_verification: false,
@@ -710,6 +740,7 @@ impl Client {
             connection_timeout: 0,
             request_timeout: 0,
             identity: None,
+            certificate: None,
             catchers: None,
             protocol: default_protocol(),
             skip_cert_verification: false,
@@ -729,6 +760,7 @@ impl Client {
             connection_timeout: 0,
             request_timeout: 0,
             identity: None,
+            certificate: None,
             catchers: None,
             protocol: default_protocol(),
             skip_cert_verification: false,
@@ -1120,6 +1152,7 @@ impl Client {
                     port,
                     &self.protocol,
                     &self.identity,
+                    &self.certificate,
                     self.skip_cert_verification,
                 )
                 .await?;
@@ -1144,6 +1177,7 @@ impl Client {
                         host,
                         port,
                         &self.identity,
+                        &self.certificate,
                         self.skip_cert_verification,
                     )
                     .await?;
@@ -1158,6 +1192,7 @@ impl Client {
                         host,
                         port,
                         &self.identity,
+                        &self.certificate,
                         self.skip_cert_verification,
                     )
                     .await?;
@@ -1269,6 +1304,7 @@ impl Client {
                     port,
                     &self.protocol,
                     &self.identity,
+                    &self.certificate,
                     self.skip_cert_verification,
                 )
                 .await?;
@@ -1287,6 +1323,7 @@ impl Client {
                         host,
                         port,
                         &self.identity,
+                        &self.certificate,
                         self.skip_cert_verification,
                     )
                     .await?;

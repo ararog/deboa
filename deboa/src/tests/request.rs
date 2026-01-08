@@ -1,17 +1,24 @@
 use std::{str::FromStr, sync::Arc};
 
 use crate::{
+    cert::Certificate,
     request::{DeboaRequest, FetchWith, IntoRequest, MethodExt},
     Client, Result,
 };
 
-use deboa_tests::utils::{make_response, TEST_HOST};
+use deboa_tests::{
+    server::ServerConfig,
+    utils::{make_response, TEST_HOST},
+};
 
 #[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::tokio::HttpServer;
 
 #[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::smol::HttpServer;
+
+#[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+use deboa_tests::server::udp::tokio::HttpServer;
 
 use http::{header, HeaderValue, Method, StatusCode};
 use url::Url;
@@ -139,7 +146,17 @@ fn test_into_string() -> Result<()> {
 
 #[tokio::test]
 async fn test_try_into() -> Result<()> {
-    let mut server = HttpServer::new();
+    #[cfg(all(
+        any(feature = "tokio-rt", feature = "smol-rt"),
+        any(feature = "http1", feature = "http2")
+    ))]
+    let config: Option<ServerConfig> = None;
+    #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+    let mut server = HttpServer::new(config);
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -151,7 +168,9 @@ async fn test_try_into() -> Result<()> {
         })
         .await;
 
-    let client = Client::default();
+    let client = Client::builder()
+        .certificate(Certificate::new("certs/ca.cert".into()))
+        .build();
     let first_post = server.url("/posts/1");
     let response = client
         .execute(first_post.into_request()?)
@@ -331,7 +350,17 @@ fn test_raw_body() -> Result<()> {
 
 #[tokio::test]
 async fn test_fetch_from_str() -> Result<()> {
-    let mut server = HttpServer::new();
+    #[cfg(all(
+        any(feature = "tokio-rt", feature = "smol-rt"),
+        any(feature = "http1", feature = "http2")
+    ))]
+    let config: Option<ServerConfig> = None;
+    #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+    let mut server = HttpServer::new(config);
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -343,7 +372,9 @@ async fn test_fetch_from_str() -> Result<()> {
         })
         .await;
 
-    let client = Client::default();
+    let client = Client::builder()
+        .certificate(Certificate::new("certs/ca.cert".into()))
+        .build();
     let first_post = server.url("/posts/1");
     let response = first_post
         .fetch_with(&client)

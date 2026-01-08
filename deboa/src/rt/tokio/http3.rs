@@ -10,7 +10,7 @@ use hyper::{Request, Response};
 use quinn::crypto::rustls::QuicClientConfig;
 use quinn::Endpoint;
 
-use crate::cert::Identity;
+use crate::cert::{Certificate, Identity};
 use crate::client::conn::stream::setup_rust_tls;
 use crate::request::Http3Request;
 use crate::{
@@ -50,7 +50,8 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
     async fn connect(
         host: &str,
         port: u16,
-        client_cert: &Option<Identity>,
+        identity: &Option<Identity>,
+        certificate: &Option<Certificate>,
         skip_cert_verification: bool,
     ) -> Result<BaseHttpConnection<Http3Request>> {
         let client_endpoint =
@@ -65,7 +66,8 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
 
         let mut client_endpoint = client_endpoint.unwrap();
 
-        let tls_config = setup_rust_tls(host, client_cert, skip_cert_verification, Some("h3"))?;
+        let tls_config =
+            setup_rust_tls(host, identity, certificate, skip_cert_verification, Some("h3"))?;
 
         let quic_config = QuicClientConfig::try_from(tls_config);
         if let Err(e) = quic_config {

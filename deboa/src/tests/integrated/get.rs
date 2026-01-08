@@ -1,14 +1,20 @@
-use crate::errors::{ConnectionError, ResponseError};
+use crate::{
+    cert::{Certificate, Identity},
+    errors::{ConnectionError, ResponseError},
+};
 #[cfg(test)]
 use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, Result};
 
-use deboa_tests::utils::make_response;
+use deboa_tests::{server::ServerConfig, utils::make_response};
 
 #[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::tokio::HttpServer;
 
 #[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::smol::HttpServer;
+
+#[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+use deboa_tests::server::udp::tokio::HttpServer;
 
 use http::StatusCode;
 
@@ -22,7 +28,17 @@ use smol_macros::test;
 //
 
 async fn do_get_http() -> Result<()> {
-    let mut server = HttpServer::new();
+    #[cfg(all(
+        any(feature = "tokio-rt", feature = "smol-rt"),
+        any(feature = "http1", feature = "http2")
+    ))]
+    let config: Option<ServerConfig> = None;
+    #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+    let mut server = HttpServer::new(config);
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -34,7 +50,9 @@ async fn do_get_http() -> Result<()> {
         })
         .await;
 
-    let client = Client::default();
+    let client = Client::builder()
+        .certificate(Certificate::new("certs/ca.cert".into()))
+        .build();
 
     let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
 
@@ -137,13 +155,27 @@ async fn test_tls_cert_verification() -> Result<()> {
 //
 
 async fn do_get_not_found() -> Result<()> {
-    let mut server = HttpServer::new();
+    #[cfg(all(
+        any(feature = "tokio-rt", feature = "smol-rt"),
+        any(feature = "http1", feature = "http2")
+    ))]
+    let config: Option<ServerConfig> = None;
+    #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+
+    let mut server = HttpServer::new(config);
+
     #[allow(unused_must_use)]
     server
         .start(|_| Ok(make_response(StatusCode::NOT_FOUND, b"Not found")))
         .await;
 
-    let client = Client::default();
+    let client = Client::builder()
+        .certificate(Certificate::new("certs/ca.cert".into()))
+        .build();
 
     let response: Result<DeboaResponse> = DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
         .send_with(client)
@@ -241,7 +273,18 @@ async fn test_get_invalid_server() {
 //
 
 async fn do_get_by_query() -> Result<()> {
-    let mut server = HttpServer::new();
+    #[cfg(all(
+        any(feature = "tokio-rt", feature = "smol-rt"),
+        any(feature = "http1", feature = "http2")
+    ))]
+    let config: Option<ServerConfig> = None;
+    #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+
+    let mut server = HttpServer::new(config);
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -253,7 +296,9 @@ async fn do_get_by_query() -> Result<()> {
         })
         .await;
 
-    let client = Client::default();
+    let client = Client::builder()
+        .certificate(Certificate::new("certs/ca.cert".into()))
+        .build();
 
     let response = DeboaRequest::get(server.url("/comments/1"))?
         .send_with(client)
@@ -293,16 +338,29 @@ async fn test_get_by_query() {
 }
 
 async fn do_get_by_query_with_retries() -> Result<()> {
-    let mut server = HttpServer::new();
+    #[cfg(all(
+        any(feature = "tokio-rt", feature = "smol-rt"),
+        any(feature = "http1", feature = "http2")
+    ))]
+    let config: Option<ServerConfig> = None;
+    #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+
+    let mut server = HttpServer::new(config);
     #[allow(unused_must_use)]
     server
         .start(|_req| Ok(make_response(StatusCode::BAD_GATEWAY, b"pong")))
         .await;
 
-    let client = Client::default();
+    let client = Client::builder()
+        .certificate(Certificate::new("certs/ca.cert".into()))
+        .build();
 
     let response = DeboaRequest::get(server.url("/comments/1"))?
-        //.retries(2)
+        .retries(2)
         .send_with(client)
         .await;
 

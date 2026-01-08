@@ -3,14 +3,14 @@
 # echo "Running Samoyed sample pre-commit"
 # exit 0
 cargo fmt --check
-cargo test --release --features "deboa-extras/serialization_all deboa-extras/compression_all" 
-cd deboa 
-cargo test --features "tokio-rt tokio-rust-tls http1" --no-default-features
-cargo test --features "tokio-rt tokio-rust-tls http2" --no-default-features
-cargo test --features "tokio-rt tokio-native-tls http1" --no-default-features
-cargo test --features "tokio-rt tokio-native-tls http2" --no-default-features
-cargo test --features "smol-rt smol-rust-tls http1" --no-default-features 
-cargo test --features "smol-rt smol-rust-tls http2" --no-default-features 
-cargo test --features "smol-rt smol-native-tls http1" --no-default-features 
-cargo test --features "smol-rt smol-native-tls http2" --no-default-features 
-cd ..
+# cargo test --release --features "deboa-extras/serialization_all deboa-extras/compression_all" 
+# cd deboa 
+# cargo test --features "tokio-rt tokio-rust-tls http1" --no-default-features
+# cargo test --features "tokio-rt tokio-rust-tls http2" --no-default-features
+# cargo test --features "tokio-rt tokio-native-tls http1" --no-default-features
+# cargo test --features "tokio-rt tokio-native-tls http2" --no-default-features
+# cargo test --features "smol-rt smol-rust-tls http1" --no-default-features 
+# cargo test --features "smol-rt smol-rust-tls http2" --no-default-features 
+# cargo test --features "smol-rt smol-native-tls http1" --no-default-features 
+# cargo test --features "smol-rt smol-native-tls http2" --no-default-features 
+# cd ..

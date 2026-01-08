@@ -15,7 +15,7 @@ use crate::client::conn::tcp::DeboaTcpConnection;
 use crate::client::conn::udp::DeboaUdpConnection;
 
 use crate::{
-    cert::Identity,
+    cert::{Certificate, Identity},
     client::conn::{BaseHttpConnection, DeboaConnection},
     HttpVersion, Result,
 };
@@ -92,7 +92,8 @@ pub trait DeboaHttpConnectionPool: private::DeboaHttpConnectionPoolSealed {
         host: &'a str,
         port: u16,
         protocol: &HttpVersion,
-        client_cert: &Option<Identity>,
+        identity: &Option<Identity>,
+        certificate: &Option<Certificate>,
         skip_cert_verification: bool,
     ) -> Result<&'a mut DeboaConnection>;
 }
@@ -142,7 +143,8 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         host: &'a str,
         port: u16,
         protocol: &HttpVersion,
-        client_cert: &Option<Identity>,
+        identity: &Option<Identity>,
+        certificate: &Option<Certificate>,
         skip_cert_verification: bool,
     ) -> Result<&'a mut DeboaConnection> {
         if self
@@ -164,7 +166,8 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
                     is_secure,
                     host,
                     port,
-                    client_cert,
+                    identity,
+                    certificate,
                     skip_cert_verification,
                 )
                 .await?;
@@ -176,7 +179,8 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
                     is_secure,
                     host,
                     port,
-                    client_cert,
+                    identity,
+                    certificate,
                     skip_cert_verification,
                 )
                 .await?;
@@ -187,7 +191,8 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
                 let connection = BaseHttpConnection::<Http3Request>::connect(
                     host,
                     port,
-                    client_cert,
+                    identity,
+                    certificate,
                     skip_cert_verification,
                 )
                 .await?;

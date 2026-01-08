@@ -1,17 +1,21 @@
-use crate::cert::Identity;
+use crate::cert::{Certificate, Identity};
 
 #[test]
-fn test_cert_init() {
-    let cert = Identity::new_with_pw("cert".into(), Some("pw".into()), None);
-    assert_eq!(cert.cert(), "cert");
-    assert_eq!(cert.pw(), Some("pw"));
-    assert_eq!(cert.ca(), None);
+fn test_identity_init() {
+    let identity = Identity::new_with_pw("cert".into(), Some("pw".into()));
+    assert_eq!(identity.cert(), "cert");
+    assert_eq!(identity.pw(), Some("pw"));
 }
 
 #[test]
-fn test_cert_init_with_key() {
-    let cert = Identity::new_with_key("cert".into(), "key".into(), None);
-    assert_eq!(cert.cert(), "cert");
-    assert_eq!(cert.key(), Some("key"));
-    assert_eq!(cert.ca(), None);
+fn test_identity_init_with_key() {
+    let identity = Identity::new_with_key("cert".into(), "key".into());
+    assert_eq!(identity.cert(), "cert");
+    assert_eq!(identity.key(), Some("key"));
+}
+
+#[test]
+fn test_cert_init() {
+    let cert = Certificate::new("cert".into());
+    assert_eq!(cert.path(), "cert");
 }
