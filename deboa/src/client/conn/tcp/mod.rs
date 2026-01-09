@@ -5,7 +5,7 @@ use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 
 use crate::{
-    cert::Identity,
+    cert::{Certificate, Identity},
     client::conn::BaseHttpConnection,
     errors::{DeboaError, RequestError, ResponseError},
     Result, MAX_ERROR_MESSAGE_SIZE,
@@ -27,7 +27,9 @@ pub trait DeboaTcpConnection: private::DeboaTcpConnectionSealed {
     ///
     /// * `is_secure` - Whether the connection is secure.
     /// * `host` - The host to connect.
-    /// * `client_cert` - The client certificate to use.
+    /// * `port` - The port to connect.
+    /// * `identity` - The identity to use.
+    /// * `certificate` - The certificate to use.
     /// * `skip_cert_verification` - Whether to skip certificate verification.
     ///
     /// # Errors
@@ -42,7 +44,8 @@ pub trait DeboaTcpConnection: private::DeboaTcpConnectionSealed {
         is_secure: bool,
         host: &str,
         port: u16,
-        client_cert: &Option<Identity>,
+        identity: &Option<Identity>,
+        certificate: &Option<Certificate>,
         skip_cert_verification: bool,
     ) -> Result<BaseHttpConnection<Self::Sender>>;
 

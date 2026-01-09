@@ -6,10 +6,7 @@ use crate::{
     Client, Result,
 };
 
-use deboa_tests::{
-    server::ServerConfig,
-    utils::{make_response, TEST_HOST},
-};
+use deboa_tests::utils::{make_response, tls_server_config, TEST_HOST};
 
 #[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::tokio::HttpServer;
@@ -146,17 +143,7 @@ fn test_into_string() -> Result<()> {
 
 #[tokio::test]
 async fn test_try_into() -> Result<()> {
-    #[cfg(all(
-        any(feature = "tokio-rt", feature = "smol-rt"),
-        any(feature = "http1", feature = "http2")
-    ))]
-    let config: Option<ServerConfig> = None;
-    #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
-    let config: Option<ServerConfig> = Some(ServerConfig::new(
-        Some("certs/server.cert".to_string()),
-        Some("certs/server.key".to_string()),
-    ));
-    let mut server = HttpServer::new(config);
+    let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -350,17 +337,7 @@ fn test_raw_body() -> Result<()> {
 
 #[tokio::test]
 async fn test_fetch_from_str() -> Result<()> {
-    #[cfg(all(
-        any(feature = "tokio-rt", feature = "smol-rt"),
-        any(feature = "http1", feature = "http2")
-    ))]
-    let config: Option<ServerConfig> = None;
-    #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
-    let config: Option<ServerConfig> = Some(ServerConfig::new(
-        Some("certs/server.cert".to_string()),
-        Some("certs/server.key".to_string()),
-    ));
-    let mut server = HttpServer::new(config);
+    let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
         .start(|req| {

@@ -8,6 +8,7 @@ use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use tokio::task::JoinHandle;
 
 use crate::server::ServerConfig;
+use crate::utils::{generate_port, TEST_HOST};
 
 pub struct HttpServer {
     port: u16,
@@ -17,13 +18,17 @@ pub struct HttpServer {
 
 impl HttpServer {
     pub fn new(config: Option<ServerConfig>) -> Self {
-        Self { port: rand::random_range(20000..65535), task: None, config }
+        Self { port: generate_port(), task: None, config }
     }
 }
 
 impl HttpServer {
     pub fn url(&self, path: &str) -> String {
-        format!("http://localhost:{}{}", self.port, path)
+        format!("{}:{}{}", TEST_HOST, self.port, path)
+    }
+
+    pub fn base_url(&self) -> String {
+        format!("{}:{}", TEST_HOST, self.port)
     }
 
     pub async fn start(
