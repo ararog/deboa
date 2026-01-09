@@ -6,7 +6,7 @@ authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 publish = false
 
 [dependencies]
-deboa = { path = "../../deboa", features = ["http1"] }
+deboa = { path = "../../deboa" }
 deboa-extras = { path = "../../deboa-extras", features = ["json"] }
 tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"], default-features = false }
 serde = "1.0.219"

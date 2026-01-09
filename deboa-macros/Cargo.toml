@@ -20,7 +20,7 @@ xml = ["deboa-extras/xml"]
 msgpack = ["deboa-extras/msgpack"]
 
 [dependencies]
-deboa = { path = "../deboa", version = "0.0.9", features = ["http1"] }
+deboa = { path = "../deboa", version = "0.0.9" }
 deboa-extras = { path = "../deboa-extras", version = "0.0.5", features = ["json"] }
 http = "1.4.0"
 serde = "1.0.228"
