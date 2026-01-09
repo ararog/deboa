@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-deboa = { path = "../../deboa", features = ["http1"] }
+deboa = { path = "../../deboa" }
 deboa-extras = { path = "../../deboa-extras" }
 vamo = { path = "../../vamo" }
 vamo-macros = { path = "../../vamo-macros" }
