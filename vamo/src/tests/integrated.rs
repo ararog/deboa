@@ -2,7 +2,8 @@ use deboa::{client::serde::RequestBody, Result};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tests::{
     data::{JSON_STR_PATCH, JSON_STR_POST},
-    utils::{setup_server, setup_server_with_body},
+    server::{tcp::tokio::HttpServer, ServerConfig},
+    utils::make_response,
 };
 use http::{header, StatusCode};
 use httpmock::{
@@ -42,9 +43,25 @@ impl Resource for Post {
 
 #[tokio::test]
 async fn test_get() -> Result<()> {
-    let server = MockServer::start();
-    let mock_all = setup_server(&server, "/posts", GET, StatusCode::OK);
-    let mock_path = setup_server(&server, "/posts/1", GET, StatusCode::OK);
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+    let mut server = HttpServer::new(config);
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "GET" {
+                match req.uri().path() {
+                    "/posts" => Ok(make_response(StatusCode::OK, b"pong")),
+                    "/posts/1" => Ok(make_response(StatusCode::OK, b"pong")),
+                    _ => Ok(make_response(StatusCode::NOT_FOUND, b"Not found")),
+                }
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
 
     let mut vamo = Vamo::new(
         server
@@ -55,14 +72,14 @@ async fn test_get() -> Result<()> {
         .get("/posts")
         .send()
         .await?;
-    mock_all.assert();
+
     assert_eq!(response.status(), StatusCode::OK);
 
     let response = vamo
         .get("/posts/1")
         .send()
         .await?;
-    mock_path.assert();
+
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(
         response
@@ -71,13 +88,28 @@ async fn test_get() -> Result<()> {
         "pong"
     );
 
+    server.stop().await;
+
     Ok(())
 }
 
 #[tokio::test]
 async fn test_put() -> Result<()> {
-    let server = MockServer::start();
-    let mock = setup_server(&server, "/posts", PUT, StatusCode::OK);
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+    let mut server = HttpServer::new(config);
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "GET" && req.uri().path() == "/posts" {
+                Ok(make_response(StatusCode::OK, b"pong"))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
 
     let mut vamo = Vamo::new(
         server
@@ -88,8 +120,6 @@ async fn test_put() -> Result<()> {
         .put("/posts")
         .send()
         .await?;
-
-    mock.assert();
 
     assert_eq!(response.status(), StatusCode::OK);
 
@@ -131,8 +161,21 @@ async fn test_post() -> Result<()> {
 
 #[tokio::test]
 async fn test_patch() -> Result<()> {
-    let server = MockServer::start();
-    let mock = setup_server(&server, "/api/posts/1", PATCH, StatusCode::OK);
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+    let mut server = HttpServer::new(config);
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "PATCH" && req.uri().path() == "/api/posts/1" {
+                Ok(make_response(StatusCode::OK, b"pong"))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
 
     let mut vamo = Vamo::new(server.url("/api"))?;
     let response = vamo
@@ -140,17 +183,30 @@ async fn test_patch() -> Result<()> {
         .send()
         .await?;
 
-    mock.assert();
-
     assert_eq!(response.status(), StatusCode::OK);
+
+    server.stop().await;
 
     Ok(())
 }
 
 #[tokio::test]
 async fn test_delete() -> Result<()> {
-    let server = MockServer::start();
-    let mock = setup_server(&server, "/api/posts/1", DELETE, StatusCode::NO_CONTENT);
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+    let mut server = HttpServer::new(config);
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "DELETE" && req.uri().path() == "/api/posts/1" {
+                Ok(make_response(StatusCode::NO_CONTENT, b""))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
 
     let mut vamo = Vamo::new(server.url("/api"))?;
     let response = vamo
@@ -158,18 +214,30 @@ async fn test_delete() -> Result<()> {
         .send()
         .await?;
 
-    mock.assert();
-
     assert_eq!(response.status(), StatusCode::NO_CONTENT);
+
+    server.stop().await;
 
     Ok(())
 }
 
 #[tokio::test]
 async fn test_post_resource() -> Result<()> {
-    let server = MockServer::start();
-    let mock =
-        setup_server_with_body(&server, "/api/posts", POST, StatusCode::CREATED, JSON_STR_POST);
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+    let mut server = HttpServer::new(config);
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "POST" && req.uri().path() == "/api/posts" {
+                Ok(make_response(StatusCode::CREATED, JSON_STR_POST.as_bytes()))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
 
     let mut post = Post {
         id: 1,
@@ -184,17 +252,30 @@ async fn test_post_resource() -> Result<()> {
         .send()
         .await?;
 
-    mock.assert();
-
     assert_eq!(response.status(), StatusCode::CREATED);
+
+    server.stop().await;
 
     Ok(())
 }
 
 #[tokio::test]
 async fn test_put_resource() -> Result<()> {
-    let server = MockServer::start();
-    let mock = setup_server_with_body(&server, "/api/posts/1", PUT, StatusCode::OK, JSON_STR_POST);
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+    let mut server = HttpServer::new(config);
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "PUT" && req.uri().path() == "/api/posts/1" {
+                Ok(make_response(StatusCode::OK, JSON_STR_POST.as_bytes()))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
 
     let mut post = Post {
         id: 1,
@@ -209,18 +290,30 @@ async fn test_put_resource() -> Result<()> {
         .send()
         .await?;
 
-    mock.assert();
-
     assert_eq!(response.status(), StatusCode::OK);
+
+    server.stop().await;
 
     Ok(())
 }
 
 #[tokio::test]
 async fn test_patch_resource() -> Result<()> {
-    let server = MockServer::start();
-    let mock =
-        setup_server_with_body(&server, "/api/posts/1", PATCH, StatusCode::OK, JSON_STR_PATCH);
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+    let mut server = HttpServer::new(config);
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "PATCH" && req.uri().path() == "/api/posts/1" {
+                Ok(make_response(StatusCode::OK, JSON_STR_PATCH.as_bytes()))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
 
     let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
 
@@ -230,17 +323,30 @@ async fn test_patch_resource() -> Result<()> {
         .send()
         .await?;
 
-    mock.assert();
-
     assert_eq!(response.status(), StatusCode::OK);
+
+    server.stop().await;
 
     Ok(())
 }
 
 #[tokio::test]
 async fn test_remove_resource() -> Result<()> {
-    let server = MockServer::start();
-    let mock = setup_server(&server, "/api/posts/1", DELETE, StatusCode::OK);
+    let config: Option<ServerConfig> = Some(ServerConfig::new(
+        Some("certs/server.cert".to_string()),
+        Some("certs/server.key".to_string()),
+    ));
+    let mut server = HttpServer::new(config);
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "DELETE" && req.uri().path() == "/api/posts/1" {
+                Ok(make_response(StatusCode::OK, b""))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
 
     let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
 
@@ -250,9 +356,9 @@ async fn test_remove_resource() -> Result<()> {
         .send()
         .await?;
 
-    mock.assert();
-
     assert_eq!(response.status(), StatusCode::OK);
+
+    server.stop().await;
 
     Ok(())
 }

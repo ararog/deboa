@@ -1,6 +1,8 @@
 #[cfg(all(feature = "tokio-rust-tls", any(feature = "http1", feature = "http2")))]
 use std::sync::Arc;
 
+#[cfg(all(any(feature = "http1", feature = "http2"), feature = "tokio-rust-tls"))]
+use crate::cert::Certificate;
 #[cfg(any(feature = "http1", feature = "http2"))]
 use crate::rt::tokio::stream::TokioStream;
 #[cfg(any(feature = "http1", feature = "http2"))]
@@ -117,12 +119,13 @@ pub(crate) async fn tls_connection(
 pub(crate) async fn tls_connection(
     host: &str,
     port: u16,
-    client_cert: &Option<DeboaIdentity>,
+    identity: &Option<DeboaIdentity>,
+    certificate: &Option<Certificate>,
     skip_server_verification: bool,
     alpn: Option<&str>,
 ) -> Result<TokioStream> {
     let socket = create_stream(host, port).await?;
-    let config = setup_rust_tls(host, client_cert, skip_server_verification, alpn)?;
+    let config = setup_rust_tls(host, identity, certificate, skip_server_verification, alpn)?;
     let connector = TlsConnector::from(Arc::new(config));
     let hostname = ServerName::try_from(host.to_string());
 

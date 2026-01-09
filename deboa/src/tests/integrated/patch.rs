@@ -9,7 +9,7 @@ use deboa_tests::server::tcp::smol::HttpServer;
 #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
 use deboa_tests::server::udp::tokio::HttpServer;
 
-use deboa_tests::{server::ServerConfig, utils::make_response};
+use deboa_tests::utils::{make_response, tls_server_config};
 use http::StatusCode;
 
 #[cfg(feature = "smol-rt")]
@@ -22,17 +22,7 @@ use smol_macros::test;
 //
 
 async fn do_patch() -> Result<()> {
-    #[cfg(all(
-        any(feature = "tokio-rt", feature = "smol-rt"),
-        any(feature = "http1", feature = "http2")
-    ))]
-    let config: Option<ServerConfig> = None;
-    #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
-    let config: Option<ServerConfig> = Some(ServerConfig::new(
-        Some("certs/server.cert".to_string()),
-        Some("certs/server.key".to_string()),
-    ));
-    let mut server = HttpServer::new(config);
+    let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
         .start(|req| {
