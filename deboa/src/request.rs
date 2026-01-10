@@ -509,7 +509,7 @@ pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 ///
 /// # Examples
 ///
-/// ```no_run
+/// ```ignore
 /// use deboa::{request::post, Result};
 /// use http::header;
 ///

@@ -1,4 +1,4 @@
-use crate::cert::Certificate;
+use crate::{cert::Certificate, tests::SKIP_CERT_VERIFICATION};
 #[cfg(test)]
 use crate::{request::DeboaRequest, Client, Result};
 #[cfg(feature = "http3-tokio")]
@@ -13,7 +13,7 @@ use deboa_tests::server::tcp::smol::HttpServer;
 #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
 use deboa_tests::server::udp::tokio::HttpServer;
 
-use deboa_tests::utils::{make_response, tls_server_config};
+use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
 use http::StatusCode;
 
 #[cfg(feature = "smol-rt")]
@@ -39,7 +39,8 @@ async fn do_delete() -> Result<()> {
         .await;
 
     let client = Client::builder()
-        .certificate(Certificate::new("certs/ca.cert".into()))
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
     let response = DeboaRequest::delete(server.url("/posts/1"))?

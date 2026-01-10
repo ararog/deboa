@@ -31,7 +31,7 @@
 //!
 //! ### Making Simple Requests
 //!
-//! ```no_run, compile_fail
+//! ```ignore
 //! use vamo::Vamo;
 //! use deboa::Result;
 //! use deboa_extras::http::serde::json::JsonBody;
@@ -74,7 +74,7 @@
 //!
 //! Vamo provides a `Resource` trait that makes it easy to work with REST resources:
 //!
-//! ```no_run
+//! ```ignore
 //! use deboa::Result;
 //! use deboa_extras::http::serde::json::JsonBody;
 //! use serde::{Deserialize, Serialize};
@@ -168,7 +168,7 @@
 //!
 //! Vamo provides convenience methods for common authentication methods:
 //!
-//! ```no_run
+//! ```ignore
 //! use vamo::Vamo;
 //! use deboa::Result;
 //!

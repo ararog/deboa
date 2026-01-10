@@ -3,10 +3,11 @@ use std::{str::FromStr, sync::Arc};
 use crate::{
     cert::Certificate,
     request::{DeboaRequest, FetchWith, IntoRequest, MethodExt},
+    tests::SKIP_CERT_VERIFICATION,
     Client, Result,
 };
 
-use deboa_tests::utils::{make_response, tls_server_config, TEST_HOST};
+use deboa_tests::utils::{make_response, test_url, tls_server_config, url_from_string, CA_CERT};
 
 #[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::tokio::HttpServer;
@@ -18,131 +19,105 @@ use deboa_tests::server::tcp::smol::HttpServer;
 use deboa_tests::server::udp::tokio::HttpServer;
 
 use http::{header, HeaderValue, Method, StatusCode};
+
+#[cfg(feature = "smol-rt")]
+use macro_rules_attribute::apply;
+#[cfg(feature = "smol-rt")]
+use smol_macros::test;
+
 use url::Url;
 
 #[test]
 fn test_method_ext_from_url() -> Result<()> {
+    let test_url = test_url(None);
     let request = Method::GET
-        .from_url(TEST_HOST)?
+        .from_url(&test_url)?
         .build()?;
     assert_eq!(request.method(), &Method::GET);
-    assert_eq!(
-        request
-            .url()
-            .to_string(),
-        TEST_HOST
-    );
+    assert_eq!(*request.url(), url_from_string(test_url));
     Ok(())
 }
 
 #[test]
 fn test_method_ext_to_url() -> Result<()> {
+    let test_url = test_url(None);
     let request = Method::POST
-        .to_url(TEST_HOST)?
+        .to_url(&test_url)?
         .build()?;
     assert_eq!(request.method(), &Method::POST);
-    assert_eq!(
-        request
-            .url()
-            .to_string(),
-        TEST_HOST
-    );
+    assert_eq!(*request.url(), url_from_string(test_url));
     Ok(())
 }
 
 #[test]
 fn test_str_method_ext_from_url() -> Result<()> {
+    let test_url = test_url(None);
     let request = "GET"
-        .from_url(TEST_HOST)?
+        .from_url(&test_url)?
         .build()?;
     assert_eq!(request.method(), &Method::GET);
-    assert_eq!(
-        request
-            .url()
-            .to_string(),
-        TEST_HOST
-    );
+    assert_eq!(*request.url(), url_from_string(test_url));
     Ok(())
 }
 
 #[test]
 fn test_str_method_ext_to_url() -> Result<()> {
+    let test_url = test_url(None);
     let request = "POST"
-        .to_url(TEST_HOST)?
+        .to_url(&test_url)?
         .build()?;
     assert_eq!(request.method(), &Method::POST);
-    assert_eq!(
-        request
-            .url()
-            .to_string(),
-        TEST_HOST
-    );
+    assert_eq!(*request.url(), url_from_string(test_url));
     Ok(())
 }
 
 #[test]
 fn test_into_url() -> Result<()> {
-    let url = Url::parse(TEST_HOST).unwrap();
+    let test_url = test_url(None);
+    let url = Url::parse(&test_url).unwrap();
     let request = DeboaRequest::get(url)?.build()?;
-    assert_eq!(
-        request
-            .url()
-            .to_string(),
-        TEST_HOST
-    );
+    assert_eq!(*request.url(), url_from_string(test_url));
     Ok(())
 }
 
 #[test]
 fn test_into_request_from_str() -> Result<()> {
-    let request = TEST_HOST.into_request()?;
-    assert_eq!(
-        request
-            .url()
-            .to_string(),
-        TEST_HOST
-    );
+    let test_url = test_url(None);
+    let request = test_url
+        .clone()
+        .into_request()?;
+    assert_eq!(*request.url(), url_from_string(test_url));
     Ok(())
 }
 
 #[test]
 fn test_into_request_from_string() -> Result<()> {
-    let request = format!("{}/posts/{}", TEST_HOST, 1).into_request()?;
-    assert_eq!(
-        request
-            .url()
-            .to_string(),
-        format!("{}/posts/{}", TEST_HOST, 1)
-    );
+    let test_url = test_url(None);
+    let post_url = format!("{}posts/{}", &test_url, 1);
+    let request = post_url
+        .clone()
+        .into_request()?;
+    assert_eq!(*request.url(), url_from_string(post_url));
     Ok(())
 }
 
 #[test]
 fn test_into_str() -> Result<()> {
-    let request = DeboaRequest::get(TEST_HOST)?.build()?;
-    assert_eq!(
-        request
-            .url()
-            .to_string(),
-        TEST_HOST
-    );
+    let test_url = test_url(None);
+    let request = DeboaRequest::get(&test_url)?.build()?;
+    assert_eq!(*request.url(), url_from_string(test_url));
     Ok(())
 }
 
 #[test]
 fn test_into_string() -> Result<()> {
-    let request = DeboaRequest::get(String::from(TEST_HOST))?.build()?;
-    assert_eq!(
-        request
-            .url()
-            .to_string(),
-        TEST_HOST
-    );
+    let test_url = test_url(None);
+    let request = DeboaRequest::get(&test_url)?.build()?;
+    assert_eq!(*request.url(), url_from_string(test_url));
     Ok(())
 }
 
-#[tokio::test]
-async fn test_try_into() -> Result<()> {
+async fn try_intro() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
@@ -156,7 +131,8 @@ async fn test_try_into() -> Result<()> {
         .await;
 
     let client = Client::builder()
-        .certificate(Certificate::new("certs/ca.cert".into()))
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
     let first_post = server.url("/posts/1");
     let response = client
@@ -167,6 +143,18 @@ async fn test_try_into() -> Result<()> {
     server.stop().await;
 
     Ok(())
+}
+
+#[cfg(feature = "tokio-rt")]
+#[tokio::test]
+async fn test_try_into() -> Result<()> {
+    try_intro().await
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_try_into() -> Result<()> {
+    try_intro().await
 }
 
 #[test]
@@ -214,7 +202,7 @@ fn test_from_str_body() -> Result<()> {
 
 #[test]
 fn test_set_retries() -> Result<()> {
-    let api = DeboaRequest::get(TEST_HOST)?
+    let api = DeboaRequest::get(test_url(None))?
         .retries(5)
         .build()?;
     assert_eq!(api.retries(), 5);
@@ -223,18 +211,16 @@ fn test_set_retries() -> Result<()> {
 
 #[test]
 fn test_base_url() -> Result<()> {
-    let api = DeboaRequest::get(String::from(TEST_HOST))?.build()?;
-    assert_eq!(
-        api.url()
-            .to_string(),
-        TEST_HOST
-    );
+    let test_url = test_url(None);
+    let api = DeboaRequest::get(&test_url)?.build()?;
+    assert_eq!(*api.url(), url_from_string(test_url));
     Ok(())
 }
 
 #[test]
 fn test_set_headers() -> Result<()> {
-    let request = DeboaRequest::get(TEST_HOST)?
+    let test_url = test_url(None);
+    let request = DeboaRequest::get(&test_url)?
         .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
         .build()?;
 
@@ -251,7 +237,7 @@ fn test_set_headers() -> Result<()> {
 #[test]
 fn test_set_headers_as_tuple() -> Result<()> {
     let headers = vec![(header::CONTENT_TYPE, mime::APPLICATION_JSON.to_string())];
-    let request = DeboaRequest::get(TEST_HOST)?
+    let request = DeboaRequest::get(test_url(None))?
         .headers(headers)
         .build()?;
 
@@ -267,7 +253,8 @@ fn test_set_headers_as_tuple() -> Result<()> {
 
 #[test]
 fn test_set_basic_auth() -> Result<()> {
-    let request = DeboaRequest::get(TEST_HOST)?
+    let test_url = test_url(None);
+    let request = DeboaRequest::get(&test_url)?
         .basic_auth("username", "password")
         .build()?;
 
@@ -283,7 +270,8 @@ fn test_set_basic_auth() -> Result<()> {
 
 #[test]
 fn test_set_bearer_auth() -> Result<()> {
-    let request = DeboaRequest::get(TEST_HOST)?
+    let test_url = test_url(None);
+    let request = DeboaRequest::get(&test_url)?
         .bearer_auth("token")
         .build()?;
 
@@ -299,7 +287,8 @@ fn test_set_bearer_auth() -> Result<()> {
 
 #[test]
 fn test_add_header() -> Result<()> {
-    let request = DeboaRequest::get(TEST_HOST)?
+    let test_url = test_url(None);
+    let request = DeboaRequest::get(&test_url)?
         .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
         .build()?;
 
@@ -315,7 +304,8 @@ fn test_add_header() -> Result<()> {
 
 #[test]
 fn test_set_text_body() -> Result<()> {
-    let request = DeboaRequest::post(TEST_HOST)?
+    let test_url = test_url(None);
+    let request = DeboaRequest::post(&test_url)?
         .text("test")
         .build()?;
 
@@ -326,7 +316,8 @@ fn test_set_text_body() -> Result<()> {
 
 #[test]
 fn test_raw_body() -> Result<()> {
-    let request = DeboaRequest::post(TEST_HOST)?
+    let test_url = test_url(None);
+    let request = DeboaRequest::post(&test_url)?
         .raw_body(b"test")
         .build()?;
 
@@ -335,8 +326,7 @@ fn test_raw_body() -> Result<()> {
     Ok(())
 }
 
-#[tokio::test]
-async fn test_fetch_from_str() -> Result<()> {
+async fn fetch_from_str() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
@@ -350,7 +340,8 @@ async fn test_fetch_from_str() -> Result<()> {
         .await;
 
     let client = Client::builder()
-        .certificate(Certificate::new("certs/ca.cert".into()))
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
     let first_post = server.url("/posts/1");
     let response = first_post
@@ -361,4 +352,16 @@ async fn test_fetch_from_str() -> Result<()> {
     server.stop().await;
 
     Ok(())
+}
+
+#[cfg(feature = "tokio-rt")]
+#[tokio::test]
+async fn test_fetch_from_str() -> Result<()> {
+    fetch_from_str().await
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_fetch_from_str() -> Result<()> {
+    fetch_from_str().await
 }

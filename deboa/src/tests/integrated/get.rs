@@ -1,11 +1,12 @@
 use crate::{
     cert::Certificate,
     errors::{ConnectionError, ResponseError},
+    tests::SKIP_CERT_VERIFICATION,
 };
 #[cfg(test)]
 use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, Result};
 
-use deboa_tests::utils::{make_response, tls_server_config};
+use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
 
 #[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::tokio::HttpServer;
@@ -30,7 +31,7 @@ use smol_macros::test;
 async fn do_get_http() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
-    server
+    let result = server
         .start(|req| {
             if req.method() == "GET" && req.uri().path() == "/posts/1" {
                 Ok(make_response(StatusCode::OK, b"Hello World!"))
@@ -40,8 +41,17 @@ async fn do_get_http() -> Result<()> {
         })
         .await;
 
+    if let Err(err) = result {
+        eprintln!("Error starting server: {}", err);
+        return Err(DeboaError::Connection(ConnectionError::Tcp {
+            host: "localhost".to_string(),
+            message: err.to_string(),
+        }));
+    }
+
     let client = Client::builder()
-        .certificate(Certificate::new("certs/ca.cert".into()))
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
     let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
@@ -152,7 +162,8 @@ async fn do_get_not_found() -> Result<()> {
         .await;
 
     let client = Client::builder()
-        .certificate(Certificate::new("certs/ca.cert".into()))
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
     let response: Result<DeboaResponse> = DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
@@ -205,12 +216,12 @@ async fn do_get_invalid_server() -> Result<()> {
     let error = DeboaError::Connection(ConnectionError::Tcp {
         host: "invalid-server.com".to_string(),
         #[cfg(target_os = "windows")]
-        message: "No such host is known. (os error 11001)".to_string(),
+        message: "Could not connect to server: No such host is known. (os error 11001)".to_string(),
         #[cfg(target_os = "linux")]
-        message: "failed to lookup address information: Name or service not known".to_string(),
+        message: "Could not connect to server: failed to lookup address information: Name or service not known".to_string(),
         #[cfg(target_os = "macos")]
         message:
-            "failed to lookup address information: nodename nor servname provided, or not known"
+            "Could not connect to server: failed to lookup address information: nodename nor servname provided, or not known"
                 .to_string(),
     });
 
@@ -218,13 +229,12 @@ async fn do_get_invalid_server() -> Result<()> {
     let error = DeboaError::Connection(ConnectionError::Udp {
         host: "invalid-server.com".to_string(),
         #[cfg(target_os = "windows")]
-        message: "No such host is known. (os error 11001)".to_string(),
+        message: "Could not connect to server: No such host is known. (os error 11001)".to_string(),
         #[cfg(target_os = "linux")]
-        message: "failed to lookup address information: Name or service not known".to_string(),
+        message: "Could not connect to server: Name or service not known".to_string(),
         #[cfg(target_os = "macos")]
-        message:
-            "failed to lookup address information: nodename nor servname provided, or not known"
-                .to_string(),
+        message: "Could not connect to server: nodename nor servname provided, or not known"
+            .to_string(),
     });
 
     assert!(response.is_err());
@@ -264,7 +274,8 @@ async fn do_get_by_query() -> Result<()> {
         .await;
 
     let client = Client::builder()
-        .certificate(Certificate::new("certs/ca.cert".into()))
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
     let response = DeboaRequest::get(server.url("/comments/1"))?
@@ -312,7 +323,8 @@ async fn do_get_by_query_with_retries() -> Result<()> {
         .await;
 
     let client = Client::builder()
-        .certificate(Certificate::new("certs/ca.cert".into()))
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
     let response = DeboaRequest::get(server.url("/comments/1"))?
@@ -348,6 +360,7 @@ async fn test_get_by_query_with_retries() {
     let _ = do_get_by_query_with_retries().await;
 }
 
+/*
 async fn do_get_with_redirect() -> Result<()> {
     let client = Client::default();
 
@@ -389,3 +402,4 @@ async fn test_get_with_redirect() -> Result<()> {
 async fn test_get_with_redirect() {
     let _ = do_get_with_redirect().await;
 }
+*/

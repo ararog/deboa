@@ -13,13 +13,13 @@ publish = false
 rust-version = "1.64.0"
 
 [features]
-default = ["http2", "tokio-rt","rust-tls-tokio"]
+default = ["http1", "tokio-rt", "tokio-rust-tls"]
 
 tokio-rt = ["tokio"]
 smol-rt = ["smol", "smol-hyper", "smol-macros"]
 
-rust-tls-tokio = ["tokio-rustls", "rustls"]
-rust-tls-smol = ["futures-rustls", "rustls"]
+tokio-rust-tls = ["tokio-rustls", "rustls"]
+smol-rust-tls = ["futures-rustls", "rustls"]
 
 http1 = ["hyper/http1", "hyper/server", "hyper-util/server", "hyper-util/http1"]
 http2 = ["hyper/http2", "hyper/server", "hyper-util/server", "hyper-util/http2"]

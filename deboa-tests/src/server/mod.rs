@@ -5,12 +5,20 @@ pub mod udp;
 
 #[derive(Default)]
 pub struct ServerConfig {
-    pub cert: Option<String>,
-    pub key: Option<String>,
+    cert: Option<Vec<u8>>,
+    key: Option<Vec<u8>>,
 }
 
 impl ServerConfig {
-    pub fn new(cert: Option<String>, key: Option<String>) -> Self {
+    pub fn new(cert: Option<Vec<u8>>, key: Option<Vec<u8>>) -> Self {
         Self { cert, key }
+    }
+
+    pub fn cert(&self) -> Option<&Vec<u8>> {
+        self.cert.as_ref()
+    }
+
+    pub fn key(&self) -> Option<&Vec<u8>> {
+        self.key.as_ref()
     }
 }

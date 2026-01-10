@@ -1,6 +1,8 @@
 use std::net::SocketAddr;
+use std::sync::Arc;
 
 use bytes::Bytes;
+use futures_rustls::TlsAcceptor;
 use http::{Request, Response};
 use http_body_util::Full;
 use hyper::body;
@@ -8,11 +10,12 @@ use hyper::body;
 use hyper::{server::conn::http1, service::service_fn};
 #[cfg(feature = "http2")]
 use hyper::{server::conn::http2, service::service_fn};
+use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use smol::net::TcpListener;
 use smol_hyper::rt::FuturesIo;
 
 use crate::server::ServerConfig;
-use crate::utils::{generate_port, TEST_HOST};
+use crate::utils::{generate_port, test_url};
 
 pub struct HttpServer {
     port: u16,
@@ -28,11 +31,11 @@ impl HttpServer {
 
 impl HttpServer {
     pub fn url(&self, path: &str) -> String {
-        format!("{}:{}{}", TEST_HOST, self.port, path)
+        format!("{}{}", test_url(Some(self.port)), path)
     }
 
     pub fn base_url(&self) -> String {
-        format!("{}:{}", TEST_HOST, self.port)
+        test_url(Some(self.port))
     }
 
     pub async fn start(
@@ -55,18 +58,17 @@ impl HttpServer {
                 return Err("Server cert and key are required".into());
             }
 
-            let cert = CertificateDer::from(std::fs::read(
-                config
-                    .cert
-                    .as_ref()
-                    .unwrap(),
-            )?);
-            let key = PrivateKeyDer::try_from(std::fs::read(
-                config
-                    .key
-                    .as_ref()
-                    .unwrap(),
-            )?)?;
+            let cert = config
+                .cert()
+                .unwrap()
+                .clone();
+            let key = config
+                .key()
+                .unwrap()
+                .clone();
+
+            let cert = CertificateDer::from(cert);
+            let key = PrivateKeyDer::try_from(key).unwrap();
 
             let provider = rustls::crypto::aws_lc_rs::default_provider();
             let mut tls_config = rustls::ServerConfig::builder_with_provider(Arc::new(provider))
@@ -82,7 +84,7 @@ impl HttpServer {
                 tls_config.alpn_protocols = vec![b"h2".to_vec()];
             }
 
-            Some(TlsAcceptor::new(Arc::new(tls_config)))
+            Some(TlsAcceptor::from(Arc::new(tls_config)))
         } else {
             None
         };

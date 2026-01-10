@@ -789,7 +789,6 @@ dependencies = [
  "deboa",
  "deboa-extras",
  "http",
- "httpmock",
  "serde",
  "tokio",
 ]
@@ -3499,8 +3498,9 @@ dependencies = [
  "deboa-extras",
  "deboa-tests",
  "http",
- "httpmock",
  "serde",
+ "smol",
+ "smol-macros",
  "tokio",
  "url",
 ]
@@ -3513,7 +3513,6 @@ dependencies = [
  "deboa-extras",
  "deboa-tests",
  "http",
- "httpmock",
  "proc-macro2",
  "quote",
  "regex",

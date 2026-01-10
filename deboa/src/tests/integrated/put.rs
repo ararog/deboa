@@ -1,4 +1,6 @@
-use crate::{cert::Certificate, request::DeboaRequest, Client, Result};
+use crate::{
+    cert::Certificate, request::DeboaRequest, tests::SKIP_CERT_VERIFICATION, Client, Result,
+};
 
 #[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::tokio::HttpServer;
@@ -9,8 +11,9 @@ use deboa_tests::server::tcp::smol::HttpServer;
 #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
 use deboa_tests::server::udp::tokio::HttpServer;
 
-use deboa_tests::utils::{make_response, tls_server_config};
+use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
 use http::StatusCode;
+
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
 #[cfg(feature = "smol-rt")]
@@ -34,7 +37,8 @@ async fn do_put() -> Result<()> {
         .await;
 
     let client = Client::builder()
-        .certificate(Certificate::new("certs/ca.cert".into()))
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
     let request = DeboaRequest::put(server.url("/posts/1"))?

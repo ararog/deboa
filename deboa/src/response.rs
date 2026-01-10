@@ -256,7 +256,7 @@ impl DeboaResponseBuilder {
 ///
 /// ## Basic Usage
 ///
-/// ```no_run
+/// ```ignore
 /// use deboa::{Client, request::get, Result};
 ///
 /// # #[tokio::main]

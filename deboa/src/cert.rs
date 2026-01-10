@@ -5,6 +5,11 @@
 //!
 //! It also provides the `Certificate` struct for working with CA certificates.
 
+#[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
+use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdentity};
+#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
+use rustls::pki_types::{pem::PemObject, CertificateDer, PrivateKeyDer};
+
 /// Represents a client certificate and its associated data for mutual TLS authentication.
 ///
 /// `Identity` encapsulates the client certificate, its password.
@@ -17,110 +22,97 @@
 /// use deboa::cert::Identity;
 ///
 /// // Create a new client certificate without a CA
-/// let cert = Identity::new(
-///     "/path/to/cert.p12".to_string(),
-///     "cert-password".to_string(),
-///     None
+/// let cert = Identity::from_pckcs12(
+///     &[1, 2, 3],
+///     Some("cert-password".to_string()),
 /// );
 ///
 /// // Create a client certificate with a CA
-/// let cert_with_ca = Identity::new(
-///     "/path/to/cert.p12".to_string(),
-///     "cert-password".to_string(),
+/// let cert_with_ca = Identity::from_pckcs8(
+///     &[1, 2, 3],
+///     &[4, 5, 6],
 /// );
 ///
-/// // Access certificate properties
-/// println!("Certificate path: {}", cert.cert());
 /// ```
 #[derive(Debug, Clone)]
 pub struct Identity {
-    cert: String,
-    key: Option<String>,
-    pw: Option<String>,
+    cert: Vec<u8>,
+    key: Option<Vec<u8>>,
+    password: Option<String>,
 }
 
 #[deprecated(note = "Use `Identity` instead")]
 pub type ClientCert = Identity;
 
 impl Identity {
-    /// Allow create a new Identity instance.
-    ///
-    /// # Arguments
-    ///
-    /// * `cert` - The client certificate.
-    /// * `pw` - The client certificate password.
-    /// * `ca` - The client certificate authority.
-    ///
-    /// # Returns
-    ///
-    /// * `Identity` - The new Identity instance.
-    ///
-    #[deprecated(note = "Use `Identity::new_with_pw` instead")]
-    pub fn new(cert: String, pw: String) -> Self {
-        Identity { cert, key: None, pw: Some(pw) }
+    #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
+    pub fn from_pckcs12(cert: &[u8], password: Option<String>) -> Self {
+        Identity { cert: cert.to_vec(), key: None, password }
     }
 
-    /// Create a new Identity instance with optional password.
-    ///
-    /// # Arguments
-    ///
-    /// * `cert` - The client certificate.
-    /// * `pw` - The client certificate password.
-    ///
-    /// # Returns
-    ///
-    /// * `Identity` - The new Identity instance.
-    ///
-    pub fn new_with_pw(cert: String, pw: Option<String>) -> Self {
-        Identity { cert, key: None, pw }
+    pub fn from_pckcs8(cert: &[u8], key: &[u8]) -> Self {
+        Identity { cert: cert.to_vec(), key: Some(key.to_vec()), password: None }
     }
+}
 
-    /// Create a new Identity instance with key file.
-    ///
-    /// # Arguments
-    ///
-    /// * `cert` - The client certificate.
-    /// * `key` - The client certificate key file.
-    ///
-    /// # Returns
-    ///
-    /// * `Identity` - The new Identity instance.
-    ///
-    pub fn new_with_key(cert: String, key: String) -> Self {
-        Identity { cert, key: Some(key), pw: None }
+#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
+impl TryFrom<&Identity> for (CertificateDer<'static>, PrivateKeyDer<'static>) {
+    type Error = std::io::Error;
+
+    fn try_from(value: &Identity) -> Result<Self, Self::Error> {
+        let cert = CertificateDer::from_pem_slice(&value.cert);
+        if cert.is_err() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Invalid certificate",
+            ));
+        }
+
+        let key = PrivateKeyDer::from_pem_slice(
+            value
+                .key
+                .as_ref()
+                .unwrap(),
+        );
+        if key.is_err() {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid key"));
+        }
+
+        Ok((cert.unwrap(), key.unwrap()))
     }
+}
 
-    /// Allow get the client certificate.
-    ///
-    /// # Returns
-    ///
-    /// * `&str` - The client certificate.
-    ///
-    #[inline]
-    pub fn cert(&self) -> &str {
-        &self.cert
-    }
+#[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
+impl TryFrom<&Identity> for NativeIdentity {
+    type Error = std::io::Error;
 
-    /// Allow get the client certificate key.
-    ///
-    /// # Returns
-    ///
-    /// * `Option<&str>` - The client certificate key.
-    ///
-    #[inline]
-    pub fn key(&self) -> Option<&str> {
-        self.key.as_deref()
-    }
+    fn try_from(value: &Identity) -> Result<Self, Self::Error> {
+        let identity = if let Some(password) = &value.password {
+            let identity = NativeIdentity::from_pkcs12(&value.cert, password);
+            if identity.is_err() {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Invalid certificate",
+                ));
+            }
+            identity.unwrap()
+        } else if let Some(key) = &value.key {
+            let identity = NativeIdentity::from_pkcs8(&value.cert, key);
+            if identity.is_err() {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Invalid certificate",
+                ));
+            }
+            identity.unwrap()
+        } else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "You need provide a password or a key",
+            ));
+        };
 
-    /// Allow get the client certificate password.
-    ///
-    /// # Returns
-    ///
-    /// * `Option<&str>` - The client certificate password.
-    ///
-    #[inline]
-    pub fn pw(&self) -> Option<&str> {
-        self.pw.as_deref()
+        Ok(identity)
     }
 }
 
@@ -132,20 +124,32 @@ impl Identity {
 /// use deboa::cert::Certificate;
 ///
 /// // Create a client certificate with a CA
-/// let cert_with_ca = Certificate::new(
-///     "/path/to/cert.p12".to_string(),
+/// let cert_with_ca = Certificate::from_path(
+///     "/path/to/cert.p12",
 /// );
 ///
-/// // Access certificate properties
-/// println!("Certificate path: {}", cert.path());
 /// ```
 #[derive(Debug, Clone)]
 pub struct Certificate {
-    path: String,
+    data: Vec<u8>,
 }
 
 impl Certificate {
-    /// Allow create a new Certificate instance.
+    /// Create certificate from slice.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - The client certificate data.
+    ///
+    /// # Returns
+    ///
+    /// * `Certificate` - The new Certificate instance.
+    ///
+    pub fn from_slice(data: &[u8]) -> Self {
+        Certificate { data: data.to_vec() }
+    }
+
+    /// Create certificate from path.
     ///
     /// # Arguments
     ///
@@ -153,10 +157,11 @@ impl Certificate {
     ///
     /// # Returns
     ///
-    /// * `Certificate` - The new Certificate instance.
+    /// * `Result<Certificate, std::io::Error>` - The new Certificate instance.
     ///
-    pub fn new(path: String) -> Self {
-        Certificate { path }
+    pub fn from_path(path: &str) -> Result<Self, std::io::Error> {
+        let data = std::fs::read(path)?;
+        Ok(Certificate { data })
     }
 
     /// Allow get the client certificate path.
@@ -166,7 +171,43 @@ impl Certificate {
     /// * `&str` - The client certificate path.
     ///
     #[inline]
-    pub fn path(&self) -> &str {
-        &self.path
+    pub fn as_bytes(&self) -> &Vec<u8> {
+        &self.data
+    }
+}
+
+#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
+impl TryFrom<&Certificate> for CertificateDer<'static> {
+    type Error = std::io::Error;
+
+    fn try_from(value: &Certificate) -> Result<Self, Self::Error> {
+        let cert = CertificateDer::from(
+            value
+                .as_bytes()
+                .to_vec(),
+        );
+        if cert.is_err() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Invalid certificate",
+            ));
+        }
+        Ok(cert.unwrap())
+    }
+}
+
+#[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
+impl TryFrom<&Certificate> for NativeCertificate {
+    type Error = std::io::Error;
+
+    fn try_from(value: &Certificate) -> Result<Self, Self::Error> {
+        let cert = NativeCertificate::from_pem(value.as_bytes());
+        if cert.is_err() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Invalid certificate",
+            ));
+        }
+        Ok(cert.unwrap())
     }
 }

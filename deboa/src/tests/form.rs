@@ -11,6 +11,11 @@ use crate::{
     Result,
 };
 
+#[cfg(feature = "smol-rt")]
+use macro_rules_attribute::apply;
+#[cfg(feature = "smol-rt")]
+use smol_macros::test;
+
 #[test]
 fn test_encoded_form() -> Result<()> {
     let mut form = EncodedForm::builder();
@@ -40,8 +45,7 @@ fn test_multipart_form() -> Result<()> {
     Ok(())
 }
 
-#[tokio::test]
-async fn test_multipart_validate_form() -> Result<()> {
+async fn multipart_validate_form() -> Result<()> {
     let mut builder = MultiPartForm::builder();
     builder.field("name", "deboa");
     builder.field("version", "0.0.1");
@@ -81,8 +85,19 @@ async fn test_multipart_validate_form() -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_multipart_validate_form_file() -> Result<()> {
+async fn test_multipart_validate_form() -> Result<()> {
+    multipart_validate_form().await
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_multipart_validate_form() -> Result<()> {
+    multipart_validate_form().await
+}
+
+async fn multipart_validate_form_file() -> Result<()> {
     let input_file = "input.txt";
     let output_file = "output.txt";
 
@@ -134,6 +149,18 @@ async fn test_multipart_validate_form_file() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(feature = "tokio-rt")]
+#[tokio::test]
+async fn test_multipart_validate_form_file() -> Result<()> {
+    multipart_validate_form_file().await
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_multipart_validate_form_file() -> Result<()> {
+    multipart_validate_form_file().await
 }
 
 async fn get_stream(

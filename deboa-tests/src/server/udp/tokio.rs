@@ -8,7 +8,7 @@ use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use tokio::task::JoinHandle;
 
 use crate::server::ServerConfig;
-use crate::utils::{generate_port, TEST_HOST};
+use crate::utils::{generate_port, test_url};
 
 pub struct HttpServer {
     port: u16,
@@ -24,11 +24,11 @@ impl HttpServer {
 
 impl HttpServer {
     pub fn url(&self, path: &str) -> String {
-        format!("{}:{}{}", TEST_HOST, self.port, path)
+        format!("{}{}", test_url(Some(self.port)), path)
     }
 
     pub fn base_url(&self) -> String {
-        format!("{}:{}", TEST_HOST, self.port)
+        test_url(Some(self.port))
     }
 
     pub async fn start(
@@ -51,18 +51,17 @@ impl HttpServer {
                 return Err("Server cert and key are required".into());
             }
 
-            let cert = CertificateDer::from(std::fs::read(
-                config
-                    .cert
-                    .as_ref()
-                    .unwrap(),
-            )?);
-            let key = PrivateKeyDer::try_from(std::fs::read(
-                config
-                    .key
-                    .as_ref()
-                    .unwrap(),
-            )?)?;
+            let cert = config
+                .cert()
+                .unwrap()
+                .clone();
+            let key = config
+                .key()
+                .unwrap()
+                .clone();
+
+            let cert = CertificateDer::from(cert);
+            let key = PrivateKeyDer::try_from(key).unwrap();
 
             let provider = rustls::crypto::aws_lc_rs::default_provider();
             let mut tls_config = rustls::ServerConfig::builder_with_provider(Arc::new(provider))
