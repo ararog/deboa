@@ -2,6 +2,7 @@ use crate::{
     cert::Certificate,
     form::{DeboaForm, EncodedForm, MultiPartForm},
     request::DeboaRequest,
+    tests::SKIP_CERT_VERIFICATION,
     Client, Result,
 };
 
@@ -14,7 +15,7 @@ use deboa_tests::server::tcp::smol::HttpServer;
 #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
 use deboa_tests::server::udp::tokio::HttpServer;
 
-use deboa_tests::utils::{make_response, tls_server_config};
+use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
 use http::{header, StatusCode};
 
 #[cfg(feature = "smol-rt")]
@@ -40,7 +41,8 @@ async fn do_post() -> Result<()> {
         .await;
 
     let client: Client = Client::builder()
-        .certificate(Certificate::new("certs/ca.cert".into()))
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
     let request = DeboaRequest::post(server.url("/posts"))?

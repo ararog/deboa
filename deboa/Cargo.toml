@@ -13,7 +13,7 @@ publish = true
 rust-version = "1.64.0"
 
 [features]
-default = ["tokio-rt", "http2", "tokio-rust-tls"]
+default = ["tokio-rt", "http1", "tokio-native-tls"]
 
 # runtimes
 tokio-rt = ["dep:tokio", "deboa-tests/tokio-rt"]
@@ -32,6 +32,7 @@ tokio-rust-tls = [
   "dep:rustls-native-certs",
   "dep:tokio-rustls",
   "dep:webpki-roots",
+  "deboa-tests/tokio-rust-tls",
 ]
 tokio-native-tls = ["dep:async-native-tls", "async-native-tls/runtime-tokio"]
 
@@ -40,6 +41,7 @@ smol-rust-tls = [
   "dep:rustls-native-certs",
   "dep:futures-rustls",
   "dep:webpki-roots",
+  "deboa-tests/smol-rust-tls",
 ]
 smol-native-tls = ["dep:async-native-tls", "async-native-tls/runtime-async-std"]
 
@@ -52,7 +54,7 @@ http3-tokio = [
   "dep:quinn",
   "quinn/runtime-tokio",
   "deboa-tests/http3",
-  "deboa-tests/rust-tls-tokio",
+  "deboa-tests/tokio-rust-tls",
 ]
 http3-smol = [
   "dep:h3",
@@ -60,7 +62,7 @@ http3-smol = [
   "dep:quinn",
   "quinn/runtime-smol",
   "deboa-tests/http3",
-  "deboa-tests/rust-tls-smol",
+  "deboa-tests/smol-rust-tls",
 ]
 
 [dependencies]

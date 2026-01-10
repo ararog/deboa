@@ -13,10 +13,23 @@ publish = true
 rust-version = "1.64.0"
 
 [features]
-default = ["json"]
+default = ["json", "_tokio-rt", "_http1", "_tokio-rust-tls"]
+
+# Serialization formats
 json = ["deboa-extras/json"]
 xml = ["deboa-extras/xml"]
 msgpack = ["deboa-extras/msgpack"]
+
+# For testing purposes (internal use only)
+_tokio-rt = []
+_smol-rt = []
+_http1 = []
+_http2 = []
+_http3 = []
+_tokio-rust-tls = []
+_smol-rust-tls = []
+_tokio-native-tls = []
+_smol-native-tls = []
 
 [lib]
 proc-macro = true
@@ -35,5 +48,4 @@ titlecase = "2.2.1"
 
 [dev-dependencies]
 deboa-tests = { path = "../deboa-tests", version = "0.0.1" }
-httpmock = { version = "0.8.2", features = ["http2"] }
 tokio = { version = "1.49.0", features = ["rt-multi-thread"] }

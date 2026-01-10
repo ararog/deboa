@@ -346,7 +346,7 @@ fn delete_operation(delete: &DeleteStruct, acc: &mut (&mut TS2, &mut TS2)) {
     acc.1
         .extend(quote! {
             pub async fn #method_name(&mut self, #api_params) -> VamoResult<()> {
-                self.api.#method(#api_path).send().await?;
+                self.api.#method(&format!(#api_path)).send().await?;
                 Ok(())
             }
         });

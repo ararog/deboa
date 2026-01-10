@@ -2,7 +2,7 @@
     any(feature = "http1", feature = "http2", feature = "http3-tokio"),
     any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
 ))]
-use std::{fs::File, io::BufReader, sync::Arc};
+use std::sync::Arc;
 
 #[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
 use rustls::ClientConfig;
@@ -36,7 +36,7 @@ pub fn setup_rust_tls(
     skip_server_verification: bool,
     alpn: Option<&str>,
 ) -> Result<ClientConfig> {
-    let root_store = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
+    let mut root_store = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
     let provider = rustls::crypto::aws_lc_rs::default_provider();
     let config = rustls::ClientConfig::builder_with_provider(Arc::new(provider))
         .with_protocol_versions(&[&rustls::version::TLS13])
@@ -53,59 +53,39 @@ pub fn setup_rust_tls(
     }
 
     let config = if let Some(ca) = certificate {
-        let file = std::fs::read(ca.path());
-        if file.is_err() {
+        let ca_file = CertificateDer::from(
+            ca.as_bytes()
+                .to_vec(),
+        );
+
+        if let Err(e) = root_store.add(ca_file) {
             return Err(DeboaError::Connection(ConnectionError::Tls {
                 host: host.to_string(),
-                message: format!("Failed to open CA file: {}", ca.path()),
+                message: format!("Invalid CA certificate: {}", e),
             }));
         }
 
-        let ca_file = CertificateDer::from(file.ok().unwrap());
-
-        let mut root_store = rustls::RootCertStore::empty();
-        let certs = root_store.add(ca_file);
-        if certs.is_err() {
-            return Err(DeboaError::Connection(ConnectionError::Tls {
-                host: host.to_string(),
-                message: format!("No valid certificates found in CA file: {}", ca.path()),
-            }));
-        }
         config.with_root_certificates(root_store)
     } else {
         config.with_root_certificates(root_store)
     };
 
-    let mut config = if let Some(client_cert) = identity {
-        let file = File::open(client_cert.cert());
-        if file.is_err() {
+    let mut config = if let Some(id) = identity {
+        let pair: std::result::Result<
+            (CertificateDer<'static>, PrivateKeyDer<'static>),
+            std::io::Error,
+        > = id.try_into();
+        if let Err(e) = pair {
             return Err(DeboaError::Connection(ConnectionError::Tls {
                 host: host.to_string(),
-                message: format!("Failed to open client certificate file: {}", client_cert.cert()),
+                message: format!("Invalid client identity: {}", e),
             }));
         }
 
-        let mut cert_file = BufReader::new(file.unwrap());
-        let cert_chain: Vec<CertificateDer<'static>> = rustls_pemfile::certs(&mut cert_file)
-            .filter_map(|c| c.ok())
-            .collect();
+        let pair = pair.unwrap();
 
-        let file = File::open(client_cert.cert());
-        if file.is_err() {
-            return Err(DeboaError::Connection(ConnectionError::Tls {
-                host: host.to_string(),
-                message: format!("Failed to open client certificate file: {}", client_cert.cert()),
-            }));
-        }
-
-        let mut key_file = BufReader::new(file.unwrap());
-        let pkcs8_bytes = rustls_pemfile::pkcs8_private_keys(&mut key_file)
-            .filter_map(|k| k.ok())
-            .next()
-            .expect("Could not find PKCS#8 private key");
-        let client_key = PrivateKeyDer::Pkcs8(pkcs8_bytes);
         config
-            .with_client_auth_cert(cert_chain, client_key)
+            .with_client_auth_cert(vec![pair.0], pair.1)
             .unwrap()
     } else {
         config.with_no_client_auth()

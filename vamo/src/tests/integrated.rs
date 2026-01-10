@@ -1,19 +1,24 @@
-use deboa::{client::serde::RequestBody, Result};
+use deboa::{cert::Certificate, client::serde::RequestBody, Client, Result};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tests::{
     data::{JSON_STR_PATCH, JSON_STR_POST},
-    server::{tcp::tokio::HttpServer, ServerConfig},
-    utils::make_response,
+    utils::{make_response, tls_server_config, CA_CERT},
 };
-use http::{header, StatusCode};
-use httpmock::{
-    Method::{DELETE, GET, PATCH, POST, PUT},
-    MockServer,
-};
+use http::StatusCode;
 use serde::Serialize;
+
+#[cfg(all(feature = "_tokio-rt", any(feature = "_http1", feature = "_http2")))]
+use deboa_tests::server::tcp::tokio::HttpServer;
+
+#[cfg(all(feature = "_smol-rt", any(feature = "_http1", feature = "_http2")))]
+use deboa_tests::server::tcp::smol::HttpServer;
+
+#[cfg(all(feature = "_tokio-rt", feature = "_http3"))]
+use deboa_tests::server::udp::tokio::HttpServer;
 
 use crate::{
     resource::{Resource, ResourceMethod},
+    tests::SKIP_CERT_VERIFICATION,
     Vamo,
 };
 
@@ -41,13 +46,8 @@ impl Resource for Post {
     }
 }
 
-#[tokio::test]
-async fn test_get() -> Result<()> {
-    let config: Option<ServerConfig> = Some(ServerConfig::new(
-        Some("certs/server.cert".to_string()),
-        Some("certs/server.key".to_string()),
-    ));
-    let mut server = HttpServer::new(config);
+async fn do_get() -> Result<()> {
+    let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -63,11 +63,17 @@ async fn test_get() -> Result<()> {
         })
         .await;
 
+    let client = Client::builder()
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
+        .build();
+
     let mut vamo = Vamo::new(
         server
             .base_url()
             .as_str(),
     )?;
+    vamo.client(client);
     let response = vamo
         .get("/posts")
         .send()
@@ -93,17 +99,25 @@ async fn test_get() -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_put() -> Result<()> {
-    let config: Option<ServerConfig> = Some(ServerConfig::new(
-        Some("certs/server.cert".to_string()),
-        Some("certs/server.key".to_string()),
-    ));
-    let mut server = HttpServer::new(config);
+async fn test_get() -> Result<()> {
+    do_get().await
+}
+
+#[cfg(feature = "_smol-rt")]
+#[apply(test!)]
+async fn test_get() -> Result<()> {
+    do_get().await
+}
+
+#[cfg(feature = "_tokio-rt")]
+async fn do_put() -> Result<()> {
+    let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
         .start(|req| {
-            if req.method() == "GET" && req.uri().path() == "/posts" {
+            if req.method() == "PUT" && req.uri().path() == "/posts" {
                 Ok(make_response(StatusCode::OK, b"pong"))
             } else {
                 Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
@@ -111,11 +125,17 @@ async fn test_put() -> Result<()> {
         })
         .await;
 
+    let client = Client::builder()
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
+        .build();
+
     let mut vamo = Vamo::new(
         server
             .base_url()
             .as_str(),
     )?;
+    vamo.client(client);
     let response = vamo
         .put("/posts")
         .send()
@@ -126,17 +146,33 @@ async fn test_put() -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_post() -> Result<()> {
-    let server = MockServer::start();
-    let mock = server.mock(|when, then| {
-        when.method(POST)
-            .path("/api/posts")
-            .body("{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}");
-        then.status::<u16>(StatusCode::CREATED.into())
-            .header(header::CONTENT_TYPE.as_str(), "application/json")
-            .body("{}");
-    });
+async fn test_put() -> Result<()> {
+    do_put().await
+}
+
+#[cfg(feature = "_smol-rt")]
+#[apply(test!)]
+async fn test_put() -> Result<()> {
+    do_put().await
+}
+
+async fn do_post() -> Result<()> {
+    let mut server = HttpServer::new(tls_server_config());
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "POST" && req.uri().path() == "/api/posts" {
+                Ok(make_response(
+                    StatusCode::CREATED,
+                    b"{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}",
+                ))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
 
     let post = Post {
         id: 1,
@@ -145,27 +181,40 @@ async fn test_post() -> Result<()> {
         user_id: Some(1),
     };
 
+    let client = Client::builder()
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
+        .build();
+
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.client(client);
     let response = vamo
         .post("/posts")
         .body_as(JsonBody, post)?
         .send()
         .await?;
 
-    mock.assert();
-
     assert_eq!(response.status(), StatusCode::CREATED);
+
+    server.stop().await;
 
     Ok(())
 }
 
+#[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_patch() -> Result<()> {
-    let config: Option<ServerConfig> = Some(ServerConfig::new(
-        Some("certs/server.cert".to_string()),
-        Some("certs/server.key".to_string()),
-    ));
-    let mut server = HttpServer::new(config);
+async fn test_post() -> Result<()> {
+    do_post().await
+}
+
+#[cfg(feature = "_smol-rt")]
+#[apply(test!)]
+async fn test_post() -> Result<()> {
+    do_post().await
+}
+
+async fn do_patch() -> Result<()> {
+    let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -177,7 +226,13 @@ async fn test_patch() -> Result<()> {
         })
         .await;
 
+    let client = Client::builder()
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
+        .build();
+
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.client(client);
     let response = vamo
         .patch("/posts/1")
         .send()
@@ -190,13 +245,20 @@ async fn test_patch() -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_delete() -> Result<()> {
-    let config: Option<ServerConfig> = Some(ServerConfig::new(
-        Some("certs/server.cert".to_string()),
-        Some("certs/server.key".to_string()),
-    ));
-    let mut server = HttpServer::new(config);
+async fn test_patch() -> Result<()> {
+    do_patch().await
+}
+
+#[cfg(feature = "_smol-rt")]
+#[apply(test!)]
+async fn test_patch() -> Result<()> {
+    do_patch().await
+}
+
+async fn do_delete() -> Result<()> {
+    let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -208,7 +270,13 @@ async fn test_delete() -> Result<()> {
         })
         .await;
 
+    let client = Client::builder()
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
+        .build();
+
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.client(client);
     let response = vamo
         .delete("/posts/1")
         .send()
@@ -221,13 +289,20 @@ async fn test_delete() -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_post_resource() -> Result<()> {
-    let config: Option<ServerConfig> = Some(ServerConfig::new(
-        Some("certs/server.cert".to_string()),
-        Some("certs/server.key".to_string()),
-    ));
-    let mut server = HttpServer::new(config);
+async fn test_delete() -> Result<()> {
+    do_delete().await
+}
+
+#[cfg(feature = "_smol-rt")]
+#[apply(test!)]
+async fn test_delete() -> Result<()> {
+    do_delete().await
+}
+
+async fn do_post_resource() -> Result<()> {
+    let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -246,7 +321,13 @@ async fn test_post_resource() -> Result<()> {
         user_id: Some(1),
     };
 
+    let client = Client::builder()
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
+        .build();
+
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.client(client);
     let response = vamo
         .create(&mut post)?
         .send()
@@ -259,13 +340,20 @@ async fn test_post_resource() -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_put_resource() -> Result<()> {
-    let config: Option<ServerConfig> = Some(ServerConfig::new(
-        Some("certs/server.cert".to_string()),
-        Some("certs/server.key".to_string()),
-    ));
-    let mut server = HttpServer::new(config);
+async fn test_post_resource() -> Result<()> {
+    do_post_resource().await
+}
+
+#[cfg(feature = "_smol-rt")]
+#[apply(test!)]
+async fn test_post_resource() -> Result<()> {
+    do_post_resource().await
+}
+
+async fn do_put_resource() -> Result<()> {
+    let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -284,7 +372,13 @@ async fn test_put_resource() -> Result<()> {
         user_id: Some(1),
     };
 
+    let client = Client::builder()
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
+        .build();
+
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.client(client);
     let response = vamo
         .update(&mut post)?
         .send()
@@ -297,13 +391,20 @@ async fn test_put_resource() -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_patch_resource() -> Result<()> {
-    let config: Option<ServerConfig> = Some(ServerConfig::new(
-        Some("certs/server.cert".to_string()),
-        Some("certs/server.key".to_string()),
-    ));
-    let mut server = HttpServer::new(config);
+async fn test_put_resource() -> Result<()> {
+    do_put_resource().await
+}
+
+#[cfg(feature = "_smol-rt")]
+#[apply(test!)]
+async fn test_put_resource() -> Result<()> {
+    do_put_resource().await
+}
+
+async fn do_patch_resource() -> Result<()> {
+    let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -317,7 +418,13 @@ async fn test_patch_resource() -> Result<()> {
 
     let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
 
+    let client = Client::builder()
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
+        .build();
+
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.client(client);
     let response = vamo
         .edit(&mut post)?
         .send()
@@ -330,13 +437,20 @@ async fn test_patch_resource() -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_remove_resource() -> Result<()> {
-    let config: Option<ServerConfig> = Some(ServerConfig::new(
-        Some("certs/server.cert".to_string()),
-        Some("certs/server.key".to_string()),
-    ));
-    let mut server = HttpServer::new(config);
+async fn test_patch_resource() -> Result<()> {
+    do_patch_resource().await
+}
+
+#[cfg(feature = "_smol-rt")]
+#[apply(test!)]
+async fn test_patch_resource() -> Result<()> {
+    do_patch_resource().await
+}
+
+async fn do_remove_resource() -> Result<()> {
+    let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
         .start(|req| {
@@ -350,7 +464,13 @@ async fn test_remove_resource() -> Result<()> {
 
     let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
 
+    let client = Client::builder()
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
+        .build();
+
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.client(client);
     let response = vamo
         .remove(&mut post)?
         .send()
@@ -361,4 +481,16 @@ async fn test_remove_resource() -> Result<()> {
     server.stop().await;
 
     Ok(())
+}
+
+#[cfg(feature = "_tokio-rt")]
+#[tokio::test]
+async fn test_remove_resource() -> Result<()> {
+    do_remove_resource().await
+}
+
+#[cfg(feature = "_smol-rt")]
+#[apply(test!)]
+async fn test_remove_resource() -> Result<()> {
+    do_remove_resource().await
 }

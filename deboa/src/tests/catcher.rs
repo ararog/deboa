@@ -6,10 +6,11 @@ use crate::{
     cert::Certificate,
     request::DeboaRequest,
     response::DeboaResponse,
-    Client,
+    tests::SKIP_CERT_VERIFICATION,
+    Client, Result,
 };
 
-use deboa_tests::utils::{make_response, tls_server_config, url_from_string, TEST_HOST};
+use deboa_tests::utils::{make_response, test_url, tls_server_config, url_from_string, CA_CERT};
 
 #[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::tokio::HttpServer;
@@ -20,8 +21,12 @@ use deboa_tests::server::tcp::smol::HttpServer;
 #[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
 use deboa_tests::server::udp::tokio::HttpServer;
 
-#[tokio::test]
-async fn test_catcher_request() {
+#[cfg(feature = "smol-rt")]
+use macro_rules_attribute::apply;
+#[cfg(feature = "smol-rt")]
+use smol_macros::test;
+
+async fn catcher_request() -> Result<()> {
     let mut mock = MockDeboaCatcher::new();
     let mut request = DeboaRequest::get("https://httpbin.org/get")
         .unwrap()
@@ -43,10 +48,23 @@ async fn test_catcher_request() {
             .get("test"),
         Some(&HeaderValue::from_str("test").unwrap())
     );
+
+    Ok(())
 }
 
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_catcher_response() {
+async fn test_catcher_request() -> Result<()> {
+    catcher_request().await
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_catcher_request() -> Result<()> {
+    catcher_request().await
+}
+
+async fn catcher_response() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
@@ -73,7 +91,8 @@ async fn test_catcher_response() {
         });
 
     let client = Client::builder()
-        .certificate(Certificate::new("certs/ca.cert".into()))
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .catch(catcher_mock)
         .build();
     let mut response = DeboaRequest::get(server.url("/posts/1"))
@@ -90,16 +109,29 @@ async fn test_catcher_response() {
     );
 
     server.stop().await;
+
+    Ok(())
 }
 
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_catcher_early_response() {
+async fn test_catcher_response() -> Result<()> {
+    catcher_response().await
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_catcher_response() -> Result<()> {
+    catcher_response().await
+}
+
+async fn catcher_early_response() -> Result<()> {
     let mut catcher_mock = MockDeboaCatcher::new();
 
     let mut headers = HeaderMap::new();
     headers.insert(HeaderName::from_static("test"), HeaderValue::from_static("test"));
 
-    let url = url_from_string(format!("{}/posts/1", TEST_HOST));
+    let url = url_from_string(format!("{}posts/1", test_url(None)));
 
     catcher_mock
         .expect_on_request()
@@ -122,7 +154,7 @@ async fn test_catcher_early_response() {
     let client = Client::builder()
         .catch(catcher_mock)
         .build();
-    let response = DeboaRequest::get(format!("{}/posts/1", TEST_HOST))
+    let response = DeboaRequest::get(format!("{}posts/1", test_url(None)))
         .unwrap()
         .send_with(client)
         .await
@@ -135,4 +167,18 @@ async fn test_catcher_early_response() {
             .unwrap(),
         "test"
     );
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio-rt")]
+#[tokio::test]
+async fn test_catcher_early_response() -> Result<()> {
+    catcher_early_response().await
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_catcher_early_response() -> Result<()> {
+    catcher_early_response().await
 }
