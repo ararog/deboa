@@ -10,7 +10,6 @@ use hyper::body;
 use hyper::{server::conn::http1, service::service_fn};
 #[cfg(feature = "http2")]
 use hyper::{server::conn::http2, service::service_fn};
-use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use smol::net::TcpListener;
 use smol_hyper::rt::FuturesIo;

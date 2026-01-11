@@ -59,8 +59,7 @@ async fn do_put() -> Result<()> {
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_put() -> Result<()> {
-    do_put().await?;
-    Ok(())
+    do_put().await
 }
 
 #[cfg(feature = "smol-rt")]

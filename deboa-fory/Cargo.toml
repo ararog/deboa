@@ -11,12 +11,30 @@ license = "MIT"
 keywords = ["http", "networking", "rest", "serializer", "fory"]
 rust-version = "1.70.0"
 
+[features]
+default = ["_tokio-rt", "_http2", "_tokio-rust-tls"]
+
+# For testing purposes (internal use only)
+_tokio-rt = ["dep:tokio", "deboa-tests/tokio-rt"]
+_smol-rt = ["dep:smol", "dep:smol-macros", "deboa-tests/smol-rt"]
+_http1 = ["deboa-tests/http1"]
+_http2 = ["deboa-tests/http2"]
+_http3 = ["deboa-tests/http3"]
+_tokio-rust-tls = ["deboa-tests/tokio-rust-tls"]
+_smol-rust-tls = ["deboa-tests/smol-rust-tls"]
+_tokio-native-tls = []
+_smol-native-tls = []
+
 [dependencies]
 deboa = { path = "../deboa", version = "0.0.9" }
 fory = "0.14.1"
 fory-core = "0.14.0"
 http = "1.4.0"
+tokio = { version = "1.49.0", features = [
+  "rt-multi-thread",
+], default-features = false, optional = true }
+smol = { version = "2.0.2", default-features = false, optional = true }
+smol-macros = { version = "0.1.1", default-features = false, optional = true }
  
 [dev-dependencies]
-httpmock = "0.8.1"
-tokio = { version = "1.49.0", features = ["macros"] }
+deboa-tests = { path = "../deboa-tests", default-features = false, version = "0.0.1" }
