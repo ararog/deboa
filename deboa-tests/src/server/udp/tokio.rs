@@ -4,6 +4,7 @@ use bytes::Bytes;
 use h3_quinn::quinn::{self, crypto::rustls::QuicServerConfig};
 use http::{Request, Response};
 use http_body_util::{BodyExt, Full};
+use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use tokio::task::JoinHandle;
 
@@ -39,7 +40,7 @@ impl HttpServer {
             .config
             .is_none()
         {
-            return Err("Server config is required".into());
+            return Err("HttpServer - Server config is required".into());
         }
 
         if let Some(config) = &self.config {
@@ -48,7 +49,7 @@ impl HttpServer {
                 .is_none()
                 || config.key.is_none()
             {
-                return Err("Server cert and key are required".into());
+                return Err("HttpServer - Server cert and key are required".into());
             }
 
             let cert = config
@@ -60,13 +61,26 @@ impl HttpServer {
                 .unwrap()
                 .clone();
 
-            let cert = CertificateDer::from(cert);
-            let key = PrivateKeyDer::try_from(key).unwrap();
+            let cert = CertificateDer::from_pem_slice(&cert);
+            if let Err(e) = cert {
+                eprintln!("HttpServer - Error loading cert: {}", e);
+                return Err(e.into());
+            }
+
+            let cert = cert.unwrap();
+
+            let key = PrivateKeyDer::from_pem_slice(&key);
+            if let Err(e) = key {
+                eprintln!("HttpServer - Error loading private key: {}", e);
+                return Err(e.into());
+            }
+
+            let key = key.unwrap();
 
             let provider = rustls::crypto::aws_lc_rs::default_provider();
             let mut tls_config = rustls::ServerConfig::builder_with_provider(Arc::new(provider))
                 .with_protocol_versions(&[&rustls::version::TLS13])
-                .expect("Failed to set TLS version")
+                .expect("HttpServer -Failed to set TLS version")
                 .with_no_client_auth()
                 .with_single_cert(vec![cert], key)?;
 
@@ -111,8 +125,9 @@ impl HttpServer {
                                                         Full::new(Bytes::new()),
                                                     );
 
-                                                    let response = handler(request)
-                                                        .expect("Could not process request!");
+                                                    let response = handler(request).expect(
+                                                        "HttpServer - Could not process request!",
+                                                    );
 
                                                     let resp = http::Response::builder()
                                                         .status(response.status())
@@ -139,7 +154,7 @@ impl HttpServer {
 
                                                     let buf = Bytes::from(
                                                         collected
-                                                            .expect("Failed to collect response")
+                                                            .expect("HttpServer - Failed to collect response")
                                                             .to_bytes()
                                                             .to_vec(),
                                                     );

@@ -116,7 +116,7 @@ pub(crate) async fn tls_connection(
     host: &str,
     port: u16,
     identity: &Option<DeboaIdentity>,
-    certificate: &Option<Certificate>,
+    certificate: &Option<DeboaCertificate>,
     skip_server_verification: bool,
     alpn: Option<&str>,
 ) -> Result<TokioStream> {
@@ -139,7 +139,7 @@ pub(crate) async fn tls_connection(
     if let Err(e) = stream {
         return Err(DeboaError::Connection(ConnectionError::Tls {
             host: host.to_string(),
-            message: e.to_string(),
+            message: format!("Could not connect to server: {}", e),
         }));
     }
 

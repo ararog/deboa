@@ -4,18 +4,23 @@
 # exit 0
 cargo fmt --check
 
-# cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all deboa/http1 deboa/tokio-rt deboa/tokio-native-tls vamo/http1 vamo/_tokio-rt vamo/_tokio-native-tls vamo-macros/_http1 vamo-macros/_tokio-rt vamo-macros/_tokio-native-tls"
-# cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all deboa/http1 deboa/smol-rt deboa/smol-native-tls vamo/http1 vamo/_smol-rt vamo/_smol-native-tls vamo-macros/_http1 vamo-macros/_smol-rt vamo-macros/_smol-native-tls"
+# cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all deboa/http1 deboa/tokio-rt deboa/tokio-native-tls vamo/_http1 vamo/_tokio-rt vamo/_tokio-native-tls vamo-macros/_http1 vamo-macros/_tokio-rt vamo-macros/_tokio-native-tls"
 
-# cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all deboa/http2 deboa/tokio-rt deboa/tokio-native-tls vamo/http2 vamo/_tokio-rt vamo/_tokio-native-tls vamo-macros/_http2 vamo-macros/_tokio-rt vamo-macros/_tokio-native-tls"
-# cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all deboa/http2 deboa/smol-rt deboa/smol-native-tls vamo/http2 vamo/_smol-rt vamo/_smol-native-tls vamo-macros/_http2 vamo-macros/_smol-rt vamo-macros/_smol-native-tls"
+# cd deboa
 
-# cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all deboa/http1 deboa/tokio-rt deboa/tokio-rust-tls vamo/http1 vamo/_tokio-rt vamo/_tokio-rust-tls vamo-macros/_http1 vamo-macros/_tokio-rt vamo-macros/_tokio-rust-tls"
-# cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all deboa/http1 deboa/smol-rt deboa/smol-rust-tls vamo/http1 vamo/_smol-rt vamo/_smol-rust-tls vamo-macros/_http1 vamo-macros/_smol-rt vamo-macros/_smol-rust-tls"
+# cargo test --features "http1 smol-rt smol-native-tls" --no-default-features
 
-# cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all deboa/http1 deboa/tokio-rt deboa/tokio-rust-tls vamo/_http2 vamo/_tokio-rt vamo/_tokio-rust-tls vamo-macros/_http2 vamo-macros/_tokio-rt vamo-macros/_tokio-rust-tls"
-# cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all deboa/http1 deboa/smol-rt deboa/smol-rust-tls vamo/_http2 vamo/_smol-rt vamo/_smol-rust-tls vamo-macros/_http2 vamo-macros/_smol-rt vamo-macros/_smol-rust-tls"
+# cargo test --features "http2 tokio-rt tokio-native-tls" --no-default-features
+# cargo test --features "http2 smol-rt smol-native-tls" --no-default-features
 
-# cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all deboa/http3-tokio deboa/tokio-rt deboa/tokio-rust-tls vamo/_http3 vamo/_tokio-rt vamo/_tokio-rust-tls vamo-macros/_http3 vamo-macros/_tokio-rt vamo-macros/_tokio-rust-tls"
+# cargo test --features "http1 tokio-rt tokio-rust-tls" --no-default-features
+# cargo test --features "http1 smol-rt smol-rust-tls" --no-default-features
 
-#cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all deboa/http3 deboa/smol-rt deboa/smol-rust-tls vamo/_http3 vamo/_smol-rt vamo/_smol-rust-tls vamo-macros/_http3 vamo-macros/_smol-rt vamo-macros/_smol-rust-tls"
+# cargo test --features "http2 tokio-rt tokio-rust-tls" --no-default-features
+# cargo test --features "http2 smol-rt smol-rust-tls" --no-default-features
+
+# cargo test --features "http3-tokio tokio-rt tokio-rust-tls" --no-default-features
+
+# cd ..
+
+# cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all deboa/http3 deboa/smol-rt deboa/smol-rust-tls vamo/_http3 vamo/_smol-rt vamo/_smol-rust-tls vamo-macros/_http3 vamo-macros/_smol-rt vamo-macros/_smol-rust-tls"

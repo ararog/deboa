@@ -10,7 +10,7 @@ use hyper::{Request, Response};
 use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
 use rustls::pki_types::pem::PemObject;
-use rustls::pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer};
+use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;

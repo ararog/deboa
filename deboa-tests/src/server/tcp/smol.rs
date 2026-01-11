@@ -10,6 +10,7 @@ use hyper::body;
 use hyper::{server::conn::http1, service::service_fn};
 #[cfg(feature = "http2")]
 use hyper::{server::conn::http2, service::service_fn};
+use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use smol::net::TcpListener;
 use smol_hyper::rt::FuturesIo;
@@ -46,7 +47,7 @@ impl HttpServer {
             .config
             .is_none()
         {
-            return Err("Server config is required".into());
+            return Err("HttpServer - Server config is required".into());
         }
 
         let tls_acceptor = if let Some(config) = &self.config {
@@ -55,7 +56,7 @@ impl HttpServer {
                 .is_none()
                 || config.key.is_none()
             {
-                return Err("Server cert and key are required".into());
+                return Err("HttpServer - Server cert and key are required".into());
             }
 
             let cert = config
@@ -67,13 +68,26 @@ impl HttpServer {
                 .unwrap()
                 .clone();
 
-            let cert = CertificateDer::from(cert);
-            let key = PrivateKeyDer::try_from(key).unwrap();
+            let cert = CertificateDer::from_pem_slice(&cert);
+            if let Err(e) = cert {
+                eprintln!("HttpServer - Error loading cert: {}", e);
+                return Err(e.into());
+            }
+
+            let cert = cert.unwrap();
+
+            let key = PrivateKeyDer::from_pem_slice(&key);
+            if let Err(e) = key {
+                eprintln!("HttpServer - Error loading private key: {}", e);
+                return Err(e.into());
+            }
+
+            let key = key.unwrap();
 
             let provider = rustls::crypto::aws_lc_rs::default_provider();
             let mut tls_config = rustls::ServerConfig::builder_with_provider(Arc::new(provider))
                 .with_protocol_versions(&[&rustls::version::TLS13])
-                .expect("Failed to set TLS version")
+                .expect("HttpServer - Failed to set TLS version")
                 .with_no_client_auth()
                 .with_single_cert(vec![cert], key)?;
 
@@ -102,7 +116,7 @@ impl HttpServer {
                 let stream = match result {
                     Ok((stream, _)) => stream,
                     Err(err) => {
-                        eprintln!("Error accepting connection: {}", err);
+                        eprintln!("HttpServer - Error accepting connection: {}", err);
                         return;
                     }
                 };
@@ -111,7 +125,7 @@ impl HttpServer {
                     let tls_stream = acceptor
                         .accept(stream)
                         .await
-                        .expect("Failed to accept TLS connection");
+                        .expect("HttpServer - Failed to accept TLS connection");
                     let io = FuturesIo::new(tls_stream);
                     smol::spawn(async move {
                         #[cfg(feature = "http1")]
@@ -119,14 +133,14 @@ impl HttpServer {
                             .serve_connection(io, service_fn(|req| async move { handler(req) }))
                             .await
                         {
-                            eprintln!("Error serving connection: {}", err);
+                            eprintln!("HttpServer - Error serving connection: {}", err);
                         }
                         #[cfg(feature = "http2")]
                         if let Err(err) = http2::Builder::new(SmolExecutor::new())
                             .serve_connection(io, service_fn(|req| async move { handler(req) }))
                             .await
                         {
-                            eprintln!("Error serving connection: {}", err);
+                            eprintln!("HttpServer - Error serving connection: {}", err);
                         }
                     })
                     .detach();
@@ -138,14 +152,14 @@ impl HttpServer {
                             .serve_connection(io, service_fn(|req| async move { handler(req) }))
                             .await
                         {
-                            eprintln!("Error serving connection: {}", err);
+                            eprintln!("HttpServer - Error serving connection: {}", err);
                         }
                         #[cfg(feature = "http2")]
                         if let Err(err) = http2::Builder::new(SmolExecutor::new())
                             .serve_connection(io, service_fn(|req| async move { handler(req) }))
                             .await
                         {
-                            eprintln!("Error serving connection: {}", err);
+                            eprintln!("HttpServer - Error serving connection: {}", err);
                         }
                     })
                     .detach();

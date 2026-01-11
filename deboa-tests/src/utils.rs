@@ -6,7 +6,7 @@ use http_body_util::Full;
 
 use crate::server::ServerConfig;
 
-pub const CA_CERT: &[u8] = include_bytes!("../certs/ca.crt");
+pub const CA_CERT: &[u8] = include_bytes!("../certs/ca.pem");
 pub const SERVER_CERT: &[u8] = include_bytes!("../certs/server.pem");
 pub const SERVER_KEY: &[u8] = include_bytes!("../certs/server.key");
 

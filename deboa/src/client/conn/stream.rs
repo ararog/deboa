@@ -53,17 +53,15 @@ pub fn setup_rust_tls(
     }
 
     let config = if let Some(ca) = certificate {
-        let ca_file = CertificateDer::from(
-            ca.as_bytes()
-                .to_vec(),
-        );
-
-        if let Err(e) = root_store.add(ca_file) {
+        let cert = ca.try_into();
+        if let Err(e) = cert {
             return Err(DeboaError::Connection(ConnectionError::Tls {
                 host: host.to_string(),
                 message: format!("Invalid CA certificate: {}", e),
             }));
         }
+
+        root_store.add(cert.unwrap());
 
         config.with_root_certificates(root_store)
     } else {
