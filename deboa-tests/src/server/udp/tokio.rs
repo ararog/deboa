@@ -61,15 +61,9 @@ impl HttpServer {
                 .unwrap()
                 .clone();
 
-            let cert = CertificateDer::from_pem_slice(&cert);
-            if let Err(e) = cert {
-                eprintln!("HttpServer - Error loading cert: {}", e);
-                return Err(e.into());
-            }
+            let cert = CertificateDer::from(cert);
 
-            let cert = cert.unwrap();
-
-            let key = PrivateKeyDer::from_pem_slice(&key);
+            let key = PrivateKeyDer::try_from(key);
             if let Err(e) = key {
                 eprintln!("HttpServer - Error loading private key: {}", e);
                 return Err(e.into());

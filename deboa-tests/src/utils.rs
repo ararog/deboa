@@ -1,13 +1,12 @@
 use url::Url;
 
+use crate::server::ServerConfig;
 use bytes::Bytes;
 use http::StatusCode;
 use http_body_util::Full;
 
-use crate::server::ServerConfig;
-
-pub const CA_CERT: &[u8] = include_bytes!("../certs/ca.pem");
-pub const SERVER_CERT: &[u8] = include_bytes!("../certs/server.pem");
+pub const CA_CERT: &[u8] = include_bytes!("../certs/ca.cert");
+pub const SERVER_CERT: &[u8] = include_bytes!("../certs/server.cert");
 pub const SERVER_KEY: &[u8] = include_bytes!("../certs/server.key");
 
 const TEST_URL: &str = "https://localhost";

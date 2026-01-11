@@ -42,7 +42,6 @@ async fn do_get_http() -> Result<()> {
         .await;
 
     if let Err(err) = result {
-        eprintln!("Error starting server: {}", err);
         return Err(DeboaError::Connection(ConnectionError::Tcp {
             host: "localhost".to_string(),
             message: err.to_string(),
@@ -231,7 +230,7 @@ async fn do_get_invalid_server() -> Result<()> {
         #[cfg(target_os = "windows")]
         message: "Could not connect to server: No such host is known. (os error 11001)".to_string(),
         #[cfg(target_os = "linux")]
-        message: "Could not connect to server: Name or service not known".to_string(),
+        message: "Could not connect to server: failed to lookup address information: Name or service not known".to_string(),
         #[cfg(target_os = "macos")]
         message: "Could not connect to server: nodename nor servname provided, or not known"
             .to_string(),

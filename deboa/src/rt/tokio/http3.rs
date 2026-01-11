@@ -87,7 +87,7 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
         if let Err(e) = result {
             return Err(DeboaError::Connection(ConnectionError::Udp {
                 host: host.to_string(),
-                message: e.to_string(),
+                message: format!("Could not connect to server: {}", e),
             }));
         }
 

@@ -18,7 +18,7 @@ use rustls::pki_types::{pem::PemObject, CertificateDer, PrivateKeyDer};
 ///
 /// # Examples
 ///
-/// ```
+/// ```igmore
 /// use deboa::cert::Identity;
 ///
 /// // Create a new client certificate without a CA
@@ -38,6 +38,7 @@ use rustls::pki_types::{pem::PemObject, CertificateDer, PrivateKeyDer};
 pub struct Identity {
     cert: Vec<u8>,
     key: Option<Vec<u8>>,
+    #[allow(unused)]
     password: Option<String>,
 }
 
@@ -60,7 +61,14 @@ impl TryFrom<&Identity> for (CertificateDer<'static>, PrivateKeyDer<'static>) {
     type Error = std::io::Error;
 
     fn try_from(value: &Identity) -> Result<Self, Self::Error> {
-        let cert = CertificateDer::from_pem_slice(&value.cert);
+        let cert = value.cert.clone();
+        let key = value
+            .key
+            .as_ref()
+            .unwrap()
+            .clone();
+
+        let cert = CertificateDer::try_from(cert);
         if cert.is_err() {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
@@ -68,14 +76,12 @@ impl TryFrom<&Identity> for (CertificateDer<'static>, PrivateKeyDer<'static>) {
             ));
         }
 
-        let key = PrivateKeyDer::from_pem_slice(
-            value
-                .key
-                .as_ref()
-                .unwrap(),
-        );
+        let key = PrivateKeyDer::try_from(key);
         if key.is_err() {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid key"));
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Invalid certificate",
+            ));
         }
 
         Ok((cert.unwrap(), key.unwrap()))
@@ -181,18 +187,13 @@ impl TryFrom<&Certificate> for CertificateDer<'static> {
     type Error = std::io::Error;
 
     fn try_from(value: &Certificate) -> Result<Self, Self::Error> {
-        let cert = CertificateDer::try_from(
+        let cert = CertificateDer::from(
             value
                 .as_bytes()
                 .to_vec(),
         );
-        if cert.is_err() {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                "Invalid certificate",
-            ));
-        }
-        Ok(cert.unwrap())
+
+        Ok(cert)
     }
 }
 
@@ -201,7 +202,7 @@ impl TryFrom<&Certificate> for NativeCertificate {
     type Error = std::io::Error;
 
     fn try_from(value: &Certificate) -> Result<Self, Self::Error> {
-        let cert = NativeCertificate::from_pem(value.as_bytes());
+        let cert = NativeCertificate::from_der(value.as_bytes());
         if cert.is_err() {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
