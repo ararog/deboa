@@ -19,7 +19,7 @@ use futures_rustls::TlsConnector;
 use rustls::pki_types::ServerName;
 
 use crate::{
-    cert::Identity as DeboaIdentity,
+    cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
     errors::{ConnectionError, DeboaError},
     Result,
 };
@@ -31,7 +31,7 @@ async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
     if let Err(e) = stream {
         return Err(DeboaError::Connection(ConnectionError::Tcp {
             host: host.to_string(),
-            message: e.to_string(),
+            message: format!("Could not connect to server: {}", e),
         }));
     }
 
@@ -48,7 +48,8 @@ pub(crate) async fn plain_connection(host: &str, port: u16) -> Result<SmolStream
 pub(crate) async fn tls_connection(
     host: &str,
     port: u16,
-    client_cert: &Option<DeboaIdentity>,
+    identity: &Option<DeboaIdentity>,
+    certificate: &Option<DeboaCertificate>,
     skip_server_verification: bool,
     alpn: Option<&str>,
 ) -> Result<SmolStream> {
@@ -65,33 +66,29 @@ pub(crate) async fn tls_connection(
 
     let builder = if let Some(alpn) = alpn { builder.request_alpns(&[alpn]) } else { builder };
 
-    let builder = if let Some(client_cert) = client_cert {
-        let builder = if let Some(ca) = client_cert.ca() {
-            let pem = std::fs::read(ca);
-            if let Err(e) = pem {
-                return Err(DeboaError::ClientCert { message: e.to_string() });
-            }
-            let cert = Certificate::from_pem(&pem.unwrap());
-            builder.add_root_certificate(cert.unwrap())
-        } else {
-            builder
-        };
-
-        let file = std::fs::read(client_cert.cert());
-        if let Err(e) = file {
-            return Err(DeboaError::ClientCert { message: e.to_string() });
-        }
-        let identity = Identity::from_pkcs12(
-            &file.unwrap(),
-            client_cert
-                .pw()
-                .unwrap_or_default(),
-        );
-        if let Err(e) = identity {
-            return Err(DeboaError::ClientCert { message: e.to_string() });
+    let builder = if let Some(ca) = certificate {
+        let cert: std::result::Result<Certificate, std::io::Error> = ca.try_into();
+        if let Err(e) = cert {
+            return Err(DeboaError::Connection(ConnectionError::Tls {
+                host: host.to_string(),
+                message: format!("Invalid CA certificate: {}", e),
+            }));
         }
 
-        builder.identity(identity.unwrap())
+        builder.add_root_certificate(cert.unwrap())
+    } else {
+        builder
+    };
+
+    let builder = if let Some(identity) = identity {
+        let ident: std::result::Result<Identity, std::io::Error> = identity.try_into();
+        if let Err(e) = ident {
+            return Err(DeboaError::Connection(ConnectionError::Tls {
+                host: host.to_string(),
+                message: format!("Invalid client identity: {}", e),
+            }));
+        }
+        builder.identity(ident.unwrap())
     } else {
         builder
     };
@@ -103,7 +100,7 @@ pub(crate) async fn tls_connection(
     if let Err(e) = stream {
         return Err(DeboaError::Connection(ConnectionError::Tls {
             host: host.to_string(),
-            message: e.to_string(),
+            message: format!("Could not connect to server: {}", e),
         }));
     }
 
@@ -139,7 +136,7 @@ pub(crate) async fn tls_connection(
     if let Err(e) = stream {
         return Err(DeboaError::Connection(ConnectionError::Tls {
             host: host.to_string(),
-            message: e.to_string(),
+            message: format!("Could not connect to server: {}", e),
         }));
     }
 

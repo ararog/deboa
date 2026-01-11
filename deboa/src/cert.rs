@@ -181,7 +181,7 @@ impl TryFrom<&Certificate> for CertificateDer<'static> {
     type Error = std::io::Error;
 
     fn try_from(value: &Certificate) -> Result<Self, Self::Error> {
-        let cert = CertificateDer::from(
+        let cert = CertificateDer::try_from(
             value
                 .as_bytes()
                 .to_vec(),
