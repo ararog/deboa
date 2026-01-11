@@ -4,7 +4,6 @@ use bytes::Bytes;
 use h3_quinn::quinn::{self, crypto::rustls::QuicServerConfig};
 use http::{Request, Response};
 use http_body_util::{BodyExt, Full};
-use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use tokio::task::JoinHandle;
 

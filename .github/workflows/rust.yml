@@ -91,6 +91,11 @@ jobs:
     - name: Build for x86_64-pc-windows-msvc
       run: cargo build --target x86_64-pc-windows-msvc --release
     
+    - name: Run all on all crates
+      run: |
+        cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all"
+        cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all"
+              
     - name: Run all HTTP1 tests with native TLS
       run: |
         cd deboa
@@ -117,5 +122,8 @@ jobs:
 
     - name: Run all HTTP3 tests with rust TLS
       run: |
+        sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+        sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
+        sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=1      
         cd deboa
         cargo test --features "http3-tokio tokio-rt tokio-rust-tls" --no-default-features

@@ -9,7 +9,6 @@ use hyper::{Request, Response};
 #[cfg(feature = "http2")]
 use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
-use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use std::net::SocketAddr;
 use std::sync::Arc;
