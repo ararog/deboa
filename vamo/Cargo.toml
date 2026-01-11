@@ -13,7 +13,7 @@ publish = true
 rust-version = "1.64.0"
 
 [features]
-default = ["_tokio-rt", "_http1", "_tokio-rust-tls"]
+default = ["_tokio-rt", "_http2", "_tokio-rust-tls"]
 
 # For testing purposes (internal use only)
 _tokio-rt = ["dep:tokio", "deboa-tests/tokio-rt"]

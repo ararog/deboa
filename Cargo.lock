@@ -3517,6 +3517,8 @@ dependencies = [
  "quote",
  "regex",
  "serde",
+ "smol",
+ "smol-macros",
  "syn 2.0.106",
  "titlecase",
  "tokio",
