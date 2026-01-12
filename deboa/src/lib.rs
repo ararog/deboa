@@ -43,7 +43,7 @@
 //! | `smol_rt`         | No       | Support smol runtime.                                   |
 //! | `http1`           | Yes      | Support for HTTP/1 (enabled by default).                |
 //! | `http2`           | Yes      | Support for HTTP/2 (enabled by default).                |
-//! | `http3-tokio`     | Yes      | Support for HTTP/3 on Tokio (enabled by default).       |
+//! | `http3`     | Yes      | Support for HTTP/3 on Tokio (enabled by default).       |
 //! | `http3-smol`      | No       | Support for HTTP/3 on Smol (enabled by default).        |
 //! | `tokio-rust-tls`  | Yes      | Support for tokio-rust-tls (enabled by default).        |
 //! | `tokio-native-tls`| No       | Support for tokio-native-tls.                           |
@@ -65,19 +65,16 @@
 //! ```
 //!
 
-#[cfg(all(feature = "smol-rt", feature = "http3-tokio"))]
-compile_error!("HTTP3 is not supported with smol runtime.");
-
-#[cfg(all(feature = "http1", feature = "http2", feature = "http3-tokio"))]
+#[cfg(all(feature = "http1", feature = "http2", feature = "http3"))]
 compile_error!("HTTP3 is not supported within HTTP/1 and HTTP/2.");
 
-#[cfg(all(feature = "tokio-native-tls", feature = "http3-tokio"))]
+#[cfg(all(feature = "tokio-native-tls", feature = "http3"))]
 compile_error!("HTTP3 is not supported within tokio-native-tls runtime.");
 
 #[cfg(all(feature = "tokio-rt", feature = "smol-rt"))]
 compile_error!("Only one runtime feature can be enabled at a time.");
 
-#[cfg(not(any(feature = "http1", feature = "http2", feature = "http3-tokio")))]
+#[cfg(not(any(feature = "http1", feature = "http2", feature = "http3")))]
 compile_error!("At least one HTTP version feature must be enabled.");
 
 pub(crate) const MAX_ERROR_MESSAGE_SIZE: usize = 50000;
@@ -96,7 +93,7 @@ use std::ops::Shl;
 
 use bytes::Bytes;
 use http::{header, HeaderValue, Request, Response};
-#[cfg(any(feature = "http1", feature = "http2", feature = "http3-tokio"))]
+#[cfg(any(feature = "http1", feature = "http2", feature = "http3"))]
 use http_body_util::Full;
 #[cfg(any(feature = "http1", feature = "http2"))]
 use hyper::body::Incoming;
@@ -106,10 +103,10 @@ use crate::cert::{Certificate, Identity};
 
 use crate::client::conn::{BaseHttpConnection, DeboaConnection};
 
-#[cfg(not(feature = "http3-tokio"))]
+#[cfg(not(feature = "http3"))]
 use crate::client::conn::tcp::DeboaTcpConnection;
 
-#[cfg(feature = "http3-tokio")]
+#[cfg(feature = "http3")]
 use crate::client::conn::udp::DeboaUdpConnection;
 
 #[cfg(feature = "http1")]
@@ -118,7 +115,7 @@ use crate::request::Http1Request;
 #[cfg(feature = "http2")]
 use crate::request::Http2Request;
 
-#[cfg(feature = "http3-tokio")]
+#[cfg(feature = "http3")]
 use crate::request::Http3Request;
 
 use crate::catcher::DeboaCatcher;
@@ -209,7 +206,7 @@ pub enum HttpVersion {
     Http1,
     #[cfg(feature = "http2")]
     Http2,
-    #[cfg(feature = "http3-tokio")]
+    #[cfg(feature = "http3")]
     Http3,
 }
 
@@ -220,7 +217,7 @@ impl Display for HttpVersion {
             HttpVersion::Http1 => write!(f, "HTTP/1.1"),
             #[cfg(feature = "http2")]
             HttpVersion::Http2 => write!(f, "HTTP/2"),
-            #[cfg(feature = "http3-tokio")]
+            #[cfg(feature = "http3")]
             HttpVersion::Http3 => write!(f, "HTTP/3"),
         }
     }
@@ -1047,7 +1044,7 @@ impl Client {
     ///
     /// * `Result<Response<ResponseType>>` - The response.
     ///
-    #[cfg(not(feature = "http3-tokio"))]
+    #[cfg(not(feature = "http3"))]
     async fn send_request<R>(&self, request: &R) -> Result<Response<Incoming>>
     where
         R: AsRef<DeboaRequest>,
@@ -1204,7 +1201,7 @@ impl Client {
         }
     }
 
-    #[cfg(feature = "http3-tokio")]
+    #[cfg(feature = "http3")]
     async fn send_request<R>(&self, request: &R) -> Result<Response<Full<Bytes>>>
     where
         R: AsRef<DeboaRequest>,
@@ -1296,7 +1293,10 @@ impl Client {
         };
 
         if let Some(pool) = &self.pool {
+            #[cfg(feature = "tokio-rt")]
             let mut pool = RwLockWriteGuard::map(pool.write().await, |f| f);
+            #[cfg(feature = "smol-rt")]
+            let mut pool = pool.write().await;
             let conn = pool
                 .create_connection(
                     true,
@@ -1309,7 +1309,7 @@ impl Client {
                 )
                 .await?;
             match conn {
-                #[cfg(feature = "http3-tokio")]
+                #[cfg(feature = "http3")]
                 DeboaConnection::Http3(ref mut conn) => {
                     conn.send_request(request)
                         .await
@@ -1317,7 +1317,7 @@ impl Client {
             }
         } else {
             match self.protocol {
-                #[cfg(feature = "http3-tokio")]
+                #[cfg(feature = "http3")]
                 HttpVersion::Http3 => {
                     let mut connection = BaseHttpConnection::<Http3Request>::connect(
                         host,
@@ -1345,7 +1345,7 @@ impl Client {
     ///
     /// * `Result<DeboaResponse>` - The response.
     ///
-    #[cfg(not(feature = "http3-tokio"))]
+    #[cfg(not(feature = "http3"))]
     async fn process_response<U>(
         &self,
         url: U,
@@ -1359,7 +1359,7 @@ impl Client {
         Ok(response)
     }
 
-    #[cfg(feature = "http3-tokio")]
+    #[cfg(feature = "http3")]
     async fn process_response<U>(
         &self,
         url: U,

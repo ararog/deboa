@@ -18,18 +18,27 @@ use crate::{
     Result,
 };
 
+use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
+use trust_dns_resolver::TokioAsyncResolver;
+
 async fn lookup_and_connect(
     host: &str,
     port: u16,
     client_endpoint: &Endpoint,
 ) -> std::result::Result<h3_quinn::Connection, Box<dyn std::error::Error>> {
-    let addr = tokio::net::lookup_host((host, port))
-        .await?
+    let resolver = TokioAsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default());
+
+    let response = resolver
+        .lookup_ip(host)
+        .await?;
+
+    let addr = response
+        .iter()
         .next()
-        .unwrap();
+        .expect("no addresses returned!");
 
     let conn = client_endpoint
-        .connect(addr, host)?
+        .connect(SocketAddr::new(addr, port), host)?
         .await?;
 
     let quinn_conn: h3_quinn::Connection = h3_quinn::Connection::new(conn);

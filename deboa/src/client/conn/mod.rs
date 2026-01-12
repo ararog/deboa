@@ -22,7 +22,7 @@ use crate::request::Http1Request;
 #[cfg(feature = "http2")]
 use crate::request::Http2Request;
 
-#[cfg(feature = "http3-tokio")]
+#[cfg(feature = "http3")]
 use crate::request::Http3Request;
 
 /// TCP protocol implementations.
@@ -37,7 +37,7 @@ use crate::request::Http3Request;
 ///
 /// - `http1`: Enables HTTP/1.1 support
 /// - `http2`: Enables HTTP/2 support (requires TLS)
-#[cfg(not(feature = "http3-tokio"))]
+#[cfg(not(feature = "http3"))]
 pub mod tcp;
 
 /// UDP protocol implementations.
@@ -50,8 +50,8 @@ pub mod tcp;
 ///
 /// # Features
 ///
-/// - `http3-tokio`: Enables HTTP/3 support (requires TLS)
-#[cfg(feature = "http3-tokio")]
+/// - `http3`: Enables HTTP/3 support (requires TLS)
+#[cfg(feature = "http3")]
 pub mod udp;
 
 /// Connection pooling for efficient HTTP connections.
@@ -100,7 +100,7 @@ pub enum DeboaConnection {
     Http1(Box<BaseHttpConnection<Http1Request>>),
     #[cfg(feature = "http2")]
     Http2(Box<BaseHttpConnection<Http2Request>>),
-    #[cfg(feature = "http3-tokio")]
+    #[cfg(feature = "http3")]
     Http3(Box<BaseHttpConnection<Http3Request>>),
 }
 

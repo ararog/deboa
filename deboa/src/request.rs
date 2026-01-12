@@ -65,7 +65,7 @@
 use std::{collections::HashMap, fmt::Debug, future::Future, str::FromStr, sync::Arc};
 
 use bytes::Bytes;
-#[cfg(feature = "http3-tokio")]
+#[cfg(feature = "http3")]
 use h3_quinn::OpenStreams;
 use http::{
     header::{self, HOST},
@@ -94,7 +94,7 @@ use crate::{
 pub type Http1Request = hyper::client::conn::http1::SendRequest<Full<Bytes>>;
 #[cfg(feature = "http2")]
 pub type Http2Request = hyper::client::conn::http2::SendRequest<Full<Bytes>>;
-#[cfg(feature = "http3-tokio")]
+#[cfg(feature = "http3")]
 pub type Http3Request = h3::client::SendRequest<OpenStreams, Bytes>;
 
 /// Trait to allow making a request from different types.

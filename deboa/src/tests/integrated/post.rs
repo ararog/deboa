@@ -12,8 +12,11 @@ use deboa_tests::server::tcp::tokio::HttpServer;
 #[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::smol::HttpServer;
 
-#[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+#[cfg(all(feature = "tokio-rt", feature = "http3"))]
 use deboa_tests::server::udp::tokio::HttpServer;
+
+#[cfg(all(feature = "smol-rt", feature = "http3"))]
+use deboa_tests::server::udp::smol::HttpServer;
 
 use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
 use http::{header::CONTENT_TYPE, StatusCode};

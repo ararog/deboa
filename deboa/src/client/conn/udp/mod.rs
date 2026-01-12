@@ -1,10 +1,10 @@
 use std::future::Future;
 
 use bytes::{Buf, Bytes, BytesMut};
-#[cfg(feature = "http3-tokio")]
+#[cfg(feature = "http3")]
 use h3::{client::RequestStream, error::StreamError};
 use h3_quinn::RecvStream;
-#[cfg(feature = "http3-tokio")]
+#[cfg(feature = "http3")]
 use http::{Request, Response, StatusCode, Version};
 use http_body_util::Full;
 
