@@ -115,7 +115,8 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
         smol::spawn(async move {
             future::poll_fn(|cx| conn.poll_close(cx)).await;
             Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
-        });
+        })
+        .detach();
 
         Ok(BaseHttpConnection::<Http3Request> { sender: send_request })
     }

@@ -13,7 +13,7 @@ publish = false
 rust-version = "1.64.0"
 
 [features]
-default = ["http3", "tokio-rt", "tokio-rust-tls"]
+default = ["tokio-rt", "http2", "tokio-rust-tls"]
 
 tokio-rt = ["tokio"]
 smol-rt = ["smol", "smol-hyper", "smol-macros"]
