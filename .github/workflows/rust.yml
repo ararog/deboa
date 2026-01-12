@@ -37,7 +37,7 @@ jobs:
         cargo test --features "http2 tokio-rt tokio-native-tls" --no-default-features
         cargo test --features "http2 smol-rt smol-native-tls" --no-default-features
 
-    - name: Run all HTTP2 tests with rust TLS
+    - name: Run all HTTP1 tests with rust TLS
       run: |
         cd deboa
         cargo test --features "http1 tokio-rt tokio-rust-tls" --no-default-features
@@ -53,6 +53,7 @@ jobs:
     #   run: |
     #     cd deboa
     #     cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
+    #     cargo test --features "http3 smol-rt smol-rust-tls" --no-default-features
 
   build-android:
     runs-on: ubuntu-latest
@@ -106,7 +107,7 @@ jobs:
     #     cargo test --features "http2 tokio-rt tokio-native-tls" --no-default-features
     #     cargo test --features "http2 smol-rt smol-native-tls" --no-default-features
 
-    - name: Run all HTTP2 tests with rust TLS
+    - name: Run all HTTP1 tests with rust TLS
       run: |
         cd deboa
         cargo test --features "http1 tokio-rt tokio-rust-tls" --no-default-features
@@ -122,6 +123,7 @@ jobs:
     #   run: |
     #     cd deboa
     #     cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
+    #     cargo test --features "http3 smol-rt smol-rust-tls" --no-default-features
 
   build-macos:
     runs-on: macos-latest
@@ -150,7 +152,7 @@ jobs:
     #     cargo test --features "http2 tokio-rt tokio-native-tls" --no-default-features
     #     cargo test --features "http2 smol-rt smol-native-tls" --no-default-features
 
-    - name: Run all HTTP2 tests with rust TLS
+    - name: Run all HTTP1 tests with rust TLS
       run: |
         cd deboa
         cargo test --features "http1 tokio-rt tokio-rust-tls" --no-default-features
@@ -166,3 +168,4 @@ jobs:
     #   run: |
     #     cd deboa
     #     cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
+    #     cargo test --features "http3 smol-rt smol-rust-tls" --no-default-features
