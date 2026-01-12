@@ -35,15 +35,15 @@ deboa = { version = "0.0.9", features = ["http1", "http2", "tokio-rt", "tokio-ru
 
 ## Features
 
-- `http1`: Enable HTTP/1 support (enabled by default)
-- `http2`: Enable HTTP/2 support (enabled by default)
-- `http3`: Enable HTTP/3 support (tokio only)
-- `tokio-rt`: Use Tokio as the async runtime (enabled by default)
-- `smol-rt`: Use smol as the async runtime
-- `tokio-rust-tls`: Use tokio-rust-tls as the TLS implementation (enabled by default)
-- `tokio-native-tls`: Use tokio-native-tls as the TLS implementation
-- `smol-rust-tls`: Use smol-rust-tls as the TLS implementation
-- `smol-native-tls`: Use smol-native-tls as the TLS implementation
+- `http1`: HTTP/1 support
+- `http2`: HTTP/2 support (enabled by default)
+- `http3`: HTTP/3 support
+- `tokio-rt`: Tokio runtime (enabled by default)
+- `smol-rt`: Smol runtime
+- `tokio-rust-tls`: tokio-rust-tls implementation (enabled by default)
+- `tokio-native-tls`: tokio-native-tls implementation
+- `smol-rust-tls`: smol-rust-tls implementation
+- `smol-native-tls`: smol-native-tls implementation
 
 ## Basic Usage
 

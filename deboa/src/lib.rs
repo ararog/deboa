@@ -41,10 +41,10 @@
 //! |-------------------|----------|---------------------------------------------------------|
 //! | `tokio_rt`        | Yes      | Support tokio runtime (enabled by default).             |
 //! | `smol_rt`         | No       | Support smol runtime.                                   |
-//! | `http1`           | Yes      | Support for HTTP/1 (enabled by default).                |
+//! | `http1`           | No       | Support for HTTP/1.                                     |
 //! | `http2`           | Yes      | Support for HTTP/2 (enabled by default).                |
-//! | `http3`     | Yes      | Support for HTTP/3 on Tokio (enabled by default).       |
-//! | `http3-smol`      | No       | Support for HTTP/3 on Smol (enabled by default).        |
+//! | `http3`           | No       | Support for HTTP/3.                                     |
+//! | `http3-smol`      | No       | Support for HTTP/3 on Smol.                             |
 //! | `tokio-rust-tls`  | Yes      | Support for tokio-rust-tls (enabled by default).        |
 //! | `tokio-native-tls`| No       | Support for tokio-native-tls.                           |
 //! | `smol-rust-tls`   | No       | Support for smol-rust-tls.                              |
@@ -54,7 +54,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = { version = "0.1.0", features = ["tokio_rt", "http1", "http2", "tokio-rust-tls"] }
+//! deboa = { version = "0.1.0", features = ["tokio_rt", "http2", "tokio-rust-tls"] }
 //! ```
 //!
 //! Conversely, HTTP/2 can be disabled:
@@ -65,11 +65,14 @@
 //! ```
 //!
 
-#[cfg(all(feature = "http1", feature = "http2", feature = "http3"))]
+#[cfg(all(any(feature = "http1", feature = "http2"), feature = "http3"))]
 compile_error!("HTTP3 is not supported within HTTP/1 and HTTP/2.");
 
 #[cfg(all(feature = "tokio-native-tls", feature = "http3"))]
 compile_error!("HTTP3 is not supported within tokio-native-tls runtime.");
+
+#[cfg(all(feature = "smol-native-tls", feature = "http3"))]
+compile_error!("HTTP3 is not supported within smol-native-tls runtime.");
 
 #[cfg(all(feature = "tokio-rt", feature = "smol-rt"))]
 compile_error!("Only one runtime feature can be enabled at a time.");
