@@ -61,7 +61,13 @@ pub fn setup_rust_tls(
             }));
         }
 
-        root_store.add(cert.unwrap());
+        let result = root_store.add(cert.unwrap());
+        if let Err(e) = result {
+            return Err(DeboaError::Connection(ConnectionError::Tls {
+                host: host.to_string(),
+                message: format!("Could not add CA certificate to the store: {}", e),
+            }));
+        }
 
         config.with_root_certificates(root_store)
     } else {
