@@ -12,7 +12,7 @@ use deboa_tests::server::tcp::smol::HttpServer;
 use deboa_tests::server::udp::tokio::HttpServer;
 
 use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
-use http::StatusCode;
+use http::{header::HOST, StatusCode};
 
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
@@ -29,7 +29,10 @@ async fn do_patch() -> Result<()> {
     server
         .start(|req| {
             if req.method() == "PATCH" && req.uri().path() == "/posts/1" {
-                Ok(make_response(StatusCode::OK, b""))
+                assert!(req
+                    .headers()
+                    .contains_key(HOST));
+                Ok(make_response(StatusCode::OK, b"done"))
             } else {
                 Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
             }
@@ -42,7 +45,7 @@ async fn do_patch() -> Result<()> {
         .build();
 
     let request = DeboaRequest::patch(server.url("/posts/1"))?
-        .text("")
+        .text("text")
         .build()?;
 
     let response = client
@@ -50,6 +53,12 @@ async fn do_patch() -> Result<()> {
         .await?;
 
     assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response
+            .text()
+            .await?,
+        "done"
+    );
 
     server.stop().await;
 

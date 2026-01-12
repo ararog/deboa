@@ -8,7 +8,7 @@
 #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
 use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdentity};
 #[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
-use rustls::pki_types::{pem::PemObject, CertificateDer, PrivateKeyDer};
+use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
 /// Represents a client certificate and its associated data for mutual TLS authentication.
 ///

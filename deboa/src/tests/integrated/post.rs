@@ -16,7 +16,7 @@ use deboa_tests::server::tcp::smol::HttpServer;
 use deboa_tests::server::udp::tokio::HttpServer;
 
 use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
-use http::{header, StatusCode};
+use http::{header::CONTENT_TYPE, StatusCode};
 
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
@@ -79,40 +79,52 @@ async fn test_post() -> Result<()> {
     do_post().await
 }
 
-/*
 async fn do_post_encoded_form() -> Result<()> {
-    let server = MockServer::start();
+    let mut server = HttpServer::new(tls_server_config());
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "POST" && req.uri().path() == "/posts" {
+                if req
+                    .headers()
+                    .contains_key(CONTENT_TYPE)
+                {
+                    let content_type = req
+                        .headers()
+                        .get(CONTENT_TYPE)
+                        .unwrap();
+                    assert_eq!(
+                        content_type
+                            .to_str()
+                            .unwrap(),
+                        mime::APPLICATION_WWW_FORM_URLENCODED.to_string()
+                    );
+                }
+                // TODO: check body
+                // name=deboa&version=0.0.1
+                Ok(make_response(StatusCode::CREATED, b"ping"))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
 
-    let http_mock = server.mock(|when, then| {
-        when.method(POST)
-            .path("/posts")
-            .header(
-                header::CONTENT_TYPE.as_str(),
-                mime::APPLICATION_WWW_FORM_URLENCODED.to_string(),
-            )
-            .body("name=deboa&version=0.0.1");
-        then.status::<u16>(StatusCode::CREATED.into())
-            .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
-            .body("ping");
-    });
-
-    let client = Client::default();
+    let client: Client = Client::builder()
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
+        .build();
 
     let mut form = EncodedForm::builder();
     form.field("name", "deboa");
     form.field("version", "0.0.1");
 
-    let request = DeboaRequest::post(
-        format!("{}/posts", TEST_HOST).as_str(),
-    )?
-    .form(form.into())
-    .build()?;
+    let request = DeboaRequest::post(server.url("/posts"))?
+        .form(form.into())
+        .build()?;
 
     let mut response = client
         .execute(request)
         .await?;
-
-    http_mock.assert();
 
     assert_eq!(response.status(), StatusCode::CREATED);
     assert_eq!(
@@ -121,6 +133,8 @@ async fn do_post_encoded_form() -> Result<()> {
             .await,
         b"ping"
     );
+
+    server.stop().await;
 
     Ok(())
 }
@@ -138,37 +152,51 @@ async fn test_post_encoded_form() -> Result<()> {
     do_post_encoded_form().await
 }
 
-
 async fn do_post_multipart_form() -> Result<()> {
-    let server = MockServer::start();
-
-    let http_mock = server.mock(|when, then| {
-        when.method(POST)
-            .path("/posts")
-            .header_prefix(header::CONTENT_TYPE.as_str(), mime::MULTIPART_FORM_DATA.to_string());
-        then.status::<u16>(StatusCode::CREATED.into())
-            .header(header::CONTENT_TYPE.as_str(), mime::TEXT_PLAIN.to_string())
-            .body("ping");
-    });
-
-    let client = Client::default();
-
     let mut form = MultiPartForm::builder();
     form.field("name", "deboa");
     form.field("version", "0.0.1");
 
-    let request = DeboaRequest::post(
-        format!("{}/posts", TEST_HOST).as_str(),
-    )?
-    .header(header::CONTENT_TYPE, mime::MULTIPART_FORM_DATA.essence_str())
-    .form(form.into())
-    .build()?;
+    let mut server = HttpServer::new(tls_server_config());
+    #[allow(unused_must_use)]
+    server
+        .start(|req| {
+            if req.method() == "POST" && req.uri().path() == "/posts" {
+                if req
+                    .headers()
+                    .contains_key(CONTENT_TYPE)
+                {
+                    let content_type = req
+                        .headers()
+                        .get(CONTENT_TYPE)
+                        .unwrap();
+
+                    assert!(content_type
+                        .to_str()
+                        .unwrap()
+                        .contains("multipart/form-data; boundary="));
+                }
+                // TODO: check body
+                // name=deboa&version=0.0.1
+                Ok(make_response(StatusCode::CREATED, b"ping"))
+            } else {
+                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            }
+        })
+        .await;
+
+    let client: Client = Client::builder()
+        .certificate(Certificate::from_slice(CA_CERT))
+        .skip_cert_verification(SKIP_CERT_VERIFICATION)
+        .build();
+
+    let request = DeboaRequest::post(server.url("/posts"))?
+        .form(form.into())
+        .build()?;
 
     let mut response = client
         .execute(request)
         .await?;
-
-    http_mock.assert();
 
     assert_eq!(response.status(), StatusCode::CREATED);
     assert_eq!(
@@ -177,6 +205,8 @@ async fn do_post_multipart_form() -> Result<()> {
             .await,
         b"ping"
     );
+
+    server.stop().await;
 
     Ok(())
 }
@@ -193,4 +223,3 @@ async fn test_post_multipart_form() -> Result<()> {
 async fn test_post_multipart_form() -> Result<()> {
     do_post_multipart_form().await
 }
-*/
