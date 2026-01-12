@@ -55,7 +55,7 @@ http = "1.3.1"
 
 - tokio-rt (default)
 - smol-rt
-- http1 (default)
+- http1
 - http2 (default)
 - http3
 - tokio-rust-tls (default)

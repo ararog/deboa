@@ -55,7 +55,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-deboa = { version = "0.0.9", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.0.9" }
 ```
 
 Basic usage:

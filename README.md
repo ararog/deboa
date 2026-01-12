@@ -33,9 +33,9 @@ deboa = { version = "0.0.9", features = ["http1", "http2", "tokio-rt"] }
 
 - tokio-rt (default)
 - smol-rt
-- http1 (default)
+- http1
 - http2 (default)
-- http3 (tokio only)
+- http3
 
 ## Usage
 
