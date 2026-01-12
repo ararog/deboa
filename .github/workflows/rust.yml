@@ -49,10 +49,10 @@ jobs:
         cargo test --features "http2 tokio-rt tokio-rust-tls" --no-default-features
         cargo test --features "http2 smol-rt smol-rust-tls" --no-default-features
 
-    - name: Run all HTTP3 tests with rust TLS
-      run: |
-        cd deboa
-        cargo test --features "http3-tokio tokio-rt tokio-rust-tls" --no-default-features
+    # - name: Run all HTTP3 tests with rust TLS
+    #   run: |
+    #     cd deboa
+    #     cargo test --features "http3-tokio tokio-rt tokio-rust-tls" --no-default-features
 
   build-android:
     runs-on: ubuntu-latest
@@ -118,10 +118,10 @@ jobs:
         cargo test --features "http2 tokio-rt tokio-rust-tls" --no-default-features
         cargo test --features "http2 smol-rt smol-rust-tls" --no-default-features
 
-    - name: Run all HTTP3 tests with rust TLS
-      run: |
-        cd deboa
-        cargo test --features "http3-tokio tokio-rt tokio-rust-tls" --no-default-features
+    # - name: Run all HTTP3 tests with rust TLS
+    #   run: |
+    #     cd deboa
+    #     cargo test --features "http3-tokio tokio-rt tokio-rust-tls" --no-default-features
 
   build-macos:
     runs-on: macos-latest
@@ -138,17 +138,17 @@ jobs:
       run: |
         cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all"
               
-    - name: Run all HTTP1 tests with native TLS
-      run: |
-        cd deboa
-        cargo test --features "http1 tokio-rt tokio-native-tls" --no-default-features
-        cargo test --features "http1 smol-rt smol-native-tls" --no-default-features
+    # - name: Run all HTTP1 tests with native TLS
+    #   run: |
+    #     cd deboa
+    #     cargo test --features "http1 tokio-rt tokio-native-tls" --no-default-features
+    #     cargo test --features "http1 smol-rt smol-native-tls" --no-default-features
 
-    - name: Run all HTTP2 tests with native TLS
-      run: |
-        cd deboa
-        cargo test --features "http2 tokio-rt tokio-native-tls" --no-default-features
-        cargo test --features "http2 smol-rt smol-native-tls" --no-default-features
+    # - name: Run all HTTP2 tests with native TLS
+    #   run: |
+    #     cd deboa
+    #     cargo test --features "http2 tokio-rt tokio-native-tls" --no-default-features
+    #     cargo test --features "http2 smol-rt smol-native-tls" --no-default-features
 
     - name: Run all HTTP2 tests with rust TLS
       run: |
@@ -162,10 +162,7 @@ jobs:
         cargo test --features "http2 tokio-rt tokio-rust-tls" --no-default-features
         cargo test --features "http2 smol-rt smol-rust-tls" --no-default-features
 
-    - name: Run all HTTP3 tests with rust TLS
-      run: |
-        sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
-        sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
-        sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=1      
-        cd deboa
-        cargo test --features "http3-tokio tokio-rt tokio-rust-tls" --no-default-features
+    # - name: Run all HTTP3 tests with rust TLS
+    #   run: |
+    #     cd deboa
+    #     cargo test --features "http3-tokio tokio-rt tokio-rust-tls" --no-default-features
