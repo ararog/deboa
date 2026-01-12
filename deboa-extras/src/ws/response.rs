@@ -1,8 +1,9 @@
+use std::future::Future;
+
 use crate::ws::io::socket::{DeboaWebSocket, UpgradedIo, WebSocket};
 use deboa::{response::DeboaResponse, Result};
 
 /// Trait for converting a DeboaResponse into a WebSocket
-#[deboa::async_trait]
 pub trait IntoWebSocket {
     /// Converts a DeboaResponse into a WebSocket
     ///
@@ -34,10 +35,9 @@ pub trait IntoWebSocket {
     ///     }
     /// }
     /// ```
-    async fn into_websocket(self) -> Result<WebSocket<UpgradedIo>>;
+    fn into_websocket(self) -> impl Future<Output = Result<WebSocket<UpgradedIo>>>;
 }
 
-#[deboa::async_trait]
 impl IntoWebSocket for DeboaResponse {
     async fn into_websocket(self) -> Result<WebSocket<UpgradedIo>> {
         let upgraded = self

@@ -1,4 +1,5 @@
-use async_trait::async_trait;
+use std::future::Future;
+
 use bytes::Bytes;
 use http::{Request, Response, StatusCode, Version};
 use http_body_util::{BodyExt, Full};
@@ -11,7 +12,6 @@ use crate::{
     Result, MAX_ERROR_MESSAGE_SIZE,
 };
 
-#[async_trait]
 /// Trait that represents the HTTP connection.
 ///
 /// # Type Parameters
@@ -40,14 +40,14 @@ pub trait DeboaTcpConnection: private::DeboaTcpConnectionSealed {
     ///
     /// * `Result<BaseHttpConnection<Self::Sender>>` - The connection or error.
     ///
-    async fn connect(
+    fn connect(
         is_secure: bool,
         host: &str,
         port: u16,
         identity: &Option<Identity>,
         certificate: &Option<Certificate>,
         skip_cert_verification: bool,
-    ) -> Result<BaseHttpConnection<Self::Sender>>;
+    ) -> impl Future<Output = Result<BaseHttpConnection<Self::Sender>>>;
 
     /// Get connection protocol.
     ///
@@ -67,7 +67,10 @@ pub trait DeboaTcpConnection: private::DeboaTcpConnectionSealed {
     ///
     /// * `Result<Response<Incoming>>` - The response or error.
     ///
-    async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>>;
+    fn send_request(
+        &mut self,
+        request: Request<Full<Bytes>>,
+    ) -> impl Future<Output = Result<Response<Incoming>>>;
 
     /// Process a response.
     ///

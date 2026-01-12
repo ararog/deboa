@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use bytes::Bytes;
 use http::version::Version;
 use http_body_util::Full;
@@ -14,7 +13,6 @@ use crate::{
     Result,
 };
 
-#[async_trait]
 impl DeboaTcpConnection for BaseHttpConnection<Http1Request> {
     type Sender = Http1Request;
 

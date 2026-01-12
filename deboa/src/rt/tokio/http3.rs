@@ -1,7 +1,6 @@
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::sync::Arc;
 
-use async_trait::async_trait;
 use bytes::Bytes;
 use futures::future;
 use http::{version::Version, StatusCode};
@@ -38,7 +37,6 @@ async fn lookup_and_connect(
     Ok(quinn_conn)
 }
 
-#[async_trait]
 impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
     type Sender = Http3Request;
 

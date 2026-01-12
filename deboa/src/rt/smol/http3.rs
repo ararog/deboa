@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use async_native_tls::{Identity, TlsConnector};
-use async_trait::async_trait;
 use bytes::Bytes;
 use http::version::Version;
 use http_body_util::Full;
@@ -18,7 +17,6 @@ use crate::{
     Result,
 };
 
-#[async_trait]
 impl DeboaHttpConnection for BaseHttpConnection<Http2Request> {
     type Sender = Http2Request;
 

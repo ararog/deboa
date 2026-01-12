@@ -62,9 +62,8 @@
 //!     .await?;
 //! ```
 
-use std::{collections::HashMap, fmt::Debug, str::FromStr, sync::Arc};
+use std::{collections::HashMap, fmt::Debug, future::Future, str::FromStr, sync::Arc};
 
-use async_trait::async_trait;
 use bytes::Bytes;
 #[cfg(feature = "http3-tokio")]
 use h3_quinn::OpenStreams;
@@ -116,7 +115,6 @@ pub type Http3Request = h3::client::SendRequest<OpenStreams, Bytes>;
 ///   .await?;
 /// assert_eq!(response.status(), 200);
 /// ```
-#[async_trait]
 pub trait IntoRequest: private::IntoRequestSealed {
     fn into_request(self) -> Result<DeboaRequest>;
 }
@@ -261,7 +259,6 @@ impl MethodExt for &str {
 
 #[deprecated(note = "Use FetchWith trait instead", since = "0.0.8")]
 /// Trait to allow make a get request from different types.
-#[async_trait]
 pub trait Fetch {
     /// Fetch the request.
     ///
@@ -282,12 +279,11 @@ pub trait Fetch {
     /// assert_eq!(response.status(), 200);
     /// ```
     ///
-    async fn fetch<T>(&self, client: T) -> Result<DeboaResponse>
+    fn fetch<T>(&self, client: T) -> impl Future<Output = Result<DeboaResponse>>
     where
         T: AsRef<Client> + Send;
 }
 
-#[async_trait]
 #[allow(deprecated)]
 impl Fetch for &str {
     async fn fetch<T>(&self, client: T) -> Result<DeboaResponse>
@@ -314,7 +310,6 @@ impl Fetch for &str {
 ///   .await?;
 /// assert_eq!(response.status(), 200);
 /// ```
-#[async_trait]
 pub trait FetchWith {
     /// Fetch the request.
     ///
@@ -335,12 +330,11 @@ pub trait FetchWith {
     /// assert_eq!(response.status(), 200);
     /// ```
     ///
-    async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
+    fn fetch_with<T>(&self, client: T) -> impl Future<Output = Result<DeboaResponse>>
     where
         T: AsRef<Client> + Send;
 }
 
-#[async_trait]
 impl FetchWith for &str {
     async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
     where
@@ -352,7 +346,6 @@ impl FetchWith for &str {
     }
 }
 
-#[async_trait]
 impl FetchWith for String {
     async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
     where
