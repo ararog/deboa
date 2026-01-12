@@ -1,8 +1,6 @@
 use crate::{cert::Certificate, tests::SKIP_CERT_VERIFICATION};
 #[cfg(test)]
 use crate::{request::DeboaRequest, Client, Result};
-#[cfg(feature = "http3-tokio")]
-use crate::{response::DeboaResponse, HttpVersion};
 
 #[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::tokio::HttpServer;

@@ -42,13 +42,6 @@ impl HttpServer {
         &mut self,
         handler: fn(Request<body::Incoming>) -> Result<Response<Full<Bytes>>, hyper::Error>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        if self
-            .config
-            .is_none()
-        {
-            return Err("HttpServer - Server config is required".into());
-        }
-
         let tls_acceptor = if let Some(config) = &self.config {
             if config
                 .cert

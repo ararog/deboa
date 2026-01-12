@@ -31,12 +31,10 @@ impl ForyRequestBuilder for DeboaRequestBuilder {
     }
 }
 
-#[deboa::async_trait]
 pub trait ForyResponse {
     async fn body_as_fory<T: Serializer + ForyDefault>(&mut self, fory: &Fory) -> Result<T>;
 }
 
-#[deboa::async_trait]
 impl ForyResponse for DeboaResponse {
     async fn body_as_fory<T: Serializer + ForyDefault>(&mut self, fory: &Fory) -> Result<T> {
         let result = fory.deserialize(

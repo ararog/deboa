@@ -1,4 +1,5 @@
-use async_trait::async_trait;
+use std::future::Future;
+
 use bytes::{Buf, Bytes, BytesMut};
 #[cfg(feature = "http3-tokio")]
 use h3::{client::RequestStream, error::StreamError};
@@ -14,7 +15,6 @@ use crate::{
     Result, MAX_ERROR_MESSAGE_SIZE,
 };
 
-#[async_trait]
 /// Trait that represents the HTTP connection.
 ///
 /// # Type Parameters
@@ -41,13 +41,13 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     ///
     /// * `Result<BaseHttpConnection<Self::Sender>>` - The connection or error.
     ///
-    async fn connect(
+    fn connect(
         host: &str,
         port: u16,
         identity: &Option<Identity>,
         certificate: &Option<Certificate>,
         skip_cert_verification: bool,
-    ) -> Result<BaseHttpConnection<Self::Sender>>;
+    ) -> impl Future<Output = Result<BaseHttpConnection<Self::Sender>>>;
 
     /// Get connection protocol.
     ///
@@ -67,10 +67,10 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     ///
     /// * `Result<Response<Full<Bytes>>>` - The response or error.
     ///
-    async fn send_request(
+    fn send_request(
         &mut self,
         request: Request<Full<Bytes>>,
-    ) -> Result<Response<Full<Bytes>>>;
+    ) -> impl Future<Output = Result<Response<Full<Bytes>>>>;
 
     /// Process a response.
     ///

@@ -132,7 +132,6 @@ use deboa::{Result, catcher::DeboaCatcher, request::DeboaRequest, response::Debo
 
 struct TestMonitor;
 
-#[deboa::async_trait]
 impl DeboaCatcher for TestMonitor {
     async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
         println!("Request: {:?}", request.url());

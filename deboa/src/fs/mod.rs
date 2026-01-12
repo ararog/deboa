@@ -23,7 +23,6 @@
 //! // Implement custom compression
 //! struct MyCompressor;
 //!
-//! #[async_trait::async_trait]
 //! impl Compressor for MyCompressor {
 //!     fn name(&self) -> String {
 //!         "my-compression".to_string()

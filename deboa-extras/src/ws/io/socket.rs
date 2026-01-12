@@ -1,4 +1,5 @@
 use std::{
+    future::Future,
     io,
     pin::Pin,
     task::{Context, Poll},
@@ -30,18 +31,25 @@ pub type UpgradedIo = TokioIo<Upgraded>;
 #[cfg(feature = "smol")]
 pub type UpgradedIo = FuturesIo<Upgraded>;
 
-#[deboa::async_trait]
 pub trait DeboaWebSocket {
     type Stream;
 
     fn new(stream: Self::Stream) -> Self;
-    async fn read_message(&mut self) -> Result<Option<Message>, DeboaExtrasError>;
-    async fn write_message(&mut self, message: Message) -> Result<(), DeboaExtrasError>;
-    async fn send_close(&mut self, code: u16, reason: &str) -> Result<(), DeboaExtrasError>;
-    async fn send_text(&mut self, message: &str) -> Result<(), DeboaExtrasError>;
-    async fn send_binary(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError>;
-    async fn send_ping(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError>;
-    async fn send_pong(&mut self, message: &[u8]) -> Result<(), DeboaExtrasError>;
+    fn read_message(&mut self) -> impl Future<Output = Result<Option<Message>, DeboaExtrasError>>;
+    fn write_message(
+        &mut self,
+        message: Message,
+    ) -> impl Future<Output = Result<(), DeboaExtrasError>>;
+    fn send_close(
+        &mut self,
+        code: u16,
+        reason: &str,
+    ) -> impl Future<Output = Result<(), DeboaExtrasError>>;
+    fn send_text(&mut self, message: &str) -> impl Future<Output = Result<(), DeboaExtrasError>>;
+    fn send_binary(&mut self, message: &[u8])
+        -> impl Future<Output = Result<(), DeboaExtrasError>>;
+    fn send_ping(&mut self, message: &[u8]) -> impl Future<Output = Result<(), DeboaExtrasError>>;
+    fn send_pong(&mut self, message: &[u8]) -> impl Future<Output = Result<(), DeboaExtrasError>>;
 }
 
 pin_project! {
@@ -53,7 +61,6 @@ pin_project! {
     }
 }
 
-#[deboa::async_trait]
 impl DeboaWebSocket for WebSocket<UpgradedIo> {
     type Stream = UpgradedIo;
 

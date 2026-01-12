@@ -1,5 +1,4 @@
-use async_trait::async_trait;
-use std::collections::HashMap;
+use std::{collections::HashMap, future::Future};
 use time::Duration;
 
 #[cfg(feature = "http1")]
@@ -47,7 +46,6 @@ impl Default for HttpConnectionPool {
     }
 }
 
-#[async_trait]
 /// Trait that represents the HTTP connection pool.
 pub trait DeboaHttpConnectionPool: private::DeboaHttpConnectionPoolSealed {
     /// Allow create a new connection pool.
@@ -86,7 +84,7 @@ pub trait DeboaHttpConnectionPool: private::DeboaHttpConnectionPoolSealed {
     ///
     /// * `Result<&mut DeboaConnection>` - The connection or error.
     ///
-    async fn create_connection<'a>(
+    fn create_connection<'a>(
         &'a mut self,
         is_secure: bool,
         host: &'a str,
@@ -95,7 +93,7 @@ pub trait DeboaHttpConnectionPool: private::DeboaHttpConnectionPoolSealed {
         identity: &Option<Identity>,
         certificate: &Option<Certificate>,
         skip_cert_verification: bool,
-    ) -> Result<&'a mut DeboaConnection>;
+    ) -> impl Future<Output = Result<&'a mut DeboaConnection>>;
 }
 
 impl HttpConnectionPool {
@@ -120,7 +118,6 @@ impl HttpConnectionPool {
     }
 }
 
-#[async_trait]
 impl DeboaHttpConnectionPool for HttpConnectionPool {
     fn new(max_idle_connections: u32, keep_alive_duration: Duration) -> Self {
         Self { max_idle_connections, keep_alive_duration, connections: HashMap::new() }
