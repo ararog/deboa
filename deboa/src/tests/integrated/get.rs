@@ -14,8 +14,11 @@ use deboa_tests::server::tcp::tokio::HttpServer;
 #[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::smol::HttpServer;
 
-#[cfg(all(feature = "tokio-rt", feature = "http3-tokio"))]
+#[cfg(all(feature = "tokio-rt", feature = "http3"))]
 use deboa_tests::server::udp::tokio::HttpServer;
+
+#[cfg(all(feature = "smol-rt", feature = "http3"))]
+use deboa_tests::server::udp::smol::HttpServer;
 
 use http::StatusCode;
 
@@ -162,15 +165,10 @@ async fn do_get_invalid_server() -> Result<()> {
                 .to_string(),
     });
 
-    #[cfg(feature = "http3-tokio")]
+    #[cfg(feature = "http3")]
     let error = DeboaError::Connection(ConnectionError::Udp {
         host: "invalid-server.com".to_string(),
-        #[cfg(target_os = "windows")]
-        message: "Could not connect to server: No such host is known. (os error 11001)".to_string(),
-        #[cfg(target_os = "linux")]
-        message: "Could not connect to server: failed to lookup address information: Name or service not known".to_string(),
-        #[cfg(target_os = "macos")]
-        message: "Could not connect to server: nodename nor servname provided, or not known"
+        message: "Could not connect to server: no record found for Query { name: Name(\"invalid-server.com.\"), query_type: AAAA, query_class: IN }"
             .to_string(),
     });
 

@@ -1,8 +1,6 @@
 #[cfg(all(feature = "smol-rust-tls", any(feature = "http1", feature = "http2")))]
 use std::sync::Arc;
 
-#[cfg(all(any(feature = "http1", feature = "http2"), feature = "smol-rust-tls"))]
-use crate::cert::Certificate;
 #[cfg(any(feature = "http1", feature = "http2"))]
 use crate::rt::smol::stream::SmolStream;
 #[cfg(any(feature = "http1", feature = "http2"))]
@@ -11,13 +9,17 @@ use smol::net::TcpStream;
 #[cfg(feature = "smol-native-tls")]
 use async_native_tls::{Certificate, Identity, TlsConnector};
 
-#[cfg(feature = "smol-rust-tls")]
+#[cfg(all(feature = "smol-rust-tls", any(feature = "http1", feature = "http2")))]
 use crate::client::conn::stream::setup_rust_tls;
 #[cfg(all(feature = "smol-rust-tls", any(feature = "http1", feature = "http2")))]
 use futures_rustls::TlsConnector;
-#[cfg(feature = "smol-rust-tls")]
+#[cfg(all(feature = "smol-rust-tls", any(feature = "http1", feature = "http2")))]
 use rustls::pki_types::ServerName;
 
+#[cfg(all(
+    any(feature = "smol-rust-tls", feature = "smol-native-tls"),
+    any(feature = "http1", feature = "http2")
+))]
 use crate::{
     cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
     errors::{ConnectionError, DeboaError},
@@ -113,7 +115,7 @@ pub(crate) async fn tls_connection(
     host: &str,
     port: u16,
     identity: &Option<DeboaIdentity>,
-    certificate: &Option<Certificate>,
+    certificate: &Option<DeboaCertificate>,
     skip_server_verification: bool,
     alpn: Option<&str>,
 ) -> Result<SmolStream> {

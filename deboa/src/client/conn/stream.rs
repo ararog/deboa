@@ -1,5 +1,5 @@
 #[cfg(all(
-    any(feature = "http1", feature = "http2", feature = "http3-tokio"),
+    any(feature = "http1", feature = "http2", feature = "http3"),
     any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
 ))]
 use std::sync::Arc;
@@ -11,12 +11,12 @@ use rustls::ClientConfig;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
 #[cfg(all(
-    any(feature = "http1", feature = "http2", feature = "http3-tokio"),
+    any(feature = "http1", feature = "http2", feature = "http3"),
     any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
 ))]
 use crate::cert::Certificate;
 #[cfg(all(
-    any(feature = "http1", feature = "http2", feature = "http3-tokio"),
+    any(feature = "http1", feature = "http2", feature = "http3"),
     any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
 ))]
 use crate::{
@@ -26,7 +26,7 @@ use crate::{
 };
 
 #[cfg(all(
-    any(feature = "http1", feature = "http2", feature = "http3-tokio"),
+    any(feature = "http1", feature = "http2", feature = "http3"),
     any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
 ))]
 pub fn setup_rust_tls(
@@ -111,7 +111,7 @@ pub fn setup_rust_tls(
         all(feature = "tokio-rt", feature = "tokio-rust-tls"),
         all(feature = "smol-rt", feature = "smol-rust-tls")
     ),
-    any(feature = "http1", feature = "http2", feature = "http3-tokio")
+    any(feature = "http1", feature = "http2", feature = "http3")
 ))]
 pub(crate) mod verify {
     use std::sync::Arc;

@@ -5,12 +5,12 @@ use time::Duration;
 use crate::request::Http1Request;
 #[cfg(feature = "http2")]
 use crate::request::Http2Request;
-#[cfg(feature = "http3-tokio")]
+#[cfg(feature = "http3")]
 use crate::request::Http3Request;
 
-#[cfg(not(feature = "http3-tokio"))]
+#[cfg(not(feature = "http3"))]
 use crate::client::conn::tcp::DeboaTcpConnection;
-#[cfg(feature = "http3-tokio")]
+#[cfg(feature = "http3")]
 use crate::client::conn::udp::DeboaUdpConnection;
 
 use crate::{
@@ -183,7 +183,7 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
                 .await?;
                 DeboaConnection::Http2(Box::new(connection))
             }
-            #[cfg(feature = "http3-tokio")]
+            #[cfg(feature = "http3")]
             HttpVersion::Http3 => {
                 let connection = BaseHttpConnection::<Http3Request>::connect(
                     host,

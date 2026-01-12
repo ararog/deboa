@@ -1,14 +1,13 @@
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 
 use bytes::Bytes;
 use h3_quinn::quinn::{self, crypto::rustls::QuicServerConfig};
 use http::{Request, Response};
-use http_body_util::Full;
-use hyper::body;
-use tokio::task::JoinHandle;
+use http_body_util::{BodyExt, Full};
+use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
 use crate::server::ServerConfig;
-use crate::utils::{generate_port, TEST_HOST};
+use crate::utils::{generate_port, test_url};
 
 pub struct HttpServer {
     port: u16,
@@ -24,16 +23,16 @@ impl HttpServer {
 
 impl HttpServer {
     pub fn url(&self, path: &str) -> String {
-        format!("{}:{}{}", TEST_HOST, self.port, path)
+        format!("{}{}", test_url(Some(self.port)), path)
     }
 
     pub fn base_url(&self) -> String {
-        format!("{}:{}", TEST_HOST, self.port)
+        test_url(Some(self.port))
     }
 
     pub async fn start(
         &mut self,
-        handler: fn(Request<body::Incoming>) -> Result<Response<Full<Bytes>>, hyper::Error>,
+        handler: fn(Request<Full<Bytes>>) -> Result<Response<Full<Bytes>>, hyper::Error>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if let Some(config) = &self.config {
             if config
@@ -60,6 +59,8 @@ impl HttpServer {
                 eprintln!("HttpServer - Error loading private key: {}", e);
                 return Err(e.into());
             }
+
+            let key = key.unwrap();
 
             let provider = rustls::crypto::aws_lc_rs::default_provider();
             let mut tls_config = rustls::ServerConfig::builder_with_provider(Arc::new(provider))
@@ -151,7 +152,7 @@ impl HttpServer {
                                                         .finish()
                                                         .await;
                                                 }
-                                            });
+                                            }).detach();
                                         }
                                         Ok(None) => {
                                             break;
@@ -167,7 +168,7 @@ impl HttpServer {
                                 eprintln!("accepting connection failed: {:?}", err);
                             }
                         }
-                    });
+                    }).detach();
                 }
 
                 endpoint
@@ -183,7 +184,7 @@ impl HttpServer {
 
     pub async fn stop(&mut self) {
         if let Some(task) = self.task.take() {
-            task.abort();
+            task.cancel().await;
         }
     }
 }

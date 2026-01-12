@@ -6,7 +6,7 @@
 
 * Client no longer need to be mutable, you might need update all client usages
 * Removed set methods from ClientBuilder
-* Removed ca field from Identity struct and new method
+* Identity code has been refactored
 * Added Certificate struct
 
 ### Non-breaking changes

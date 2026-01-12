@@ -52,7 +52,7 @@ jobs:
     # - name: Run all HTTP3 tests with rust TLS
     #   run: |
     #     cd deboa
-    #     cargo test --features "http3-tokio tokio-rt tokio-rust-tls" --no-default-features
+    #     cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
 
   build-android:
     runs-on: ubuntu-latest
@@ -121,7 +121,7 @@ jobs:
     # - name: Run all HTTP3 tests with rust TLS
     #   run: |
     #     cd deboa
-    #     cargo test --features "http3-tokio tokio-rt tokio-rust-tls" --no-default-features
+    #     cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
 
   build-macos:
     runs-on: macos-latest
@@ -165,4 +165,4 @@ jobs:
     # - name: Run all HTTP3 tests with rust TLS
     #   run: |
     #     cd deboa
-    #     cargo test --features "http3-tokio tokio-rt tokio-rust-tls" --no-default-features
+    #     cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
