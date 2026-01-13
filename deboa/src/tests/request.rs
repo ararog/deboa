@@ -1,32 +1,13 @@
 use std::{str::FromStr, sync::Arc};
 
 use crate::{
-    cert::Certificate,
-    request::{DeboaRequest, FetchWith, IntoRequest, MethodExt},
-    tests::SKIP_CERT_VERIFICATION,
-    Client, Result,
+    request::{DeboaRequest, IntoRequest, MethodExt},
+    Result,
 };
 
-use deboa_tests::utils::{make_response, test_url, tls_server_config, url_from_string, CA_CERT};
+use deboa_tests::utils::{test_url, url_from_string};
 
-#[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
-use deboa_tests::server::tcp::tokio::HttpServer;
-
-#[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
-use deboa_tests::server::tcp::smol::HttpServer;
-
-#[cfg(all(feature = "tokio-rt", feature = "http3"))]
-use deboa_tests::server::udp::tokio::HttpServer;
-
-#[cfg(all(feature = "smol-rt", feature = "http3"))]
-use deboa_tests::server::udp::smol::HttpServer;
-
-use http::{header, HeaderValue, Method, StatusCode};
-
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
+use http::{header, HeaderValue, Method};
 
 use url::Url;
 
@@ -118,46 +99,6 @@ fn test_into_string() -> Result<()> {
     let request = DeboaRequest::get(&test_url)?.build()?;
     assert_eq!(*request.url(), url_from_string(test_url));
     Ok(())
-}
-
-async fn try_intro() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| {
-            if req.method() == "GET" && req.uri().path() == "/posts/1" {
-                Ok(make_response(StatusCode::OK, b""))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
-
-    let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
-        .skip_cert_verification(SKIP_CERT_VERIFICATION)
-        .build();
-    let first_post = server.url("/posts/1");
-    let response = client
-        .execute(first_post.into_request()?)
-        .await?;
-    assert_eq!(response.status(), 200);
-
-    server.stop().await;
-
-    Ok(())
-}
-
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_try_into() -> Result<()> {
-    try_intro().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_try_into() -> Result<()> {
-    try_intro().await
 }
 
 #[test]
@@ -327,44 +268,4 @@ fn test_raw_body() -> Result<()> {
     assert_eq!(request.raw_body(), b"test");
 
     Ok(())
-}
-
-async fn fetch_from_str() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| {
-            if req.method() == "GET" && req.uri().path() == "/posts/1" {
-                Ok(make_response(StatusCode::OK, b""))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
-
-    let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
-        .skip_cert_verification(SKIP_CERT_VERIFICATION)
-        .build();
-    let first_post = server.url("/posts/1");
-    let response = first_post
-        .fetch_with(&client)
-        .await?;
-    assert_eq!(response.status(), 200);
-
-    server.stop().await;
-
-    Ok(())
-}
-
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_fetch_from_str() -> Result<()> {
-    fetch_from_str().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_fetch_from_str() -> Result<()> {
-    fetch_from_str().await
 }

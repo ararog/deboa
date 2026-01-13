@@ -2,19 +2,7 @@ use crate::{cert::Certificate, tests::SKIP_CERT_VERIFICATION};
 #[cfg(test)]
 use crate::{request::DeboaRequest, Client, Result};
 
-#[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
-use deboa_tests::server::tcp::tokio::HttpServer;
-
-#[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
-use deboa_tests::server::tcp::smol::HttpServer;
-
-#[cfg(all(feature = "tokio-rt", feature = "http3"))]
-use deboa_tests::server::udp::tokio::HttpServer;
-
-#[cfg(all(feature = "smol-rt", feature = "http3"))]
-use deboa_tests::server::udp::smol::HttpServer;
-
-use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
+use deboa_tests::utils::{make_response, start_mock_server, CA_CERT};
 use http::StatusCode;
 
 #[cfg(feature = "smol-rt")]
@@ -27,17 +15,14 @@ use smol_macros::test;
 //
 
 async fn do_delete() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| {
-            if req.method() == "DELETE" && req.uri().path() == "/posts/1" {
-                Ok(make_response(StatusCode::OK, b""))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| {
+        if req.method() == "DELETE" && req.uri().path() == "/posts/1" {
+            Ok(make_response(StatusCode::OK, b""))
+        } else {
+            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let client = Client::builder()
         .certificate(Certificate::from_slice(CA_CERT))

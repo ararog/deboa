@@ -11,3 +11,5 @@ mod integrated;
 mod request;
 mod response;
 mod url;
+
+mod helpers;
