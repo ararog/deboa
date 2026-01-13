@@ -5,7 +5,6 @@ nav_order: 1
 description: "A straightforward, non-opinionated, developer-centric HTTP client library for Rust"
 permalink: /
 ---
-
 <div align="center">
 <img src="https://raw.githubusercontent.com/ararog/deboa/refs/heads/develop/other_deboa_128.png" alt="deboa" width="128" height="128">
 
