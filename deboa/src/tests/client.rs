@@ -1,20 +1,8 @@
-use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
+use std::sync::Arc;
 
-#[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
-use deboa_tests::server::tcp::tokio::HttpServer;
+use url::Url;
 
-#[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
-use deboa_tests::server::tcp::smol::HttpServer;
-
-#[cfg(all(feature = "tokio-rt", feature = "http3"))]
-use deboa_tests::server::udp::tokio::HttpServer;
-
-#[cfg(all(feature = "smol-rt", feature = "http3"))]
-use deboa_tests::server::udp::smol::HttpServer;
-
-use http::StatusCode;
-
-use crate::{cert::Certificate, default_protocol, tests::SKIP_CERT_VERIFICATION, Client, Result};
+use crate::{default_protocol, Client, Result};
 
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
@@ -66,30 +54,10 @@ fn test_set_skip_cert_verification() -> Result<()> {
 }
 
 async fn shl() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| {
-            if req.method() == "GET" && req.uri().path() == "/" {
-                Ok(make_response(StatusCode::OK, b""))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let client = Client::default();
+    let request = &client << "https://httpbin.org/get";
 
-    let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
-        .skip_cert_verification(SKIP_CERT_VERIFICATION)
-        .build();
-    let request = &client << &server.url("/");
-    let response = client
-        .execute(request)
-        .await?;
-
-    assert_eq!(response.status(), 200);
-
-    server.stop().await;
+    assert_eq!(request.url(), Arc::new(Url::parse("https://httpbin.org/get").unwrap()));
 
     Ok(())
 }

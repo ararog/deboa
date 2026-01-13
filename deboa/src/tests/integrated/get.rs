@@ -1,24 +1,12 @@
-use crate::{
-    cert::Certificate,
-    errors::{ConnectionError, ResponseError},
-    tests::SKIP_CERT_VERIFICATION,
-};
 #[cfg(test)]
 use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, Result};
+use crate::{
+    errors::{ConnectionError, ResponseError},
+    request::{FetchWith, IntoRequest},
+    tests::helpers::client_with_cert,
+};
 
-use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
-
-#[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
-use deboa_tests::server::tcp::tokio::HttpServer;
-
-#[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
-use deboa_tests::server::tcp::smol::HttpServer;
-
-#[cfg(all(feature = "tokio-rt", feature = "http3"))]
-use deboa_tests::server::udp::tokio::HttpServer;
-
-#[cfg(all(feature = "smol-rt", feature = "http3"))]
-use deboa_tests::server::udp::smol::HttpServer;
+use deboa_tests::utils::{make_response, start_mock_server};
 
 use http::StatusCode;
 
@@ -32,29 +20,16 @@ use smol_macros::test;
 //
 
 async fn do_get_http() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    let result = server
-        .start(|req| {
-            if req.method() == "GET" && req.uri().path() == "/posts/1" {
-                Ok(make_response(StatusCode::OK, b"Hello World!"))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| {
+        if req.method() == "GET" && req.uri().path() == "/posts/1" {
+            Ok(make_response(StatusCode::OK, b"Hello World!"))
+        } else {
+            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
-    if let Err(err) = result {
-        return Err(DeboaError::Connection(ConnectionError::Tcp {
-            host: "localhost".to_string(),
-            message: err.to_string(),
-        }));
-    }
-
-    let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
-        .skip_cert_verification(SKIP_CERT_VERIFICATION)
-        .build();
+    let client = client_with_cert();
 
     let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
 
@@ -90,21 +65,113 @@ async fn test_get_http() {
     let _ = do_get_http().await;
 }
 
+async fn skip_cert_verification_helper(skip: bool) -> Result<()> {
+    let mut server = start_mock_server(|req| {
+        if req.method() == "GET" && req.uri().path() == "/posts/1" {
+            Ok(make_response(StatusCode::OK, b"Hello World!"))
+        } else {
+            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
+
+    let client = Client::builder()
+        .skip_cert_verification(skip)
+        .build();
+
+    let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
+
+    let response = client
+        .execute(request)
+        .await;
+
+    if skip {
+        #[cfg(any(feature = "http1", feature = "http2"))]
+        {
+            let response = response?;
+            assert_eq!(response.status(), StatusCode::OK);
+        }
+        #[cfg(feature = "http3")]
+        {
+            let error = DeboaError::Connection(ConnectionError::Udp {
+                host: "localhost".to_string(),
+                message: "Could not connect to server: aborted by peer: the cryptographic handshake failed: error 120: peer doesn't support any known protocol".to_string(),
+            });
+            assert_eq!(response.unwrap_err(), error);
+        }
+    } else {
+        #[cfg(all(
+            any(feature = "http1", feature = "http2"),
+            any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
+        ))]
+        let error = DeboaError::Connection(ConnectionError::Tls {
+            host: "localhost".to_string(),
+            message: "Could not connect to server: invalid peer certificate: UnknownIssuer"
+                .to_string(),
+        });
+
+        #[cfg(all(feature = "http3", any(feature = "tokio-rust-tls", feature = "smol-rust-tls")))]
+        let error = DeboaError::Connection(ConnectionError::Udp {
+            host: "localhost".to_string(),
+            message: "Could not connect to server: the cryptographic handshake failed: error 48: invalid peer certificate: UnknownIssuer".to_string(),
+        });
+
+        #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
+        let error = DeboaError::Connection(ConnectionError::Tls {
+            host: "localhost".to_string(),
+            message: "Could not connect to server: error:0A000086:SSL routines:tls_post_process_server_certificate:certificate verify failed:../ssl/statem/statem_clnt.c:1889: (unable to get local issuer certificate)".to_string(),
+        });
+        assert_eq!(response.unwrap_err(), error);
+    }
+
+    server.stop().await;
+
+    Ok(())
+}
+
+async fn do_get_http_skip_verification() -> Result<()> {
+    skip_cert_verification_helper(true).await
+}
+
+#[cfg(feature = "tokio-rt")]
+#[tokio::test]
+async fn test_get_http_skip_verification() -> Result<()> {
+    do_get_http_skip_verification().await?;
+    Ok(())
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_get_http_skip_verification() {
+    let _ = do_get_http_skip_verification().await;
+}
+
+async fn test_get_http_verify() -> Result<()> {
+    skip_cert_verification_helper(false).await
+}
+
+#[cfg(feature = "tokio-rt")]
+#[tokio::test]
+async fn do_get_http_verify() -> Result<()> {
+    test_get_http_verify().await?;
+    Ok(())
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn do_get_http_verify() {
+    let _ = test_get_http_verify().await;
+}
+
 //
 // GET NOT FOUND
 //
 
 async fn do_get_not_found() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|_| Ok(make_response(StatusCode::NOT_FOUND, b"Not found")))
-        .await;
+    let mut server =
+        start_mock_server(|_| Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))).await;
 
-    let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
-        .skip_cert_verification(SKIP_CERT_VERIFICATION)
-        .build();
+    let client = client_with_cert();
 
     let response: Result<DeboaResponse> = DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
         .send_with(client)
@@ -196,22 +263,16 @@ async fn test_get_invalid_server() {
 //
 
 async fn do_get_by_query() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| {
-            if req.method() == "GET" && req.uri().path() == "/comments/1" {
-                Ok(make_response(StatusCode::OK, b"My comment"))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| {
+        if req.method() == "GET" && req.uri().path() == "/comments/1" {
+            Ok(make_response(StatusCode::OK, b"My comment"))
+        } else {
+            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
-    let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
-        .skip_cert_verification(SKIP_CERT_VERIFICATION)
-        .build();
+    let client = client_with_cert();
 
     let response = DeboaRequest::get(server.url("/comments/1"))?
         .send_with(client)
@@ -251,16 +312,10 @@ async fn test_get_by_query() {
 }
 
 async fn do_get_by_query_with_retries() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|_req| Ok(make_response(StatusCode::BAD_GATEWAY, b"pong")))
-        .await;
+    let mut server =
+        start_mock_server(|_req| Ok(make_response(StatusCode::BAD_GATEWAY, b"pong"))).await;
 
-    let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
-        .skip_cert_verification(SKIP_CERT_VERIFICATION)
-        .build();
+    let client = client_with_cert();
 
     let response = DeboaRequest::get(server.url("/comments/1"))?
         .retries(2)
@@ -338,3 +393,71 @@ async fn test_get_with_redirect() {
     let _ = do_get_with_redirect().await;
 }
 */
+
+async fn try_intro() -> Result<()> {
+    let mut server = start_mock_server(|req| {
+        if req.method() == "GET" && req.uri().path() == "/posts/1" {
+            Ok(make_response(StatusCode::OK, b""))
+        } else {
+            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
+
+    let client = client_with_cert();
+    let first_post = server.url("/posts/1");
+    let response = client
+        .execute(first_post.into_request()?)
+        .await?;
+    assert_eq!(response.status(), 200);
+
+    server.stop().await;
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio-rt")]
+#[tokio::test]
+async fn test_try_into() -> Result<()> {
+    try_intro().await
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_try_into() -> Result<()> {
+    try_intro().await
+}
+
+async fn fetch_from_str() -> Result<()> {
+    let mut server = start_mock_server(|req| {
+        if req.method() == "GET" && req.uri().path() == "/posts/1" {
+            Ok(make_response(StatusCode::OK, b""))
+        } else {
+            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
+
+    let client = client_with_cert();
+    let first_post = server.url("/posts/1");
+    let response = first_post
+        .fetch_with(&client)
+        .await?;
+    assert_eq!(response.status(), 200);
+
+    server.stop().await;
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio-rt")]
+#[tokio::test]
+async fn test_fetch_from_str() -> Result<()> {
+    fetch_from_str().await
+}
+
+#[cfg(feature = "smol-rt")]
+#[apply(test!)]
+async fn test_fetch_from_str() -> Result<()> {
+    fetch_from_str().await
+}
