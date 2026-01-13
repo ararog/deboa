@@ -64,7 +64,7 @@ jobs:
       run: rustup target add aarch64-linux-android armv7-linux-androideabi
 
     - name: Install Android NDK
-      uses: android-actions/setup-android@v2
+      uses: android-actions/setup-android@v3
       with:
         ndk-version: r25c # Use a compatible NDK version
 
