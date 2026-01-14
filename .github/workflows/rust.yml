@@ -18,8 +18,7 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - name: Build
-      run: cargo build --verbose
+    - uses: Swatinem/rust-cache@v2
 
     - name: Run all tests on all crates
       run: |
@@ -63,6 +62,8 @@ jobs:
     - name: Install Rust toolchains
       run: rustup target add aarch64-linux-android armv7-linux-androideabi
 
+    - uses: Swatinem/rust-cache@v2
+
     - name: Install Android NDK
       uses: android-actions/setup-android@v3
       with:
@@ -84,6 +85,8 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v6
+
+    - uses: Swatinem/rust-cache@v2
 
     - name: Install Rust toolchains
       run: rustup target add x86_64-pc-windows-msvc
@@ -132,6 +135,8 @@ jobs:
 
     - name: Install Rust toolchains
       run: rustup target add x86_64-apple-darwin
+
+    - uses: Swatinem/rust-cache@v2
 
     - name: Build for x86_64-apple-darwin
       run: cargo build --target x86_64-apple-darwin --release
