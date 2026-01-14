@@ -10,6 +10,15 @@ use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdent
 #[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
+#[derive(Debug, Clone)]
+/// Supported encodings for client certificates.
+pub enum ContentEncoding {
+    /// PEM encoding.
+    PEM,
+    /// DER encoding.
+    DER,
+}
+
 /// Represents a client certificate and its associated data for mutual TLS authentication.
 ///
 /// `Identity` encapsulates the client certificate, its password.
@@ -21,16 +30,17 @@ use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 /// ```igmore
 /// use deboa::cert::Identity;
 ///
-/// // Create a new client certificate without a CA
-/// let cert = Identity::from_pckcs12(
+/// // Load a DER encoded PKCS#12 archive from a slice of bytes using a password
+/// let cert = Identity::from_pkcs12(
 ///     &[1, 2, 3],
 ///     Some("cert-password".to_string()),
 /// );
 ///
-/// // Create a client certificate with a CA
-/// let cert_with_ca = Identity::from_pckcs8(
+/// // Load a DER encoded certificate and key from a slice of bytes
+/// let cert_with_ca = Identity::from_pkcs8(
 ///     &[1, 2, 3],
 ///     &[4, 5, 6],
+///     ContentEncoding::DER,
 /// );
 ///
 /// ```
@@ -40,6 +50,8 @@ pub struct Identity {
     key: Option<Vec<u8>>,
     #[allow(unused)]
     password: Option<String>,
+    #[allow(unused)]
+    encoding: Option<ContentEncoding>,
 }
 
 #[deprecated(note = "Use `Identity` instead")]
@@ -47,12 +59,39 @@ pub type ClientCert = Identity;
 
 impl Identity {
     #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
-    pub fn from_pkcs12(cert: &[u8], password: Option<String>) -> Self {
-        Identity { cert: cert.to_vec(), key: None, password }
+    /// Load a DER encoded PKCS#12 archive from a slice of bytes
+    ///
+    /// # Arguments
+    ///
+    /// * `bundle` - The DER encoded PKCS#12 archive.
+    /// * `password` - The password for the PKCS#12 archive.
+    ///
+    /// # Returns
+    ///
+    /// * `Identity` - The new Identity instance.
+    ///
+    pub fn from_pkcs12(bundle: &[u8], password: Option<String>) -> Self {
+        Identity { cert: bundle.to_vec(), key: None, password, encoding: None }
     }
 
-    pub fn from_pkcs8(cert: &[u8], key: &[u8]) -> Self {
-        Identity { cert: cert.to_vec(), key: Some(key.to_vec()), password: None }
+    /// Load DER encoded certificate and key from a slice of bytes
+    ///
+    /// # Arguments
+    ///
+    /// * `cert` - The DER encoded certificate.
+    /// * `key` - The DER encoded PKCS8 private key.
+    /// * `encoding` - The encoding of the certificate and key.
+    ///
+    /// # Returns
+    ///
+    /// * `Identity` - The new Identity instance.
+    pub fn from_pkcs8(cert: &[u8], key: &[u8], encoding: ContentEncoding) -> Self {
+        Identity {
+            cert: cert.to_vec(),
+            key: Some(key.to_vec()),
+            password: None,
+            encoding: Some(encoding),
+        }
     }
 }
 
@@ -68,17 +107,48 @@ impl TryFrom<&Identity> for (CertificateDer<'static>, PrivateKeyDer<'static>) {
             .unwrap()
             .clone();
 
-        let cert = CertificateDer::from(cert);
+        let pair = match value.encoding {
+            Some(ContentEncoding::DER) => {
+                let cert = CertificateDer::from(cert);
 
-        let key = PrivateKeyDer::try_from(key);
-        if key.is_err() {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                "Invalid certificate",
-            ));
-        }
+                let key = PrivateKeyDer::try_from(key);
+                if key.is_err() {
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        "Invalid certificate",
+                    ));
+                }
+                (cert, key.unwrap())
+            }
+            Some(ContentEncoding::PEM) => {
+                use rustls_pki_types::pem::PemObject;
 
-        Ok((cert, key.unwrap()))
+                let cert = CertificateDer::from_pem_slice(&cert);
+                if let Err(e) = cert {
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        format!("Invalid certificate: {}", e),
+                    ));
+                }
+
+                let key = PrivateKeyDer::from_pem_slice(&key);
+                if let Err(e) = key {
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        format!("Invalid certificate: {}", e),
+                    ));
+                }
+                (cert.unwrap(), key.unwrap())
+            }
+            None => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Invalid certificate",
+                ));
+            }
+        };
+
+        Ok(pair)
     }
 }
 
@@ -121,21 +191,23 @@ impl TryFrom<&Identity> for NativeIdentity {
 /// # Examples
 ///
 /// ```
-/// use deboa::cert::Certificate;
+/// use deboa::cert::{Certificate, ContentEncoding};
 ///
-/// // Create a client certificate with a CA
-/// let cert_with_ca = Certificate::from_path(
-///     "/path/to/cert.p12",
+/// // Load a DER encoded certificate from a file
+/// let cert = Certificate::from_file(
+///     "/path/to/cert.crt",
+///     ContentEncoding::DER,
 /// );
 ///
 /// ```
 #[derive(Debug, Clone)]
 pub struct Certificate {
     data: Vec<u8>,
+    encoding: ContentEncoding,
 }
 
 impl Certificate {
-    /// Create certificate from slice.
+    /// Create certificate from slice of DER encoded bytes.
     ///
     /// # Arguments
     ///
@@ -145,23 +217,23 @@ impl Certificate {
     ///
     /// * `Certificate` - The new Certificate instance.
     ///
-    pub fn from_slice(data: &[u8]) -> Self {
-        Certificate { data: data.to_vec() }
+    pub fn from_slice(data: &[u8], encoding: ContentEncoding) -> Self {
+        Certificate { data: data.to_vec(), encoding }
     }
 
-    /// Create certificate from path.
+    /// Create certificate from file of DER encoded file.
     ///
     /// # Arguments
     ///
-    /// * `path` - The client certificate path.
+    /// * `file` - The client certificate file path.
     ///
     /// # Returns
     ///
     /// * `Result<Certificate, std::io::Error>` - The new Certificate instance.
     ///
-    pub fn from_path(path: &str) -> Result<Self, std::io::Error> {
-        let data = std::fs::read(path)?;
-        Ok(Certificate { data })
+    pub fn from_file(file: &str, encoding: ContentEncoding) -> Result<Self, std::io::Error> {
+        let data = std::fs::read(file)?;
+        Ok(Certificate { data, encoding })
     }
 
     /// Allow get the client certificate path.
@@ -181,11 +253,25 @@ impl TryFrom<&Certificate> for CertificateDer<'static> {
     type Error = std::io::Error;
 
     fn try_from(value: &Certificate) -> Result<Self, Self::Error> {
-        let cert = CertificateDer::from(
-            value
-                .as_bytes()
-                .to_vec(),
-        );
+        let cert = match value.encoding {
+            ContentEncoding::DER => CertificateDer::from(
+                value
+                    .as_bytes()
+                    .to_vec(),
+            ),
+            ContentEncoding::PEM => {
+                use rustls_pki_types::pem::PemObject;
+
+                let result = CertificateDer::from_pem_slice(value.as_bytes());
+                if let Err(e) = result {
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        format!("Invalid certificate: {}", e),
+                    ));
+                }
+                result.unwrap()
+            }
+        };
 
         Ok(cert)
     }
@@ -196,13 +282,18 @@ impl TryFrom<&Certificate> for NativeCertificate {
     type Error = std::io::Error;
 
     fn try_from(value: &Certificate) -> Result<Self, Self::Error> {
-        let cert = NativeCertificate::from_der(value.as_bytes());
-        if cert.is_err() {
+        let cert = match value.encoding {
+            ContentEncoding::DER => NativeCertificate::from_der(value.as_bytes()),
+            ContentEncoding::PEM => NativeCertificate::from_pem(value.as_bytes()),
+        };
+
+        if let Err(e) = cert {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
-                "Invalid certificate",
+                format!("Invalid certificate: {}", e),
             ));
         }
+
         Ok(cert.unwrap())
     }
 }

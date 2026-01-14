@@ -1,3 +1,4 @@
+use crate::cert::ContentEncoding;
 use crate::{
     cert::Identity,
     errors::{ConnectionError, ResponseError},
@@ -7,9 +8,9 @@ use crate::{
 #[cfg(test)]
 use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, Result};
 
-use deboa_tests::utils::{make_response, start_mock_server, CLIENT_CERT, CLIENT_KEY, CLIENT_P12};
+use deboa_tests::utils::{make_response, start_mock_server, CLIENT_CERT, CLIENT_KEY};
 #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
-use deboa_tests::utils::{CLIENT_CERT_PEM, CLIENT_KEY_PEM};
+use deboa_tests::utils::{CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
 
 use http::StatusCode;
 
@@ -177,10 +178,10 @@ async fn do_get_http_mutual_authentication() -> Result<()> {
     .await;
 
     #[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
-    let identity = Identity::from_pkcs8(CLIENT_CERT, CLIENT_KEY);
+    let identity = Identity::from_pkcs8(CLIENT_CERT, CLIENT_KEY, ContentEncoding::DER);
 
     #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
-    let identity = Identity::from_pkcs8(CLIENT_CERT_PEM, CLIENT_KEY_PEM);
+    let identity = Identity::from_pkcs8(CLIENT_CERT_PEM, CLIENT_KEY_PEM, ContentEncoding::PEM);
 
     let client = Client::builder()
         .identity(identity)

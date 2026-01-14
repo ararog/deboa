@@ -1,4 +1,8 @@
-use deboa::{cert::Certificate, client::serde::RequestBody, Client as DeboaClient, Result};
+use deboa::{
+    cert::{Certificate, ContentEncoding},
+    client::serde::RequestBody,
+    Client as DeboaClient, Result,
+};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
 
@@ -46,7 +50,7 @@ async fn do_post_resource() -> Result<()> {
     url.push_str("/api");
 
     let client = DeboaClient::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 

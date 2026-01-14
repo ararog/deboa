@@ -1,8 +1,8 @@
-use crate::{cert::Certificate, tests::SKIP_CERT_VERIFICATION};
+use crate::tests::helpers::client_with_cert;
 #[cfg(test)]
-use crate::{request::DeboaRequest, Client, Result};
+use crate::{request::DeboaRequest, Result};
 
-use deboa_tests::utils::{make_response, start_mock_server, CA_CERT};
+use deboa_tests::utils::{make_response, start_mock_server};
 use http::StatusCode;
 
 #[cfg(feature = "smol-rt")]
@@ -24,10 +24,7 @@ async fn do_delete() -> Result<()> {
     })
     .await;
 
-    let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
-        .skip_cert_verification(SKIP_CERT_VERIFICATION)
-        .build();
+    let client = client_with_cert();
 
     let response = DeboaRequest::delete(server.url("/posts/1"))?
         .send_with(client)
