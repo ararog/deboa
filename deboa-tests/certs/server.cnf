@@ -1,0 +1,16 @@
+# server.cnf
+[ req ]
+prompt = no
+distinguished_name = req_distinguished_name
+req_extensions = req_ext
+
+[ req_distinguished_name ]
+CN = localhost
+
+[ req_ext ]
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = localhost
+IP.1 = 127.0.0.1
+# Add more DNS names or IPs as needed, e.g., DNS.2 = myapp.internal

@@ -1,0 +1,20 @@
+[ req ]
+prompt = no
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+
+[ req_distinguished_name ]
+# Provide your client details here
+C = US
+ST = VA
+L = SomeCity
+O = MyCompany
+OU = MyDivision
+CN = testuser
+
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = critical, clientAuth
+# Optional: Add Subject Alternative Name (SAN) if required
+# subjectAltName = DNS:testuser.example.com, IP:192.168.1.100

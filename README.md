@@ -36,6 +36,10 @@ deboa = { version = "0.0.9", features = ["http1", "http2", "tokio-rt"] }
 - http1
 - http2 (default)
 - http3
+- tokio-rust-tls (default)
+- tokio-native-tls
+- smol-rust-tls
+- smol-native-tls
 
 ## Usage
 
