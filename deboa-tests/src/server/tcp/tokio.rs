@@ -169,8 +169,8 @@ impl HttpServer {
         Ok(())
     }
 
-    pub async fn stop(&self) {
-        if let Some(task) = &self.task {
+    pub async fn stop(&mut self) {
+        if let Some(task) = &self.task.take() {
             task.abort();
         }
     }
