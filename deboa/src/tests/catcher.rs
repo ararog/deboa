@@ -3,7 +3,7 @@ use http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
 
 use crate::{
     catcher::{DeboaCatcher, MockDeboaCatcher},
-    cert::Certificate,
+    cert::{Certificate, ContentEncoding},
     request::DeboaRequest,
     response::DeboaResponse,
     tests::SKIP_CERT_VERIFICATION,
@@ -94,7 +94,7 @@ async fn catcher_response() -> Result<()> {
         });
 
     let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .catch(catcher_mock)
         .build();

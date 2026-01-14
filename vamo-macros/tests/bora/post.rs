@@ -1,4 +1,7 @@
-use deboa::{cert::Certificate, Client as DeboaClient, Result};
+use deboa::{
+    cert::{Certificate, ContentEncoding},
+    Client as DeboaClient, Result,
+};
 use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
 
 #[cfg(all(feature = "_tokio-rt", any(feature = "_http1", feature = "_http2")))]
@@ -47,7 +50,7 @@ async fn do_post_by_id() -> Result<()> {
         .await;
 
     let client = DeboaClient::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 

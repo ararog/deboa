@@ -1,6 +1,6 @@
 use deboa_tests::utils::CA_CERT;
 
-use crate::cert::{Certificate, Identity};
+use crate::cert::{Certificate, ContentEncoding, Identity};
 
 /*
 #[test]
@@ -20,6 +20,6 @@ fn test_identity_init_with_key() {
 
 #[test]
 fn test_cert_init() {
-    let cert = Certificate::from_slice(CA_CERT);
+    let cert = Certificate::from_slice(CA_CERT, ContentEncoding::DER);
     assert_eq!(cert.as_bytes(), CA_CERT);
 }

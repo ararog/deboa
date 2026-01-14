@@ -1,4 +1,8 @@
-use deboa::{cert::Certificate, client::serde::RequestBody, Client, Result};
+use deboa::{
+    cert::{Certificate, ContentEncoding},
+    client::serde::RequestBody,
+    Client, Result,
+};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tests::{
     data::{JSON_STR_PATCH, JSON_STR_POST},
@@ -64,7 +68,7 @@ async fn do_get() -> Result<()> {
         .await;
 
     let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
@@ -126,7 +130,7 @@ async fn do_put() -> Result<()> {
         .await;
 
     let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
@@ -182,7 +186,7 @@ async fn do_post() -> Result<()> {
     };
 
     let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
@@ -227,7 +231,7 @@ async fn do_patch() -> Result<()> {
         .await;
 
     let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
@@ -271,7 +275,7 @@ async fn do_delete() -> Result<()> {
         .await;
 
     let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
@@ -322,7 +326,7 @@ async fn do_post_resource() -> Result<()> {
     };
 
     let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
@@ -373,7 +377,7 @@ async fn do_put_resource() -> Result<()> {
     };
 
     let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
@@ -419,7 +423,7 @@ async fn do_patch_resource() -> Result<()> {
     let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
 
     let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
@@ -465,7 +469,7 @@ async fn do_remove_resource() -> Result<()> {
     let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
 
     let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 

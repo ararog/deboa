@@ -33,7 +33,7 @@ tokio-rust-tls = [
   "dep:rustls-native-certs",
   "dep:tokio-rustls",
   "dep:webpki-roots",
-  "dep:rustls-pemfile",
+
   "deboa-tests/tokio-rust-tls",
 ]
 tokio-native-tls = ["dep:async-native-tls", "async-native-tls/runtime-tokio", "deboa-tests/tokio-rust-tls"]
@@ -43,7 +43,7 @@ smol-rust-tls = [
   "dep:rustls-native-certs",
   "dep:futures-rustls",
   "dep:webpki-roots",
-  "dep:rustls-pemfile",
+
   "deboa-tests/smol-rust-tls",
 ]
 smol-native-tls = ["dep:async-native-tls", "async-native-tls/runtime-async-std", "deboa-tests/smol-rust-tls"]
@@ -93,7 +93,7 @@ rand = "0.9.2"
 regex = "1.9.6"
 rustls = { version = "0.23.36", optional = true }
 rustls-native-certs = { version = "0.8.0", optional = true }
-rustls-pemfile = { version = "2.2.0", optional = true }
+rustls-pki-types = "1.13.2"
 serde = { version = "1.0.217", features = ["derive"] }
 smol = { version = "2.0.2", optional = true }
 smol-hyper = { version = "0.1.0", optional = true, features = ["smol"] }

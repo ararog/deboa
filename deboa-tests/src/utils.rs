@@ -21,9 +21,13 @@ use http::{Request, Response};
 use hyper::body::Incoming;
 
 pub const CA_CERT: &[u8] = include_bytes!("../certs/ca.der");
+pub const CA_CERT_PEM: &[u8] = include_bytes!("../certs/ca.crt");
 
 pub const SERVER_CERT: &[u8] = include_bytes!("../certs/server.der");
 pub const SERVER_KEY: &[u8] = include_bytes!("../certs/server.key.der");
+
+pub const SERVER_CERT_PEM: &[u8] = include_bytes!("../certs/server.crt");
+pub const SERVER_KEY_PEM: &[u8] = include_bytes!("../certs/server.key");
 
 pub const CLIENT_CERT: &[u8] = include_bytes!("../certs/client.der");
 pub const CLIENT_KEY: &[u8] = include_bytes!("../certs/client.key.der");
