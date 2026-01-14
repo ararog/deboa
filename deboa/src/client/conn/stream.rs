@@ -90,7 +90,7 @@ pub fn setup_rust_tls(
 
         config
             .with_client_auth_cert(vec![pair.0], pair.1)
-            .unwrap()
+            .expect("Failed to set client identity")
     } else {
         config.with_no_client_auth()
     };

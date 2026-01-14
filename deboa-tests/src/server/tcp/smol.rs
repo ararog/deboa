@@ -11,11 +11,13 @@ use hyper::{server::conn::http1, service::service_fn};
 #[cfg(feature = "http2")]
 use hyper::{server::conn::http2, service::service_fn};
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
+use rustls::server::WebPkiClientVerifier;
+use rustls::RootCertStore;
 use smol::net::TcpListener;
 use smol_hyper::rt::FuturesIo;
 
 use crate::server::ServerConfig;
-use crate::utils::{generate_port, test_url};
+use crate::utils::{generate_port, test_url, CA_CERT};
 
 pub struct HttpServer {
     port: u16,
@@ -71,11 +73,29 @@ impl HttpServer {
             let key = key.unwrap();
 
             let provider = rustls::crypto::aws_lc_rs::default_provider();
-            let mut tls_config = rustls::ServerConfig::builder_with_provider(Arc::new(provider))
+            let builder = rustls::ServerConfig::builder_with_provider(Arc::new(provider))
                 .with_protocol_versions(&[&rustls::version::TLS13])
-                .expect("HttpServer - Failed to set TLS version")
-                .with_no_client_auth()
-                .with_single_cert(vec![cert], key)?;
+                .expect("HttpServer - Failed to set TLS version");
+
+            let builder = if config
+                .client_auth
+                .unwrap_or(false)
+            {
+                let mut store = RootCertStore::empty();
+                let cert = CertificateDer::from(CA_CERT);
+                store
+                    .add(cert)
+                    .unwrap();
+
+                let client_verifier = WebPkiClientVerifier::builder(Arc::new(store))
+                    .build()
+                    .unwrap();
+                builder.with_client_cert_verifier(client_verifier)
+            } else {
+                builder.with_no_client_auth()
+            };
+
+            let mut tls_config = builder.with_single_cert(vec![cert], key)?;
 
             tls_config.max_early_data_size = u32::MAX;
             if cfg!(feature = "http1") {

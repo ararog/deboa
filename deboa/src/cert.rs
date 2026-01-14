@@ -47,11 +47,11 @@ pub type ClientCert = Identity;
 
 impl Identity {
     #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
-    pub fn from_pckcs12(cert: &[u8], password: Option<String>) -> Self {
+    pub fn from_pkcs12(cert: &[u8], password: Option<String>) -> Self {
         Identity { cert: cert.to_vec(), key: None, password }
     }
 
-    pub fn from_pckcs8(cert: &[u8], key: &[u8]) -> Self {
+    pub fn from_pkcs8(cert: &[u8], key: &[u8]) -> Self {
         Identity { cert: cert.to_vec(), key: Some(key.to_vec()), password: None }
     }
 }
@@ -68,13 +68,7 @@ impl TryFrom<&Identity> for (CertificateDer<'static>, PrivateKeyDer<'static>) {
             .unwrap()
             .clone();
 
-        let cert = CertificateDer::try_from(cert);
-        if cert.is_err() {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                "Invalid certificate",
-            ));
-        }
+        let cert = CertificateDer::from(cert);
 
         let key = PrivateKeyDer::try_from(key);
         if key.is_err() {
@@ -84,7 +78,7 @@ impl TryFrom<&Identity> for (CertificateDer<'static>, PrivateKeyDer<'static>) {
             ));
         }
 
-        Ok((cert.unwrap(), key.unwrap()))
+        Ok((cert, key.unwrap()))
     }
 }
 

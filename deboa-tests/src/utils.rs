@@ -20,9 +20,18 @@ use crate::server::udp::smol::HttpServer;
 use http::{Request, Response};
 use hyper::body::Incoming;
 
-pub const CA_CERT: &[u8] = include_bytes!("../certs/ca.cert");
-pub const SERVER_CERT: &[u8] = include_bytes!("../certs/server.cert");
-pub const SERVER_KEY: &[u8] = include_bytes!("../certs/server.key");
+pub const CA_CERT: &[u8] = include_bytes!("../certs/ca.der");
+
+pub const SERVER_CERT: &[u8] = include_bytes!("../certs/server.der");
+pub const SERVER_KEY: &[u8] = include_bytes!("../certs/server.key.der");
+
+pub const CLIENT_CERT: &[u8] = include_bytes!("../certs/client.der");
+pub const CLIENT_KEY: &[u8] = include_bytes!("../certs/client.key.der");
+
+pub const CLIENT_CERT_PEM: &[u8] = include_bytes!("../certs/client.crt");
+pub const CLIENT_KEY_PEM: &[u8] = include_bytes!("../certs/client.key");
+
+pub const CLIENT_P12: &[u8] = include_bytes!("../certs/client.p12");
 
 const TEST_URL: &str = "https://localhost";
 
