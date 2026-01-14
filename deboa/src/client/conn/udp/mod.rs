@@ -82,67 +82,69 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     ///
     /// * `Result<Response<Full<Bytes>>>` - The response or error.
     ///
-    async fn process_response(
+    fn process_response(
         &self,
         response: std::result::Result<Response<()>, StreamError>,
         mut stream: RequestStream<RecvStream, Bytes>,
-    ) -> Result<Response<Full<Bytes>>> {
-        let response = response.unwrap();
+    ) -> impl Future<Output = Result<Response<Full<Bytes>>>> + Send {
+        async move {
+            let response = response.unwrap();
 
-        let status_code = response.status();
+            let status_code = response.status();
 
-        if (!status_code.is_success()
-            && !status_code.is_informational()
-            && !status_code.is_redirection())
-            || status_code == StatusCode::TOO_MANY_REQUESTS
-        {
-            let mut error_message = Vec::new();
-            let mut downloaded = 0;
+            if (!status_code.is_success()
+                && !status_code.is_informational()
+                && !status_code.is_redirection())
+                || status_code == StatusCode::TOO_MANY_REQUESTS
+            {
+                let mut error_message = Vec::new();
+                let mut downloaded = 0;
+                while let Ok(Some(chunk)) = stream
+                    .recv_data()
+                    .await
+                {
+                    if downloaded + error_message.len() > MAX_ERROR_MESSAGE_SIZE {
+                        break;
+                    }
+                    error_message.extend_from_slice(chunk.chunk());
+                    downloaded += error_message.len();
+                }
+
+                return Err(DeboaError::Response(ResponseError::Receive {
+                    status_code,
+                    message: format!(
+                        "Could not process request ({}): {}",
+                        status_code,
+                        String::from_utf8_lossy(&error_message)
+                    ),
+                }));
+            }
+
+            let mut response_builder = Response::builder().status(status_code);
+            let headers = response_builder
+                .headers_mut()
+                .unwrap();
+            *headers = response
+                .headers()
+                .clone();
+            let mut body = BytesMut::new();
             while let Ok(Some(chunk)) = stream
                 .recv_data()
                 .await
             {
-                if downloaded + error_message.len() > MAX_ERROR_MESSAGE_SIZE {
-                    break;
-                }
-                error_message.extend_from_slice(chunk.chunk());
-                downloaded += error_message.len();
+                body.extend_from_slice(chunk.chunk());
             }
 
-            return Err(DeboaError::Response(ResponseError::Receive {
-                status_code,
-                message: format!(
-                    "Could not process request ({}): {}",
+            let response = response_builder.body(Full::new(body.freeze()));
+            if let Err(err) = response {
+                return Err(DeboaError::Response(ResponseError::Receive {
                     status_code,
-                    String::from_utf8_lossy(&error_message)
-                ),
-            }));
-        }
+                    message: format!("Could not process response ({}): {}", status_code, err),
+                }));
+            }
 
-        let mut response_builder = Response::builder().status(status_code);
-        let headers = response_builder
-            .headers_mut()
-            .unwrap();
-        *headers = response
-            .headers()
-            .clone();
-        let mut body = BytesMut::new();
-        while let Ok(Some(chunk)) = stream
-            .recv_data()
-            .await
-        {
-            body.extend_from_slice(chunk.chunk());
+            Ok(response.unwrap())
         }
-
-        let response = response_builder.body(Full::new(body.freeze()));
-        if let Err(err) = response {
-            return Err(DeboaError::Response(ResponseError::Receive {
-                status_code,
-                message: format!("Could not process response ({}): {}", status_code, err),
-            }));
-        }
-
-        Ok(response.unwrap())
     }
 }
 

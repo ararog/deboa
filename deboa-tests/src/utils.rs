@@ -52,7 +52,7 @@ pub fn fake_url() -> Url {
 }
 
 pub fn generate_port() -> u16 {
-    rand::random_range(20000..65535)
+    rand::random_range(9000..65535)
 }
 
 pub fn tls_server_config() -> Option<ServerConfig> {

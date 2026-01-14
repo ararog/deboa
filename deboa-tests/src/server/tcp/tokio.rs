@@ -10,7 +10,7 @@ use hyper::{Request, Response};
 use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
-use rustls::server::{ClientCertVerifierBuilder, NoClientAuth, WebPkiClientVerifier};
+use rustls::server::WebPkiClientVerifier;
 use rustls::RootCertStore;
 use std::net::SocketAddr;
 use std::sync::Arc;
