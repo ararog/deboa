@@ -8,7 +8,7 @@ use crate::{
 #[cfg(test)]
 use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, Result};
 
-use deboa_tests::utils::{make_response, start_mock_server};
+use deboa_tests::utils::{make_response, start_mock_server, CA_CERT};
 #[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
 use deboa_tests::utils::{CLIENT_CERT, CLIENT_KEY};
 #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
@@ -186,6 +186,7 @@ async fn do_get_http_mutual_authentication() -> Result<()> {
     let identity = Identity::from_pkcs8(CLIENT_CERT_PEM, CLIENT_KEY_PEM, ContentEncoding::PEM);
 
     let client = Client::builder()
+        .certificate(crate::cert::Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .identity(identity)
         .build();
 
@@ -195,27 +196,7 @@ async fn do_get_http_mutual_authentication() -> Result<()> {
         .execute(request)
         .await;
 
-    #[cfg(all(
-        any(feature = "http1", feature = "http2"),
-        any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
-    ))]
-    let error = DeboaError::Connection(ConnectionError::Tls {
-        host: "localhost".to_string(),
-        message: "Could not connect to server: invalid peer certificate: UnknownIssuer".to_string(),
-    });
-
-    #[cfg(all(feature = "http3", any(feature = "tokio-rust-tls", feature = "smol-rust-tls")))]
-    let error = DeboaError::Connection(ConnectionError::Udp {
-        host: "localhost".to_string(),
-        message: "Could not connect to server: the cryptographic handshake failed: error 48: invalid peer certificate: UnknownIssuer".to_string(),
-    });
-
-    #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
-    let error = DeboaError::Connection(ConnectionError::Tls {
-        host: "localhost".to_string(),
-        message: "Could not connect to server: error:0A000086:SSL routines:tls_post_process_server_certificate:certificate verify failed:../ssl/statem/statem_clnt.c:1889: (unable to get local issuer certificate)".to_string(),
-    });
-    assert_eq!(response.unwrap_err(), error);
+    assert_eq!(response?.status(), StatusCode::OK);
 
     server.stop().await;
 
@@ -250,6 +231,7 @@ async fn do_get_http_mutual_authentication_with_password() -> Result<()> {
     let identity = Identity::from_pkcs12(CLIENT_P12, Some("test".to_string()));
 
     let client = Client::builder()
+        .certificate(crate::cert::Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .identity(identity)
         .build();
 
@@ -259,27 +241,7 @@ async fn do_get_http_mutual_authentication_with_password() -> Result<()> {
         .execute(request)
         .await;
 
-    #[cfg(all(
-        any(feature = "http1", feature = "http2"),
-        any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
-    ))]
-    let error = DeboaError::Connection(ConnectionError::Tls {
-        host: "localhost".to_string(),
-        message: "Could not connect to server: invalid peer certificate: UnknownIssuer".to_string(),
-    });
-
-    #[cfg(all(feature = "http3", any(feature = "tokio-rust-tls", feature = "smol-rust-tls")))]
-    let error = DeboaError::Connection(ConnectionError::Udp {
-        host: "localhost".to_string(),
-        message: "Could not connect to server: the cryptographic handshake failed: error 48: invalid peer certificate: UnknownIssuer".to_string(),
-    });
-
-    #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
-    let error = DeboaError::Connection(ConnectionError::Tls {
-        host: "localhost".to_string(),
-        message: "Could not connect to server: error:0A000086:SSL routines:tls_post_process_server_certificate:certificate verify failed:../ssl/statem/statem_clnt.c:1889: (unable to get local issuer certificate)".to_string(),
-    });
-    assert_eq!(response.unwrap_err(), error);
+    assert_eq!(response?.status(), StatusCode::OK);
 
     server.stop().await;
 
