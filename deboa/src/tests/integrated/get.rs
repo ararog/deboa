@@ -8,7 +8,9 @@ use crate::{
 #[cfg(test)]
 use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, Result};
 
-use deboa_tests::utils::{make_response, start_mock_server, CLIENT_CERT, CLIENT_KEY};
+use deboa_tests::utils::{make_response, start_mock_server};
+#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
+use deboa_tests::utils::{CLIENT_CERT, CLIENT_KEY};
 #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
 use deboa_tests::utils::{CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
 
@@ -428,6 +430,8 @@ async fn do_get_by_query() -> Result<()> {
 
     assert!(comments.is_ok());
     assert_eq!(comments.unwrap(), "My comment");
+
+    server.stop().await;
 
     Ok(())
 }
