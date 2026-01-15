@@ -4,7 +4,10 @@ use deboa::{
     Client as DeboaClient, Result,
 };
 use deboa_extras::http::serde::json::JsonBody;
-use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
+use deboa_tests::{
+    server::Server,
+    utils::{make_response, tls_server_config, CA_CERT},
+};
 
 #[cfg(all(feature = "_tokio-rt", any(feature = "_http1", feature = "_http2")))]
 use deboa_tests::server::tcp::tokio::HttpServer;

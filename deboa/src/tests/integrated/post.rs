@@ -5,7 +5,10 @@ use crate::{
     Client, Result,
 };
 
-use deboa_tests::utils::{make_response, start_mock_server};
+use deboa_tests::{
+    server::Server,
+    utils::{make_response, start_mock_server},
+};
 use http::{header::CONTENT_TYPE, StatusCode};
 
 #[cfg(feature = "smol-rt")]

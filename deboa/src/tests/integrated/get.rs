@@ -8,6 +8,7 @@ use crate::{
 #[cfg(test)]
 use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, Result};
 
+use deboa_tests::server::Server;
 use deboa_tests::utils::{make_response, start_mock_server, CA_CERT};
 #[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
 use deboa_tests::utils::{CLIENT_CERT, CLIENT_KEY};

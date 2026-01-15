@@ -6,6 +6,7 @@ use deboa::{
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tests::{
     data::{JSON_STR_PATCH, JSON_STR_POST},
+    server::Server,
     utils::{make_response, tls_server_config, CA_CERT},
 };
 use http::StatusCode;
@@ -19,6 +20,9 @@ use deboa_tests::server::tcp::smol::HttpServer;
 
 #[cfg(all(feature = "_tokio-rt", feature = "_http3"))]
 use deboa_tests::server::udp::tokio::HttpServer;
+
+#[cfg(all(feature = "_smol-rt", feature = "_http3"))]
+use deboa_tests::server::udp::smol::HttpServer;
 
 use crate::{
     resource::{Resource, ResourceMethod},
