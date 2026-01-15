@@ -10,7 +10,10 @@ use crate::{
     Client, Result,
 };
 
-use deboa_tests::utils::{make_response, test_url, tls_server_config, url_from_string, CA_CERT};
+use deboa_tests::{
+    server::Server,
+    utils::{make_response, test_url, tls_server_config, url_from_string, CA_CERT},
+};
 
 #[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
 use deboa_tests::server::tcp::tokio::HttpServer;

@@ -1,23 +1,25 @@
+use http_body_util::Full;
+use hyper::body::{Bytes, Incoming};
+#[cfg(feature = "http1")]
+use hyper::server::conn::http1;
+#[cfg(feature = "http2")]
+use hyper::server::conn::http2;
+use hyper::service::service_fn;
+use hyper::{Request, Response};
+#[cfg(feature = "http2")]
+use hyper_util::rt::TokioExecutor;
+use hyper_util::rt::TokioIo;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use bytes::Bytes;
+use crate::rt::smol::SmolExecutor;
 use futures_rustls::TlsAcceptor;
-use http::{Request, Response};
-use http_body_util::Full;
-use hyper::body;
-#[cfg(feature = "http1")]
-use hyper::{server::conn::http1, service::service_fn};
-#[cfg(feature = "http2")]
-use hyper::{server::conn::http2, service::service_fn};
-use rustls::pki_types::{CertificateDer, PrivateKeyDer};
-use rustls::server::WebPkiClientVerifier;
-use rustls::RootCertStore;
 use smol::net::TcpListener;
 use smol_hyper::rt::FuturesIo;
 
-use crate::server::ServerConfig;
-use crate::utils::{generate_port, test_url, CA_CERT};
+use crate::server::tcp::TcpServer;
+use crate::server::{BoxedError, Server, ServerConfig};
+use crate::utils::generate_port;
 
 pub struct HttpServer {
     port: u16,
@@ -31,19 +33,16 @@ impl HttpServer {
     }
 }
 
-impl HttpServer {
-    pub fn url(&self, path: &str) -> String {
-        format!("{}{}", test_url(Some(self.port)), path)
+impl TcpServer for HttpServer {}
+
+impl Server<Incoming, Full<Bytes>> for HttpServer {
+    type RequestFunction = fn(Request<Incoming>) -> Result<Response<Full<Bytes>>, hyper::Error>;
+
+    fn port(&self) -> u16 {
+        self.port
     }
 
-    pub fn base_url(&self) -> String {
-        test_url(Some(self.port))
-    }
-
-    pub async fn start(
-        &mut self,
-        handler: fn(Request<body::Incoming>) -> Result<Response<Full<Bytes>>, hyper::Error>,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn start(&mut self, handler: Self::RequestFunction) -> Result<(), BoxedError> {
         let tls_acceptor = if let Some(config) = &self.config {
             if config
                 .cert
@@ -53,56 +52,9 @@ impl HttpServer {
                 return Err("HttpServer - Server cert and key are required".into());
             }
 
-            let cert = config
-                .cert()
-                .unwrap()
-                .clone();
-            let key = config
-                .key()
-                .unwrap()
-                .clone();
+            let alpn = if cfg!(feature = "http1") { "http/1.1".into() } else { "h2".into() };
 
-            let cert = CertificateDer::from(cert);
-
-            let key = PrivateKeyDer::try_from(key);
-            if let Err(e) = key {
-                eprintln!("HttpServer - Error loading private key: {}", e);
-                return Err(e.into());
-            }
-
-            let key = key.unwrap();
-
-            let provider = rustls::crypto::aws_lc_rs::default_provider();
-            let builder = rustls::ServerConfig::builder_with_provider(Arc::new(provider))
-                .with_protocol_versions(&[&rustls::version::TLS13])
-                .expect("HttpServer - Failed to set TLS version");
-
-            let builder = if config
-                .client_auth
-                .unwrap_or(false)
-            {
-                let mut store = RootCertStore::empty();
-                let cert = CertificateDer::from(CA_CERT);
-                store
-                    .add(cert)
-                    .unwrap();
-
-                let client_verifier = WebPkiClientVerifier::builder(Arc::new(store))
-                    .build()
-                    .unwrap();
-                builder.with_client_cert_verifier(client_verifier)
-            } else {
-                builder.with_no_client_auth()
-            };
-
-            let mut tls_config = builder.with_single_cert(vec![cert], key)?;
-
-            tls_config.max_early_data_size = u32::MAX;
-            if cfg!(feature = "http1") {
-                tls_config.alpn_protocols = vec![b"http/1.1".to_vec()];
-            } else if cfg!(feature = "http2") {
-                tls_config.alpn_protocols = vec![b"h2".to_vec()];
-            }
+            let tls_config = self.setup_tls(config.clone(), alpn)?;
 
             Some(TlsAcceptor::from(Arc::new(tls_config)))
         } else {
@@ -178,32 +130,10 @@ impl HttpServer {
         Ok(())
     }
 
-    pub async fn stop(&mut self) {
+    async fn stop(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if let Some(task) = self.task.take() {
             task.cancel().await;
         }
-    }
-}
-
-use hyper::rt::Executor;
-use std::future::Future;
-
-#[non_exhaustive]
-#[derive(Default, Debug, Clone)]
-pub struct SmolExecutor {}
-
-impl<Fut> Executor<Fut> for SmolExecutor
-where
-    Fut: Future + Send + 'static,
-    Fut::Output: Send + 'static,
-{
-    fn execute(&self, fut: Fut) {
-        smol::spawn(fut).detach();
-    }
-}
-
-impl SmolExecutor {
-    pub fn new() -> Self {
-        Self {}
+        Ok(())
     }
 }

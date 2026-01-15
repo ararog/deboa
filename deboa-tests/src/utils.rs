@@ -1,6 +1,10 @@
 use url::Url;
 
-use crate::server::ServerConfig;
+#[cfg(not(feature = "http3"))]
+use crate::server::Http1RequestHandler;
+#[cfg(feature = "http3")]
+use crate::server::Http3RequestHandler;
+use crate::server::{Server, ServerConfig};
 use bytes::Bytes;
 use http::StatusCode;
 use http_body_util::Full;
@@ -16,9 +20,6 @@ use crate::server::udp::tokio::HttpServer;
 
 #[cfg(all(feature = "smol-rt", feature = "http3"))]
 use crate::server::udp::smol::HttpServer;
-
-use http::{Request, Response};
-use hyper::body::Incoming;
 
 pub const CA_CERT: &[u8] = include_bytes!("../certs/ca.der");
 pub const CA_CERT_PEM: &[u8] = include_bytes!("../certs/ca.crt");
@@ -71,18 +72,8 @@ pub fn url_from_string(url: String) -> Url {
 }
 
 pub async fn start_mock_server(
-    #[cfg(not(feature = "http3"))] handler: fn(
-        Request<Incoming>,
-    ) -> std::result::Result<
-        Response<Full<Bytes>>,
-        hyper::Error,
-    >,
-    #[cfg(feature = "http3")] handler: fn(
-        Request<Full<Bytes>>,
-    ) -> std::result::Result<
-        Response<Full<Bytes>>,
-        hyper::Error,
-    >,
+    #[cfg(not(feature = "http3"))] handler: Http1RequestHandler,
+    #[cfg(feature = "http3")] handler: Http3RequestHandler,
 ) -> HttpServer {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]

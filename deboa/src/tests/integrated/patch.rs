@@ -1,6 +1,9 @@
 use crate::{request::DeboaRequest, tests::helpers::client_with_cert, Client, Result};
 
-use deboa_tests::utils::{make_response, start_mock_server};
+use deboa_tests::{
+    server::Server,
+    utils::{make_response, start_mock_server},
+};
 use http::{header::HOST, StatusCode};
 
 #[cfg(feature = "smol-rt")]
