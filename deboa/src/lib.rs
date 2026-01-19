@@ -65,9 +65,6 @@
 //! ```
 //!
 
-#[cfg(all(any(feature = "http1", feature = "http2"), feature = "http3"))]
-compile_error!("HTTP3 is not supported within HTTP/1 and HTTP/2.");
-
 #[cfg(all(feature = "tokio-native-tls", feature = "http3"))]
 compile_error!("HTTP3 is not supported within tokio-native-tls runtime.");
 
@@ -95,38 +92,20 @@ use std::fmt::{Debug, Display};
 use std::ops::Shl;
 
 use bytes::Bytes;
-use http::{header, HeaderValue, Request, Response};
+use http::{header, HeaderValue, Request};
 #[cfg(any(feature = "http1", feature = "http2", feature = "http3"))]
 use http_body_util::Full;
-#[cfg(any(feature = "http1", feature = "http2"))]
-use hyper::body::Incoming;
 use log::{error, info};
 
 use crate::cert::{Certificate, Identity};
 
-use crate::client::conn::{BaseHttpConnection, DeboaConnection};
-
-#[cfg(not(feature = "http3"))]
-use crate::client::conn::tcp::DeboaTcpConnection;
-
-#[cfg(feature = "http3")]
-use crate::client::conn::udp::DeboaUdpConnection;
-
-#[cfg(feature = "http1")]
-use crate::request::Http1Request;
-
-#[cfg(feature = "http2")]
-use crate::request::Http2Request;
-
-#[cfg(feature = "http3")]
-use crate::request::Http3Request;
+use crate::client::conn::{ConnectionConfig, ConnectionFactory};
 
 use crate::catcher::DeboaCatcher;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
 use crate::errors::DeboaError;
 use crate::request::{DeboaRequest, IntoRequest};
-use crate::response::{DeboaResponse, IntoBody};
-use crate::url::IntoUrl;
+use crate::response::DeboaResponse;
 
 pub use async_trait::async_trait;
 
@@ -197,7 +176,7 @@ impl Shl<&str> for &Client {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 /// Enum that represents the HTTP version.
 ///
 /// # Variants
@@ -940,118 +919,13 @@ impl Client {
     ///
     /// - Uses connection pooling for better performance
     /// - Automatically reuses connections when possible
-    /// - Supports HTTP/1.1 and HTTP/2
+    /// - Supports HTTP/1.1, HTTP/2 and HTTP/3
     pub async fn execute<R>(&self, request: R) -> Result<DeboaResponse>
     where
         R: IntoRequest,
     {
-        let mut request = request.into_request()?;
+        let request = request.into_request()?;
 
-        if let Some(catchers) = &self.catchers {
-            let mut response = None;
-            for catcher in catchers {
-                response = catcher
-                    .on_request(request.as_mut())
-                    .await?;
-            }
-
-            if let Some(response) = response {
-                let mut new_response = response;
-                for catcher in catchers {
-                    catcher
-                        .on_response(new_response.as_mut())
-                        .await?;
-                }
-                return Ok(new_response);
-            }
-        }
-
-        let mut retry_count: u32 = 0;
-        let response = loop {
-            let response = self
-                .send_request(request.as_ref())
-                .await;
-            if let Err(err) = response {
-                if retry_count == request.retries() {
-                    error!("Request failed after {} retries: {}", retry_count, err);
-                    break Err(err);
-                }
-                #[cfg(feature = "tokio-rt")]
-                tokio::time::sleep(tokio::time::Duration::from_secs(2_u32.pow(retry_count) as u64))
-                    .await;
-                #[cfg(feature = "smol-rt")]
-                smol::Timer::after(std::time::Duration::from_secs(2_u32.pow(retry_count) as u64))
-                    .await;
-                retry_count += 1;
-                continue;
-            }
-
-            let response = response.unwrap();
-
-            if response
-                .status()
-                .is_redirection()
-            {
-                let location = response
-                    .headers()
-                    .get(header::LOCATION);
-                info!(
-                    "Redirecting to {}",
-                    location
-                        .unwrap()
-                        .to_str()
-                        .unwrap()
-                );
-                if let Some(location) = location {
-                    let location = location
-                        .to_str()
-                        .unwrap();
-                    let result = request
-                        .as_mut()
-                        .set_url(location);
-                    if let Err(err) = result {
-                        break Err(err);
-                    }
-                }
-                continue;
-            }
-
-            break Ok(response);
-        };
-
-        let res_url = request
-            .url()
-            .to_string();
-        let mut response = self
-            .process_response(res_url, response?)
-            .await?;
-
-        if let Some(catchers) = &self.catchers {
-            for catcher in catchers {
-                catcher
-                    .on_response(response.as_mut())
-                    .await?;
-            }
-        }
-
-        Ok(response)
-    }
-
-    /// Allow send a request.
-    ///
-    /// # Arguments
-    ///
-    /// * `request` - The request to be sent.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<Response<ResponseType>>` - The response.
-    ///
-    #[cfg(not(feature = "http3"))]
-    async fn send_request<R>(&self, request: &R) -> Result<Response<Incoming>>
-    where
-        R: AsRef<DeboaRequest>,
-    {
         let url = request
             .as_ref()
             .url();
@@ -1139,240 +1013,43 @@ impl Client {
             }
         };
 
-        if let Some(pool) = &self.pool {
+        let config = ConnectionConfig::builder()
+            .is_secure(is_secure)
+            .host(host)
+            .port(port)
+            .protocol(
+                self.protocol
+                    .clone(),
+            )
+            .identity(
+                self.identity
+                    .clone(),
+            )
+            .certificate(
+                self.certificate
+                    .clone(),
+            )
+            .skip_cert_verification(self.skip_cert_verification)
+            .build();
+
+        let response = if let Some(pool) = &self.pool {
             #[cfg(feature = "tokio-rt")]
             let mut pool = RwLockWriteGuard::map(pool.write().await, |f| f);
             #[cfg(feature = "smol-rt")]
             let mut pool = pool.write().await;
 
             let conn = pool
-                .create_connection(
-                    is_secure,
-                    host,
-                    port,
-                    &self.protocol,
-                    &self.identity,
-                    &self.certificate,
-                    self.skip_cert_verification,
-                )
+                .create_connection(&config)
                 .await?;
-            match conn {
-                #[cfg(feature = "http1")]
-                DeboaConnection::Http1(ref mut conn) => {
-                    conn.send_request(request)
-                        .await
-                }
-                #[cfg(feature = "http2")]
-                DeboaConnection::Http2(ref mut conn) => {
-                    conn.send_request(request)
-                        .await
-                }
-            }
+
+            conn.send_request(url.clone(), request)
+                .await?
         } else {
-            match self.protocol {
-                #[cfg(feature = "http1")]
-                HttpVersion::Http1 => {
-                    let mut connection = BaseHttpConnection::<Http1Request>::connect(
-                        is_secure,
-                        host,
-                        port,
-                        &self.identity,
-                        &self.certificate,
-                        self.skip_cert_verification,
-                    )
-                    .await?;
-                    connection
-                        .send_request(request)
-                        .await
-                }
-                #[cfg(feature = "http2")]
-                HttpVersion::Http2 => {
-                    let mut connection = BaseHttpConnection::<Http2Request>::connect(
-                        is_secure,
-                        host,
-                        port,
-                        &self.identity,
-                        &self.certificate,
-                        self.skip_cert_verification,
-                    )
-                    .await?;
-                    connection
-                        .send_request(request)
-                        .await
-                }
-            }
-        }
-    }
-
-    #[cfg(feature = "http3")]
-    async fn send_request<R>(&self, request: &R) -> Result<Response<Full<Bytes>>>
-    where
-        R: AsRef<DeboaRequest>,
-    {
-        let url = request
-            .as_ref()
-            .url();
-        let mut uri = url
-            .path()
-            .to_string();
-        if let Some(query) = url.query() {
-            uri.push('?');
-            uri.push_str(query);
-        }
-
-        let method = request
-            .as_ref()
-            .method();
-
-        info!("Building request: {} {}", method, uri);
-        let mut builder = Request::builder()
-            .uri(uri)
-            .method(
-                method
-                    .to_string()
-                    .as_str(),
-            );
-        {
-            let req_headers = builder
-                .headers_mut()
-                .unwrap();
-
-            request
-                .as_ref()
-                .headers()
-                .into_iter()
-                .fold(&mut *req_headers, |acc, (key, value)| {
-                    acc.insert(key, value.into());
-                    acc
-                });
-
-            if let Some(deboa_cookies) = request
-                .as_ref()
-                .cookies()
-            {
-                let mut cookies = Vec::<String>::new();
-
-                for cookie in deboa_cookies.values() {
-                    cookies.push(cookie.to_string());
-                }
-
-                if let Ok(cookie_header) = HeaderValue::from_str(&cookies.join("; ")) {
-                    req_headers.insert(header::COOKIE, cookie_header);
-                }
-            }
-        }
-
-        let request = builder.body(Full::new(Bytes::from(
-            request
-                .as_ref()
-                .raw_body()
-                .to_vec(),
-        )));
-
-        if let Err(err) = request {
-            error!("Failed to send request: {}", err);
-            return Err(DeboaError::Request(errors::RequestError::Send {
-                url: url.to_string(),
-                method: method.to_string(),
-                message: err.to_string(),
-            }));
-        }
-
-        let request = request.unwrap();
-
-        let scheme = url.scheme();
-
-        let host = url
-            .host_str()
-            .unwrap_or("localhost");
-
-        let port = if let Some(port) = url.port() {
-            port
-        } else {
-            match scheme {
-                "https" | "wss" => 443,
-                _ => panic!("Unsupported scheme: {}", scheme),
-            }
+            let mut conn = ConnectionFactory::create_connection(&self.protocol, &config).await?;
+            conn.send_request(url.clone(), request)
+                .await?
         };
 
-        if let Some(pool) = &self.pool {
-            #[cfg(feature = "tokio-rt")]
-            let mut pool = RwLockWriteGuard::map(pool.write().await, |f| f);
-            #[cfg(feature = "smol-rt")]
-            let mut pool = pool.write().await;
-            let conn = pool
-                .create_connection(
-                    true,
-                    host,
-                    port,
-                    &self.protocol,
-                    &self.identity,
-                    &self.certificate,
-                    self.skip_cert_verification,
-                )
-                .await?;
-            match conn {
-                #[cfg(feature = "http3")]
-                DeboaConnection::Http3(ref mut conn) => {
-                    conn.send_request(request)
-                        .await
-                }
-            }
-        } else {
-            match self.protocol {
-                #[cfg(feature = "http3")]
-                HttpVersion::Http3 => {
-                    let mut connection = BaseHttpConnection::<Http3Request>::connect(
-                        host,
-                        port,
-                        &self.identity,
-                        &self.certificate,
-                        self.skip_cert_verification,
-                    )
-                    .await?;
-                    connection
-                        .send_request(request)
-                        .await
-                }
-            }
-        }
-    }
-
-    /// Allow process a response.
-    ///
-    /// # Arguments
-    ///
-    /// * `response` - The response to be processed.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<DeboaResponse>` - The response.
-    ///
-    #[cfg(not(feature = "http3"))]
-    async fn process_response<U>(
-        &self,
-        url: U,
-        response: Response<Incoming>,
-    ) -> Result<DeboaResponse>
-    where
-        U: IntoUrl,
-    {
-        let response = response.map(|body| body.into_body());
-        let response = DeboaResponse::new(url.into_url()?, response);
-        Ok(response)
-    }
-
-    #[cfg(feature = "http3")]
-    async fn process_response<U>(
-        &self,
-        url: U,
-        response: Response<Full<Bytes>>,
-    ) -> Result<DeboaResponse>
-    where
-        U: IntoUrl,
-    {
-        let response = response.map(|body| body.into_body());
-        let response = DeboaResponse::new(url.into_url()?, response);
         Ok(response)
     }
 }

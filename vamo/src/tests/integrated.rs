@@ -58,7 +58,7 @@ async fn do_get() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "GET" {
                 match req.uri().path() {
                     "/posts" => Ok(make_response(StatusCode::OK, b"pong")),
@@ -124,7 +124,7 @@ async fn do_put() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "PUT" && req.uri().path() == "/posts" {
                 Ok(make_response(StatusCode::OK, b"pong"))
             } else {
@@ -170,7 +170,7 @@ async fn do_post() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "POST" && req.uri().path() == "/api/posts" {
                 Ok(make_response(
                     StatusCode::CREATED,
@@ -225,7 +225,7 @@ async fn do_patch() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "PATCH" && req.uri().path() == "/api/posts/1" {
                 Ok(make_response(StatusCode::OK, b"pong"))
             } else {
@@ -269,7 +269,7 @@ async fn do_delete() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "DELETE" && req.uri().path() == "/api/posts/1" {
                 Ok(make_response(StatusCode::NO_CONTENT, b""))
             } else {
@@ -313,7 +313,7 @@ async fn do_post_resource() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "POST" && req.uri().path() == "/api/posts" {
                 Ok(make_response(StatusCode::CREATED, JSON_STR_POST.as_bytes()))
             } else {
@@ -364,7 +364,7 @@ async fn do_put_resource() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "PUT" && req.uri().path() == "/api/posts/1" {
                 Ok(make_response(StatusCode::OK, JSON_STR_POST.as_bytes()))
             } else {
@@ -415,7 +415,7 @@ async fn do_patch_resource() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "PATCH" && req.uri().path() == "/api/posts/1" {
                 Ok(make_response(StatusCode::OK, JSON_STR_PATCH.as_bytes()))
             } else {
@@ -461,7 +461,7 @@ async fn do_remove_resource() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "DELETE" && req.uri().path() == "/api/posts/1" {
                 Ok(make_response(StatusCode::OK, b""))
             } else {

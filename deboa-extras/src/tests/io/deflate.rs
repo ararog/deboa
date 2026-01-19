@@ -20,7 +20,7 @@ async fn test_deflate_decompress() -> Result<()> {
         .body(Either::Right(Full::from(DEFLATE_COMPRESSED.to_vec())))
         .unwrap();
 
-    let mut response = DeboaResponse::new(fake_url(), response);
+    let mut response = DeboaResponse::new(fake_url().into(), response);
 
     encoding_catcher
         .on_response(&mut response)

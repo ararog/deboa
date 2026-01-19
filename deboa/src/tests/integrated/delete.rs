@@ -18,7 +18,7 @@ use smol_macros::test;
 //
 
 async fn do_delete() -> Result<()> {
-    let mut server = start_mock_server(|req| {
+    let mut server = start_mock_server(|req| async move {
         if req.method() == "DELETE" && req.uri().path() == "/posts/1" {
             Ok(make_response(StatusCode::OK, b""))
         } else {

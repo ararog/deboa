@@ -1,16 +1,15 @@
 use std::future::Future;
 
 use bytes::{Buf, Bytes, BytesMut};
-#[cfg(feature = "http3")]
-use h3::{client::RequestStream, error::StreamError};
+use h3::client::RequestStream;
 use h3_quinn::RecvStream;
-#[cfg(feature = "http3")]
+use http::response::Parts;
 use http::{Request, Response, StatusCode, Version};
+use http_body::Body;
 use http_body_util::Full;
 
 use crate::{
-    cert::{Certificate, Identity},
-    client::conn::BaseHttpConnection,
+    client::conn::{BaseHttpConnection, ConnectionConfig},
     errors::{DeboaError, ResponseError},
     Result, MAX_ERROR_MESSAGE_SIZE,
 };
@@ -23,6 +22,8 @@ use crate::{
 ///
 pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     type Sender;
+    type ReqBody;
+    type ResBody: Body;
 
     /// Create a new connection.
     ///
@@ -39,15 +40,11 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     ///
     /// # Returns
     ///
-    /// * `Result<BaseHttpConnection<Self::Sender>>` - The connection or error.
+    /// * `Result<BaseHttpConnection<Self::Sender, Self::ReqBody, Self::ResBody>>` - The connection or error.
     ///
     fn connect(
-        host: &str,
-        port: u16,
-        identity: &Option<Identity>,
-        certificate: &Option<Certificate>,
-        skip_cert_verification: bool,
-    ) -> impl Future<Output = Result<BaseHttpConnection<Self::Sender>>>;
+        config: &ConnectionConfig,
+    ) -> impl Future<Output = Result<BaseHttpConnection<Self::Sender, Self::ReqBody, Self::ResBody>>>;
 
     /// Get connection protocol.
     ///
@@ -65,12 +62,12 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     ///
     /// # Returns
     ///
-    /// * `Result<Response<Full<Bytes>>>` - The response or error.
+    /// * `Result<Response<Self::ResBody>>` - The response or error.
     ///
     fn send_request(
         &mut self,
-        request: Request<Full<Bytes>>,
-    ) -> impl Future<Output = Result<Response<Full<Bytes>>>>;
+        request: Request<Self::ReqBody>,
+    ) -> impl Future<Output = Result<Response<Self::ResBody>>>;
 
     /// Process a response.
     ///
@@ -80,17 +77,15 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
     ///
     /// # Returns
     ///
-    /// * `Result<Response<Full<Bytes>>>` - The response or error.
+    /// * `Result<Response<Self::ResBody>>` - The response or error.
     ///
     fn process_response(
         &self,
-        response: std::result::Result<Response<()>, StreamError>,
+        parts: Parts,
         mut stream: RequestStream<RecvStream, Bytes>,
     ) -> impl Future<Output = Result<Response<Full<Bytes>>>> + Send {
         async move {
-            let response = response.unwrap();
-
-            let status_code = response.status();
+            let status_code = parts.status;
 
             if (!status_code.is_success()
                 && !status_code.is_informational()
@@ -120,13 +115,6 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
                 }));
             }
 
-            let mut response_builder = Response::builder().status(status_code);
-            let headers = response_builder
-                .headers_mut()
-                .unwrap();
-            *headers = response
-                .headers()
-                .clone();
             let mut body = BytesMut::new();
             while let Ok(Some(chunk)) = stream
                 .recv_data()
@@ -135,15 +123,9 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
                 body.extend_from_slice(chunk.chunk());
             }
 
-            let response = response_builder.body(Full::new(body.freeze()));
-            if let Err(err) = response {
-                return Err(DeboaError::Response(ResponseError::Receive {
-                    status_code,
-                    message: format!("Could not process response ({}): {}", status_code, err),
-                }));
-            }
+            let response = Response::from_parts(parts, Full::new(body.freeze()));
 
-            Ok(response.unwrap())
+            Ok(response)
         }
     }
 }

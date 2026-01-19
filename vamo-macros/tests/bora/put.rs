@@ -42,7 +42,7 @@ async fn do_put_by_id() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "PUT" && req.uri().path() == "/posts/1" {
                 Ok(make_response(StatusCode::OK, b""))
             } else {

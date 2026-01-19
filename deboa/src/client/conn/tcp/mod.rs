@@ -1,13 +1,12 @@
 use std::future::Future;
 
-use bytes::Bytes;
 use http::{Request, Response, StatusCode, Version};
-use http_body_util::{BodyExt, Full};
+use http_body::Body;
+use http_body_util::BodyExt;
 use hyper::body::Incoming;
 
 use crate::{
-    cert::{Certificate, Identity},
-    client::conn::BaseHttpConnection,
+    client::conn::{BaseHttpConnection, ConnectionConfig},
     errors::{DeboaError, RequestError, ResponseError},
     Result, MAX_ERROR_MESSAGE_SIZE,
 };
@@ -20,6 +19,8 @@ use crate::{
 ///
 pub trait DeboaTcpConnection: private::DeboaTcpConnectionSealed {
     type Sender;
+    type ReqBody: Body + Unpin;
+    type ResBody: Body + Unpin;
 
     /// Create a new connection.
     ///
@@ -41,13 +42,8 @@ pub trait DeboaTcpConnection: private::DeboaTcpConnectionSealed {
     /// * `Result<BaseHttpConnection<Self::Sender>>` - The connection or error.
     ///
     fn connect(
-        is_secure: bool,
-        host: &str,
-        port: u16,
-        identity: &Option<Identity>,
-        certificate: &Option<Certificate>,
-        skip_cert_verification: bool,
-    ) -> impl Future<Output = Result<BaseHttpConnection<Self::Sender>>>;
+        config: &ConnectionConfig,
+    ) -> impl Future<Output = Result<BaseHttpConnection<Self::Sender, Self::ReqBody, Self::ResBody>>>;
 
     /// Get connection protocol.
     ///
@@ -65,12 +61,12 @@ pub trait DeboaTcpConnection: private::DeboaTcpConnectionSealed {
     ///
     /// # Returns
     ///
-    /// * `Result<Response<Incoming>>` - The response or error.
+    /// * `Result<Response<Self::ResBody>>` - The response or error.
     ///
     fn send_request(
         &mut self,
-        request: Request<Full<Bytes>>,
-    ) -> impl Future<Output = Result<Response<Incoming>>>;
+        request: Request<Self::ReqBody>,
+    ) -> impl Future<Output = Result<Response<Self::ResBody>>>;
 
     /// Process a response.
     ///

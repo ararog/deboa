@@ -21,7 +21,7 @@ use smol_macros::test;
 //
 
 async fn do_post() -> Result<()> {
-    let mut server = start_mock_server(|req| {
+    let mut server = start_mock_server(|req| async move {
         if req.method() == "POST" && req.uri().path() == "/posts" {
             Ok(make_response(StatusCode::CREATED, b"{\n  \"id\": 101\n}"))
         } else {
@@ -67,7 +67,7 @@ async fn test_post() -> Result<()> {
 }
 
 async fn do_post_encoded_form() -> Result<()> {
-    let mut server = start_mock_server(|req| {
+    let mut server = start_mock_server(|req| async move {
         if req.method() == "POST" && req.uri().path() == "/posts" {
             if req
                 .headers()
@@ -138,7 +138,7 @@ async fn do_post_multipart_form() -> Result<()> {
     form.field("name", "deboa");
     form.field("version", "0.0.1");
 
-    let mut server = start_mock_server(|req| {
+    let mut server = start_mock_server(|req| async move {
         if req.method() == "POST" && req.uri().path() == "/posts" {
             if req
                 .headers()

@@ -44,7 +44,7 @@ async fn do_get_by_id() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "GET" && req.uri().path() == "/posts/1" {
                 Ok(make_response(StatusCode::OK, b"{ \"id\": 1, \"title\": \"title\" }"))
             } else {
@@ -90,7 +90,7 @@ async fn do_get_all() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "GET" && req.uri().path() == "/posts" {
                 Ok(make_response(
                     StatusCode::OK,
@@ -138,7 +138,7 @@ async fn do_query_by_id() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             println!("{} {}", req.method(), req.uri());
             if req.method() == "GET"
                 && req.uri().path() == "/posts"
@@ -187,7 +187,7 @@ async fn do_query_by_title() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "GET"
                 && req.uri().path() == "/posts"
                 && req.uri().query()
