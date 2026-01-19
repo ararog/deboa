@@ -38,7 +38,7 @@ async fn do_post_resource() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "POST" && req.uri().path() == "/api/users" {
                 Ok(make_response(StatusCode::CREATED, b""))
             } else {

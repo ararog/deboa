@@ -16,7 +16,7 @@ use smol_macros::test;
 //
 
 async fn do_patch() -> Result<()> {
-    let mut server = start_mock_server(|req| {
+    let mut server = start_mock_server(|req| async move {
         if req.method() == "PATCH" && req.uri().path() == "/posts/1" {
             assert!(req
                 .headers()

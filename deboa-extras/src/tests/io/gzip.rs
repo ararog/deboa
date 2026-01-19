@@ -19,7 +19,7 @@ async fn test_gzip() -> Result<()> {
         .body(Either::Right(Full::from(GZIP_COMPRESSED.to_vec())))
         .unwrap();
 
-    let mut response = DeboaResponse::new(fake_url(), response);
+    let mut response = DeboaResponse::new(fake_url().into(), response);
 
     encoding_catcher
         .on_response(&mut response)

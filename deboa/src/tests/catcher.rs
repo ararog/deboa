@@ -74,7 +74,7 @@ async fn catcher_response() -> Result<()> {
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     server
-        .start(|req| {
+        .start(|req| async move {
             if req.method() == "GET" && req.uri().path() == "/posts/1" {
                 Ok(make_response(StatusCode::OK, b"Hello World!"))
             } else {

@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use bytes::Bytes;
 use http::version::Version;
 use http_body_util::Full;
@@ -5,35 +7,38 @@ use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
 use hyper_util::rt::TokioIo;
 
 use crate::{
-    cert::{Certificate, Identity},
-    client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection},
+    client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
     errors::{ConnectionError, DeboaError},
     request::Http1Request,
     rt::tokio::tls::{plain_connection, tls_connection},
     Result,
 };
 
-impl DeboaTcpConnection for BaseHttpConnection<Http1Request> {
+impl DeboaTcpConnection for BaseHttpConnection<Http1Request, Full<Bytes>, Incoming> {
     type Sender = Http1Request;
+    type ReqBody = Full<Bytes>;
+    type ResBody = Incoming;
 
     #[inline]
     fn protocol(&self) -> Version {
         Version::HTTP_11
     }
 
-    #[hotpath::measure]
-    async fn connect(
-        is_secure: bool,
-        host: &str,
-        port: u16,
-        identity: &Option<Identity>,
-        certificate: &Option<Certificate>,
-        skip_cert_verification: bool,
-    ) -> Result<BaseHttpConnection<Self::Sender>> {
-        let stream = if is_secure {
-            tls_connection(host, port, identity, certificate, skip_cert_verification, None).await
+    async fn connect<'a>(
+        config: &ConnectionConfig<'a>,
+    ) -> Result<BaseHttpConnection<Self::Sender, Self::ReqBody, Self::ResBody>> {
+        let stream = if config.is_secure() {
+            tls_connection(
+                config.host(),
+                config.port(),
+                config.identity(),
+                config.certificate(),
+                config.skip_cert_verification(),
+                None,
+            )
+            .await
         } else {
-            plain_connection(host, port).await
+            plain_connection(config.host(), config.port()).await
         };
 
         if let Err(e) = stream {
@@ -44,7 +49,9 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request> {
 
         if let Err(err) = result {
             return Err(DeboaError::Connection(ConnectionError::Handshake {
-                host: host.to_string(),
+                host: config
+                    .host()
+                    .to_string(),
                 message: err.to_string(),
             }));
         }
@@ -61,11 +68,18 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request> {
             };
         });
 
-        Ok(BaseHttpConnection::<Self::Sender> { sender })
+        Ok(BaseHttpConnection::<Self::Sender, Self::ReqBody, Self::ResBody> {
+            sender,
+            req_body: PhantomData,
+            res_body: PhantomData,
+        })
     }
 
     #[hotpath::measure]
-    async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {
+    async fn send_request(
+        &mut self,
+        request: Request<Self::ReqBody>,
+    ) -> Result<Response<Self::ResBody>> {
         let method = request
             .method()
             .to_string();
@@ -80,6 +94,6 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request> {
 }
 
 impl crate::client::conn::tcp::private::DeboaTcpConnectionSealed
-    for BaseHttpConnection<Http1Request>
+    for BaseHttpConnection<Http1Request, Full<Bytes>, Incoming>
 {
 }

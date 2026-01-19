@@ -24,7 +24,7 @@ fn test_status() -> Result<()> {
         .body(DeboaBody::Right(Full::<Bytes>::from(SAMPLE_TEST.to_vec())))
         .unwrap();
 
-    let response = DeboaResponse::new(fake_url(), response);
+    let response = DeboaResponse::new(fake_url().into(), response);
     assert_eq!(response.status(), http::StatusCode::OK);
     Ok(())
 }

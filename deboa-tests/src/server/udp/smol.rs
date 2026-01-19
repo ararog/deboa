@@ -1,16 +1,22 @@
+use std::future::Future;
 use std::{net::SocketAddr, sync::Arc};
 
 use bytes::Bytes;
+use h3::server::RequestStream;
 use h3_quinn::quinn::{self, crypto::rustls::QuicServerConfig};
 use http::{Request, Response};
-use http_body_util::{BodyExt, Full};
+use http_body_util::Full;
+use hyper::service::service_fn;
 
-use crate::server::{BoxedError, Server, ServerConfig};
+use crate::rt::task::ServerTask;
+use crate::server::errors::{EasyHttpMockError, StartError::Tls};
+use crate::server::udp::UdpServer;
+use crate::server::{Server, ServerConfig};
 use crate::utils::generate_port;
 
 pub struct HttpServer {
     port: u16,
-    task: Option<smol::Task<()>>,
+    task: Option<ServerTask>,
     config: Option<ServerConfig>,
 }
 
@@ -20,137 +26,53 @@ impl HttpServer {
     }
 }
 
-impl Server<Full<Bytes>, Full<Bytes>> for HttpServer {
-    type RequestFunction = fn(Request<Full<Bytes>>) -> Result<Response<Full<Bytes>>, hyper::Error>;
+impl UdpServer for HttpServer {}
 
+impl Server<Full<Bytes>, Full<Bytes>> for HttpServer {
     fn port(&self) -> u16 {
         self.port
     }
 
-    async fn start(&mut self, handler: Self::RequestFunction) -> Result<(), BoxedError> {
+    async fn start<H, Fut>(&mut self, handler: H) -> Result<(), EasyHttpMockError>
+    where
+        H: Fn(Request<Full<Bytes>>) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<Response<Full<Bytes>>, EasyHttpMockError>> + Send + 'static,
+    {
         if let Some(config) = &self.config {
             if config
                 .cert
                 .is_none()
                 || config.key.is_none()
             {
-                return Err("HttpServer - Server cert and key are required".into());
+                return Err(EasyHttpMockError::Start(Tls(
+                    "HttpServer - Server cert and key are required".to_string(),
+                )));
             }
 
             let tls_config = self.setup_tls(config.clone(), b"h3".to_vec())?;
 
-            let server_config =
-                quinn::ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(tls_config)?));
+            let quic_config = QuicServerConfig::try_from(tls_config)
+                .map_err(|e| EasyHttpMockError::Start(Tls(e.to_string())))?;
+
+            let server_config = quinn::ServerConfig::with_crypto(Arc::new(quic_config));
             let endpoint = quinn::Endpoint::server(
                 server_config,
                 SocketAddr::from(([127, 0, 0, 1], self.port)),
-            )?;
+            )
+            .map_err(|e| EasyHttpMockError::Bind(e.to_string()))?;
 
-            let handle = smol::spawn(async move {
-                while let Some(new_conn) = endpoint
-                    .accept()
-                    .await
-                {
-                    smol::spawn(async move {
-                        match new_conn.await {
-                            Ok(conn) => {
-                                let mut h3_conn =
-                                    h3::server::Connection::new(h3_quinn::Connection::new(conn))
-                                        .await
-                                        .unwrap();
+            let handler = Arc::new(service_fn(handler));
 
-                                loop {
-                                    match h3_conn
-                                        .accept()
-                                        .await
-                                    {
-                                        Ok(Some(resolver)) => {
-                                            smol::spawn(async move {
-                                                let result = resolver
-                                                    .resolve_request()
-                                                    .await;
-                                                if let Ok((req, mut stream)) = result {
-                                                    let (parts, _) = req.into_parts();
+            let server_task = self.handle_connections(endpoint, handler)?;
 
-                                                    let request = http::Request::from_parts(
-                                                        parts,
-                                                        Full::new(Bytes::new()),
-                                                    );
-
-                                                    let response = handler(request).expect(
-                                                        "HttpServer - Could not process request!",
-                                                    );
-
-                                                    let resp = http::Response::builder()
-                                                        .status(response.status())
-                                                        .body(())
-                                                        .unwrap();
-
-                                                    match stream
-                                                        .send_response(resp)
-                                                        .await
-                                                    {
-                                                        Ok(_) => {
-                                                            println!(
-                                                            "successfully respond to connection"
-                                                        );
-                                                        }
-                                                        Err(err) => {
-                                                            eprintln!("unable to send response to connection peer: {:?}", err);
-                                                        }
-                                                    }
-
-                                                    let collected = response
-                                                        .collect()
-                                                        .await;
-
-                                                    let buf = Bytes::from(
-                                                        collected
-                                                            .expect("HttpServer - Failed to collect response")
-                                                            .to_bytes()
-                                                            .to_vec(),
-                                                    );
-
-                                                    stream
-                                                        .send_data(buf)
-                                                        .await;
-
-                                                    stream
-                                                        .finish()
-                                                        .await;
-                                                }
-                                            }).detach();
-                                        }
-                                        Ok(None) => {
-                                            break;
-                                        }
-                                        Err(err) => {
-                                            eprintln!("error on accept {}", err);
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            Err(err) => {
-                                eprintln!("accepting connection failed: {:?}", err);
-                            }
-                        }
-                    }).detach();
-                }
-
-                endpoint
-                    .wait_idle()
-                    .await;
-            });
-
-            self.task = Some(handle);
+            self.task = Some(server_task);
         }
 
         Ok(())
     }
 
-    async fn stop(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        if let Some(task) = self.task.take() {
+    async fn stop(&mut self) -> Result<(), EasyHttpMockError> {
+        if let Some(mut task) = self.task.take() {
             task.cancel().await;
         }
         Ok(())

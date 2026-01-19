@@ -78,8 +78,8 @@
 //!     // Process chunk
 //! }
 //! ```
-use std::fmt::Debug;
 use std::fs::write;
+use std::{fmt::Debug, sync::Arc};
 
 use http::{header, HeaderName, HeaderValue, Response};
 use http_body_util::{BodyDataStream, BodyExt, Either, Full};
@@ -242,7 +242,7 @@ impl DeboaResponseBuilder {
     ///
     #[inline]
     pub fn build(self) -> DeboaResponse {
-        DeboaResponse { url: self.url, inner: self.inner }
+        DeboaResponse { url: self.url.into(), inner: self.inner }
     }
 }
 
@@ -308,7 +308,7 @@ impl DeboaResponseBuilder {
 /// * `headers` - The response headers
 /// * `body` - The response body (can be streamed or buffered)
 pub struct DeboaResponse {
-    url: Url,
+    url: Arc<Url>,
     inner: Response<DeboaBody>,
 }
 
@@ -343,14 +343,14 @@ impl DeboaResponse {
     /// * `url` - The url of the response.
     /// * `inner` - The inner response.
     ///
-    pub fn new(url: Url, inner: Response<DeboaBody>) -> Self {
+    pub fn new(url: Arc<Url>, inner: Response<DeboaBody>) -> Self {
         Self { url, inner }
     }
 
     #[inline]
     pub fn builder(url: Url) -> DeboaResponseBuilder {
         DeboaResponseBuilder {
-            url,
+            url: url.into(),
             inner: Response::new(DeboaBody::Right(Full::<Bytes>::from(Bytes::new()))),
         }
     }

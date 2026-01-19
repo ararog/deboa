@@ -1,22 +1,9 @@
 use std::{collections::HashMap, future::Future};
 use time::Duration;
 
-#[cfg(feature = "http1")]
-use crate::request::Http1Request;
-#[cfg(feature = "http2")]
-use crate::request::Http2Request;
-#[cfg(feature = "http3")]
-use crate::request::Http3Request;
-
-#[cfg(not(feature = "http3"))]
-use crate::client::conn::tcp::DeboaTcpConnection;
-#[cfg(feature = "http3")]
-use crate::client::conn::udp::DeboaUdpConnection;
-
 use crate::{
-    cert::{Certificate, Identity},
-    client::conn::{BaseHttpConnection, DeboaConnection},
-    HttpVersion, Result,
+    client::conn::{ConnectionConfig, ConnectionFactory, DeboaConnection},
+    Result,
 };
 
 /// Struct that represents the HTTP connection pool.
@@ -86,13 +73,7 @@ pub trait DeboaHttpConnectionPool: private::DeboaHttpConnectionPoolSealed {
     ///
     fn create_connection<'a>(
         &'a mut self,
-        is_secure: bool,
-        host: &'a str,
-        port: u16,
-        protocol: &HttpVersion,
-        identity: &Option<Identity>,
-        certificate: &Option<Certificate>,
-        skip_cert_verification: bool,
+        config: &ConnectionConfig<'a>,
     ) -> impl Future<Output = Result<&'a mut DeboaConnection>>;
 }
 
@@ -136,14 +117,9 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
 
     async fn create_connection<'a>(
         &'a mut self,
-        is_secure: bool,
-        host: &'a str,
-        port: u16,
-        protocol: &HttpVersion,
-        identity: &Option<Identity>,
-        certificate: &Option<Certificate>,
-        skip_cert_verification: bool,
+        config: &ConnectionConfig<'a>,
     ) -> Result<&'a mut DeboaConnection> {
+        let host = config.host();
         if self
             .connections
             .contains_key(host)
@@ -156,46 +132,7 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         }
 
         log::debug!("Creating new connection for {}", host);
-        let connection = match protocol {
-            #[cfg(feature = "http1")]
-            HttpVersion::Http1 => {
-                let connection = BaseHttpConnection::<Http1Request>::connect(
-                    is_secure,
-                    host,
-                    port,
-                    identity,
-                    certificate,
-                    skip_cert_verification,
-                )
-                .await?;
-                DeboaConnection::Http1(Box::new(connection))
-            }
-            #[cfg(feature = "http2")]
-            HttpVersion::Http2 => {
-                let connection = BaseHttpConnection::<Http2Request>::connect(
-                    is_secure,
-                    host,
-                    port,
-                    identity,
-                    certificate,
-                    skip_cert_verification,
-                )
-                .await?;
-                DeboaConnection::Http2(Box::new(connection))
-            }
-            #[cfg(feature = "http3")]
-            HttpVersion::Http3 => {
-                let connection = BaseHttpConnection::<Http3Request>::connect(
-                    host,
-                    port,
-                    identity,
-                    certificate,
-                    skip_cert_verification,
-                )
-                .await?;
-                DeboaConnection::Http3(Box::new(connection))
-            }
-        };
+        let connection = ConnectionFactory::create_connection(&config.protocol, config).await?;
 
         self.connections
             .insert(host.to_string(), connection);

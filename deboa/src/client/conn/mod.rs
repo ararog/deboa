@@ -16,6 +16,24 @@
 //! - Thread-safe connection handling
 //! ```
 
+use std::{marker::PhantomData, sync::Arc};
+
+use http::Request;
+
+#[cfg(any(feature = "http1", feature = "http2", feature = "http3"))]
+use bytes::Bytes;
+#[cfg(any(feature = "http1", feature = "http2", feature = "http3"))]
+use http_body_util::Full;
+#[cfg(any(feature = "http1", feature = "http2"))]
+use hyper::body::Incoming;
+use url::Url;
+
+use crate::{
+    cert::{Certificate, Identity},
+    response::{DeboaResponse, IntoBody},
+    HttpVersion, Result,
+};
+
 #[cfg(feature = "http1")]
 use crate::request::Http1Request;
 
@@ -37,7 +55,7 @@ use crate::request::Http3Request;
 ///
 /// - `http1`: Enables HTTP/1.1 support
 /// - `http2`: Enables HTTP/2 support (requires TLS)
-#[cfg(not(feature = "http3"))]
+#[cfg(any(feature = "http1", feature = "http2"))]
 pub mod tcp;
 
 /// UDP protocol implementations.
@@ -95,13 +113,55 @@ pub(crate) mod stream;
 ///
 /// * `Http1` - The HTTP/1.1 connection.
 /// * `Http2` - The HTTP/2 connection.
+/// * `Http3` - The HTTP/3 connection.
 pub enum DeboaConnection {
     #[cfg(feature = "http1")]
-    Http1(Box<BaseHttpConnection<Http1Request>>),
+    Http1(Box<BaseHttpConnection<Http1Request, Full<Bytes>, Incoming>>),
     #[cfg(feature = "http2")]
-    Http2(Box<BaseHttpConnection<Http2Request>>),
+    Http2(Box<BaseHttpConnection<Http2Request, Full<Bytes>, Incoming>>),
     #[cfg(feature = "http3")]
-    Http3(Box<BaseHttpConnection<Http3Request>>),
+    Http3(Box<BaseHttpConnection<Http3Request, Full<Bytes>, Full<Bytes>>>),
+}
+
+impl DeboaConnection {
+    pub async fn send_request(
+        &mut self,
+        url: Arc<Url>,
+        request: Request<Full<Bytes>>,
+    ) -> Result<DeboaResponse> {
+        let url = url.clone();
+        let response = match self {
+            #[cfg(feature = "http1")]
+            DeboaConnection::Http1(ref mut conn) => {
+                use crate::client::conn::tcp::DeboaTcpConnection;
+                let response = conn
+                    .send_request(request)
+                    .await?;
+                let response = response.map(|body| body.into_body());
+                DeboaResponse::new(url, response)
+            }
+            #[cfg(feature = "http2")]
+            DeboaConnection::Http2(ref mut conn) => {
+                use crate::client::conn::tcp::DeboaTcpConnection;
+                let response = conn
+                    .send_request(request)
+                    .await?;
+                let response = response.map(|body| body.into_body());
+                DeboaResponse::new(url, response)
+            }
+            #[cfg(feature = "http3")]
+            DeboaConnection::Http3(ref mut conn) => {
+                use crate::client::conn::udp::DeboaUdpConnection;
+                let response = conn
+                    .send_request(request)
+                    .await?;
+                let response = response.map(|body| body.into_body());
+                DeboaResponse::new(url, response)
+            }
+        };
+
+        Ok(response)
+    }
 }
 
 /// Struct that represents the connection.
@@ -109,6 +169,167 @@ pub enum DeboaConnection {
 /// # Fields
 ///
 /// * `sender` - The sender to use.
-pub struct BaseHttpConnection<T> {
+pub struct BaseHttpConnection<T, ReqBody, ResBody> {
     pub(crate) sender: T,
+    pub(crate) req_body: PhantomData<ReqBody>,
+    pub(crate) res_body: PhantomData<ResBody>,
+}
+
+pub struct ConnectionConfigBuilder<'a> {
+    is_secure: bool,
+    host: &'a str,
+    port: u16,
+    protocol: HttpVersion,
+    identity: Option<Identity>,
+    certificate: Option<Certificate>,
+    skip_cert_verification: bool,
+}
+
+impl<'a> ConnectionConfigBuilder<'a> {
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
+        Self {
+            is_secure: false,
+            host: "",
+            port: 80,
+            #[cfg(feature = "http1")]
+            protocol: HttpVersion::Http1,
+            #[cfg(feature = "http2")]
+            protocol: HttpVersion::Http2,
+            #[cfg(feature = "http3")]
+            protocol: HttpVersion::Http3,
+            identity: None,
+            certificate: None,
+            skip_cert_verification: false,
+        }
+    }
+
+    pub fn is_secure(mut self, is_secure: bool) -> Self {
+        self.is_secure = is_secure;
+        self
+    }
+
+    pub fn host(mut self, host: &'a str) -> Self {
+        self.host = host;
+        self
+    }
+
+    pub fn port(mut self, port: u16) -> Self {
+        self.port = port;
+        self
+    }
+
+    pub fn protocol(mut self, protocol: HttpVersion) -> Self {
+        self.protocol = protocol;
+        self
+    }
+
+    pub fn identity(mut self, identity: Option<Identity>) -> Self {
+        self.identity = identity;
+        self
+    }
+
+    pub fn certificate(mut self, certificate: Option<Certificate>) -> Self {
+        self.certificate = certificate;
+        self
+    }
+
+    pub fn skip_cert_verification(mut self, skip_cert_verification: bool) -> Self {
+        self.skip_cert_verification = skip_cert_verification;
+        self
+    }
+
+    pub fn build(self) -> ConnectionConfig<'a> {
+        ConnectionConfig {
+            is_secure: self.is_secure,
+            host: self.host,
+            port: self.port,
+            protocol: self.protocol,
+            identity: self.identity,
+            certificate: self.certificate,
+            skip_cert_verification: self.skip_cert_verification,
+        }
+    }
+}
+
+pub struct ConnectionConfig<'a> {
+    is_secure: bool,
+    host: &'a str,
+    port: u16,
+    protocol: HttpVersion,
+    identity: Option<Identity>,
+    certificate: Option<Certificate>,
+    skip_cert_verification: bool,
+}
+
+impl<'a> ConnectionConfig<'a> {
+    pub fn builder() -> ConnectionConfigBuilder<'a> {
+        ConnectionConfigBuilder::new()
+    }
+
+    pub fn is_secure(&self) -> bool {
+        self.is_secure
+    }
+
+    pub fn host(&self) -> &str {
+        &self.host
+    }
+
+    pub fn port(&self) -> u16 {
+        self.port
+    }
+
+    pub fn protocol(&self) -> &HttpVersion {
+        &self.protocol
+    }
+
+    pub fn identity(&self) -> &Option<Identity> {
+        &self.identity
+    }
+
+    pub fn certificate(&self) -> &Option<Certificate> {
+        &self.certificate
+    }
+
+    pub fn skip_cert_verification(&self) -> bool {
+        self.skip_cert_verification
+    }
+}
+
+pub struct ConnectionFactory {}
+
+impl ConnectionFactory {
+    pub async fn create_connection<'a>(
+        protocol: &HttpVersion,
+        config: &'a ConnectionConfig<'a>,
+    ) -> Result<DeboaConnection> {
+        let conn = match protocol {
+            #[cfg(feature = "http1")]
+            HttpVersion::Http1 => {
+                use crate::client::conn::tcp::DeboaTcpConnection;
+                let conn =
+                    BaseHttpConnection::<Http1Request, Full<Bytes>, Incoming>::connect(config)
+                        .await?;
+                DeboaConnection::Http1(Box::new(conn))
+            }
+            #[cfg(feature = "http2")]
+            HttpVersion::Http2 => {
+                use crate::client::conn::tcp::DeboaTcpConnection;
+                let conn =
+                    BaseHttpConnection::<Http2Request, Full<Bytes>, Incoming>::connect(&config)
+                        .await?;
+                DeboaConnection::Http2(Box::new(conn))
+            }
+            #[cfg(feature = "http3")]
+            HttpVersion::Http3 => {
+                use crate::client::conn::udp::DeboaUdpConnection;
+                let conn =
+                    BaseHttpConnection::<Http3Request, Full<Bytes>, Full<Bytes>>::connect(&config)
+                        .await?;
+                DeboaConnection::Http3(Box::new(conn))
+            }
+        };
+
+        Ok(conn)
+    }
 }

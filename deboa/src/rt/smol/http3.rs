@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::sync::Arc;
 
@@ -13,8 +14,8 @@ use hyper::{Request, Response};
 use quinn::crypto::rustls::QuicClientConfig;
 use quinn::Endpoint;
 
-use crate::cert::{Certificate, Identity};
 use crate::client::conn::stream::setup_rust_tls;
+use crate::client::conn::ConnectionConfig;
 use crate::request::Http3Request;
 use crate::{
     client::conn::{udp::DeboaUdpConnection, BaseHttpConnection},
@@ -47,40 +48,47 @@ async fn lookup_and_connect(
     Ok(quinn_conn)
 }
 
-impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
+impl DeboaUdpConnection for BaseHttpConnection<Http3Request, Full<Bytes>, Full<Bytes>> {
     type Sender = Http3Request;
+    type ReqBody = Full<Bytes>;
+    type ResBody = Full<Bytes>;
 
     #[inline]
     fn protocol(&self) -> Version {
         Version::HTTP_3
     }
 
-    async fn connect(
-        host: &str,
-        port: u16,
-        identity: &Option<Identity>,
-        certificate: &Option<Certificate>,
-        skip_cert_verification: bool,
-    ) -> Result<BaseHttpConnection<Http3Request>> {
+    async fn connect<'a>(
+        config: &ConnectionConfig<'a>,
+    ) -> Result<BaseHttpConnection<Self::Sender, Full<Bytes>, Full<Bytes>>> {
         let client_endpoint =
             Endpoint::client(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), 0)));
 
         if let Err(e) = client_endpoint {
             return Err(DeboaError::Connection(ConnectionError::Udp {
-                host: host.to_string(),
+                host: config
+                    .host()
+                    .to_string(),
                 message: e.to_string(),
             }));
         }
 
         let mut client_endpoint = client_endpoint.unwrap();
 
-        let tls_config =
-            setup_rust_tls(host, identity, certificate, skip_cert_verification, Some("h3"))?;
+        let tls_config = setup_rust_tls(
+            config.host(),
+            config.identity(),
+            config.certificate(),
+            config.skip_cert_verification(),
+            Some("h3"),
+        )?;
 
         let quic_config = QuicClientConfig::try_from(tls_config);
         if let Err(e) = quic_config {
             return Err(DeboaError::Connection(ConnectionError::Tls {
-                host: host.to_string(),
+                host: config
+                    .host()
+                    .to_string(),
                 message: e.to_string(),
             }));
         }
@@ -90,11 +98,13 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
         let client_config = quinn::ClientConfig::new(Arc::new(quic_config));
         client_endpoint.set_default_client_config(client_config);
 
-        let result = lookup_and_connect(host, port, &client_endpoint).await;
+        let result = lookup_and_connect(config.host(), config.port(), &client_endpoint).await;
 
         if let Err(e) = result {
             return Err(DeboaError::Connection(ConnectionError::Udp {
-                host: host.to_string(),
+                host: config
+                    .host()
+                    .to_string(),
                 message: format!("Could not connect to server: {}", e),
             }));
         }
@@ -105,7 +115,9 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
 
         if let Err(e) = client {
             return Err(DeboaError::Connection(ConnectionError::Udp {
-                host: host.to_string(),
+                host: config
+                    .host()
+                    .to_string(),
                 message: e.to_string(),
             }));
         }
@@ -118,7 +130,11 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
         })
         .detach();
 
-        Ok(BaseHttpConnection::<Http3Request> { sender: send_request })
+        Ok(BaseHttpConnection::<Self::Sender, Self::ReqBody, Self::ResBody> {
+            sender: send_request,
+            req_body: PhantomData,
+            res_body: PhantomData,
+        })
     }
 
     async fn send_request(
@@ -194,8 +210,12 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
             }));
         }
 
+        let (parts, _) = response
+            .unwrap()
+            .into_parts();
+
         let response = self
-            .process_response(response, recv_stream)
+            .process_response(parts, recv_stream)
             .await?;
 
         Ok(response)
@@ -203,6 +223,6 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request> {
 }
 
 impl crate::client::conn::udp::private::DeboaUdpConnectionSealed
-    for BaseHttpConnection<Http3Request>
+    for BaseHttpConnection<Http3Request, Full<Bytes>, Full<Bytes>>
 {
 }

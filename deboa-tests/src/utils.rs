@@ -1,12 +1,13 @@
+use std::future::Future;
+
+#[cfg(any(feature = "http1", feature = "http2"))]
+use hyper::body::Incoming;
 use url::Url;
 
-#[cfg(not(feature = "http3"))]
-use crate::server::Http1RequestHandler;
-#[cfg(feature = "http3")]
-use crate::server::Http3RequestHandler;
+use crate::server::errors::EasyHttpMockError;
 use crate::server::{Server, ServerConfig};
 use bytes::Bytes;
-use http::StatusCode;
+use http::{Request, Response, StatusCode};
 use http_body_util::Full;
 
 #[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
@@ -71,10 +72,23 @@ pub fn url_from_string(url: String) -> Url {
     url.parse().unwrap()
 }
 
-pub async fn start_mock_server(
-    #[cfg(not(feature = "http3"))] handler: Http1RequestHandler,
-    #[cfg(feature = "http3")] handler: Http3RequestHandler,
-) -> HttpServer {
+#[cfg(any(feature = "http1", feature = "http2"))]
+type RequestType = Request<Incoming>;
+
+#[cfg(feature = "http3")]
+type RequestType = Request<Full<Bytes>>;
+
+#[cfg(any(feature = "http1", feature = "http2"))]
+type ResponseType = Response<Full<Bytes>>;
+
+#[cfg(feature = "http3")]
+type ResponseType = Response<Full<Bytes>>;
+
+pub async fn start_mock_server<H, Fut>(handler: H) -> HttpServer
+where
+    H: Fn(RequestType) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Result<ResponseType, EasyHttpMockError>> + Send + 'static,
+{
     let mut server = HttpServer::new(tls_server_config());
     #[allow(unused_must_use)]
     let result = server

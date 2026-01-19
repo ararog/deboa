@@ -6,24 +6,22 @@ use hyper::server::conn::http1;
 use hyper::server::conn::http2;
 use hyper::service::service_fn;
 use hyper::{Request, Response};
-#[cfg(feature = "http2")]
-use hyper_util::rt::TokioExecutor;
-use hyper_util::rt::TokioIo;
+use std::future::Future;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use crate::rt::smol::SmolExecutor;
+use crate::server::errors::{EasyHttpMockError, StartError::Tls};
 use futures_rustls::TlsAcceptor;
 use smol::net::TcpListener;
-use smol_hyper::rt::FuturesIo;
 
+use crate::rt::task::ServerTask;
 use crate::server::tcp::TcpServer;
-use crate::server::{BoxedError, Server, ServerConfig};
+use crate::server::{Server, ServerConfig};
 use crate::utils::generate_port;
 
 pub struct HttpServer {
     port: u16,
-    task: Option<smol::Task<()>>,
+    task: Option<ServerTask>,
     config: Option<ServerConfig>,
 }
 
@@ -36,20 +34,24 @@ impl HttpServer {
 impl TcpServer for HttpServer {}
 
 impl Server<Incoming, Full<Bytes>> for HttpServer {
-    type RequestFunction = fn(Request<Incoming>) -> Result<Response<Full<Bytes>>, hyper::Error>;
-
     fn port(&self) -> u16 {
         self.port
     }
 
-    async fn start(&mut self, handler: Self::RequestFunction) -> Result<(), BoxedError> {
+    async fn start<F, Fut>(&mut self, handler: F) -> Result<(), EasyHttpMockError>
+    where
+        F: Fn(Request<Incoming>) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<Response<Full<Bytes>>, EasyHttpMockError>> + Send + 'static,
+    {
         let tls_acceptor = if let Some(config) = &self.config {
             if config
                 .cert
                 .is_none()
                 || config.key.is_none()
             {
-                return Err("HttpServer - Server cert and key are required".into());
+                return Err(EasyHttpMockError::Start(Tls(
+                    "HttpServer - Server cert and key are required".to_string(),
+                )));
             }
 
             let alpn = if cfg!(feature = "http1") { "http/1.1".into() } else { "h2".into() };
@@ -63,75 +65,21 @@ impl Server<Incoming, Full<Bytes>> for HttpServer {
 
         let addr = SocketAddr::from(([127, 0, 0, 1], self.port));
 
-        let listener = TcpListener::bind(addr).await?;
+        let listener = TcpListener::bind(addr)
+            .await
+            .map_err(|e| EasyHttpMockError::Bind(e.to_string()))?;
 
-        let handle = smol::spawn(async move {
-            loop {
-                let result = listener
-                    .accept()
-                    .await;
+        let handler = Arc::new(service_fn(handler));
 
-                let stream = match result {
-                    Ok((stream, _)) => stream,
-                    Err(err) => {
-                        eprintln!("HttpServer - Error accepting connection: {}", err);
-                        return;
-                    }
-                };
+        let task = self.handle_connections(listener, tls_acceptor, handler)?;
 
-                if let Some(acceptor) = &tls_acceptor {
-                    let tls_stream = acceptor
-                        .accept(stream)
-                        .await
-                        .expect("HttpServer - Failed to accept TLS connection");
-                    let io = FuturesIo::new(tls_stream);
-                    smol::spawn(async move {
-                        #[cfg(feature = "http1")]
-                        if let Err(err) = http1::Builder::new()
-                            .serve_connection(io, service_fn(|req| async move { handler(req) }))
-                            .await
-                        {
-                            eprintln!("HttpServer - Error serving connection: {}", err);
-                        }
-                        #[cfg(feature = "http2")]
-                        if let Err(err) = http2::Builder::new(SmolExecutor::new())
-                            .serve_connection(io, service_fn(|req| async move { handler(req) }))
-                            .await
-                        {
-                            eprintln!("HttpServer - Error serving connection: {}", err);
-                        }
-                    })
-                    .detach();
-                } else {
-                    let io = FuturesIo::new(stream);
-                    smol::spawn(async move {
-                        #[cfg(feature = "http1")]
-                        if let Err(err) = http1::Builder::new()
-                            .serve_connection(io, service_fn(|req| async move { handler(req) }))
-                            .await
-                        {
-                            eprintln!("HttpServer - Error serving connection: {}", err);
-                        }
-                        #[cfg(feature = "http2")]
-                        if let Err(err) = http2::Builder::new(SmolExecutor::new())
-                            .serve_connection(io, service_fn(|req| async move { handler(req) }))
-                            .await
-                        {
-                            eprintln!("HttpServer - Error serving connection: {}", err);
-                        }
-                    })
-                    .detach();
-                };
-            }
-        });
-
-        self.task = Some(handle);
+        self.task = Some(task);
 
         Ok(())
     }
 
-    async fn stop(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        if let Some(task) = self.task.take() {
+    async fn stop(&mut self) -> Result<(), EasyHttpMockError> {
+        if let Some(mut task) = self.task.take() {
             task.cancel().await;
         }
         Ok(())
