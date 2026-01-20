@@ -1,9 +1,6 @@
 use crate::{request::DeboaRequest, tests::helpers::client_with_cert, Client, Result};
 
-use deboa_tests::{
-    server::Server,
-    utils::{make_response, start_mock_server},
-};
+use deboa_tests::{mock_response, utils::start_mock_server};
 use http::{header::HOST, StatusCode};
 
 #[cfg(feature = "smol-rt")]
@@ -21,9 +18,9 @@ async fn do_patch() -> Result<()> {
             assert!(req
                 .headers()
                 .contains_key(HOST));
-            Ok(make_response(StatusCode::OK, b"done"))
+            Ok(mock_response(StatusCode::OK, b"done"))
         } else {
-            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
         }
     })
     .await;

@@ -233,12 +233,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-rs"
-version = "0.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d807628eef22552f164351bf18d939997543b13d4ab9b30b2124c1c75258a4f6"
-
-[[package]]
 name = "async-signal"
 version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -751,7 +745,6 @@ dependencies = [
  "futures",
  "futures-rustls",
  "futures-util",
- "gate",
  "h3",
  "h3-quinn",
  "hotpath",
@@ -770,6 +763,7 @@ dependencies = [
  "quinn",
  "rand 0.9.2",
  "regex",
+ "rt-gate",
  "rustls",
  "rustls-native-certs",
  "rustls-pki-types",
@@ -841,20 +835,10 @@ dependencies = [
 name = "deboa-tests"
 version = "0.0.1"
 dependencies = [
- "async-rs",
- "bytes",
- "flume",
- "futures-rustls",
- "h3",
- "h3-quinn",
+ "easyhttpmock",
  "http",
- "http-body-util",
- "hyper",
- "hyper-util",
  "mime",
- "quinn",
  "rand 0.9.2",
- "rustls",
  "serde",
  "serde_json",
  "smol",
@@ -862,8 +846,8 @@ dependencies = [
  "smol-macros",
  "thiserror 2.0.17",
  "tokio",
- "tokio-rustls",
  "url",
+ "vetis",
 ]
 
 [[package]]
@@ -893,6 +877,19 @@ name = "dunce"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
+
+[[package]]
+name = "easyhttpmock"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "http",
+ "http-body-util",
+ "hyper",
+ "rand 0.9.2",
+ "thiserror 2.0.17",
+ "vetis",
+]
 
 [[package]]
 name = "either"
@@ -990,9 +987,6 @@ name = "fastrand"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
-dependencies = [
- "getrandom 0.2.17",
-]
 
 [[package]]
 name = "faststr"
@@ -1042,18 +1036,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b09cf3155332e944990140d967ff5eceb70df778b34f77d8075db46e4704e6d8"
 dependencies = [
  "num-traits",
-]
-
-[[package]]
-name = "flume"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e139bc46ca777eb5efaf62df0ab8cc5fd400866427e56c68b22e414e53bd3be"
-dependencies = [
- "fastrand",
- "futures-core",
- "futures-sink",
- "spin",
 ]
 
 [[package]]
@@ -1221,13 +1203,6 @@ dependencies = [
  "pin-project-lite",
  "pin-utils",
  "slab",
-]
-
-[[package]]
-name = "gate"
-version = "0.1.0"
-dependencies = [
- "tokio",
 ]
 
 [[package]]
@@ -2529,6 +2504,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "rt-gate"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3fdeac5c073ff256da6c4366443b5746c71b2d73b5be757849d2a041aa7e85e7"
+dependencies = [
+ "smol",
+ "tokio",
+]
+
+[[package]]
 name = "rustc-hash"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3041,9 +3026,6 @@ name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
-dependencies = [
- "lock_api",
-]
 
 [[package]]
 name = "standback"
@@ -3617,6 +3599,34 @@ name = "version_check"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
+
+[[package]]
+name = "vetis"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "futures-rustls",
+ "h3",
+ "h3-quinn",
+ "http",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "mime",
+ "quinn",
+ "rand 0.9.2",
+ "rt-gate",
+ "rustls",
+ "serde",
+ "serde_json",
+ "smol",
+ "smol-hyper",
+ "smol-macros",
+ "thiserror 2.0.17",
+ "tokio",
+ "tokio-rustls",
+ "url",
+]
 
 [[package]]
 name = "walkdir"
