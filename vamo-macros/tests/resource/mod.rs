@@ -5,18 +5,9 @@ use deboa::{
 };
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tests::{
-    server::Server,
-    utils::{make_response, tls_server_config, CA_CERT},
+    mock_response,
+    utils::{start_mock_server, CA_CERT},
 };
-
-#[cfg(all(feature = "_tokio-rt", any(feature = "_http1", feature = "_http2")))]
-use deboa_tests::server::tcp::tokio::HttpServer;
-
-#[cfg(all(feature = "_smol-rt", any(feature = "_http1", feature = "_http2")))]
-use deboa_tests::server::tcp::smol::HttpServer;
-
-#[cfg(all(feature = "_tokio-rt", feature = "_http3"))]
-use deboa_tests::server::udp::tokio::HttpServer;
 
 use http::StatusCode;
 use serde::Serialize;
@@ -35,17 +26,14 @@ pub struct User {
 }
 
 async fn do_post_resource() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            if req.method() == "POST" && req.uri().path() == "/api/users" {
-                Ok(make_response(StatusCode::CREATED, b""))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "POST" && req.uri().path() == "/api/users" {
+            Ok(mock_response(StatusCode::CREATED, b""))
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let mut user = User { id: 32, name: "User 1".to_string() };
 

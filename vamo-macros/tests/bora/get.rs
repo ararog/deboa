@@ -3,12 +3,9 @@ use deboa::{
     Client as DeboaClient, Result,
 };
 use deboa_tests::{
-    server::Server,
-    utils::{make_response, tls_server_config, CA_CERT},
+    mock_response,
+    utils::{start_mock_server, CA_CERT},
 };
-
-#[cfg(all(feature = "_tokio-rt", any(feature = "_http1", feature = "_http2")))]
-use deboa_tests::server::tcp::tokio::HttpServer;
 
 #[cfg(all(feature = "_smol-rt", any(feature = "_http1", feature = "_http2")))]
 use deboa_tests::server::tcp::smol::HttpServer;
@@ -41,17 +38,14 @@ pub struct Post {
 pub struct PostService;
 
 async fn do_get_by_id() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            if req.method() == "GET" && req.uri().path() == "/posts/1" {
-                Ok(make_response(StatusCode::OK, b"{ \"id\": 1, \"title\": \"title\" }"))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "GET" && req.uri().path() == "/posts/1" {
+            Ok(mock_response(StatusCode::OK, b"{ \"id\": 1, \"title\": \"title\" }"))
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let client = DeboaClient::builder()
         .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
@@ -87,20 +81,17 @@ async fn test_get_by_id() -> Result<()> {
 }
 
 async fn do_get_all() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            if req.method() == "GET" && req.uri().path() == "/posts" {
-                Ok(make_response(
-                    StatusCode::OK,
-                    b"[{ \"id\": 1, \"title\": \"title\" }, { \"id\": 2, \"title\": \"title\" }]",
-                ))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "GET" && req.uri().path() == "/posts" {
+            Ok(mock_response(
+                StatusCode::OK,
+                b"[{ \"id\": 1, \"title\": \"title\" }, { \"id\": 2, \"title\": \"title\" }]",
+            ))
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let client = DeboaClient::builder()
         .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
@@ -135,21 +126,18 @@ async fn test_get_all() -> Result<()> {
 }
 
 async fn do_query_by_id() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            println!("{} {}", req.method(), req.uri());
-            if req.method() == "GET"
-                && req.uri().path() == "/posts"
-                && req.uri().query() == Some("id=1")
-            {
-                Ok(make_response(StatusCode::OK, b"[{ \"id\": 1, \"title\": \"title\" }]"))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        println!("{} {}", req.method(), req.uri());
+        if req.method() == "GET"
+            && req.uri().path() == "/posts"
+            && req.uri().query() == Some("id=1")
+        {
+            Ok(mock_response(StatusCode::OK, b"[{ \"id\": 1, \"title\": \"title\" }]"))
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let client = DeboaClient::builder()
         .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
@@ -184,24 +172,20 @@ async fn test_query_by_id() -> Result<()> {
 }
 
 async fn do_query_by_title() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            if req.method() == "GET"
-                && req.uri().path() == "/posts"
-                && req.uri().query()
-                    == Some("id=6&title=dolorem%20eum%20magni%20eos%20aperiam%20quia")
-            {
-                Ok(make_response(
-                    StatusCode::OK,
-                    b"[{ \"id\": 6, \"title\": \"dolorem eum magni eos aperiam quia\" }]",
-                ))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "GET"
+            && req.uri().path() == "/posts"
+            && req.uri().query() == Some("id=6&title=dolorem%20eum%20magni%20eos%20aperiam%20quia")
+        {
+            Ok(mock_response(
+                StatusCode::OK,
+                b"[{ \"id\": 6, \"title\": \"dolorem eum magni eos aperiam quia\" }]",
+            ))
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let client = DeboaClient::builder()
         .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))

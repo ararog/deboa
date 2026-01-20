@@ -8,8 +8,8 @@ use crate::{
 #[cfg(test)]
 use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, Result};
 
-use deboa_tests::server::Server;
-use deboa_tests::utils::{make_response, start_mock_server, CA_CERT};
+use deboa_tests::mock_response;
+use deboa_tests::utils::{start_mock_server, CA_CERT};
 #[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
 use deboa_tests::utils::{CLIENT_CERT, CLIENT_KEY};
 #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
@@ -29,9 +29,9 @@ use smol_macros::test;
 async fn do_get_http() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(make_response(StatusCode::OK, b"Hello World!"))
+            Ok(mock_response(StatusCode::OK, b"Hello World!"))
         } else {
-            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
         }
     })
     .await;
@@ -75,9 +75,9 @@ async fn test_get_http() {
 async fn skip_cert_verification_helper(skip: bool) -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(make_response(StatusCode::OK, b"Hello World!"))
+            Ok(mock_response(StatusCode::OK, b"Hello World!"))
         } else {
-            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
         }
     })
     .await;
@@ -173,9 +173,9 @@ async fn do_get_http_verify() {
 async fn do_get_http_mutual_authentication() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(make_response(StatusCode::OK, b"Hello World!"))
+            Ok(mock_response(StatusCode::OK, b"Hello World!"))
         } else {
-            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
         }
     })
     .await;
@@ -222,9 +222,9 @@ async fn test_get_http_mutual_authentication() -> Result<()> {
 async fn do_get_http_mutual_authentication_with_password() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(make_response(StatusCode::OK, b"Hello World!"))
+            Ok(mock_response(StatusCode::OK, b"Hello World!"))
         } else {
-            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
         }
     })
     .await;
@@ -269,7 +269,7 @@ async fn test_get_http_mutual_authentication_with_password() {
 async fn do_get_not_found() -> Result<()> {
     let mut server =
         start_mock_server(
-            |_| async move { Ok(make_response(StatusCode::NOT_FOUND, b"Not found")) },
+            |_| async move { Ok(mock_response(StatusCode::NOT_FOUND, b"Not found")) },
         )
         .await;
 
@@ -367,9 +367,9 @@ async fn test_get_invalid_server() {
 async fn do_get_by_query() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/comments/1" {
-            Ok(make_response(StatusCode::OK, b"My comment"))
+            Ok(mock_response(StatusCode::OK, b"My comment"))
         } else {
-            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
         }
     })
     .await;
@@ -505,9 +505,9 @@ async fn test_get_with_redirect() {
 async fn try_intro() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(make_response(StatusCode::OK, b""))
+            Ok(mock_response(StatusCode::OK, b""))
         } else {
-            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
         }
     })
     .await;
@@ -539,9 +539,9 @@ async fn test_try_into() -> Result<()> {
 async fn fetch_from_str() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(make_response(StatusCode::OK, b""))
+            Ok(mock_response(StatusCode::OK, b""))
         } else {
-            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
         }
     })
     .await;

@@ -1,26 +1,20 @@
 use std::future::Future;
 
-#[cfg(any(feature = "http1", feature = "http2"))]
-use hyper::body::Incoming;
+use easyhttpmock::{
+    config::EasyHttpMockConfig,
+    server::{adapters::vetis_adapter::VetisServerAdapter, PortGenerator},
+    EasyHttpMock,
+};
+
+use vetis::{
+    server::{
+        config::{SecurityConfig, ServerConfig},
+        errors::VetisError,
+    },
+    RequestType, ResponseType,
+};
+
 use url::Url;
-
-use crate::server::errors::EasyHttpMockError;
-use crate::server::{Server, ServerConfig};
-use bytes::Bytes;
-use http::{Request, Response, StatusCode};
-use http_body_util::Full;
-
-#[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
-use crate::server::tcp::tokio::HttpServer;
-
-#[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
-use crate::server::tcp::smol::HttpServer;
-
-#[cfg(all(feature = "tokio-rt", feature = "http3"))]
-use crate::server::udp::tokio::HttpServer;
-
-#[cfg(all(feature = "smol-rt", feature = "http3"))]
-use crate::server::udp::smol::HttpServer;
 
 pub const CA_CERT: &[u8] = include_bytes!("../certs/ca.der");
 pub const CA_CERT_PEM: &[u8] = include_bytes!("../certs/ca.crt");
@@ -53,43 +47,30 @@ pub fn fake_url() -> Url {
     Url::parse("http://test.com/get").unwrap()
 }
 
-pub fn generate_port() -> u16 {
-    rand::random_range(9000..65535)
-}
-
-pub fn tls_server_config() -> Option<ServerConfig> {
-    Some(ServerConfig::new(Some(SERVER_CERT.to_vec()), Some(SERVER_KEY.to_vec())))
-}
-
-pub fn make_response(status: StatusCode, body: &[u8]) -> http::Response<Full<Bytes>> {
-    http::Response::builder()
-        .status(status)
-        .body(Full::new(Bytes::from(body.to_vec())))
-        .unwrap()
-}
-
 pub fn url_from_string(url: String) -> Url {
     url.parse().unwrap()
 }
 
-#[cfg(any(feature = "http1", feature = "http2"))]
-type RequestType = Request<Incoming>;
-
-#[cfg(feature = "http3")]
-type RequestType = Request<Full<Bytes>>;
-
-#[cfg(any(feature = "http1", feature = "http2"))]
-type ResponseType = Response<Full<Bytes>>;
-
-#[cfg(feature = "http3")]
-type ResponseType = Response<Full<Bytes>>;
-
-pub async fn start_mock_server<H, Fut>(handler: H) -> HttpServer
+pub async fn start_mock_server<H, Fut>(handler: H) -> EasyHttpMock<VetisServerAdapter>
 where
     H: Fn(RequestType) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<ResponseType, EasyHttpMockError>> + Send + 'static,
+    Fut: Future<Output = Result<ResponseType, VetisError>> + Send + 'static,
 {
-    let mut server = HttpServer::new(tls_server_config());
+    let tls_config = SecurityConfig::builder()
+        .cert(SERVER_CERT.to_vec())
+        .key(SERVER_KEY.to_vec())
+        .build();
+
+    let vetis_config = ServerConfig::builder()
+        .security(tls_config)
+        .with_random_port()
+        .build();
+
+    let config = EasyHttpMockConfig::<VetisServerAdapter>::builder()
+        .server_config(vetis_config)
+        .build();
+
+    let mut server = EasyHttpMock::new(config);
     #[allow(unused_must_use)]
     let result = server
         .start(handler)

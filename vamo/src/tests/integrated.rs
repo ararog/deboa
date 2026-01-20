@@ -6,23 +6,11 @@ use deboa::{
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tests::{
     data::{JSON_STR_PATCH, JSON_STR_POST},
-    server::Server,
-    utils::{make_response, tls_server_config, CA_CERT},
+    mock_response,
+    utils::{start_mock_server, CA_CERT},
 };
 use http::StatusCode;
 use serde::Serialize;
-
-#[cfg(all(feature = "_tokio-rt", any(feature = "_http1", feature = "_http2")))]
-use deboa_tests::server::tcp::tokio::HttpServer;
-
-#[cfg(all(feature = "_smol-rt", any(feature = "_http1", feature = "_http2")))]
-use deboa_tests::server::tcp::smol::HttpServer;
-
-#[cfg(all(feature = "_tokio-rt", feature = "_http3"))]
-use deboa_tests::server::udp::tokio::HttpServer;
-
-#[cfg(all(feature = "_smol-rt", feature = "_http3"))]
-use deboa_tests::server::udp::smol::HttpServer;
 
 use crate::{
     resource::{Resource, ResourceMethod},
@@ -55,21 +43,18 @@ impl Resource for Post {
 }
 
 async fn do_get() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            if req.method() == "GET" {
-                match req.uri().path() {
-                    "/posts" => Ok(make_response(StatusCode::OK, b"pong")),
-                    "/posts/1" => Ok(make_response(StatusCode::OK, b"pong")),
-                    _ => Ok(make_response(StatusCode::NOT_FOUND, b"Not found")),
-                }
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "GET" {
+            match req.uri().path() {
+                "/posts" => Ok(mock_response(StatusCode::OK, b"pong")),
+                "/posts/1" => Ok(mock_response(StatusCode::OK, b"pong")),
+                _ => Ok(mock_response(StatusCode::NOT_FOUND, b"Not found")),
             }
-        })
-        .await;
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let client = Client::builder()
         .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
@@ -121,17 +106,14 @@ async fn test_get() -> Result<()> {
 
 #[cfg(feature = "_tokio-rt")]
 async fn do_put() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            if req.method() == "PUT" && req.uri().path() == "/posts" {
-                Ok(make_response(StatusCode::OK, b"pong"))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "PUT" && req.uri().path() == "/posts" {
+            Ok(mock_response(StatusCode::OK, b"pong"))
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let client = Client::builder()
         .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
@@ -167,20 +149,17 @@ async fn test_put() -> Result<()> {
 }
 
 async fn do_post() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            if req.method() == "POST" && req.uri().path() == "/api/posts" {
-                Ok(make_response(
-                    StatusCode::CREATED,
-                    b"{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}",
-                ))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "POST" && req.uri().path() == "/api/posts" {
+            Ok(mock_response(
+                StatusCode::CREATED,
+                b"{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}",
+            ))
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let post = Post {
         id: 1,
@@ -222,17 +201,14 @@ async fn test_post() -> Result<()> {
 }
 
 async fn do_patch() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            if req.method() == "PATCH" && req.uri().path() == "/api/posts/1" {
-                Ok(make_response(StatusCode::OK, b"pong"))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "PATCH" && req.uri().path() == "/api/posts/1" {
+            Ok(mock_response(StatusCode::OK, b"pong"))
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let client = Client::builder()
         .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
@@ -266,17 +242,14 @@ async fn test_patch() -> Result<()> {
 }
 
 async fn do_delete() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            if req.method() == "DELETE" && req.uri().path() == "/api/posts/1" {
-                Ok(make_response(StatusCode::NO_CONTENT, b""))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "DELETE" && req.uri().path() == "/api/posts/1" {
+            Ok(mock_response(StatusCode::NO_CONTENT, b""))
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let client = Client::builder()
         .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
@@ -310,17 +283,14 @@ async fn test_delete() -> Result<()> {
 }
 
 async fn do_post_resource() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            if req.method() == "POST" && req.uri().path() == "/api/posts" {
-                Ok(make_response(StatusCode::CREATED, JSON_STR_POST.as_bytes()))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "POST" && req.uri().path() == "/api/posts" {
+            Ok(mock_response(StatusCode::CREATED, JSON_STR_POST.as_bytes()))
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let mut post = Post {
         id: 1,
@@ -361,17 +331,14 @@ async fn test_post_resource() -> Result<()> {
 }
 
 async fn do_put_resource() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            if req.method() == "PUT" && req.uri().path() == "/api/posts/1" {
-                Ok(make_response(StatusCode::OK, JSON_STR_POST.as_bytes()))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "PUT" && req.uri().path() == "/api/posts/1" {
+            Ok(mock_response(StatusCode::OK, JSON_STR_POST.as_bytes()))
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let mut post = Post {
         id: 1,
@@ -412,17 +379,14 @@ async fn test_put_resource() -> Result<()> {
 }
 
 async fn do_patch_resource() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            if req.method() == "PATCH" && req.uri().path() == "/api/posts/1" {
-                Ok(make_response(StatusCode::OK, JSON_STR_PATCH.as_bytes()))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "PATCH" && req.uri().path() == "/api/posts/1" {
+            Ok(mock_response(StatusCode::OK, JSON_STR_PATCH.as_bytes()))
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
 
@@ -458,17 +422,14 @@ async fn test_patch_resource() -> Result<()> {
 }
 
 async fn do_remove_resource() -> Result<()> {
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| async move {
-            if req.method() == "DELETE" && req.uri().path() == "/api/posts/1" {
-                Ok(make_response(StatusCode::OK, b""))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "DELETE" && req.uri().path() == "/api/posts/1" {
+            Ok(mock_response(StatusCode::OK, b""))
+        } else {
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+        }
+    })
+    .await;
 
     let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
 

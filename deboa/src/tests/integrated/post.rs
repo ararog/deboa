@@ -5,10 +5,7 @@ use crate::{
     Client, Result,
 };
 
-use deboa_tests::{
-    server::Server,
-    utils::{make_response, start_mock_server},
-};
+use deboa_tests::{mock_response, utils::start_mock_server};
 use http::{header::CONTENT_TYPE, StatusCode};
 
 #[cfg(feature = "smol-rt")]
@@ -23,9 +20,9 @@ use smol_macros::test;
 async fn do_post() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "POST" && req.uri().path() == "/posts" {
-            Ok(make_response(StatusCode::CREATED, b"{\n  \"id\": 101\n}"))
+            Ok(mock_response(StatusCode::CREATED, b"{\n  \"id\": 101\n}"))
         } else {
-            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
         }
     })
     .await;
@@ -86,9 +83,9 @@ async fn do_post_encoded_form() -> Result<()> {
             }
             // TODO: check body
             // name=deboa&version=0.0.1
-            Ok(make_response(StatusCode::CREATED, b"ping"))
+            Ok(mock_response(StatusCode::CREATED, b"ping"))
         } else {
-            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
         }
     })
     .await;
@@ -156,9 +153,9 @@ async fn do_post_multipart_form() -> Result<()> {
             }
             // TODO: check body
             // name=deboa&version=0.0.1
-            Ok(make_response(StatusCode::CREATED, b"ping"))
+            Ok(mock_response(StatusCode::CREATED, b"ping"))
         } else {
-            Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
         }
     })
     .await;
