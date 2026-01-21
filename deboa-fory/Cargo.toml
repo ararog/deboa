@@ -30,7 +30,7 @@ deboa = { path = "../deboa", version = "0.0.9" }
 fory = "0.14.1"
 fory-core = "0.14.0"
 http = "1.4.0"
-tokio = { version = "1.49.0", features = [
+tokio = { version = "1.38.1", features = [
   "rt-multi-thread",
 ], default-features = false, optional = true }
 smol = { version = "2.0.2", default-features = false, optional = true }
