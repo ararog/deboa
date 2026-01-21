@@ -881,6 +881,8 @@ checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 [[package]]
 name = "easyhttpmock"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e67ce82d4d4476a4b80bd97106fe76b7f70eef1345adb6742dc83886f742276a"
 dependencies = [
  "bytes",
  "http",
@@ -3603,6 +3605,8 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 [[package]]
 name = "vetis"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44971863b42ad99c5576b92e40f4195170e4f8cd4034c873b6cfa288b5ce2348"
 dependencies = [
  "bytes",
  "futures-rustls",
