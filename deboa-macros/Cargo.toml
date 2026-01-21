@@ -26,6 +26,6 @@ http = "1.4.0"
 serde = "1.0.228"
 
 [dev-dependencies]
-tokio = { version = "1.49.0", features = ["rt-multi-thread"] }
+tokio = { version = "1.38.1", features = ["rt-multi-thread"] }
 
 
