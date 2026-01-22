@@ -2,10 +2,8 @@ use std::marker::PhantomData;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::sync::Arc;
 
-use async_std_resolver::{
-    config::{ResolverConfig, ResolverOpts},
-    resolver,
-};
+use rt_gate::spawn_worker;
+
 use bytes::Bytes;
 use futures::future;
 use http::{version::Version, StatusCode};
@@ -23,12 +21,28 @@ use crate::{
     Result,
 };
 
+#[cfg(feature = "smol-rt")]
+use async_std_resolver::{
+    config::{ResolverConfig, ResolverOpts},
+    resolver,
+};
+
+#[cfg(feature = "tokio-rt")]
+use trust_dns_resolver::{
+    config::{ResolverConfig, ResolverOpts},
+    TokioAsyncResolver,
+};
+
 async fn lookup_and_connect(
     host: &str,
     port: u16,
     client_endpoint: &Endpoint,
 ) -> std::result::Result<h3_quinn::Connection, Box<dyn std::error::Error>> {
+    #[cfg(feature = "smol-rt")]
     let resolver = resolver(ResolverConfig::default(), ResolverOpts::default()).await;
+
+    #[cfg(feature = "tokio-rt")]
+    let resolver = TokioAsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default());
 
     let response = resolver
         .lookup_ip(host)
@@ -124,11 +138,10 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, Full<Bytes>, Full<B
 
         let (mut conn, send_request) = client.unwrap();
 
-        smol::spawn(async move {
+        spawn_worker(async move {
             future::poll_fn(|cx| conn.poll_close(cx)).await;
             Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
-        })
-        .detach();
+        });
 
         Ok(BaseHttpConnection::<Self::Sender, Self::ReqBody, Self::ResBody> {
             sender: send_request,

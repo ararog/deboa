@@ -1,4 +1,5 @@
 use crate::cert::ContentEncoding;
+use crate::tests::TestResult;
 use crate::{
     cert::Identity,
     errors::{ConnectionError, ResponseError},
@@ -6,7 +7,7 @@ use crate::{
     tests::helpers::client_with_cert,
 };
 #[cfg(test)]
-use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client, Result};
+use crate::{errors::DeboaError, request::DeboaRequest, response::DeboaResponse, Client};
 
 use deboa_tests::mock_response;
 use deboa_tests::utils::{start_mock_server, CA_CERT};
@@ -26,7 +27,7 @@ use smol_macros::test;
 // GET
 //
 
-async fn do_get_http() -> Result<()> {
+async fn do_get_http() -> TestResult<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, b"Hello World!"))
@@ -54,25 +55,26 @@ async fn do_get_http() -> Result<()> {
         StatusCode::OK.as_u16()
     );
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_http() -> Result<()> {
-    do_get_http().await?;
-    Ok(())
+async fn test_get_http() -> TestResult<()> {
+    do_get_http().await
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_get_http() {
-    let _ = do_get_http().await;
+async fn test_get_http() -> TestResult<()> {
+    do_get_http().await
 }
 
-async fn skip_cert_verification_helper(skip: bool) -> Result<()> {
+async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, b"Hello World!"))
@@ -131,46 +133,47 @@ async fn skip_cert_verification_helper(skip: bool) -> Result<()> {
         assert_eq!(response.unwrap_err(), error);
     }
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }
 
-async fn do_get_http_skip_verification() -> Result<()> {
+async fn do_get_http_skip_verification() -> TestResult<()> {
     skip_cert_verification_helper(true).await
 }
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_http_skip_verification() -> Result<()> {
+async fn test_get_http_skip_verification() -> TestResult<()> {
     do_get_http_skip_verification().await?;
     Ok(())
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_get_http_skip_verification() {
-    let _ = do_get_http_skip_verification().await;
+async fn test_get_http_skip_verification() -> TestResult<()> {
+    do_get_http_skip_verification().await
 }
 
-async fn test_get_http_verify() -> Result<()> {
+async fn do_get_http_verify() -> TestResult<()> {
     skip_cert_verification_helper(false).await
 }
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn do_get_http_verify() -> Result<()> {
-    test_get_http_verify().await?;
-    Ok(())
+async fn test_get_http_verify() -> TestResult<()> {
+    do_get_http_verify().await
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn do_get_http_verify() {
-    let _ = test_get_http_verify().await;
+async fn test_get_http_verify() -> TestResult<()> {
+    do_get_http_verify().await
 }
 
-async fn do_get_http_mutual_authentication() -> Result<()> {
+async fn do_get_http_mutual_authentication() -> TestResult<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, b"Hello World!"))
@@ -199,27 +202,27 @@ async fn do_get_http_mutual_authentication() -> Result<()> {
 
     assert_eq!(response?.status(), StatusCode::OK);
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_http_mutual_authentication() -> Result<()> {
-    do_get_http_mutual_authentication().await?;
-    Ok(())
+async fn test_get_http_mutual_authentication() -> TestResult<()> {
+    do_get_http_mutual_authentication().await
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_get_http_mutual_authentication() -> Result<()> {
-    do_get_http_mutual_authentication().await?;
-    Ok(())
+async fn test_get_http_mutual_authentication() -> TestResult<()> {
+    do_get_http_mutual_authentication().await
 }
 
 #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
-async fn do_get_http_mutual_authentication_with_password() -> Result<()> {
+async fn do_get_http_mutual_authentication_with_password() -> TestResult<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, b"Hello World!"))
@@ -244,29 +247,30 @@ async fn do_get_http_mutual_authentication_with_password() -> Result<()> {
 
     assert_eq!(response?.status(), StatusCode::OK);
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }
 
 #[cfg(all(feature = "tokio-rt", any(feature = "tokio-native-tls", feature = "smol-native-tls")))]
 #[tokio::test]
-async fn test_get_http_mutual_authentication_with_password() -> Result<()> {
-    do_get_http_mutual_authentication_with_password().await?;
-    Ok(())
+async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
+    do_get_http_mutual_authentication_with_password().await
 }
 
 #[cfg(all(feature = "smol-rt", any(feature = "tokio-native-tls", feature = "smol-native-tls")))]
 #[apply(test!)]
-async fn test_get_http_mutual_authentication_with_password() {
-    let _ = do_get_http_mutual_authentication_with_password().await;
+async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
+    do_get_http_mutual_authentication_with_password().await
 }
 
 //
 // GET NOT FOUND
 //
 
-async fn do_get_not_found() -> Result<()> {
+async fn do_get_not_found() -> TestResult<()> {
     let mut server =
         start_mock_server(
             |_| async move { Ok(mock_response(StatusCode::NOT_FOUND, b"Not found")) },
@@ -275,9 +279,10 @@ async fn do_get_not_found() -> Result<()> {
 
     let client = client_with_cert();
 
-    let response: Result<DeboaResponse> = DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
-        .send_with(client)
-        .await;
+    let response: crate::Result<DeboaResponse> =
+        DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
+            .send_with(client)
+            .await;
 
     assert!(response.is_err());
     assert_eq!(
@@ -288,36 +293,37 @@ async fn do_get_not_found() -> Result<()> {
         })
     );
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_not_found() -> Result<()> {
-    do_get_not_found().await?;
-    Ok(())
+async fn test_get_not_found() -> TestResult<()> {
+    do_get_not_found().await
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_get_not_found() {
-    let _ = do_get_not_found().await;
+async fn test_get_not_found() -> TestResult<()> {
+    do_get_not_found().await
 }
 
 //
 // GET INVALID SERVER
 //
 
-async fn do_get_invalid_server() -> Result<()> {
+async fn do_get_invalid_server() -> TestResult<()> {
     let api = Client::default();
 
     let request = DeboaRequest::get("https://invalid-server.com/posts")?
         .text("test")
         .build()?;
 
-    let response: Result<DeboaResponse> = api
+    let response: crate::Result<DeboaResponse> = api
         .execute(request)
         .await;
 
@@ -349,22 +355,21 @@ async fn do_get_invalid_server() -> Result<()> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_invalid_server() -> Result<()> {
-    do_get_invalid_server().await?;
-    Ok(())
+async fn test_get_invalid_server() -> TestResult<()> {
+    do_get_invalid_server().await
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_get_invalid_server() {
-    let _ = do_get_invalid_server().await;
+async fn test_get_invalid_server() -> TestResult<()> {
+    do_get_invalid_server().await
 }
 
 //
 // GET BY QUERY
 //
 
-async fn do_get_by_query() -> Result<()> {
+async fn do_get_by_query() -> TestResult<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/comments/1" {
             Ok(mock_response(StatusCode::OK, b"My comment"))
@@ -397,22 +402,23 @@ async fn do_get_by_query() -> Result<()> {
     assert!(comments.is_ok());
     assert_eq!(comments.unwrap(), "My comment");
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_by_query() -> Result<()> {
-    do_get_by_query().await?;
-    Ok(())
+async fn test_get_by_query() -> TestResult<()> {
+    do_get_by_query().await
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_get_by_query() {
-    let _ = do_get_by_query().await;
+async fn test_get_by_query() -> TestResult<()> {
+    do_get_by_query().await
 }
 
 /*
@@ -446,9 +452,8 @@ async fn do_get_by_query_with_retries() -> Result<()> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_by_query_with_retries() -> Result<()> {
-    do_get_by_query_with_retries().await?;
-    Ok(())
+async fn test_get_by_query_with_retries() -> TestResult<()> {
+    do_get_by_query_with_retries().await
 }
 
 #[cfg(feature = "smol-rt")]
@@ -490,9 +495,8 @@ async fn do_get_with_redirect() -> Result<()> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_with_redirect() -> Result<()> {
-    do_get_with_redirect().await?;
-    Ok(())
+async fn test_get_with_redirect() -> TestResult<()> {
+    do_get_with_redirect().await
 }
 
 #[cfg(feature = "smol-rt")]
@@ -502,7 +506,7 @@ async fn test_get_with_redirect() {
 }
 */
 
-async fn try_intro() -> Result<()> {
+async fn try_intro() -> TestResult<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, b""))
@@ -519,24 +523,26 @@ async fn try_intro() -> Result<()> {
         .await?;
     assert_eq!(response.status(), 200);
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_try_into() -> Result<()> {
+async fn test_try_into() -> TestResult<()> {
     try_intro().await
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_try_into() -> Result<()> {
+async fn test_try_into() -> TestResult<()> {
     try_intro().await
 }
 
-async fn fetch_from_str() -> Result<()> {
+async fn fetch_from_str() -> TestResult<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, b""))
@@ -553,19 +559,21 @@ async fn fetch_from_str() -> Result<()> {
         .await?;
     assert_eq!(response.status(), 200);
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_fetch_from_str() -> Result<()> {
+async fn test_fetch_from_str() -> TestResult<()> {
     fetch_from_str().await
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_fetch_from_str() -> Result<()> {
+async fn test_fetch_from_str() -> TestResult<()> {
     fetch_from_str().await
 }
