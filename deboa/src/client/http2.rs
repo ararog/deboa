@@ -4,17 +4,41 @@ use bytes::Bytes;
 use http::version::Version;
 use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
+
+use rt_gate::spawn_worker;
+
+#[cfg(feature = "smol-rt")]
+use crate::rt::smol::executor::SmolExecutor;
+#[cfg(all(feature = "smol-rt", any(feature = "smol-rust-tls", feature = "smol-native-tls")))]
+use crate::rt::smol::tls::{plain_connection, tls_connection};
+#[cfg(feature = "smol-rt")]
 use smol_hyper::rt::FuturesIo;
+
+#[cfg(all(
+    feature = "tokio-rt",
+    any(feature = "tokio-rust-tls", feature = "tokio-native-tls")
+))]
+use crate::rt::tokio::tls::{plain_connection, tls_connection};
+#[cfg(feature = "tokio-rt")]
+use hyper_util::rt::TokioExecutor;
+#[cfg(feature = "tokio-rt")]
+use hyper_util::rt::TokioIo;
 
 use crate::{
     client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
     request::Http2Request,
-    rt::smol::{
-        executor::SmolExecutor,
-        tls::{plain_connection, tls_connection},
-    },
     Result,
 };
+
+#[cfg(feature = "smol-rt")]
+type DeboaIo<T> = FuturesIo<T>;
+#[cfg(feature = "smol-rt")]
+type DeboaExecutor = SmolExecutor;
+
+#[cfg(feature = "tokio-rt")]
+type DeboaIo<T> = TokioIo<T>;
+#[cfg(feature = "tokio-rt")]
+type DeboaExecutor = TokioExecutor;
 
 impl DeboaTcpConnection for BaseHttpConnection<Http2Request, Full<Bytes>, Incoming> {
     type Sender = Http2Request;
@@ -47,17 +71,16 @@ impl DeboaTcpConnection for BaseHttpConnection<Http2Request, Full<Bytes>, Incomi
             return Err(e);
         }
 
-        let result = handshake(SmolExecutor::new(), FuturesIo::new(stream.unwrap())).await;
+        let result = handshake(DeboaExecutor::new(), DeboaIo::new(stream.unwrap())).await;
 
         let (sender, conn) = result.unwrap();
 
-        smol::spawn(async move {
+        spawn_worker(async move {
             match conn.await {
                 Ok(_) => (),
                 Err(_err) => {}
             };
-        })
-        .detach();
+        });
 
         Ok(BaseHttpConnection::<Self::Sender, Self::ReqBody, Self::ResBody> {
             sender,

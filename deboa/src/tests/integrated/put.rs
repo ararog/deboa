@@ -1,4 +1,7 @@
-use crate::{request::DeboaRequest, tests::helpers::client_with_cert, Result};
+use crate::{
+    request::DeboaRequest,
+    tests::{helpers::client_with_cert, TestResult},
+};
 
 use deboa_tests::{mock_response, utils::start_mock_server};
 use http::StatusCode;
@@ -12,7 +15,7 @@ use smol_macros::test;
 // PUT
 //
 
-async fn do_put() -> Result<()> {
+async fn do_put() -> TestResult<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "PUT" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, b""))
@@ -34,19 +37,21 @@ async fn do_put() -> Result<()> {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_put() -> Result<()> {
+async fn test_put() -> TestResult<()> {
     do_put().await
 }
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_put() -> Result<()> {
+async fn test_put() -> TestResult<()> {
     do_put().await
 }
