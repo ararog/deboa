@@ -65,9 +65,9 @@ jobs:
     - uses: Swatinem/rust-cache@v2
 
     - name: Install Android NDK
-      uses: android-actions/setup-android@v3
+      uses: nttld/setup-ndk@v1
       with:
-        ndk-version: r25c # Use a compatible NDK version
+        ndk-version: r29
 
     - name: Install cargo-ndk and other build dependencies
       run: |
