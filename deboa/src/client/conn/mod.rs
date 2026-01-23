@@ -20,10 +20,11 @@ use std::{marker::PhantomData, sync::Arc};
 
 use http::Request;
 
-#[cfg(any(feature = "http1", feature = "http2", feature = "http3"))]
+#[cfg(feature = "http3")]
 use bytes::Bytes;
-#[cfg(any(feature = "http1", feature = "http2", feature = "http3"))]
+#[cfg(feature = "http3")]
 use http_body_util::Full;
+
 #[cfg(any(feature = "http1", feature = "http2"))]
 use hyper::body::Incoming;
 use url::Url;
@@ -35,13 +36,13 @@ use crate::{
 };
 
 #[cfg(feature = "http1")]
-use crate::request::Http1Request;
+use crate::request::{BytesBody, Http1Request};
 
 #[cfg(feature = "http2")]
-use crate::request::Http2Request;
+use crate::request::{BytesBody, Http2Request};
 
 #[cfg(feature = "http3")]
-use crate::request::Http3Request;
+use crate::request::{BytesBody, Http3Request};
 
 /// TCP protocol implementations.
 ///
@@ -116,18 +117,18 @@ pub(crate) mod stream;
 /// * `Http3` - The HTTP/3 connection.
 pub enum DeboaConnection {
     #[cfg(feature = "http1")]
-    Http1(Box<BaseHttpConnection<Http1Request, Full<Bytes>, Incoming>>),
+    Http1(Box<BaseHttpConnection<Http1Request, BytesBody, Incoming>>),
     #[cfg(feature = "http2")]
-    Http2(Box<BaseHttpConnection<Http2Request, Full<Bytes>, Incoming>>),
+    Http2(Box<BaseHttpConnection<Http2Request, BytesBody, Incoming>>),
     #[cfg(feature = "http3")]
-    Http3(Box<BaseHttpConnection<Http3Request, Full<Bytes>, Full<Bytes>>>),
+    Http3(Box<BaseHttpConnection<Http3Request, BytesBody, Full<Bytes>>>),
 }
 
 impl DeboaConnection {
     pub async fn send_request(
         &mut self,
         url: Arc<Url>,
-        request: Request<Full<Bytes>>,
+        request: Request<BytesBody>,
     ) -> Result<DeboaResponse> {
         let url = url.clone();
         let response = match self {
@@ -307,16 +308,15 @@ impl ConnectionFactory {
             #[cfg(feature = "http1")]
             HttpVersion::Http1 => {
                 use crate::client::conn::tcp::DeboaTcpConnection;
-                let conn =
-                    BaseHttpConnection::<Http1Request, Full<Bytes>, Incoming>::connect(config)
-                        .await?;
+                let conn = BaseHttpConnection::<Http1Request, BytesBody, Incoming>::connect(config)
+                    .await?;
                 DeboaConnection::Http1(Box::new(conn))
             }
             #[cfg(feature = "http2")]
             HttpVersion::Http2 => {
                 use crate::client::conn::tcp::DeboaTcpConnection;
                 let conn =
-                    BaseHttpConnection::<Http2Request, Full<Bytes>, Incoming>::connect(&config)
+                    BaseHttpConnection::<Http2Request, BytesBody, Incoming>::connect(&config)
                         .await?;
                 DeboaConnection::Http2(Box::new(conn))
             }
@@ -324,7 +324,7 @@ impl ConnectionFactory {
             HttpVersion::Http3 => {
                 use crate::client::conn::udp::DeboaUdpConnection;
                 let conn =
-                    BaseHttpConnection::<Http3Request, Full<Bytes>, Full<Bytes>>::connect(&config)
+                    BaseHttpConnection::<Http3Request, BytesBody, Full<Bytes>>::connect(&config)
                         .await?;
                 DeboaConnection::Http3(Box::new(conn))
             }

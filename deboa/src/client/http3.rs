@@ -14,7 +14,7 @@ use quinn::Endpoint;
 
 use crate::client::conn::stream::setup_rust_tls;
 use crate::client::conn::ConnectionConfig;
-use crate::request::Http3Request;
+use crate::request::{BytesBody, Http3Request};
 use crate::{
     client::conn::{udp::DeboaUdpConnection, BaseHttpConnection},
     errors::{ConnectionError, DeboaError, RequestError, ResponseError},
@@ -62,9 +62,9 @@ async fn lookup_and_connect(
     Ok(quinn_conn)
 }
 
-impl DeboaUdpConnection for BaseHttpConnection<Http3Request, Full<Bytes>, Full<Bytes>> {
+impl DeboaUdpConnection for BaseHttpConnection<Http3Request, BytesBody, Full<Bytes>> {
     type Sender = Http3Request;
-    type ReqBody = Full<Bytes>;
+    type ReqBody = BytesBody;
     type ResBody = Full<Bytes>;
 
     #[inline]
@@ -74,7 +74,7 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, Full<Bytes>, Full<B
 
     async fn connect<'a>(
         config: &ConnectionConfig<'a>,
-    ) -> Result<BaseHttpConnection<Self::Sender, Full<Bytes>, Full<Bytes>>> {
+    ) -> Result<BaseHttpConnection<Self::Sender, Self::ReqBody, Self::ResBody>> {
         let client_endpoint =
             Endpoint::client(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), 0)));
 
@@ -152,8 +152,8 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, Full<Bytes>, Full<B
 
     async fn send_request(
         &mut self,
-        request: Request<Full<Bytes>>,
-    ) -> Result<Response<Full<Bytes>>> {
+        request: Request<Self::ReqBody>,
+    ) -> Result<Response<Self::ResBody>> {
         let mut sender = self.sender.clone();
 
         let url = request
@@ -236,6 +236,6 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, Full<Bytes>, Full<B
 }
 
 impl crate::client::conn::udp::private::DeboaUdpConnectionSealed
-    for BaseHttpConnection<Http3Request, Full<Bytes>, Full<Bytes>>
+    for BaseHttpConnection<Http3Request, BytesBody, Full<Bytes>>
 {
 }

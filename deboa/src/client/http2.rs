@@ -1,12 +1,11 @@
 use std::marker::PhantomData;
 
-use bytes::Bytes;
 use http::version::Version;
-use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
 
 use rt_gate::spawn_worker;
 
+use crate::request::BytesBody;
 #[cfg(feature = "smol-rt")]
 use crate::rt::smol::executor::SmolExecutor;
 #[cfg(all(feature = "smol-rt", any(feature = "smol-rust-tls", feature = "smol-native-tls")))]
@@ -40,9 +39,9 @@ type DeboaIo<T> = TokioIo<T>;
 #[cfg(feature = "tokio-rt")]
 type DeboaExecutor = TokioExecutor;
 
-impl DeboaTcpConnection for BaseHttpConnection<Http2Request, Full<Bytes>, Incoming> {
+impl DeboaTcpConnection for BaseHttpConnection<Http2Request, BytesBody, Incoming> {
     type Sender = Http2Request;
-    type ReqBody = Full<Bytes>;
+    type ReqBody = BytesBody;
     type ResBody = Incoming;
 
     #[inline]
@@ -89,7 +88,10 @@ impl DeboaTcpConnection for BaseHttpConnection<Http2Request, Full<Bytes>, Incomi
         })
     }
 
-    async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {
+    async fn send_request(
+        &mut self,
+        request: Request<Self::ReqBody>,
+    ) -> Result<Response<Self::ResBody>> {
         let method = request
             .method()
             .to_string();
@@ -105,6 +107,6 @@ impl DeboaTcpConnection for BaseHttpConnection<Http2Request, Full<Bytes>, Incomi
 }
 
 impl crate::client::conn::tcp::private::DeboaTcpConnectionSealed
-    for BaseHttpConnection<Http2Request, Full<Bytes>, Incoming>
+    for BaseHttpConnection<Http2Request, BytesBody, Incoming>
 {
 }
