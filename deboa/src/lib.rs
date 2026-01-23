@@ -81,33 +81,45 @@ pub(crate) const MAX_ERROR_MESSAGE_SIZE: usize = 50000;
 
 use cfg_if::cfg_if;
 
+use futures::{stream, TryStreamExt};
+use http_body::Frame;
+
 #[cfg(feature = "tokio-rt")]
 use tokio::sync::{RwLock, RwLockWriteGuard};
 
 #[cfg(feature = "smol-rt")]
 use smol::lock::RwLock;
 
-use std::fmt::{Debug, Display};
+#[cfg(feature = "tokio-rt")]
+use tokio_util::io::ReaderStream;
 
+use std::fmt::{Debug, Display};
 use std::ops::Shl;
 
 use bytes::Bytes;
 use http::{header, HeaderValue, Request};
-#[cfg(any(feature = "http1", feature = "http2", feature = "http3"))]
-use http_body_util::Full;
+use http_body_util::{BodyExt, StreamBody};
 use log::{error, info};
 
 use crate::cert::{Certificate, Identity};
 
 use crate::client::conn::{ConnectionConfig, ConnectionFactory};
 
+#[cfg(feature = "tokio-rt")]
+use crate::errors::IoError;
+
 use crate::catcher::DeboaCatcher;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
-use crate::errors::DeboaError;
+use crate::errors::{DeboaError, RequestError};
 use crate::request::{DeboaRequest, IntoRequest};
 use crate::response::DeboaResponse;
 
 pub use async_trait::async_trait;
+
+#[cfg(feature = "tokio-rt")]
+pub type File = tokio::fs::File;
+#[cfg(feature = "smol-rt")]
+pub type File = smol::fs::File;
 
 pub mod cache;
 pub mod catcher;
@@ -979,16 +991,42 @@ impl Client {
             }
         }
 
-        let request = builder.body(Full::new(Bytes::from(
-            request
-                .as_ref()
-                .raw_body()
-                .to_vec(),
-        )));
+        #[cfg(feature = "tokio-rt")]
+        let request = if let Some(file) = request.file() {
+            let file = File::open(file)
+                .await
+                .map_err(|e| DeboaError::Io(IoError::File { message: e.to_string() }))?;
+            let content = ReaderStream::new(file).map_ok(Frame::data);
+            let body = StreamBody::new(content);
+            builder.body(body.boxed())
+        } else {
+            let all_bytes = Bytes::from(
+                request
+                    .as_ref()
+                    .raw_body()
+                    .to_vec(),
+            );
+            let content = stream::iter(vec![Ok(all_bytes)]).map_ok(Frame::data);
+            let body = StreamBody::new(content);
+            builder.body(body.boxed())
+        };
+
+        #[cfg(feature = "smol-rt")]
+        let request = {
+            let all_bytes = Bytes::from(
+                request
+                    .as_ref()
+                    .raw_body()
+                    .to_vec(),
+            );
+            let content = stream::iter(vec![Ok(all_bytes)]).map_ok(Frame::data);
+            let body = StreamBody::new(content);
+            builder.body(body.boxed())
+        };
 
         if let Err(err) = request {
             error!("Failed to send request: {}", err);
-            return Err(DeboaError::Request(errors::RequestError::Send {
+            return Err(DeboaError::Request(RequestError::Send {
                 url: url.to_string(),
                 method: method.to_string(),
                 message: err.to_string(),

@@ -1,12 +1,11 @@
 use std::marker::PhantomData;
 
-use bytes::Bytes;
 use http::version::Version;
-use http_body_util::Full;
 use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
 
 use rt_gate::spawn_worker;
 
+use crate::request::BytesBody;
 #[cfg(all(feature = "smol-rt", any(feature = "smol-rust-tls", feature = "smol-native-tls")))]
 use crate::rt::smol::tls::{plain_connection, tls_connection};
 #[cfg(feature = "smol-rt")]
@@ -32,9 +31,9 @@ type DeboaIo<T> = FuturesIo<T>;
 #[cfg(feature = "tokio-rt")]
 type DeboaIo<T> = TokioIo<T>;
 
-impl DeboaTcpConnection for BaseHttpConnection<Http1Request, Full<Bytes>, Incoming> {
+impl DeboaTcpConnection for BaseHttpConnection<Http1Request, BytesBody, Incoming> {
     type Sender = Http1Request;
-    type ReqBody = Full<Bytes>;
+    type ReqBody = BytesBody;
     type ResBody = Incoming;
 
     #[inline]
@@ -44,7 +43,7 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request, Full<Bytes>, Incomi
 
     async fn connect<'a>(
         config: &ConnectionConfig<'a>,
-    ) -> Result<BaseHttpConnection<Http1Request, Full<Bytes>, Incoming>> {
+    ) -> Result<BaseHttpConnection<Self::Sender, Self::ReqBody, Self::ResBody>> {
         let stream = if config.is_secure() {
             tls_connection(
                 config.host(),
@@ -77,14 +76,17 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request, Full<Bytes>, Incomi
             };
         });
 
-        Ok(BaseHttpConnection::<Http1Request, Full<Bytes>, Incoming> {
+        Ok(BaseHttpConnection::<Self::Sender, Self::ReqBody, Self::ResBody> {
             sender,
             req_body: PhantomData,
             res_body: PhantomData,
         })
     }
 
-    async fn send_request(&mut self, request: Request<Full<Bytes>>) -> Result<Response<Incoming>> {
+    async fn send_request(
+        &mut self,
+        request: Request<Self::ReqBody>,
+    ) -> Result<Response<Self::ResBody>> {
         let method = request
             .method()
             .to_string();
@@ -100,6 +102,6 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request, Full<Bytes>, Incomi
 }
 
 impl crate::client::conn::tcp::private::DeboaTcpConnectionSealed
-    for BaseHttpConnection<Http1Request, Full<Bytes>, Incoming>
+    for BaseHttpConnection<Http1Request, BytesBody, Incoming>
 {
 }

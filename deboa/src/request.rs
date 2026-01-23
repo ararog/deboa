@@ -62,7 +62,9 @@
 //!     .await?;
 //! ```
 
-use std::{collections::HashMap, fmt::Debug, future::Future, str::FromStr, sync::Arc};
+use std::{
+    collections::HashMap, fmt::Debug, future::Future, path::PathBuf, str::FromStr, sync::Arc,
+};
 
 use bytes::Bytes;
 #[cfg(feature = "http3")]
@@ -73,8 +75,7 @@ use http::{
 };
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-#[cfg(any(feature = "http1", feature = "http2"))]
-use http_body_util::Full;
+use http_body_util::combinators::BoxBody;
 use log::error;
 use regex::Regex;
 use serde::Serialize;
@@ -90,10 +91,18 @@ use crate::{
     Client, Result,
 };
 
+pub type BytesBody = BoxBody<Bytes, std::io::Error>;
+
+#[cfg(feature = "smol-rt")]
+pub type File = smol::fs::File;
+
+#[cfg(feature = "tokio-rt")]
+pub type File = tokio::fs::File;
+
 #[cfg(feature = "http1")]
-pub type Http1Request = hyper::client::conn::http1::SendRequest<Full<Bytes>>;
+pub type Http1Request = hyper::client::conn::http1::SendRequest<BytesBody>;
 #[cfg(feature = "http2")]
-pub type Http2Request = hyper::client::conn::http2::SendRequest<Full<Bytes>>;
+pub type Http2Request = hyper::client::conn::http2::SendRequest<BytesBody>;
 #[cfg(feature = "http3")]
 pub type Http3Request = h3::client::SendRequest<OpenStreams, Bytes>;
 
@@ -532,6 +541,7 @@ pub struct DeboaRequestBuilder {
     headers: HeaderMap,
     cookies: Option<HashMap<String, DeboaCookie>>,
     method: http::Method,
+    file: Option<PathBuf>,
     body: Arc<[u8]>,
     form: Option<Form>,
 }
@@ -562,6 +572,22 @@ impl DeboaRequestBuilder {
     #[inline]
     pub fn method(mut self, method: http::Method) -> Self {
         self.method = method;
+        self
+    }
+
+    /// Set file to upload
+    ///
+    /// # Arguments:
+    ///
+    /// * `file` - File to upload
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The request builder
+    ///
+    #[inline]
+    pub fn file(mut self, file: PathBuf) -> Self {
+        self.file = Some(file);
         self
     }
 
@@ -860,6 +886,7 @@ impl DeboaRequestBuilder {
             retries: self.retries,
             method: self.method,
             body: self.body,
+            file: self.file,
         };
 
         if let Some(host) = request.url().host() {
@@ -961,6 +988,7 @@ pub struct DeboaRequest {
     retries: u32,
     method: http::Method,
     body: Arc<[u8]>,
+    file: Option<PathBuf>,
 }
 
 impl Debug for DeboaRequest {
@@ -972,6 +1000,7 @@ impl Debug for DeboaRequest {
             .field("retries", &self.retries)
             .field("method", &self.method)
             .field("body", &self.body)
+            .field("file", &self.file)
             .finish()
     }
 }
@@ -1108,6 +1137,7 @@ impl FromStr for DeboaRequest {
                 .parse::<http::Method>()
                 .unwrap(),
             body: body.into(),
+            file: None,
         })
     }
 }
@@ -1172,6 +1202,7 @@ impl DeboaRequest {
             cookies: None,
             retries: 0,
             method,
+            file: None,
             body: Arc::new([]),
             form: None,
         })
@@ -1608,6 +1639,33 @@ impl DeboaRequest {
     #[inline]
     pub fn set_text(&mut self, text: String) -> &mut Self {
         self.set_raw_body(text.as_bytes());
+        self
+    }
+
+    /// Allow get file at any time
+    ///
+    /// # Returns
+    ///
+    /// * `Option<&PathBuf>` - The file.
+    ///
+    #[inline]
+    pub fn file(&self) -> Option<&PathBuf> {
+        self.file.as_ref()
+    }
+
+    /// Allow set file at any time
+    ///
+    /// # Arguments
+    ///
+    /// * `file` - The file to be set.
+    ///
+    /// # Returns
+    ///
+    /// * `&mut Self` - The request.
+    ///
+    #[inline]
+    pub fn set_file(&mut self, file: PathBuf) -> &mut Self {
+        self.file = Some(file);
         self
     }
 
