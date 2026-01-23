@@ -64,9 +64,9 @@ jobs:
 
     - uses: Swatinem/rust-cache@v2
 
-    - name: Install Android NDK
-      id: setup-ndk    
-      uses: nttld/setup-ndk@v1
+    - uses: nttld/setup-ndk@v1
+      name: Install Android NDK
+      id: setup-ndk
       with:
         ndk-version: r29
         add-to-path: false
