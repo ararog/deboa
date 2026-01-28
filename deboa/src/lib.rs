@@ -79,6 +79,32 @@ compile_error!("At least one HTTP version feature must be enabled.");
 
 pub(crate) const MAX_ERROR_MESSAGE_SIZE: usize = 50000;
 
+#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
+#[inline]
+pub(crate) fn alpn() -> Vec<Vec<u8>> {
+    vec![
+        #[cfg(feature = "http2")]
+        b"h2".to_vec(),
+        #[cfg(feature = "http1")]
+        b"http/1.1".to_vec(),
+        #[cfg(feature = "http3")]
+        b"h3".to_vec(),
+    ]
+}
+
+#[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
+#[inline]
+pub(crate) fn alpn() -> &'static [&'static str] {
+    &[
+        #[cfg(feature = "http2")]
+        "h2",
+        #[cfg(feature = "http1")]
+        "http/1.1",
+        #[cfg(feature = "http3")]
+        "h3",
+    ]
+}
+
 use cfg_if::cfg_if;
 
 use futures::{stream, TryStreamExt};
