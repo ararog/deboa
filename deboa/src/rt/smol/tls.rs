@@ -53,7 +53,7 @@ pub(crate) async fn tls_connection(
     identity: &Option<DeboaIdentity>,
     certificate: &Option<DeboaCertificate>,
     skip_server_verification: bool,
-    alpn: Option<&str>,
+    alpn: &[&str],
 ) -> Result<SmolStream> {
     let socket = create_stream(host, port).await?;
     let builder = TlsConnector::new();
@@ -66,7 +66,7 @@ pub(crate) async fn tls_connection(
         builder
     };
 
-    let builder = if let Some(alpn) = alpn { builder.request_alpns(&[alpn]) } else { builder };
+    let builder = builder.request_alpns(&alpn);
 
     let builder = if let Some(ca) = certificate {
         let cert: std::result::Result<Certificate, std::io::Error> = ca.try_into();
@@ -117,7 +117,7 @@ pub(crate) async fn tls_connection(
     identity: &Option<DeboaIdentity>,
     certificate: &Option<DeboaCertificate>,
     skip_server_verification: bool,
-    alpn: Option<&str>,
+    alpn: Vec<Vec<u8>>,
 ) -> Result<SmolStream> {
     let socket = create_stream(host, port).await?;
     let config = setup_rust_tls(host, identity, certificate, skip_server_verification, alpn)?;

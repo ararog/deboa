@@ -89,12 +89,21 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, BytesBody, Full<Byt
 
         let mut client_endpoint = client_endpoint.unwrap();
 
+        let alpn = vec![
+            #[cfg(feature = "http2")]
+            b"h2".to_vec(),
+            #[cfg(feature = "http1")]
+            b"http/1.1".to_vec(),
+            #[cfg(feature = "http3")]
+            b"h3".to_vec(),
+        ];
+
         let tls_config = setup_rust_tls(
             config.host(),
             config.identity(),
             config.certificate(),
             config.skip_cert_verification(),
-            Some("h3"),
+            alpn,
         )?;
 
         let quic_config = QuicClientConfig::try_from(tls_config);
