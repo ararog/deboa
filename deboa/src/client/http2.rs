@@ -5,7 +5,6 @@ use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
 
 use rt_gate::spawn_worker;
 
-use crate::request::BytesBody;
 #[cfg(feature = "smol-rt")]
 use crate::rt::smol::executor::SmolExecutor;
 #[cfg(all(feature = "smol-rt", any(feature = "smol-rust-tls", feature = "smol-native-tls")))]
@@ -24,8 +23,9 @@ use hyper_util::rt::TokioExecutor;
 use hyper_util::rt::TokioIo;
 
 use crate::{
+    alpn,
     client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
-    request::Http2Request,
+    request::{BytesBody, Http2Request},
     Result,
 };
 
@@ -52,26 +52,6 @@ impl DeboaTcpConnection for BaseHttpConnection<Http2Request, BytesBody, Incoming
     async fn connect<'a>(
         config: &ConnectionConfig<'a>,
     ) -> Result<BaseHttpConnection<Self::Sender, Self::ReqBody, Self::ResBody>> {
-        #[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
-        let alpn = vec![
-            #[cfg(feature = "http2")]
-            b"h2".to_vec(),
-            #[cfg(feature = "http1")]
-            b"http/1.1".to_vec(),
-            #[cfg(feature = "http3")]
-            b"h3".to_vec(),
-        ];
-
-        #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
-        let alpn = &[
-            #[cfg(feature = "http2")]
-            "h2",
-            #[cfg(feature = "http1")]
-            "http/1.1",
-            #[cfg(feature = "http3")]
-            "h3",
-        ];
-
         let stream = if config.is_secure() {
             tls_connection(
                 config.host(),
@@ -79,7 +59,7 @@ impl DeboaTcpConnection for BaseHttpConnection<Http2Request, BytesBody, Incoming
                 config.identity(),
                 config.certificate(),
                 config.skip_cert_verification(),
-                alpn,
+                alpn(),
             )
             .await
         } else {

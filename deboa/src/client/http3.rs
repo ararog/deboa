@@ -1,6 +1,8 @@
-use std::marker::PhantomData;
-use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
-use std::sync::Arc;
+use std::{
+    marker::PhantomData,
+    net::{Ipv4Addr, SocketAddr, SocketAddrV4},
+    sync::Arc,
+};
 
 use rt_gate::spawn_worker;
 
@@ -9,15 +11,15 @@ use futures::future;
 use http::{version::Version, StatusCode};
 use http_body_util::{BodyExt, Full};
 use hyper::{Request, Response};
-use quinn::crypto::rustls::QuicClientConfig;
-use quinn::Endpoint;
+use quinn::{crypto::rustls::QuicClientConfig, Endpoint};
 
-use crate::client::conn::stream::setup_rust_tls;
-use crate::client::conn::ConnectionConfig;
-use crate::request::{BytesBody, Http3Request};
 use crate::{
-    client::conn::{udp::DeboaUdpConnection, BaseHttpConnection},
+    alpn,
+    client::conn::{
+        stream::setup_rust_tls, udp::DeboaUdpConnection, BaseHttpConnection, ConnectionConfig,
+    },
     errors::{ConnectionError, DeboaError, RequestError, ResponseError},
+    request::{BytesBody, Http3Request},
     Result,
 };
 
@@ -89,21 +91,12 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, BytesBody, Full<Byt
 
         let mut client_endpoint = client_endpoint.unwrap();
 
-        let alpn = vec![
-            #[cfg(feature = "http2")]
-            b"h2".to_vec(),
-            #[cfg(feature = "http1")]
-            b"http/1.1".to_vec(),
-            #[cfg(feature = "http3")]
-            b"h3".to_vec(),
-        ];
-
         let tls_config = setup_rust_tls(
             config.host(),
             config.identity(),
             config.certificate(),
             config.skip_cert_verification(),
-            alpn,
+            alpn(),
         )?;
 
         let quic_config = QuicClientConfig::try_from(tls_config);
