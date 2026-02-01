@@ -708,6 +708,25 @@ impl DeboaResponse {
         Ok(())
     }
 
+    /// Allow get inner response parts at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `http::response::Parts` - The parts of the response.
+    /// * `DeboaBody` - The body of the response.
+    ///
+    /// # Example
+    ///
+    /// ```compile_fail
+    /// let (parts, body) = response.into_parts();
+    /// ```
+    pub fn into_parts(self) -> (http::response::Parts, DeboaBody) {
+        let (parts, body) = self
+            .inner
+            .into_parts();
+        (parts, body)
+    }
+
     #[cfg(feature = "tokio-rt")]
     #[inline]
     pub async fn upgrade(self) -> Result<hyper_util::rt::TokioIo<hyper::upgrade::Upgraded>> {

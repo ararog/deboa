@@ -1,7 +1,7 @@
 [package]
 name = "vamo-macros"
 edition = "2021"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 description = "Macros for quick client development using vamo"
 license = "MIT"
@@ -10,7 +10,7 @@ readme = "README.md"
 keywords = ["compiler-plugin", "macros", "resources", "http", "rest"]
 exclude = [".travis.yml"]
 publish = true
-rust-version = "1.64.0"
+rust-version = "1.75.0"
 
 [features]
 default = ["json", "_tokio-rt", "_http2", "_tokio-rust-tls"]
@@ -35,9 +35,9 @@ _smol-native-tls = []
 proc-macro = true
 
 [dependencies]
-deboa = { path = "../deboa", version = "0.0.9" }
-deboa-extras = { path = "../deboa-extras", version = "0.0.5", features=["json"] }
-vamo = { path = "../vamo", version = "0.0.5" }
+deboa = { path = "../deboa", version = "0.1.0-beta.1" }
+deboa-extras = { path = "../deboa-extras", version = "0.0.6", features=["json"] }
+vamo = { path = "../vamo", version = "0.0.6" }
 proc-macro2 = "1.0.103"
 serde = "1.0.228"
 syn = { version = "2.0", features = ["full"] }

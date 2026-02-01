@@ -10,8 +10,6 @@ use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdent
 #[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
-use crate::Result;
-
 #[derive(Debug, Clone)]
 /// Supported encodings for client certificates.
 pub enum ContentEncoding {
