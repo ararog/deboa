@@ -59,8 +59,15 @@ pub enum DeboaError {
     #[error("Invalid cookie header: {message}")]
     Cookie { message: String },
 
+    #[deprecated = "Use `Identity` instead"]
     #[error("Invalid client certificate: {message}")]
     ClientCert { message: String },
+
+    #[error("Invalid certificate: {message}")]
+    Certificate { message: String },
+
+    #[error("Invalid identity: {message}")]
+    Identity { message: String },
 
     #[error("Invalid header: {message}")]
     Header { message: String },

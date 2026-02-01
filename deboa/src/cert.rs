@@ -10,6 +10,8 @@ use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdent
 #[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
+use crate::Result;
+
 #[derive(Debug, Clone)]
 /// Supported encodings for client certificates.
 pub enum ContentEncoding {
@@ -74,6 +76,12 @@ impl Identity {
         Identity { cert: bundle.to_vec(), key: None, password, encoding: None }
     }
 
+    #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
+    pub fn from_pkcs12_file(file: &str, password: Option<String>) -> std::io::Result<Self> {
+        let data = std::fs::read(file)?;
+        Ok(Identity { cert: data, key: None, password, encoding: None })
+    }
+
     /// Load DER encoded certificate and key from a slice of bytes
     ///
     /// # Arguments
@@ -93,13 +101,23 @@ impl Identity {
             encoding: Some(encoding),
         }
     }
+
+    pub fn from_pkcs8_file(
+        cert: &str,
+        key: &str,
+        encoding: ContentEncoding,
+    ) -> std::io::Result<Self> {
+        let cert = std::fs::read(cert)?;
+        let key = std::fs::read(key)?;
+        Ok(Identity { cert, key: Some(key), password: None, encoding: Some(encoding) })
+    }
 }
 
 #[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
 impl TryFrom<&Identity> for (CertificateDer<'static>, PrivateKeyDer<'static>) {
     type Error = std::io::Error;
 
-    fn try_from(value: &Identity) -> Result<Self, Self::Error> {
+    fn try_from(value: &Identity) -> std::result::Result<Self, Self::Error> {
         let cert = value.cert.clone();
         let key = value
             .key
@@ -156,7 +174,7 @@ impl TryFrom<&Identity> for (CertificateDer<'static>, PrivateKeyDer<'static>) {
 impl TryFrom<&Identity> for NativeIdentity {
     type Error = std::io::Error;
 
-    fn try_from(value: &Identity) -> Result<Self, Self::Error> {
+    fn try_from(value: &Identity) -> std::result::Result<Self, Self::Error> {
         let identity = if let Some(password) = &value.password {
             let identity = NativeIdentity::from_pkcs12(&value.cert, password);
             if identity.is_err() {
@@ -231,7 +249,7 @@ impl Certificate {
     ///
     /// * `Result<Certificate, std::io::Error>` - The new Certificate instance.
     ///
-    pub fn from_file(file: &str, encoding: ContentEncoding) -> Result<Self, std::io::Error> {
+    pub fn from_file(file: &str, encoding: ContentEncoding) -> std::io::Result<Self> {
         let data = std::fs::read(file)?;
         Ok(Certificate { data, encoding })
     }
@@ -252,7 +270,7 @@ impl Certificate {
 impl TryFrom<&Certificate> for CertificateDer<'static> {
     type Error = std::io::Error;
 
-    fn try_from(value: &Certificate) -> Result<Self, Self::Error> {
+    fn try_from(value: &Certificate) -> std::result::Result<Self, Self::Error> {
         let cert = match value.encoding {
             ContentEncoding::DER => CertificateDer::from(
                 value
@@ -281,7 +299,7 @@ impl TryFrom<&Certificate> for CertificateDer<'static> {
 impl TryFrom<&Certificate> for NativeCertificate {
     type Error = std::io::Error;
 
-    fn try_from(value: &Certificate) -> Result<Self, Self::Error> {
+    fn try_from(value: &Certificate) -> std::result::Result<Self, Self::Error> {
         let cert = match value.encoding {
             ContentEncoding::DER => NativeCertificate::from_der(value.as_bytes()),
             ContentEncoding::PEM => NativeCertificate::from_pem(value.as_bytes()),
