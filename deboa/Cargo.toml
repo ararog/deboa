@@ -55,10 +55,10 @@ smol-rust-tls = [
 ]
 
 rustls-provider = [
-    "__rustls_awc_lc-rs"
+    "__rustls_awc_lc_rs"
 ]
 
-__rustls_awc_lc-rs = [
+__rustls_awc_lc_rs = [
     "futures-rustls/aws-lc-rs"
 ]
 
