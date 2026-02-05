@@ -1,7 +1,9 @@
-use deboa::{catcher::DeboaCatcher, response::DeboaResponse, Result};
+use deboa::{
+    catcher::DeboaCatcher,
+    response::{DeboaResponse, IntoBody},
+    Result,
+};
 use http::{Response, StatusCode};
-use http_body_util::Either;
-use http_body_util::Full;
 
 use crate::{catcher::encoding::EncodingCatcher, io::brotli::BrotliDecompressor};
 
@@ -17,7 +19,7 @@ async fn test_brotli_decompress() -> Result<()> {
     let response = Response::builder()
         .status(StatusCode::OK)
         .header("Content-Encoding", "br")
-        .body(Either::Right(Full::from(BROTLI_COMPRESSED.to_vec())))
+        .body(BROTLI_COMPRESSED.into_body())
         .unwrap();
 
     let mut response = DeboaResponse::new(fake_url().into(), response);

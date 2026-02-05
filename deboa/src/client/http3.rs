@@ -6,10 +6,9 @@ use std::{
 
 use rt_gate::spawn_worker;
 
-use bytes::Bytes;
 use futures::future;
 use http::{version::Version, StatusCode};
-use http_body_util::{BodyExt, Full};
+use http_body_util::BodyExt;
 use hyper::{Request, Response};
 use quinn::{crypto::rustls::QuicClientConfig, Endpoint};
 
@@ -20,6 +19,7 @@ use crate::{
     },
     errors::{ConnectionError, DeboaError, RequestError, ResponseError},
     request::{BytesBody, Http3Request},
+    response::DeboaBody,
     Result,
 };
 
@@ -64,10 +64,10 @@ async fn lookup_and_connect(
     Ok(quinn_conn)
 }
 
-impl DeboaUdpConnection for BaseHttpConnection<Http3Request, BytesBody, Full<Bytes>> {
+impl DeboaUdpConnection for BaseHttpConnection<Http3Request, BytesBody, DeboaBody> {
     type Sender = Http3Request;
     type ReqBody = BytesBody;
-    type ResBody = Full<Bytes>;
+    type ResBody = DeboaBody;
 
     #[inline]
     fn protocol(&self) -> Version {
@@ -238,6 +238,6 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, BytesBody, Full<Byt
 }
 
 impl crate::client::conn::udp::private::DeboaUdpConnectionSealed
-    for BaseHttpConnection<Http3Request, BytesBody, Full<Bytes>>
+    for BaseHttpConnection<Http3Request, BytesBody, DeboaBody>
 {
 }

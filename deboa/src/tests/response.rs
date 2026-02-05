@@ -2,13 +2,11 @@ use std::fs::remove_file;
 
 use crate::{
     cookie::DeboaCookie,
-    response::{DeboaBody, DeboaResponse},
+    response::{DeboaResponse, IntoBody},
     Result,
 };
-use bytes::Bytes;
 use deboa_tests::utils::fake_url;
 use http::{header, Response};
-use http_body_util::Full;
 
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
@@ -21,7 +19,7 @@ const SAMPLE_TEST: &[u8] = b"Hello, world!";
 fn test_status() -> Result<()> {
     let response = Response::builder()
         .status(http::StatusCode::OK)
-        .body(DeboaBody::Right(Full::<Bytes>::from(SAMPLE_TEST.to_vec())))
+        .body(SAMPLE_TEST.into_body())
         .unwrap();
 
     let response = DeboaResponse::new(fake_url().into(), response);
