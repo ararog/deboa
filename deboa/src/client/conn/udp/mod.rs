@@ -6,11 +6,12 @@ use h3_quinn::RecvStream;
 use http::response::Parts;
 use http::{Request, Response, StatusCode, Version};
 use http_body::Body;
-use http_body_util::Full;
 
+use crate::response::DeboaBody;
 use crate::{
     client::conn::{BaseHttpConnection, ConnectionConfig},
     errors::{DeboaError, ResponseError},
+    response::IntoBody,
     Result, MAX_ERROR_MESSAGE_SIZE,
 };
 
@@ -83,7 +84,7 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
         &self,
         parts: Parts,
         mut stream: RequestStream<RecvStream, Bytes>,
-    ) -> impl Future<Output = Result<Response<Full<Bytes>>>> + Send {
+    ) -> impl Future<Output = Result<Response<DeboaBody>>> + Send {
         async move {
             let status_code = parts.status;
 
@@ -123,7 +124,11 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
                 body.extend_from_slice(chunk.chunk());
             }
 
-            let response = Response::from_parts(parts, Full::new(body.freeze()));
+            let response = Response::from_parts(
+                parts,
+                body.freeze()
+                    .into_body(),
+            );
 
             Ok(response)
         }

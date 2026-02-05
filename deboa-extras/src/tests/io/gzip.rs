@@ -1,13 +1,15 @@
-use deboa::{catcher::DeboaCatcher, response::DeboaResponse, Result};
-use deboa_tests::utils::fake_url;
-use http::Response;
-use http::StatusCode;
-use http_body_util::Either;
-use http_body_util::Full;
+use deboa::{
+    catcher::DeboaCatcher,
+    response::{DeboaResponse, IntoBody},
+    Result,
+};
+use deboa_tests::{
+    data::{DECOMPRESSED, GZIP_COMPRESSED},
+    utils::fake_url,
+};
+use http::{Response, StatusCode};
 
 use crate::{catcher::encoding::EncodingCatcher, io::gzip::GzipDecompressor};
-
-use deboa_tests::data::{DECOMPRESSED, GZIP_COMPRESSED};
 
 #[tokio::test]
 async fn test_gzip() -> Result<()> {
@@ -16,7 +18,7 @@ async fn test_gzip() -> Result<()> {
     let response = Response::builder()
         .status(StatusCode::OK)
         .header("Content-Encoding", "gzip")
-        .body(Either::Right(Full::from(GZIP_COMPRESSED.to_vec())))
+        .body(GZIP_COMPRESSED.into_body())
         .unwrap();
 
     let mut response = DeboaResponse::new(fake_url().into(), response);

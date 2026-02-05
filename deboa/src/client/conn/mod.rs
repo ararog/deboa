@@ -20,11 +20,6 @@ use std::{marker::PhantomData, sync::Arc};
 
 use http::Request;
 
-#[cfg(feature = "http3")]
-use bytes::Bytes;
-#[cfg(feature = "http3")]
-use http_body_util::Full;
-
 #[cfg(any(feature = "http1", feature = "http2"))]
 use hyper::body::Incoming;
 use url::Url;
@@ -42,7 +37,10 @@ use crate::request::{BytesBody, Http1Request};
 use crate::request::{BytesBody, Http2Request};
 
 #[cfg(feature = "http3")]
-use crate::request::{BytesBody, Http3Request};
+use crate::{
+    request::{BytesBody, Http3Request},
+    response::DeboaBody,
+};
 
 /// TCP protocol implementations.
 ///
@@ -121,7 +119,7 @@ pub enum DeboaConnection {
     #[cfg(feature = "http2")]
     Http2(Box<BaseHttpConnection<Http2Request, BytesBody, Incoming>>),
     #[cfg(feature = "http3")]
-    Http3(Box<BaseHttpConnection<Http3Request, BytesBody, Full<Bytes>>>),
+    Http3(Box<BaseHttpConnection<Http3Request, BytesBody, DeboaBody>>),
 }
 
 impl DeboaConnection {
@@ -156,7 +154,7 @@ impl DeboaConnection {
                 let response = conn
                     .send_request(request)
                     .await?;
-                let response = response.map(|body| body.into_body());
+                let response = response.map(|body| body);
                 DeboaResponse::new(url, response)
             }
         };
@@ -273,7 +271,7 @@ impl<'a> ConnectionConfig<'a> {
     }
 
     pub fn host(&self) -> &str {
-        &self.host
+        self.host
     }
 
     pub fn port(&self) -> u16 {
@@ -315,16 +313,15 @@ impl ConnectionFactory {
             #[cfg(feature = "http2")]
             HttpVersion::Http2 => {
                 use crate::client::conn::tcp::DeboaTcpConnection;
-                let conn =
-                    BaseHttpConnection::<Http2Request, BytesBody, Incoming>::connect(&config)
-                        .await?;
+                let conn = BaseHttpConnection::<Http2Request, BytesBody, Incoming>::connect(config)
+                    .await?;
                 DeboaConnection::Http2(Box::new(conn))
             }
             #[cfg(feature = "http3")]
             HttpVersion::Http3 => {
-                use crate::client::conn::udp::DeboaUdpConnection;
+                use crate::{client::conn::udp::DeboaUdpConnection, response::DeboaBody};
                 let conn =
-                    BaseHttpConnection::<Http3Request, BytesBody, Full<Bytes>>::connect(&config)
+                    BaseHttpConnection::<Http3Request, BytesBody, DeboaBody>::connect(&config)
                         .await?;
                 DeboaConnection::Http3(Box::new(conn))
             }
