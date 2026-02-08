@@ -59,6 +59,12 @@ IP.1 = 127.0.0.1
 openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 3650 -extfile server.cnf -extensions req_ext
 ```
 
+### Export as DER:
+
+```bash
+openssl x509 -in server.crt -outform der -out server.der
+```
+
 ## Client
 
 ### Private Key and certificate request
