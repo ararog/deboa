@@ -452,20 +452,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "blog"
-version = "0.1.0"
-dependencies = [
- "deboa",
- "deboa-extras",
- "http",
- "rayon",
- "serde",
- "serde_json",
- "tokio",
- "vamo",
-]
-
-[[package]]
 name = "brotli"
 version = "8.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -512,29 +498,6 @@ name = "cast"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
-
-[[package]]
-name = "catcher"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "deboa",
- "deboa-extras",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
-name = "cbor"
-version = "0.1.0"
-dependencies = [
- "ciborium",
- "deboa",
- "deboa-extras",
- "serde",
- "tokio",
-]
 
 [[package]]
 name = "cc"
@@ -991,17 +954,6 @@ dependencies = [
  "url",
  "ws-framer",
  "ws-mock",
-]
-
-[[package]]
-name = "deboa-macros"
-version = "0.0.8"
-dependencies = [
- "deboa",
- "deboa-extras",
- "http",
- "serde",
- "tokio",
 ]
 
 [[package]]
@@ -1956,12 +1908,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "joinery"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72167d68f5fce3b8655487b8038691a3c9984ee769590f93f2a631f4ad64e4f5"
-
-[[package]]
 name = "js-sys"
 version = "0.3.82"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2546,21 +2492,6 @@ dependencies = [
  "cpufeatures",
  "opaque-debug",
  "universal-hash",
-]
-
-[[package]]
-name = "postman"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "deboa",
- "deboa-extras",
- "http",
- "serde",
- "serde_json",
- "tokio",
- "vamo",
- "vamo-macros",
 ]
 
 [[package]]
@@ -3512,18 +3443,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbbb5d9659141646ae647b42fe094daf6c6192d1620870b449d9557f748b2daa"
 
 [[package]]
-name = "simple"
-version = "0.0.0"
-dependencies = [
- "deboa",
- "deboa-extras",
- "http",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "siphasher"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3889,17 +3808,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
-name = "titlecase"
-version = "2.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38397a8cdb017cfeb48bf6c154d6de975ac69ffeed35980fde199d2ee0842042"
-dependencies = [
- "joinery",
- "lazy_static 1.5.0",
- "regex",
-]
-
-[[package]]
 name = "tokio"
 version = "1.49.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4198,42 +4106,6 @@ dependencies = [
  "halfbrown",
  "itoa",
  "ryu",
-]
-
-[[package]]
-name = "vamo"
-version = "0.0.6"
-dependencies = [
- "base64",
- "deboa",
- "deboa-extras",
- "deboa-tests",
- "http",
- "serde",
- "smol",
- "smol-macros",
- "tokio",
- "url",
-]
-
-[[package]]
-name = "vamo-macros"
-version = "0.0.6"
-dependencies = [
- "deboa",
- "deboa-extras",
- "deboa-tests",
- "http",
- "proc-macro2",
- "quote",
- "regex",
- "serde",
- "smol",
- "smol-macros",
- "syn 2.0.106",
- "titlecase",
- "tokio",
- "vamo",
 ]
 
 [[package]]

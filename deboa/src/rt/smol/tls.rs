@@ -15,6 +15,8 @@ use crate::client::conn::stream::setup_rust_tls;
 use futures_rustls::TlsConnector;
 #[cfg(all(feature = "smol-rust-tls", any(feature = "http1", feature = "http2")))]
 use rustls::pki_types::ServerName;
+#[cfg(any(feature = "http1", feature = "http2"))]
+use trust_dns_resolver::error::ResolveErrorKind;
 
 #[cfg(all(
     any(feature = "smol-rust-tls", feature = "smol-native-tls"),
@@ -26,18 +28,57 @@ use crate::{
     Result,
 };
 
+use async_std_resolver::{
+    config::{ResolverConfig, ResolverOpts},
+    resolver,
+};
+
 #[cfg(any(feature = "http1", feature = "http2"))]
 async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
-    let stream = { TcpStream::connect(format!("{}:{}", host, port)).await };
+    let resolver = resolver(ResolverConfig::default(), ResolverOpts::default()).await;
 
-    if let Err(e) = stream {
-        return Err(DeboaError::Connection(ConnectionError::Tcp {
-            host: host.to_string(),
-            message: format!("Could not connect to server: {}", e),
-        }));
-    }
+    let response = resolver
+        .lookup_ip(host)
+        .await;
 
-    Ok(stream.unwrap())
+    let addr = match response {
+        Ok(response) => response,
+        Err(e) => match e.kind() {
+            ResolveErrorKind::NoRecordsFound { query, .. } => {
+                let query_name = query
+                    .name()
+                    .to_string();
+                return Err(DeboaError::Connection(ConnectionError::Tcp {
+                    host: host.to_string(),
+                    message: format!("Could not resolve host: {}", query_name),
+                }));
+            }
+            _ => {
+                return Err(DeboaError::Connection(ConnectionError::Tcp {
+                    host: host.to_string(),
+                    message: format!("Could not resolve host: {}", e),
+                }));
+            }
+        },
+    };
+
+    let addr = addr
+        .iter()
+        .next()
+        .expect("no addresses returned!");
+
+    let tcp_stream = TcpStream::connect((addr, port)).await;
+    let tcp_stream = match tcp_stream {
+        Ok(tcp_stream) => tcp_stream,
+        Err(e) => {
+            return Err(DeboaError::Connection(ConnectionError::Tcp {
+                host: host.to_string(),
+                message: format!("Could not connect to server: {}", e),
+            }));
+        }
+    };
+
+    Ok(tcp_stream)
 }
 
 #[cfg(any(feature = "http1", feature = "http2"))]

@@ -16,11 +16,7 @@
 //! - Thread-safe connection handling
 //! ```
 
-use std::{
-    marker::PhantomData,
-    net::{IpAddr, SocketAddr},
-    sync::Arc,
-};
+use std::{marker::PhantomData, net::IpAddr, sync::Arc};
 
 use http::Request;
 
