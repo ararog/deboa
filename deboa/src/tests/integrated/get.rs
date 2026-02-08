@@ -327,24 +327,9 @@ async fn do_get_invalid_server() -> TestResult<()> {
         .execute(request)
         .await;
 
-    #[cfg(any(feature = "http1", feature = "http2"))]
     let error = DeboaError::Connection(ConnectionError::Tcp {
         host: "invalid-server.com".to_string(),
-        #[cfg(target_os = "windows")]
-        message: "Could not connect to server: No such host is known. (os error 11001)".to_string(),
-        #[cfg(target_os = "linux")]
-        message: "Could not connect to server: failed to lookup address information: Name or service not known".to_string(),
-        #[cfg(target_os = "macos")]
-        message:
-            "Could not connect to server: failed to lookup address information: nodename nor servname provided, or not known"
-                .to_string(),
-    });
-
-    #[cfg(feature = "http3")]
-    let error = DeboaError::Connection(ConnectionError::Udp {
-        host: "invalid-server.com".to_string(),
-        message: "Could not connect to server: no record found for Query { name: Name(\"invalid-server.com.\"), query_type: AAAA, query_class: IN }"
-            .to_string(),
+        message: "Could not resolve host: invalid-server.com.".to_string(),
     });
 
     assert!(response.is_err());

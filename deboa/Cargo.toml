@@ -17,81 +17,85 @@ default = ["tokio-rt", "http2", "tokio-rust-tls"]
 
 # runtimes
 tokio-rt = [
-    "tokio/fs",
-    "tokio/macros",
-    "deboa-tests/tokio-rt",
-    "quinn/runtime-tokio",
-    "tokio-util/io",
-    "rt-gate/tokio-rt",
+  "tokio/fs",
+  "tokio/macros",
+  "deboa-tests/tokio-rt",
+  "quinn/runtime-tokio",
+  "tokio-util/io",
+  "rt-gate/tokio-rt",
 ]
 smol-rt = [
-    "dep:smol",
-    "dep:smol-hyper",
-    "dep:async-executor",
-    "dep:smol-macros",
-    "dep:macro_rules_attribute",
-    "deboa-tests/smol-rt",
-    "quinn/runtime-smol",
-    "rt-gate/smol-rt",
+  "dep:smol",
+  "dep:smol-hyper",
+  "dep:async-executor",
+  "dep:smol-macros",
+  "dep:macro_rules_attribute",
+  "deboa-tests/smol-rt",
+  "quinn/runtime-smol",
+  "rt-gate/smol-rt",
 ]
 
 # tls
 tokio-rust-tls = [
-    "dep:rustls",
-    "dep:rustls-native-certs",
-    "dep:tokio-rustls",
-    "dep:webpki-roots",
-    "deboa-tests/tokio-rust-tls",
-    "rustls-provider",
+  "dep:rustls",
+  "dep:rustls-native-certs",
+  "dep:tokio-rustls",
+  "dep:webpki-roots",
+  "deboa-tests/tokio-rust-tls",
+  "rustls-provider",
 ]
 
 smol-rust-tls = [
-    "dep:rustls",
-    "dep:rustls-native-certs",
-    "dep:futures-rustls",
-    "dep:webpki-roots",
-    "deboa-tests/smol-rust-tls",
-    "rustls-provider",
+  "dep:rustls",
+  "dep:rustls-native-certs",
+  "dep:futures-rustls",
+  "dep:webpki-roots",
+  "deboa-tests/smol-rust-tls",
+  "rustls-provider",
 ]
 
-rustls-provider = [
-    "__rustls_awc_lc_rs"
-]
+rustls-provider = ["__rustls_awc_lc_rs"]
 
-__rustls_awc_lc_rs = [
-    "futures-rustls/aws-lc-rs"
-]
+__rustls_awc_lc_rs = ["futures-rustls/aws-lc-rs"]
 
-__rustls_ring = [
-    "futures-rustls/ring"
-]
+__rustls_ring = ["futures-rustls/ring"]
 
-__rustls_rustcrypto = [ 
-    "dep:rustls-rustcrypto"
-]
+__rustls_rustcrypto = ["dep:rustls-rustcrypto"]
 
 tokio-native-tls = [
-    "dep:async-native-tls",
-    "async-native-tls/runtime-tokio",
-    "deboa-tests/tokio-rust-tls",
+  "dep:async-native-tls",
+  "async-native-tls/runtime-tokio",
+  "deboa-tests/tokio-rust-tls",
 ]
 
 smol-native-tls = [
-    "dep:async-native-tls",
-    "async-native-tls/runtime-async-std",
-    "deboa-tests/smol-rust-tls",
+  "dep:async-native-tls",
+  "async-native-tls/runtime-async-std",
+  "deboa-tests/smol-rust-tls",
 ]
 
 # protocols
-http1 = ["hyper/http1", "hyper-util/http1", "deboa-tests/http1"]
-http2 = ["hyper/http2", "hyper-util/http2", "deboa-tests/http2"]
+http1 = [
+  "hyper/http1",
+  "hyper-util/http1",
+  "deboa-tests/http1",
+  "trust-dns-resolver",
+  "async-std-resolver",
+]
+http2 = [
+  "hyper/http2",
+  "hyper-util/http2",
+  "deboa-tests/http2",
+  "trust-dns-resolver",
+  "async-std-resolver",
+]
 http3 = [
-    "dep:h3",
-    "dep:h3-quinn",
-    "dep:quinn",
-    "deboa-tests/http3",
-    "trust-dns-resolver",
-    "async-std-resolver",
+  "dep:h3",
+  "dep:h3-quinn",
+  "dep:quinn",
+  "deboa-tests/http3",
+  "trust-dns-resolver",
+  "async-std-resolver",
 ]
 
 [dependencies]
@@ -135,7 +139,7 @@ smol-hyper = { version = "0.1.0", optional = true, features = ["smol"] }
 smol-macros = { version = "0.1.1", optional = true }
 thiserror = "2.0.17"
 time = "=0.2.27"
-tokio = { version = "1.38.1", optional = true, default-features = false}
+tokio = { version = "1.38.1", optional = true, default-features = false }
 tokio-rustls = { version = "0.26.0", optional = true }
 tokio-util = { version = "0.7.11", optional = true }
 trust-dns-resolver = { version = "0.23.2", optional = true }

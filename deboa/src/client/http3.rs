@@ -7,6 +7,7 @@ use http::{version::Version, StatusCode};
 use http_body_util::BodyExt;
 use hyper::{Request, Response};
 use quinn::{crypto::rustls::QuicClientConfig, Endpoint};
+use trust_dns_resolver::error::ResolveErrorKind;
 
 use crate::{
     alpn,
@@ -35,7 +36,7 @@ async fn lookup_and_connect(
     host: &str,
     port: u16,
     client_endpoint: &Endpoint,
-) -> std::result::Result<h3_quinn::Connection, Box<dyn std::error::Error>> {
+) -> std::result::Result<h3_quinn::Connection, DeboaError> {
     #[cfg(feature = "smol-rt")]
     let resolver = resolver(ResolverConfig::default(), ResolverOpts::default()).await;
 
@@ -44,16 +45,57 @@ async fn lookup_and_connect(
 
     let response = resolver
         .lookup_ip(host)
-        .await?;
+        .await;
 
-    let addr = response
+    let addr = match response {
+        Ok(response) => response,
+        Err(e) => match e.kind() {
+            ResolveErrorKind::NoRecordsFound { query, .. } => {
+                let query_name = query
+                    .name()
+                    .to_string();
+                return Err(DeboaError::Connection(ConnectionError::Tcp {
+                    host: host.to_string(),
+                    message: format!("Could not resolve host: {}", query_name),
+                }));
+            }
+            _ => {
+                return Err(DeboaError::Connection(ConnectionError::Tcp {
+                    host: host.to_string(),
+                    message: format!("Could not resolve host: {}", e),
+                }));
+            }
+        },
+    };
+
+    let addr = addr
         .iter()
         .next()
         .expect("no addresses returned!");
 
-    let conn = client_endpoint
-        .connect(SocketAddr::new(addr, port), host)?
-        .await?;
+    let conn = client_endpoint.connect(SocketAddr::new(addr, port), host);
+
+    let conn = match conn {
+        Ok(conn) => conn,
+        Err(e) => {
+            return Err(DeboaError::Connection(ConnectionError::Udp {
+                host: host.to_string(),
+                message: format!("Could not connect to server: {}", e),
+            }))
+        }
+    };
+
+    let conn = conn.await;
+
+    let conn = match conn {
+        Ok(conn) => conn,
+        Err(e) => {
+            return Err(DeboaError::Connection(ConnectionError::Udp {
+                host: host.to_string(),
+                message: format!("Could not connect to server: {}", e),
+            }))
+        }
+    };
 
     let quinn_conn: h3_quinn::Connection = h3_quinn::Connection::new(conn);
 
@@ -112,12 +154,7 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, BytesBody, DeboaBod
         let result = lookup_and_connect(config.host(), config.port(), &client_endpoint).await;
 
         if let Err(e) = result {
-            return Err(DeboaError::Connection(ConnectionError::Udp {
-                host: config
-                    .host()
-                    .to_string(),
-                message: format!("Could not connect to server: {}", e),
-            }));
+            return Err(e);
         }
 
         let conn = result.unwrap();
