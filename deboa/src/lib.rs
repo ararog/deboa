@@ -114,12 +114,13 @@ use http_body::Frame;
 use tokio::sync::{RwLock, RwLockWriteGuard};
 
 #[cfg(feature = "smol-rt")]
-use smol::lock::RwLock;
+use smol::{io::AsyncReadExt, lock::RwLock};
 
 #[cfg(feature = "tokio-rt")]
 use tokio_util::io::ReaderStream;
 
 use std::fmt::{Debug, Display};
+use std::net::IpAddr;
 use std::ops::Shl;
 
 use bytes::Bytes;
@@ -131,12 +132,9 @@ use crate::cert::{Certificate, Identity};
 
 use crate::client::conn::{ConnectionConfig, ConnectionFactory};
 
-#[cfg(feature = "tokio-rt")]
-use crate::errors::IoError;
-
 use crate::catcher::DeboaCatcher;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
-use crate::errors::{DeboaError, RequestError};
+use crate::errors::{DeboaError, IoError, RequestError};
 use crate::request::{DeboaRequest, IntoRequest};
 use crate::response::DeboaResponse;
 
@@ -286,6 +284,7 @@ pub struct ClientBuilder {
     protocol: HttpVersion,
     skip_cert_verification: bool,
     pool: Option<RwLock<HttpConnectionPool>>,
+    bind_addr: IpAddr,
 }
 
 impl ClientBuilder {
@@ -559,6 +558,12 @@ impl ClientBuilder {
         self
     }
 
+    #[inline]
+    pub fn bind_addr(mut self, bind_addr: IpAddr) -> Self {
+        self.bind_addr = bind_addr;
+        self
+    }
+
     /// Constructs a new `Deboa` client with the configured settings.
     ///
     /// This consumes the builder and returns a new `Deboa` instance that can
@@ -600,6 +605,7 @@ impl ClientBuilder {
             protocol: self.protocol,
             skip_cert_verification: self.skip_cert_verification,
             pool: self.pool,
+            bind_addr: self.bind_addr,
         }
     }
 }
@@ -661,6 +667,7 @@ pub struct Client {
     protocol: HttpVersion,
     skip_cert_verification: bool,
     pool: Option<RwLock<HttpConnectionPool>>,
+    bind_addr: IpAddr,
 }
 
 impl AsRef<Client> for Client {
@@ -687,13 +694,13 @@ impl Debug for Client {
 
 pub(crate) const fn default_protocol() -> HttpVersion {
     cfg_if! {
-      if #[cfg(feature = "http1")] {
-          HttpVersion::Http1
-      } else if #[cfg(feature = "http2")] {
-          HttpVersion::Http2
-      } else {
-          HttpVersion::Http3
-      }
+        if #[cfg(feature = "http1")] {
+            HttpVersion::Http1
+        } else if #[cfg(feature = "http2")] {
+            HttpVersion::Http2
+        } else {
+            HttpVersion::Http3
+        }
     }
 }
 
@@ -708,6 +715,9 @@ impl Default for Client {
             protocol: default_protocol(),
             skip_cert_verification: false,
             pool: None,
+            bind_addr: "0.0.0.0"
+                .parse()
+                .unwrap(),
         }
     }
 }
@@ -762,6 +772,9 @@ impl Client {
             protocol: default_protocol(),
             skip_cert_verification: false,
             pool: None,
+            bind_addr: "0.0.0.0"
+                .parse()
+                .unwrap(),
         }
     }
 
@@ -782,6 +795,9 @@ impl Client {
             protocol: default_protocol(),
             skip_cert_verification: false,
             pool: None,
+            bind_addr: "0.0.0.0"
+                .parse()
+                .unwrap(),
         }
     }
 
@@ -833,6 +849,11 @@ impl Client {
     #[cfg(feature = "smol-rt")]
     pub async fn connection_pool(&self) -> Option<&smol::lock::RwLock<HttpConnectionPool>> {
         self.pool.as_ref()
+    }
+
+    #[inline]
+    pub fn bind_addr(&self) -> IpAddr {
+        self.bind_addr
     }
 
     /// Allow get request request timeout at any time.
@@ -1026,11 +1047,10 @@ impl Client {
             let body = StreamBody::new(content);
             builder.body(body.boxed())
         } else {
-            let all_bytes = Bytes::from(
+            let all_bytes = Bytes::copy_from_slice(
                 request
                     .as_ref()
-                    .raw_body()
-                    .to_vec(),
+                    .raw_body(),
             );
             let content = stream::iter(vec![Ok(all_bytes)]).map_ok(Frame::data);
             let body = StreamBody::new(content);
@@ -1038,12 +1058,20 @@ impl Client {
         };
 
         #[cfg(feature = "smol-rt")]
-        let request = {
-            let all_bytes = Bytes::from(
+        let request = if let Some(file) = request.file() {
+            let file = File::open(file)
+                .await
+                .map_err(|e| DeboaError::Io(IoError::File { message: e.to_string() }))?;
+            let content = file
+                .bytes()
+                .map_ok(|data| Frame::data(bytes::Bytes::copy_from_slice(&[data])));
+            let body = StreamBody::new(content);
+            builder.body(body.boxed())
+        } else {
+            let all_bytes = Bytes::copy_from_slice(
                 request
                     .as_ref()
-                    .raw_body()
-                    .to_vec(),
+                    .raw_body(),
             );
             let content = stream::iter(vec![Ok(all_bytes)]).map_ok(Frame::data);
             let body = StreamBody::new(content);
@@ -1094,6 +1122,7 @@ impl Client {
                     .clone(),
             )
             .skip_cert_verification(self.skip_cert_verification)
+            .client_bind_addr(self.bind_addr)
             .build();
 
         let response = if let Some(pool) = &self.pool {

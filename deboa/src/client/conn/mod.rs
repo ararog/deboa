@@ -16,7 +16,11 @@
 //! - Thread-safe connection handling
 //! ```
 
-use std::{marker::PhantomData, sync::Arc};
+use std::{
+    marker::PhantomData,
+    net::{IpAddr, SocketAddr},
+    sync::Arc,
+};
 
 use http::Request;
 
@@ -182,6 +186,7 @@ pub struct ConnectionConfigBuilder<'a> {
     identity: Option<Identity>,
     certificate: Option<Certificate>,
     skip_cert_verification: bool,
+    client_bind_addr: IpAddr,
 }
 
 impl<'a> ConnectionConfigBuilder<'a> {
@@ -200,6 +205,9 @@ impl<'a> ConnectionConfigBuilder<'a> {
             identity: None,
             certificate: None,
             skip_cert_verification: false,
+            client_bind_addr: "0.0.0.0"
+                .parse()
+                .unwrap(),
         }
     }
 
@@ -238,6 +246,11 @@ impl<'a> ConnectionConfigBuilder<'a> {
         self
     }
 
+    pub fn client_bind_addr(mut self, client_bind_addr: IpAddr) -> Self {
+        self.client_bind_addr = client_bind_addr;
+        self
+    }
+
     pub fn build(self) -> ConnectionConfig<'a> {
         ConnectionConfig {
             is_secure: self.is_secure,
@@ -247,6 +260,7 @@ impl<'a> ConnectionConfigBuilder<'a> {
             identity: self.identity,
             certificate: self.certificate,
             skip_cert_verification: self.skip_cert_verification,
+            client_bind_addr: self.client_bind_addr,
         }
     }
 }
@@ -259,6 +273,7 @@ pub struct ConnectionConfig<'a> {
     identity: Option<Identity>,
     certificate: Option<Certificate>,
     skip_cert_verification: bool,
+    client_bind_addr: IpAddr,
 }
 
 impl<'a> ConnectionConfig<'a> {
@@ -292,6 +307,10 @@ impl<'a> ConnectionConfig<'a> {
 
     pub fn skip_cert_verification(&self) -> bool {
         self.skip_cert_verification
+    }
+
+    pub fn client_bind_addr(&self) -> &IpAddr {
+        &self.client_bind_addr
     }
 }
 

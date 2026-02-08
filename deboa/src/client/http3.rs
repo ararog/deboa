@@ -1,8 +1,4 @@
-use std::{
-    marker::PhantomData,
-    net::{Ipv4Addr, SocketAddr, SocketAddrV4},
-    sync::Arc,
-};
+use std::{marker::PhantomData, net::SocketAddr, sync::Arc};
 
 use rt_gate::spawn_worker;
 
@@ -77,8 +73,7 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, BytesBody, DeboaBod
     async fn connect<'a>(
         config: &ConnectionConfig<'a>,
     ) -> Result<BaseHttpConnection<Self::Sender, Self::ReqBody, Self::ResBody>> {
-        let client_endpoint =
-            Endpoint::client(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), 0)));
+        let client_endpoint = Endpoint::client(SocketAddr::new(*config.client_bind_addr(), 0));
 
         if let Err(e) = client_endpoint {
             return Err(DeboaError::Connection(ConnectionError::Udp {
