@@ -45,7 +45,7 @@ brotli = { version = "8.0.2", optional = true }
 bytes = { version = "1.11.1", optional = true }
 ciborium = { version = "0.2.2", optional = true }
 deboa = { path = "../deboa", version = "0.0.9", optional = true }
-flate2 = { version = "1.1.5", optional = true }
+flate2 = { version = "1.1.9", optional = true }
 flexbuffers = { version = "25.12.19", optional = true }
 futures = "0.3.31"
 futures-util = "0.3.31"
@@ -73,6 +73,6 @@ ws-framer = { version = "0.3.1", optional = true }
 
 [dev-dependencies]
 deboa-tests = { path = "../deboa-tests", version = "0.0.1" }
-httpmock = { version = "0.8.2", features = ["http2"] }
+httpmock = { version = "0.8.3", features = ["http2"] }
 tokio = { version = "1.49.0", features = ["rt-multi-thread"] }
 ws-mock = "0.4.0"
