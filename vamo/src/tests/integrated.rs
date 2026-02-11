@@ -46,12 +46,12 @@ async fn do_get() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" {
             match req.uri().path() {
-                "/posts" => Ok(mock_response(StatusCode::OK, b"pong")),
-                "/posts/1" => Ok(mock_response(StatusCode::OK, b"pong")),
-                _ => Ok(mock_response(StatusCode::NOT_FOUND, b"Not found")),
+                "/posts" => Ok(mock_response(StatusCode::OK, "pong")),
+                "/posts/1" => Ok(mock_response(StatusCode::OK, "pong")),
+                _ => Ok(mock_response(StatusCode::NOT_FOUND, "Not found")),
             }
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -108,9 +108,9 @@ async fn test_get() -> Result<()> {
 async fn do_put() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "PUT" && req.uri().path() == "/posts" {
-            Ok(mock_response(StatusCode::OK, b"pong"))
+            Ok(mock_response(StatusCode::OK, "pong"))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -153,10 +153,10 @@ async fn do_post() -> Result<()> {
         if req.method() == "POST" && req.uri().path() == "/api/posts" {
             Ok(mock_response(
                 StatusCode::CREATED,
-                b"{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}",
+                "{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}",
             ))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -203,9 +203,9 @@ async fn test_post() -> Result<()> {
 async fn do_patch() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "PATCH" && req.uri().path() == "/api/posts/1" {
-            Ok(mock_response(StatusCode::OK, b"pong"))
+            Ok(mock_response(StatusCode::OK, "pong"))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -244,9 +244,9 @@ async fn test_patch() -> Result<()> {
 async fn do_delete() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "DELETE" && req.uri().path() == "/api/posts/1" {
-            Ok(mock_response(StatusCode::NO_CONTENT, b""))
+            Ok(mock_response(StatusCode::NO_CONTENT, ""))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -285,9 +285,9 @@ async fn test_delete() -> Result<()> {
 async fn do_post_resource() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "POST" && req.uri().path() == "/api/posts" {
-            Ok(mock_response(StatusCode::CREATED, JSON_STR_POST.as_bytes()))
+            Ok(mock_response(StatusCode::CREATED, JSON_STR_POST))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -333,9 +333,9 @@ async fn test_post_resource() -> Result<()> {
 async fn do_put_resource() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "PUT" && req.uri().path() == "/api/posts/1" {
-            Ok(mock_response(StatusCode::OK, JSON_STR_POST.as_bytes()))
+            Ok(mock_response(StatusCode::OK, JSON_STR_POST))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -381,9 +381,9 @@ async fn test_put_resource() -> Result<()> {
 async fn do_patch_resource() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "PATCH" && req.uri().path() == "/api/posts/1" {
-            Ok(mock_response(StatusCode::OK, JSON_STR_PATCH.as_bytes()))
+            Ok(mock_response(StatusCode::OK, JSON_STR_PATCH))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -424,9 +424,9 @@ async fn test_patch_resource() -> Result<()> {
 async fn do_remove_resource() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "DELETE" && req.uri().path() == "/api/posts/1" {
-            Ok(mock_response(StatusCode::OK, b""))
+            Ok(mock_response(StatusCode::OK, ""))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
