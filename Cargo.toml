@@ -10,7 +10,7 @@ members = [
     "examples/blog",
     # "examples/catcher",
     "examples/cbor",
-    "examples/chat",
+    #"examples/chat",
     "examples/postman",
     "examples/simple",
     # "examples/sse",
