@@ -128,6 +128,7 @@ jobs:
     - name: Run all HTTP3 tests with rust TLS
       env:
         INTERFACE: "::"
+        HOSTNAME: "ip6-localhost"
       run: |
         cd deboa
         cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
