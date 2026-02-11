@@ -26,7 +26,7 @@ _tokio-native-tls = []
 _smol-native-tls = []
 
 [dependencies]
-deboa = { path = "../deboa", version = "0.0.9" }
+deboa = { version = "0.1.0-beta.2" }
 fory = "0.14.1"
 fory-core = "0.14.0"
 http = "1.4.0"

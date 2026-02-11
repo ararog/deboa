@@ -1,7 +1,7 @@
 use deboa::{
     cert::{Certificate, ContentEncoding},
     client::serde::RequestBody,
-    Client as DeboaClient, Result,
+    Client as DeboaClient,
 };
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tests::{
@@ -25,7 +25,7 @@ pub struct User {
     name: String,
 }
 
-async fn do_post_resource() -> Result<()> {
+async fn do_post_resource() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "POST" && req.uri().path() == "/api/users" {
             Ok(mock_response(StatusCode::CREATED, ""))
@@ -54,19 +54,21 @@ async fn do_post_resource() -> Result<()> {
 
     assert_eq!(response.status(), StatusCode::CREATED);
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }
 
 #[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_post_resource() -> Result<()> {
+async fn test_post_resource() -> Result<(), Box<dyn std::error::Error>> {
     do_post_resource().await
 }
 
 #[cfg(feature = "_smol-rt")]
 #[apply(test!)]
-async fn test_post_resource() -> Result<()> {
+async fn test_post_resource() -> Result<(), Box<dyn std::error::Error>> {
     do_post_resource().await
 }

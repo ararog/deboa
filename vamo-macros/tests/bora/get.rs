@@ -1,6 +1,6 @@
 use deboa::{
     cert::{Certificate, ContentEncoding},
-    Client as DeboaClient, Result,
+    Client as DeboaClient,
 };
 use deboa_tests::{
     mock_response,
@@ -37,7 +37,7 @@ pub struct Post {
     )]
 pub struct PostService;
 
-async fn do_get_by_id() -> Result<()> {
+async fn do_get_by_id() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, "{ \"id\": 1, \"title\": \"title\" }"))
@@ -61,7 +61,9 @@ async fn do_get_by_id() -> Result<()> {
         .get_by_id(1)
         .await?;
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     println!("id...: {}", post.id);
     println!("title: {}", post.title);
@@ -72,17 +74,17 @@ async fn do_get_by_id() -> Result<()> {
 
 #[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_get_by_id() -> Result<()> {
+async fn test_get_by_id() -> Result<(), Box<dyn std::error::Error>> {
     do_get_by_id().await
 }
 
 #[cfg(feature = "_smol-rt")]
 #[apply(test!)]
-async fn test_get_by_id() -> Result<()> {
+async fn test_get_by_id() -> Result<(), Box<dyn std::error::Error>> {
     do_get_by_id().await
 }
 
-async fn do_get_all() -> Result<()> {
+async fn do_get_all() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts" {
             Ok(mock_response(
@@ -109,7 +111,9 @@ async fn do_get_all() -> Result<()> {
         .get_all()
         .await?;
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     println!("posts: {posts:?}");
 
@@ -119,17 +123,17 @@ async fn do_get_all() -> Result<()> {
 
 #[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_get_all() -> Result<()> {
+async fn test_get_all() -> Result<(), Box<dyn std::error::Error>> {
     do_get_all().await
 }
 
 #[cfg(feature = "_smol-rt")]
 #[apply(test!)]
-async fn test_get_all() -> Result<()> {
+async fn test_get_all() -> Result<(), Box<dyn std::error::Error>> {
     do_get_all().await
 }
 
-async fn do_query_by_id() -> Result<()> {
+async fn do_query_by_id() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         println!("{} {}", req.method(), req.uri());
         if req.method() == "GET"
@@ -157,7 +161,9 @@ async fn do_query_by_id() -> Result<()> {
         .query_by_id(1)
         .await?;
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     println!("posts: {posts:?}");
 
@@ -167,17 +173,17 @@ async fn do_query_by_id() -> Result<()> {
 
 #[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_query_by_id() -> Result<()> {
+async fn test_query_by_id() -> Result<(), Box<dyn std::error::Error>> {
     do_query_by_id().await
 }
 
 #[cfg(feature = "_smol-rt")]
 #[apply(test!)]
-async fn test_query_by_id() -> Result<()> {
+async fn test_query_by_id() -> Result<(), Box<dyn std::error::Error>> {
     do_query_by_id().await
 }
 
-async fn do_query_by_title() -> Result<()> {
+async fn do_query_by_title() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET"
             && req.uri().path() == "/posts"
@@ -207,7 +213,9 @@ async fn do_query_by_title() -> Result<()> {
         .query_by_title(6, "dolorem eum magni eos aperiam quia")
         .await?;
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     println!("posts: {posts:?}");
 
@@ -217,7 +225,7 @@ async fn do_query_by_title() -> Result<()> {
 
 #[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_query_by_title() -> Result<()> {
+async fn test_query_by_title() -> Result<(), Box<dyn std::error::Error>> {
     do_query_by_title().await
 }
 

@@ -61,10 +61,3 @@ pub struct Comment {
     #[allow(unused)]
     pub body: String,
 }
-
-#[derive(Default, Serialize, Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "PascalCase")]
-pub struct Response {
-    pub response_code: i32,
-    pub response_message: String,
-}

@@ -1,6 +1,6 @@
 use deboa::{
     cert::{Certificate, ContentEncoding},
-    Client as DeboaClient, Result,
+    Client as DeboaClient,
 };
 use deboa_tests::{
     mock_response,
@@ -17,7 +17,7 @@ pub struct PostService;
 
 #[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_delete_by_id() -> Result<()> {
+async fn test_delete_by_id() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "DELETE" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, ""))
@@ -41,7 +41,9 @@ async fn test_delete_by_id() -> Result<()> {
         .delete_post(1)
         .await?;
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }

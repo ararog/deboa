@@ -32,7 +32,10 @@ impl ForyRequestBuilder for DeboaRequestBuilder {
 }
 
 pub trait ForyResponse {
-    async fn body_as_fory<T: Serializer + ForyDefault>(&mut self, fory: &Fory) -> Result<T>;
+    fn body_as_fory<T: Serializer + ForyDefault>(
+        &mut self,
+        fory: &Fory,
+    ) -> impl std::future::Future<Output = Result<T>> + Send;
 }
 
 impl ForyResponse for DeboaResponse {

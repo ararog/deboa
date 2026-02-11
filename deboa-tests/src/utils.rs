@@ -9,9 +9,10 @@ use easyhttpmock::{
     EasyHttpMock,
 };
 
-use vetis::{errors::VetisError, Request, Response};
-
 use url::Url;
+use vetis::config::Protocol;
+
+pub use vetis::{errors::VetisError, Request, Response};
 
 pub const CA_CERT: &[u8] = include_bytes!("../certs/ca.der");
 pub const CA_CERT_PEM: &[u8] = include_bytes!("../certs/ca.crt");
@@ -62,9 +63,17 @@ where
     let server_cert = SERVER_CERT;
     let server_key = SERVER_KEY;
 
+    #[cfg(feature = "http1")]
+    let protocol = Protocol::Http1;
+    #[cfg(feature = "http2")]
+    let protocol = Protocol::Http2;
+    #[cfg(feature = "http3")]
+    let protocol = Protocol::Http3;
+
     let vetis_adapter_config = VetisAdapterConfig::builder()
         .hostname(Some(hostname))
         .interface(&interface)
+        .protocol(protocol)
         .with_random_port()
         .cert(Some(server_cert.to_vec()))
         .key(Some(server_key.to_vec()))

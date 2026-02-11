@@ -1,18 +1,16 @@
 use crate::{ForyRequestBuilder, ForyResponse};
-use deboa::{Client, cert::Certificate, errors::DeboaError, request::post};
-use deboa_tests::utils::{make_response, tls_server_config, CA_CERT};
-
-#[cfg(all(feature = "_tokio-rt", any(feature = "_http1", feature = "_http2")))]
-use deboa_tests::server::tcp::tokio::HttpServer;
-
-#[cfg(all(feature = "_smol-rt", any(feature = "_http1", feature = "_http2")))]
-use deboa_tests::server::tcp::smol::HttpServer;
-
-#[cfg(all(feature = "_tokio-rt", feature = "_http3"))]
-use deboa_tests::server::udp::tokio::HttpServer;
+use deboa::{
+    cert::{Certificate, ContentEncoding},
+    request::post,
+    Client,
+};
+use deboa_tests::{
+    mock_response,
+    utils::{start_mock_server, Response, CA_CERT},
+};
 
 use fory::{Fory, ForyObject};
-use http::{header, Method, StatusCode};
+use http::StatusCode;
 
 pub(crate) const SKIP_CERT_VERIFICATION: bool =
     cfg!(any(feature = "_tokio-native-tls", feature = "_smol-native-tls"));
@@ -25,25 +23,24 @@ struct Person {
     age: u8,
 }
 
-async fn do_fory_post_request() -> Result<(), DeboaError> {
-    let method = Method::POST;
+async fn do_fory_post_request() -> Result<(), Box<dyn std::error::Error>> {
     let path = "/posts";
-    let status = 200;
 
-    let mut server = HttpServer::new(tls_server_config());
-    #[allow(unused_must_use)]
-    server
-        .start(|req| {
-            if req.method() == "POST" && req.uri().path() == "/posts" {
-                Ok(make_response(StatusCode::OK, b"Hello World!"))
-            } else {
-                Ok(make_response(StatusCode::NOT_FOUND, b"Not found"))
-            }
-        })
-        .await;
+    let mut server = start_mock_server(|req| async move {
+        if req.method() == "POST" && req.uri().path() == "/posts" {
+            Ok(Response::builder()
+                .status(StatusCode::OK)
+                .bytes(&FORY_PERSON))
+        } else {
+            Ok(Response::builder()
+                .status(StatusCode::NOT_FOUND)
+                .bytes(&[]))
+        }
+    })
+    .await;
 
     let client = Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
@@ -64,19 +61,21 @@ async fn do_fory_post_request() -> Result<(), DeboaError> {
     assert_eq!(response.name, "John Doe");
     assert_eq!(response.age, 30);
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }
 
 #[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_fory_post_request() -> Result<(), DeboaError> {
+async fn test_fory_post_request() -> Result<(), Box<dyn std::error::Error>> {
     do_fory_post_request().await
 }
 
 #[cfg(feature = "_smol-rt")]
 #[apply(test!)]
-async fn test_fory_post_request() -> Result<(), DeboaError> {
+async fn test_fory_post_request() -> Result<(), Box<dyn std::error::Error>> {
     do_fory_post_request().await
 }
