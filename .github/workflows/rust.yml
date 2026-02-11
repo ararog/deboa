@@ -66,11 +66,8 @@ jobs:
     - uses: Swatinem/rust-cache@v2
 
     - name: Build for aarch64-linux-android with cargo-ndk
-      run: cargo ndk -t aarch64-linux-android build --release
-
-    - name: Run all tests on all crates
       run: |
-        cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all"      
+        cargo ndk --target armv7-linux-androideabi,aarch64-linux-android,i686-linux-android,x86_64-linux-android --android-platform 25 build
 
   build-windows:
     runs-on: windows-latest
