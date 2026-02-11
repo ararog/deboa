@@ -64,13 +64,6 @@ jobs:
 
     - uses: Swatinem/rust-cache@v2
 
-    - uses: nttld/setup-ndk@v1
-      name: Install Android NDK
-      id: setup-ndk
-      with:
-        ndk-version: r29
-        add-to-path: false
-
     - name: Install cargo-ndk and other build dependencies
       run: |
         cargo install cargo-ndk
@@ -78,11 +71,10 @@ jobs:
 
     - name: Build for aarch64-linux-android with cargo-ndk
       run: cargo ndk -t aarch64-linux-android build --release
-      env:
-        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
-        ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
-        CC_aarch64_linux_android: ${{ env.ANDROID_NDK_HOME }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang
-        CXX_aarch64_linux_android: ${{ env.ANDROID_NDK_HOME }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++
+
+    - name: Run all tests on all crates
+      run: |
+        cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all"      
 
   build-windows:
     runs-on: windows-latest
@@ -126,8 +118,6 @@ jobs:
         cargo test --features "http2 smol-rt smol-rust-tls" --no-default-features
 
     - name: Run all HTTP3 tests with rust TLS
-      env:
-        INTERFACE: "::"
       run: |
         cd deboa
         cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
