@@ -16,13 +16,13 @@ rust-version = "1.75.0"
 default = ["_tokio-rt", "_http2", "_tokio-rust-tls"]
 
 # For testing purposes (internal use only)
-_tokio-rt = ["dep:tokio"]
-_smol-rt = ["dep:smol", "dep:smol-macros"]
-_http1 = []
-_http2 = []
-_http3 = []
-_tokio-rust-tls = []
-_smol-rust-tls = []
+_tokio-rt = ["dep:tokio", "deboa-tests/tokio-rt"]
+_smol-rt = ["dep:smol", "dep:smol-macros", "deboa-tests/smol-rt"]
+_http1 = ["deboa-tests/http1"]
+_http2 = ["deboa-tests/http2"]
+_http3 = ["deboa-tests/http3"]
+_tokio-rust-tls = ["deboa-tests/tokio-rust-tls"]
+_smol-rust-tls = ["deboa-tests/smol-rust-tls"]
 _tokio-native-tls = []
 _smol-native-tls = []
 

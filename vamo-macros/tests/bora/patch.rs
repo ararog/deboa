@@ -1,6 +1,6 @@
 use deboa::{
     cert::{Certificate, ContentEncoding},
-    Client as DeboaClient, Result,
+    Client as DeboaClient,
 };
 use deboa_tests::{
     mock_response,
@@ -29,7 +29,7 @@ pub struct Post {
     )]
 pub struct PostService;
 
-async fn do_patch_by_id() -> Result<()> {
+async fn do_patch_by_id() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "PATCH" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, ""))
@@ -53,19 +53,21 @@ async fn do_patch_by_id() -> Result<()> {
         .patch_post(1, Post { title: "title".to_string(), body: "body".to_string(), user_id: 1 })
         .await?;
 
-    server.stop().await;
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }
 
 #[cfg(feature = "_tokio-rt")]
 #[tokio::test]
-async fn test_patch_by_id() -> Result<()> {
+async fn test_patch_by_id() -> Result<(), Box<dyn std::error::Error>> {
     do_patch_by_id().await
 }
 
 #[cfg(feature = "_smol-rt")]
 #[apply(test!)]
-async fn test_patch_by_id() -> Result<()> {
+async fn test_patch_by_id() -> Result<(), Box<dyn std::error::Error>> {
     do_patch_by_id().await
 }

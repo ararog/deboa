@@ -4,7 +4,25 @@
 # exit 0
 cargo fmt --check
 
-cargo test --features "deboa-extras/serialization_all deboa-extras/compression_all"
+cd deboa-extras
+cargo test --features "serialization_all compression_all"
+cd ..
+
+cd deboa-fory
+cargo test
+cd ..
+
+cd deboa-macros
+cargo test
+cd ..
+
+cd vamo
+cargo test
+cd ..
+
+cd vamo-macros
+cargo test
+cd ..
 
 cd deboa
 
