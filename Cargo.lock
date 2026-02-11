@@ -1544,9 +1544,9 @@ checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 
 [[package]]
 name = "easyhttpmock"
-version = "0.1.3-beta.1"
+version = "0.1.3-beta.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "136a6276cd3d65d4c920a7aaadc48335245a49f520b215ca8c5cb9edf31adf78"
+checksum = "5849b719ff07ba316862be7aa0102d4c76232e2554b1ef59e961751d87117402"
 dependencies = [
  "bytes",
  "http",
