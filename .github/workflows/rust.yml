@@ -56,7 +56,7 @@ jobs:
 
   build-android:
     runs-on: ubuntu-latest
-    container: instrumentisto/cargo-ndk:latest-rust
+    container: instrumentisto/cargo-ndk
     steps:
     - uses: actions/checkout@v6
 
