@@ -40,9 +40,9 @@ pub struct PostService;
 async fn do_get_by_id() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, b"{ \"id\": 1, \"title\": \"title\" }"))
+            Ok(mock_response(StatusCode::OK, "{ \"id\": 1, \"title\": \"title\" }"))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -60,6 +60,8 @@ async fn do_get_by_id() -> Result<()> {
     let post = post_service
         .get_by_id(1)
         .await?;
+
+    server.stop().await;
 
     println!("id...: {}", post.id);
     println!("title: {}", post.title);
@@ -85,10 +87,10 @@ async fn do_get_all() -> Result<()> {
         if req.method() == "GET" && req.uri().path() == "/posts" {
             Ok(mock_response(
                 StatusCode::OK,
-                b"[{ \"id\": 1, \"title\": \"title\" }, { \"id\": 2, \"title\": \"title\" }]",
+                "[{ \"id\": 1, \"title\": \"title\" }, { \"id\": 2, \"title\": \"title\" }]",
             ))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -106,6 +108,8 @@ async fn do_get_all() -> Result<()> {
     let posts = post_service
         .get_all()
         .await?;
+
+    server.stop().await;
 
     println!("posts: {posts:?}");
 
@@ -132,9 +136,9 @@ async fn do_query_by_id() -> Result<()> {
             && req.uri().path() == "/posts"
             && req.uri().query() == Some("id=1")
         {
-            Ok(mock_response(StatusCode::OK, b"[{ \"id\": 1, \"title\": \"title\" }]"))
+            Ok(mock_response(StatusCode::OK, "[{ \"id\": 1, \"title\": \"title\" }]"))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -152,6 +156,8 @@ async fn do_query_by_id() -> Result<()> {
     let posts = post_service
         .query_by_id(1)
         .await?;
+
+    server.stop().await;
 
     println!("posts: {posts:?}");
 
@@ -179,10 +185,10 @@ async fn do_query_by_title() -> Result<()> {
         {
             Ok(mock_response(
                 StatusCode::OK,
-                b"[{ \"id\": 6, \"title\": \"dolorem eum magni eos aperiam quia\" }]",
+                "[{ \"id\": 6, \"title\": \"dolorem eum magni eos aperiam quia\" }]",
             ))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -200,6 +206,8 @@ async fn do_query_by_title() -> Result<()> {
     let posts = post_service
         .query_by_title(6, "dolorem eum magni eos aperiam quia")
         .await?;
+
+    server.stop().await;
 
     println!("posts: {posts:?}");
 

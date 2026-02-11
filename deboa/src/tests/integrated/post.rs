@@ -20,9 +20,9 @@ use smol_macros::test;
 async fn do_post() -> TestResult<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "POST" && req.uri().path() == "/posts" {
-            Ok(mock_response(StatusCode::CREATED, b"{\n  \"id\": 101\n}"))
+            Ok(mock_response(StatusCode::CREATED, "{\n  \"id\": 101\n}"))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -84,9 +84,9 @@ async fn do_post_encoded_form() -> TestResult<()> {
             }
             // TODO: check body
             // name=deboa&version=0.0.1
-            Ok(mock_response(StatusCode::CREATED, b"ping"))
+            Ok(mock_response(StatusCode::CREATED, "ping"))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -155,9 +155,9 @@ async fn do_post_multipart_form() -> TestResult<()> {
             }
             // TODO: check body
             // name=deboa&version=0.0.1
-            Ok(mock_response(StatusCode::CREATED, b"ping"))
+            Ok(mock_response(StatusCode::CREATED, "ping"))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;

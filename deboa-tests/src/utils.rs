@@ -2,16 +2,17 @@ use std::future::Future;
 
 use easyhttpmock::{
     config::EasyHttpMockConfig,
-    server::{adapters::vetis_adapter::VetisServerAdapter, PortGenerator},
+    server::{
+        adapters::vetis_adapter::{VetisAdapter, VetisAdapterConfig},
+        PortGenerator,
+    },
     EasyHttpMock,
 };
 
 use vetis::{
-    server::{
-        config::{SecurityConfig, ServerConfig},
-        errors::VetisError,
-    },
-    RequestType, ResponseType,
+    config::{SecurityConfig, ServerConfig},
+    errors::VetisError,
+    Request, Response,
 };
 
 use url::Url;
@@ -51,26 +52,31 @@ pub fn url_from_string(url: String) -> Url {
     url.parse().unwrap()
 }
 
-pub async fn start_mock_server<H, Fut>(handler: H) -> EasyHttpMock<VetisServerAdapter>
+pub async fn start_mock_server<H, Fut>(handler: H) -> EasyHttpMock<VetisAdapter>
 where
-    H: Fn(RequestType) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<ResponseType, VetisError>> + Send + 'static,
+    H: Fn(Request) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Result<Response, VetisError>> + Send + Sync + 'static,
 {
-    let tls_config = SecurityConfig::builder()
-        .cert(SERVER_CERT.to_vec())
-        .key(SERVER_KEY.to_vec())
-        .build();
-
-    let vetis_config = ServerConfig::builder()
-        .security(tls_config)
+    let vetis_adapter_config = VetisAdapterConfig::builder()
+        .interface("0.0.0.0")
         .with_random_port()
+        .cert(Some(SERVER_CERT.to_vec()))
+        .key(Some(SERVER_KEY.to_vec()))
+        .ca(Some(CA_CERT.to_vec()))
         .build();
 
-    let config = EasyHttpMockConfig::<VetisServerAdapter>::builder()
-        .server_config(vetis_config)
+    let config = EasyHttpMockConfig::<VetisAdapter>::builder()
+        .server_config(vetis_adapter_config)
         .build();
 
-    let mut server = EasyHttpMock::new(config);
+    let server = EasyHttpMock::new(config);
+    let mut server = match server {
+        Ok(server) => server,
+        Err(err) => {
+            panic!("Failed to create mock server: {}", err);
+        }
+    };
+
     #[allow(unused_must_use)]
     let result = server
         .start(handler)

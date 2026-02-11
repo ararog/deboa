@@ -33,9 +33,9 @@ pub struct PostService;
 async fn do_post_by_id() -> Result<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "POST" && req.uri().path() == "/posts" {
-            Ok(mock_response(StatusCode::OK, b""))
+            Ok(mock_response(StatusCode::OK, ""))
         } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, b"Not found"))
+            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
         }
     })
     .await;
@@ -58,6 +58,9 @@ async fn do_post_by_id() -> Result<()> {
             user_id: 1,
         })
         .await?;
+
+    server.stop().await;
+
     Ok(())
 }
 
