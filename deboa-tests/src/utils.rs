@@ -59,8 +59,8 @@ where
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
 
-    let server_cert = if interface.starts_with("::") { IP6_SERVER_CERT } else { SERVER_CERT };
-    let server_key = if interface.starts_with("::") { IP6_SERVER_KEY } else { SERVER_KEY };
+    let server_cert = SERVER_CERT;
+    let server_key = SERVER_KEY;
 
     let vetis_adapter_config = VetisAdapterConfig::builder()
         .hostname(Some(hostname))
