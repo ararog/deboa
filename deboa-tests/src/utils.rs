@@ -58,8 +58,10 @@ where
     Fut: Future<Output = Result<Response, VetisError>> + Send + Sync + 'static,
 {
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
 
     let vetis_adapter_config = VetisAdapterConfig::builder()
+        .hostname(Some(hostname))
         .interface(&interface)
         .with_random_port()
         .cert(Some(SERVER_CERT.to_vec()))

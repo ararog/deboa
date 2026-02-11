@@ -26,7 +26,7 @@ http2 = ["easyhttpmock/http2", "vetis/http2"]
 http3 = ["easyhttpmock/http3", "vetis/http3"]
 
 [dependencies]
-easyhttpmock = { version = "0.1.3-beta.1", optional = true, default-features = false }
+easyhttpmock = { version = "0.1.3-beta.2", optional = true, default-features = false }
 vetis = { version = "0.1.4-beta.2", optional = true, default-features = false}
 http = "1.4.0"
 mime = "0.3.17"
