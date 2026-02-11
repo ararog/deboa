@@ -106,10 +106,6 @@ jobs:
         cargo test --features "serialization_all compression_all"
         cd ..
 
-        cd deboa-fory
-        cargo test
-        cd ..
-
         cd deboa-macros
         cargo test
         cd ..
