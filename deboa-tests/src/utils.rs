@@ -9,11 +9,7 @@ use easyhttpmock::{
     EasyHttpMock,
 };
 
-use vetis::{
-    config::{SecurityConfig, ServerConfig},
-    errors::VetisError,
-    Request, Response,
-};
+use vetis::{errors::VetisError, Request, Response};
 
 use url::Url;
 
@@ -22,6 +18,9 @@ pub const CA_CERT_PEM: &[u8] = include_bytes!("../certs/ca.crt");
 
 pub const SERVER_CERT: &[u8] = include_bytes!("../certs/server.der");
 pub const SERVER_KEY: &[u8] = include_bytes!("../certs/server.key.der");
+
+pub const IP6_SERVER_CERT: &[u8] = include_bytes!("../certs/ip6-server.der");
+pub const IP6_SERVER_KEY: &[u8] = include_bytes!("../certs/ip6-server.key.der");
 
 pub const SERVER_CERT_PEM: &[u8] = include_bytes!("../certs/server.crt");
 pub const SERVER_KEY_PEM: &[u8] = include_bytes!("../certs/server.key");
@@ -60,12 +59,15 @@ where
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
 
+    let server_cert = if interface.starts_with("::") { IP6_SERVER_CERT } else { SERVER_CERT };
+    let server_key = if interface.starts_with("::") { IP6_SERVER_KEY } else { SERVER_KEY };
+
     let vetis_adapter_config = VetisAdapterConfig::builder()
         .hostname(Some(hostname))
         .interface(&interface)
         .with_random_port()
-        .cert(Some(SERVER_CERT.to_vec()))
-        .key(Some(SERVER_KEY.to_vec()))
+        .cert(Some(server_cert.to_vec()))
+        .key(Some(server_key.to_vec()))
         .ca(Some(CA_CERT.to_vec()))
         .build();
 
