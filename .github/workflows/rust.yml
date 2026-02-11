@@ -48,11 +48,11 @@ jobs:
         cargo test --features "http2 tokio-rt tokio-rust-tls" --no-default-features
         cargo test --features "http2 smol-rt smol-rust-tls" --no-default-features
 
-    # - name: Run all HTTP3 tests with rust TLS
-    #   run: |
-    #     cd deboa
-    #     cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
-    #     cargo test --features "http3 smol-rt smol-rust-tls" --no-default-features
+    - name: Run all HTTP3 tests with rust TLS
+      run: |
+        cd deboa
+        cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
+        cargo test --features "http3 smol-rt smol-rust-tls" --no-default-features
 
   build-android:
     runs-on: ubuntu-latest
@@ -79,7 +79,8 @@ jobs:
     - name: Build for aarch64-linux-android with cargo-ndk
       run: cargo ndk -t aarch64-linux-android build --release
       env:
-        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}        
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
         CC_aarch64_linux_android: ${{ env.ANDROID_NDK_HOME }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang
         CXX_aarch64_linux_android: ${{ env.ANDROID_NDK_HOME }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++
 
@@ -124,11 +125,13 @@ jobs:
         cargo test --features "http2 tokio-rt tokio-rust-tls" --no-default-features
         cargo test --features "http2 smol-rt smol-rust-tls" --no-default-features
 
-    # - name: Run all HTTP3 tests with rust TLS
-    #   run: |
-    #     cd deboa
-    #     cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
-    #     cargo test --features "http3 smol-rt smol-rust-tls" --no-default-features
+    - name: Run all HTTP3 tests with rust TLS
+      env:
+        INTERFACE: "::"
+      run: |
+        cd deboa
+        cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
+        cargo test --features "http3 smol-rt smol-rust-tls" --no-default-features
 
   build-macos:
     runs-on: macos-latest
@@ -171,8 +174,8 @@ jobs:
         cargo test --features "http2 tokio-rt tokio-rust-tls" --no-default-features
         cargo test --features "http2 smol-rt smol-rust-tls" --no-default-features
 
-    # - name: Run all HTTP3 tests with rust TLS
-    #   run: |
-    #     cd deboa
-    #     cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
-    #     cargo test --features "http3 smol-rt smol-rust-tls" --no-default-features
+    - name: Run all HTTP3 tests with rust TLS
+      run: |
+        cd deboa
+        cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
+        cargo test --features "http3 smol-rt smol-rust-tls" --no-default-features

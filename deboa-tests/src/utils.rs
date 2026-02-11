@@ -57,8 +57,10 @@ where
     H: Fn(Request) -> Fut + Send + Sync + 'static,
     Fut: Future<Output = Result<Response, VetisError>> + Send + Sync + 'static,
 {
+    let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
+
     let vetis_adapter_config = VetisAdapterConfig::builder()
-        .interface("0.0.0.0")
+        .interface(&interface)
         .with_random_port()
         .cert(Some(SERVER_CERT.to_vec()))
         .key(Some(SERVER_KEY.to_vec()))
