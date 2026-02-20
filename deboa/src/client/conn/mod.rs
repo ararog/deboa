@@ -30,17 +30,16 @@ use crate::{
     HttpVersion, Result,
 };
 
+use crate::{request::BytesBody, response::DeboaBody};
+
 #[cfg(feature = "http1")]
-use crate::request::{BytesBody, Http1Request};
+use crate::request::Http1Request;
 
 #[cfg(feature = "http2")]
-use crate::request::{BytesBody, Http2Request};
+use crate::request::Http2Request;
 
 #[cfg(feature = "http3")]
-use crate::{
-    request::{BytesBody, Http3Request},
-    response::DeboaBody,
-};
+use crate::request::Http3Request;
 
 /// TCP protocol implementations.
 ///
