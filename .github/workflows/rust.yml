@@ -83,7 +83,7 @@ jobs:
 
     - uses: Swatinem/rust-cache@v2
 
-    - name: Build for aarch64-linux-android with cargo-ndk
+    - name: Build for android archs with cargo-ndk
       run: |
         cd deboa
         cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
