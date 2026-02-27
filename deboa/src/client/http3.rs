@@ -1,5 +1,6 @@
 use std::{marker::PhantomData, net::SocketAddr, sync::Arc};
 
+use hyper_body_utils::HttpBody;
 use rt_gate::spawn_worker;
 
 use futures::future;
@@ -15,8 +16,7 @@ use crate::{
         stream::setup_rust_tls, udp::DeboaUdpConnection, BaseHttpConnection, ConnectionConfig,
     },
     errors::{ConnectionError, DeboaError, RequestError, ResponseError},
-    request::{BytesBody, Http3Request},
-    response::DeboaBody,
+    request::Http3Request,
     Result,
 };
 
@@ -102,10 +102,10 @@ async fn lookup_and_connect(
     Ok(quinn_conn)
 }
 
-impl DeboaUdpConnection for BaseHttpConnection<Http3Request, BytesBody, DeboaBody> {
+impl DeboaUdpConnection for BaseHttpConnection<Http3Request, HttpBody, HttpBody> {
     type Sender = Http3Request;
-    type ReqBody = BytesBody;
-    type ResBody = DeboaBody;
+    type ReqBody = HttpBody;
+    type ResBody = HttpBody;
 
     #[inline]
     fn protocol(&self) -> Version {
@@ -209,7 +209,6 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, BytesBody, DeboaBod
         if let Err(err) = request {
             return Err(DeboaError::Request(RequestError::Send {
                 url: url.to_string(),
-                method: method.to_string(),
                 message: err.to_string(),
             }));
         }
@@ -228,7 +227,6 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, BytesBody, DeboaBod
                     if let Err(err) = result {
                         return Err(DeboaError::Request(RequestError::Send {
                             url: url.to_string(),
-                            method: method.to_string(),
                             message: err.to_string(),
                         }));
                     }
@@ -242,7 +240,6 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, BytesBody, DeboaBod
         if let Err(err) = finish_request {
             return Err(DeboaError::Request(RequestError::Send {
                 url: url.to_string(),
-                method: method.to_string(),
                 message: err.to_string(),
             }));
         }
@@ -270,6 +267,6 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, BytesBody, DeboaBod
 }
 
 impl crate::client::conn::udp::private::DeboaUdpConnectionSealed
-    for BaseHttpConnection<Http3Request, BytesBody, DeboaBody>
+    for BaseHttpConnection<Http3Request, HttpBody, HttpBody>
 {
 }

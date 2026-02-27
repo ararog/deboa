@@ -25,13 +25,13 @@
 //!
 //! ```rust, ignore
 //! use deboa::client::serde::RequestBody;
-//! use deboa::{request::DeboaRequest, Result};
+//! use deboa::{request::DeboaRequestBuilder, Result};
 //! use serde::Serialize;
 //!
 //! struct JsonBody;
 //!
 //! impl RequestBody for JsonBody {
-//!     fn register_content_type(&self, request: &mut DeboaRequest) {
+//!     fn register_content_type(&self, request: &mut DeboaRequestBuilder) {
 //!         request.set_content_type("application/json");
 //!     }
 //!
@@ -65,7 +65,7 @@
 //! - Form data encoding and decoding
 //! - Custom content type handling
 
-use crate::{request::DeboaRequest, Result};
+use crate::Result;
 use serde::{Deserialize, Serialize};
 
 /// Trait that represents request body serialization capabilities.
@@ -92,8 +92,8 @@ use serde::{Deserialize, Serialize};
 /// struct JsonSerializer;
 ///
 /// impl RequestBody for JsonSerializer {
-///     fn register_content_type(&self, request: &mut DeboaRequest) {
-///         request.set_content_type("application/json");
+///     fn mime_type(&self) -> Result<HeaderValue> {
+///         Ok(HeaderValue::from_str("application/json").unwrap())
 ///     }
 ///
 ///     fn serialize<T: Serialize>(&self, value: T) -> Result<Vec<u8>> {
@@ -113,8 +113,8 @@ use serde::{Deserialize, Serialize};
 /// struct FormSerializer;
 ///
 /// impl RequestBody for FormSerializer {
-///     fn register_content_type(&self, request: &mut DeboaRequest) {
-///         request.set_content_type("application/x-www-form-urlencoded");
+///     fn mime_type(&self) -> Result<HeaderValue> {
+///         Ok(HeaderValue::from_str("application/x-www-form-urlencoded").unwrap())
 ///     }
 ///
 ///     fn serialize<T: Serialize>(&self, value: T) -> Result<Vec<u8>> {
@@ -130,18 +130,18 @@ pub trait RequestBody {
     /// This method is called to set the appropriate Content-Type header
     /// for the serialized data format.
     ///
-    /// # Arguments
+    /// # Returns
     ///
-    /// * `request` - A mutable reference to the DeboaRequest instance
+    /// * `Result<HeaderValue>` - The content type header value
     ///
     /// # Examples
     ///
     /// ```rust, ignore
-    /// fn register_content_type(&self, request: &mut DeboaRequest) {
-    ///     request.set_content_type("application/json");
+    /// fn mime_type(&self) -> &str {
+    ///     "application/json"
     /// }
     /// ```
-    fn register_content_type(&self, request: &mut DeboaRequest) -> ();
+    fn mime_type(&self) -> &str;
 
     /// Serialize the request body
     ///

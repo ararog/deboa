@@ -4,10 +4,7 @@ use deboa::{
     request::post,
     Client,
 };
-use deboa_tests::{
-    mock_response,
-    utils::{start_mock_server, Response, CA_CERT},
-};
+use deboa_tests::utils::{start_mock_server, Response, CA_CERT};
 
 use fory::{Fory, ForyObject};
 use http::StatusCode;

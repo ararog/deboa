@@ -1,5 +1,4 @@
 use deboa::{errors::DeboaError, response::DeboaResponse, Result};
-pub use http_body_util::BodyExt;
 use mime_typed::MimeStrExt;
 
 use crate::http::sse::io::stream::ServerEventStream;

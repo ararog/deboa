@@ -50,14 +50,14 @@ fn test_cookies() -> Result<()> {
 }
 
 async fn raw_body() -> Result<()> {
-    let mut response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder(fake_url())
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
         .build();
     assert_eq!(
         response
-            .raw_body()
+            .bytes()
             .await,
         SAMPLE_TEST
     );

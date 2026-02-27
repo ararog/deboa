@@ -2,14 +2,22 @@ use crate::http::serde::yaml::YamlBody;
 use deboa::{request::DeboaRequest, response::DeboaResponse, Result};
 use deboa_tests::data::{sample_post, Post, YAML_POST};
 use deboa_tests::utils::fake_url;
+use http_body_util::BodyExt;
 
-#[test]
-fn test_set_yaml() -> Result<()> {
+#[tokio::test]
+async fn test_set_yaml() -> Result<()> {
     let request = DeboaRequest::post(fake_url())?
         .body_as(YamlBody, sample_post())?
         .build()?;
 
-    assert_eq!(*request.raw_body(), YAML_POST[..]);
+    let bytes = request
+        .body()
+        .collect()
+        .await
+        .unwrap()
+        .to_bytes();
+
+    assert_eq!(bytes, YAML_POST[..]);
 
     Ok(())
 }

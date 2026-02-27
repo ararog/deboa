@@ -87,7 +87,7 @@ async fn do_get() -> Result<()> {
         "pong"
     );
 
-    server.stop().await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -106,7 +106,7 @@ async fn test_get() -> Result<()> {
 
 #[cfg(feature = "_tokio-rt")]
 async fn do_put() -> Result<()> {
-    let mut server = start_mock_server(|req| async move {
+    let server = start_mock_server(|req| async move {
         if req.method() == "PUT" && req.uri().path() == "/posts" {
             Ok(mock_response(StatusCode::OK, "pong"))
         } else {
@@ -183,7 +183,7 @@ async fn do_post() -> Result<()> {
 
     assert_eq!(response.status(), StatusCode::CREATED);
 
-    server.stop().await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -224,7 +224,7 @@ async fn do_patch() -> Result<()> {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    server.stop().await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -265,7 +265,7 @@ async fn do_delete() -> Result<()> {
 
     assert_eq!(response.status(), StatusCode::NO_CONTENT);
 
-    server.stop().await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -313,7 +313,7 @@ async fn do_post_resource() -> Result<()> {
 
     assert_eq!(response.status(), StatusCode::CREATED);
 
-    server.stop().await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -361,7 +361,7 @@ async fn do_put_resource() -> Result<()> {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    server.stop().await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -404,7 +404,7 @@ async fn do_patch_resource() -> Result<()> {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    server.stop().await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -447,7 +447,7 @@ async fn do_remove_resource() -> Result<()> {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    server.stop().await;
+    let _ = server.stop().await;
 
     Ok(())
 }

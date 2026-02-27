@@ -4,6 +4,7 @@ use http::{Request, Response, StatusCode, Version};
 use http_body::Body;
 use http_body_util::BodyExt;
 use hyper::body::Incoming;
+use hyper_body_utils::HttpBody;
 
 use crate::{
     client::conn::{BaseHttpConnection, ConnectionConfig},
@@ -82,14 +83,13 @@ pub trait DeboaTcpConnection: private::DeboaTcpConnectionSealed {
     ///
     fn process_response(
         &self,
-        method: &str,
+        _method: &str,
         response: std::result::Result<Response<Incoming>, hyper::Error>,
-    ) -> impl Future<Output = Result<Response<Incoming>>> + Send {
+    ) -> impl Future<Output = Result<Response<HttpBody>>> + Send {
         async {
             if let Err(err) = response {
                 return Err(DeboaError::Request(RequestError::Send {
                     url: "".to_string(),
-                    method: method.to_string(),
                     message: err.to_string(),
                 }));
             }
@@ -124,6 +124,9 @@ pub trait DeboaTcpConnection: private::DeboaTcpConnectionSealed {
                     ),
                 }));
             }
+
+            let (parts, body) = response.into_parts();
+            let response = Response::from_parts(parts, HttpBody::from_incoming(body));
 
             Ok(response)
         }

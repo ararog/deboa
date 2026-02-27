@@ -3,6 +3,7 @@ use deboa::errors::{ContentError, DeboaError};
 use deboa::{request::DeboaRequest, response::DeboaResponse, Result};
 use deboa_tests::data::{sample_post, Post};
 use deboa_tests::utils::fake_url;
+use http_body_util::BodyExt;
 
 fn build_sample_cbor_body() -> Vec<u8> {
     let mut buf = Vec::new();
@@ -11,21 +12,35 @@ fn build_sample_cbor_body() -> Vec<u8> {
     buf
 }
 
-#[test]
-fn test_set_cbor() -> Result<()> {
+async fn do_test_set_cbor() -> Result<()> {
     let request = DeboaRequest::post(fake_url())?
         .body_as(CborBody, sample_post())?
         .build()?;
 
-    assert_eq!(*request.raw_body(), build_sample_cbor_body());
+    let bytes = request
+        .body()
+        .collect()
+        .await
+        .unwrap()
+        .to_bytes();
+
+    assert_eq!(bytes, build_sample_cbor_body());
 
     Ok(())
 }
 
+#[tokio::test]
+async fn test_set_cbor() {
+    do_test_set_cbor()
+        .await
+        .unwrap();
+}
+
 #[test]
 fn test_set_cbor_registers_headers() -> Result<()> {
-    let mut request = DeboaRequest::post(fake_url())?.build()?;
-    request.set_body_as(CborBody, sample_post())?;
+    let request = DeboaRequest::post(fake_url())?
+        .body_as(CborBody, sample_post())?
+        .build()?;
 
     assert_eq!(
         request

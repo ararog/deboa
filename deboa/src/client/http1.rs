@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use http::version::Version;
-use hyper::{body::Incoming, client::conn::http1::handshake, Request, Response};
+use hyper::{client::conn::http1::handshake, Request, Response};
 
 use rt_gate::spawn_worker;
 
@@ -18,10 +18,12 @@ use crate::rt::tokio::tls::{plain_connection, tls_connection};
 #[cfg(feature = "tokio-rt")]
 use hyper_util::rt::TokioIo;
 
+use hyper_body_utils::HttpBody;
+
 use crate::{
     alpn,
     client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
-    request::{BytesBody, Http1Request},
+    request::Http1Request,
     Result,
 };
 
@@ -31,10 +33,10 @@ type DeboaIo<T> = FuturesIo<T>;
 #[cfg(feature = "tokio-rt")]
 type DeboaIo<T> = TokioIo<T>;
 
-impl DeboaTcpConnection for BaseHttpConnection<Http1Request, BytesBody, Incoming> {
+impl DeboaTcpConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody> {
     type Sender = Http1Request;
-    type ReqBody = BytesBody;
-    type ResBody = Incoming;
+    type ReqBody = HttpBody;
+    type ResBody = HttpBody;
 
     #[inline]
     fn protocol(&self) -> Version {
@@ -102,6 +104,6 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request, BytesBody, Incoming
 }
 
 impl crate::client::conn::tcp::private::DeboaTcpConnectionSealed
-    for BaseHttpConnection<Http1Request, BytesBody, Incoming>
+    for BaseHttpConnection<Http1Request, HttpBody, HttpBody>
 {
 }

@@ -4,16 +4,16 @@ use deboa::{
     request::DeboaRequest,
     Result,
 };
-use http::header;
+use http::{header, HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
+
 pub struct FlexBody;
 
 const FLEXBUFFERS_CONTENT_TYPE: &str = "application/x-flexbuffers";
 
 impl RequestBody for FlexBody {
-    fn register_content_type(&self, request: &mut DeboaRequest) {
-        request.add_header(header::CONTENT_TYPE, FLEXBUFFERS_CONTENT_TYPE);
-        request.add_header(header::ACCEPT, FLEXBUFFERS_CONTENT_TYPE);
+    fn mime_type(&self) -> &str {
+        FLEXBUFFERS_CONTENT_TYPE
     }
 
     fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>> {
