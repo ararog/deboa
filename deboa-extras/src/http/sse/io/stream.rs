@@ -5,6 +5,7 @@ use std::{
 
 use futures::{ready, Stream};
 use hyper::body::Body;
+use hyper_body_utils::HttpBody;
 use pin_project_lite::pin_project;
 
 use crate::{
@@ -12,19 +13,16 @@ use crate::{
     http::sse::event::ServerEvent,
 };
 
-use deboa::response::DeboaBody;
-
 pin_project! {
     /// A data stream created from a [`Body`].
-    #[derive(Debug)]
     pub struct ServerEventStream{
         #[pin]
-        stream: DeboaBody,
+        stream: HttpBody,
     }
 }
 
 impl ServerEventStream {
-    pub fn new(stream: DeboaBody) -> Self {
+    pub fn new(stream: HttpBody) -> Self {
         Self { stream }
     }
 }

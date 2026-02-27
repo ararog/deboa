@@ -79,11 +79,13 @@ impl ToFile {
             .stream();
         while let Some(frame) = stream.next().await {
             if let Ok(chunk) = frame {
-                if let Some(ref on_progress) = on_progress {
-                    on_progress(chunk.len() as u64);
-                }
-                if let Err(err) = file.write(chunk.as_ref()) {
-                    return Err(DeboaError::Io(IoError::File { message: err.to_string() }));
+                if let Some(data) = chunk.data_ref() {
+                    if let Some(ref on_progress) = on_progress {
+                        on_progress(data.len() as u64);
+                    }
+                    if let Err(err) = file.write(data) {
+                        return Err(DeboaError::Io(IoError::File { message: err.to_string() }));
+                    }
                 }
             }
         }

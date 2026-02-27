@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use deboa::{Client, Result, request::DeboaRequest, response::DeboaResponse};
-use http::header;
+use http::{HeaderValue, header};
 use vamo::Vamo;
 
 use crate::post_service::{Post, PostService};
@@ -17,7 +17,9 @@ impl DeboaCatcher for AuthCatcher {
         &self,
         request: &mut DeboaRequest,
     ) -> Result<Option<deboa::response::DeboaResponse>> {
-        request.add_header(header::AUTHORIZATION, "Bearer token");
+        request
+            .headers_mut()
+            .insert(header::AUTHORIZATION, HeaderValue::from_str("Bearer token").unwrap());
         Ok(None)
     }
 

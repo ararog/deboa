@@ -81,15 +81,14 @@
 use std::fs::write;
 use std::{fmt::Debug, sync::Arc};
 
-use futures::{stream, TryStreamExt};
 use http::{header, HeaderName, HeaderValue, Response};
-use http_body::Frame;
 use http_body_util::combinators::BoxBody;
-use http_body_util::{BodyDataStream, BodyExt, Either, StreamBody};
+use http_body_util::{BodyExt, Either};
 use hyper::{
     body::{Bytes, Incoming},
     upgrade::on,
 };
+use hyper_body_utils::HttpBody;
 #[cfg(feature = "tokio-rt")]
 use hyper_util::rt::TokioIo;
 use log::error;
@@ -122,50 +121,36 @@ pub type DeboaBody = Either<Incoming, BoxBody<Bytes, std::io::Error>>;
 /// assert_eq!(response, DeboaBody::Right(Full::<Bytes>::from(b"Some bytes")));
 /// ```
 pub trait IntoBody {
-    fn into_body(self) -> DeboaBody;
+    fn into_body(self) -> HttpBody;
 }
 
 impl IntoBody for Incoming {
-    fn into_body(self) -> DeboaBody {
-        DeboaBody::Left(self)
+    fn into_body(self) -> HttpBody {
+        HttpBody::Incoming(self)
     }
 }
 
 impl IntoBody for &[u8] {
-    fn into_body(self) -> DeboaBody {
-        let all_bytes = Bytes::copy_from_slice(self);
-        let content = stream::iter(vec![Ok(all_bytes)]).map_ok(Frame::data);
-        let body = StreamBody::new(content);
-        DeboaBody::Right(body.boxed())
+    fn into_body(self) -> HttpBody {
+        HttpBody::from_bytes(self)
     }
 }
 
 impl IntoBody for Vec<u8> {
-    fn into_body(self) -> DeboaBody {
-        let all_bytes = Bytes::from(self);
-        let content = stream::iter(vec![Ok(all_bytes)]).map_ok(Frame::data);
-        let body = StreamBody::new(content);
-        DeboaBody::Right(body.boxed())
-    }
-}
-
-impl IntoBody for Bytes {
-    fn into_body(self) -> DeboaBody {
-        let content = stream::iter(vec![Ok(self)]).map_ok(Frame::data);
-        let body = StreamBody::new(content);
-        DeboaBody::Right(body.boxed())
+    fn into_body(self) -> HttpBody {
+        HttpBody::from_bytes(&self)
     }
 }
 
 impl IntoBody for BoxBody<Bytes, std::io::Error> {
-    fn into_body(self) -> DeboaBody {
-        DeboaBody::Right(self)
+    fn into_body(self) -> HttpBody {
+        HttpBody::Stream(self)
     }
 }
 
 pub struct DeboaResponseBuilder {
     url: Url,
-    inner: Response<DeboaBody>,
+    inner: Response<HttpBody>,
 }
 
 impl DeboaResponseBuilder {
@@ -320,7 +305,7 @@ impl DeboaResponseBuilder {
 /// * `body` - The response body (can be streamed or buffered)
 pub struct DeboaResponse {
     url: Arc<Url>,
-    inner: Response<DeboaBody>,
+    inner: Response<HttpBody>,
 }
 
 impl Debug for DeboaResponse {
@@ -329,7 +314,6 @@ impl Debug for DeboaResponse {
             .field("url", &self.url)
             .field("status", &self.inner.status())
             .field("headers", &self.inner.headers())
-            .field("body", &self.inner.body())
             .finish()
     }
 }
@@ -354,16 +338,13 @@ impl DeboaResponse {
     /// * `url` - The url of the response.
     /// * `inner` - The inner response.
     ///
-    pub fn new(url: Arc<Url>, inner: Response<DeboaBody>) -> Self {
+    pub fn new(url: Arc<Url>, inner: Response<HttpBody>) -> Self {
         Self { url, inner }
     }
 
     #[inline]
     pub fn builder(url: Url) -> DeboaResponseBuilder {
-        let all_bytes = Bytes::new();
-        let content = stream::iter(vec![Ok(all_bytes)]).map_ok(Frame::data);
-        let body = StreamBody::new(content);
-        DeboaResponseBuilder { url, inner: Response::new(DeboaBody::Right(body.boxed())) }
+        DeboaResponseBuilder { url, inner: Response::new(HttpBody::from_bytes(&[])) }
     }
 
     /// Allow get url at any time.
@@ -550,49 +531,9 @@ impl DeboaResponse {
     /// * `DeboaBody` - The inner response body.
     ///
     #[inline]
-    pub fn inner_body(self) -> DeboaBody {
+    pub fn inner_body(self) -> HttpBody {
         self.inner
             .into_body()
-    }
-
-    /// Returns the response body as a vector of bytes, consuming body.
-    /// Useful for small responses. For larger responses, consider using `stream`.
-    ///
-    /// # Returns
-    ///
-    /// * `Vec<u8>` - The raw body of the response.
-    ///
-    #[inline]
-    pub async fn raw_body(&mut self) -> Vec<u8> {
-        let mut data = Vec::<u8>::new();
-        while let Some(chunk) = self
-            .inner
-            .body_mut()
-            .frame()
-            .await
-        {
-            let frame = chunk.unwrap();
-            if let Some(bytes) = frame.data_ref() {
-                data.extend_from_slice(bytes);
-            }
-        }
-        data
-    }
-
-    /// Allow set raw body at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `body` - The body to be set.
-    ///
-    #[inline]
-    pub fn set_raw_body(&mut self, body: Bytes) {
-        let all_bytes = Bytes::copy_from_slice(&body);
-        let content = stream::iter(vec![Ok(all_bytes)]).map_ok(Frame::data);
-        let body = StreamBody::new(content);
-        *self
-            .inner
-            .body_mut() = Either::Right(body.boxed());
     }
 
     /// Convenient alias to raw_body.
@@ -602,9 +543,16 @@ impl DeboaResponse {
     /// * `Vec<u8>` - The raw body of the response.
     ///
     #[inline]
-    pub async fn bytes(&mut self) -> Vec<u8> {
-        self.raw_body()
-            .await
+    pub async fn bytes(self) -> Vec<u8> {
+        let mut data = Vec::<u8>::new();
+        let bytes = self
+            .inner_body()
+            .collect()
+            .await;
+        if let Ok(bytes) = bytes {
+            data.extend_from_slice(&bytes.to_bytes());
+        }
+        data
     }
 
     /// Allow get stream body at any time.
@@ -614,9 +562,9 @@ impl DeboaResponse {
     /// * `Either<Incoming, Full<Bytes>>` - The stream body of the response.
     ///
     #[inline]
-    pub fn stream(self) -> BodyDataStream<http::Response<DeboaBody>> {
+    pub fn stream(self) -> HttpBody {
         self.inner
-            .into_data_stream()
+            .into_body()
     }
 
     /// Returns the response body as a deserialized type, consuming body.
@@ -646,13 +594,11 @@ impl DeboaResponse {
     ///
     #[inline]
     pub async fn body_as<T: ResponseBody, B: for<'a> Deserialize<'a>>(
-        mut self,
+        self,
         body_type: T,
     ) -> Result<B> {
-        let result = body_type.deserialize::<B>(
-            self.raw_body()
-                .await,
-        )?;
+        let bytes = self.bytes().await;
+        let result = body_type.deserialize::<B>(bytes)?;
         Ok(result)
     }
 
@@ -677,10 +623,8 @@ impl DeboaResponse {
     /// ```
     ///
     #[inline]
-    pub async fn text(mut self) -> Result<String> {
-        let body = self
-            .raw_body()
-            .await;
+    pub async fn text(self) -> Result<String> {
+        let body = self.bytes().await;
         Ok(String::from_utf8_lossy(&body).to_string())
     }
 
@@ -710,10 +654,8 @@ impl DeboaResponse {
     /// ```
     ///
     #[inline]
-    pub async fn to_file(mut self, path: &str) -> Result<()> {
-        let body = self
-            .raw_body()
-            .await;
+    pub async fn to_file(self, path: &str) -> Result<()> {
+        let body = self.bytes().await;
         let result = write(path, body);
         if let Err(e) = result {
             error!("Failed to write file: {}", e);
@@ -734,7 +676,7 @@ impl DeboaResponse {
     /// ```compile_fail
     /// let (parts, body) = response.into_parts();
     /// ```
-    pub fn into_parts(self) -> (http::response::Parts, DeboaBody) {
+    pub fn into_parts(self) -> (http::response::Parts, HttpBody) {
         let (parts, body) = self
             .inner
             .into_parts();

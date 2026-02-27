@@ -62,20 +62,19 @@
 //!     .await?;
 //! ```
 
-use std::{
-    collections::HashMap, fmt::Debug, future::Future, path::PathBuf, str::FromStr, sync::Arc,
-};
+use std::{collections::HashMap, fmt::Debug, future::Future, str::FromStr, sync::Arc};
 
 use bytes::Bytes;
 #[cfg(feature = "http3")]
 use h3_quinn::OpenStreams;
 use http::{
-    header::{self, HOST},
+    header::{self},
     HeaderMap, HeaderName, HeaderValue, Method,
 };
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use http_body_util::combinators::BoxBody;
+use hyper_body_utils::HttpBody;
 use log::error;
 use regex::Regex;
 use serde::Serialize;
@@ -100,9 +99,9 @@ pub type File = smol::fs::File;
 pub type File = tokio::fs::File;
 
 #[cfg(feature = "http1")]
-pub type Http1Request = hyper::client::conn::http1::SendRequest<BytesBody>;
+pub type Http1Request = hyper::client::conn::http1::SendRequest<HttpBody>;
 #[cfg(feature = "http2")]
-pub type Http2Request = hyper::client::conn::http2::SendRequest<BytesBody>;
+pub type Http2Request = hyper::client::conn::http2::SendRequest<HttpBody>;
 #[cfg(feature = "http3")]
 pub type Http3Request = h3::client::SendRequest<OpenStreams, Bytes>;
 
@@ -541,8 +540,7 @@ pub struct DeboaRequestBuilder {
     headers: HeaderMap,
     cookies: Option<HashMap<String, DeboaCookie>>,
     method: http::Method,
-    file: Option<PathBuf>,
-    body: Arc<[u8]>,
+    body: HttpBody,
     form: Option<Form>,
 }
 
@@ -586,8 +584,8 @@ impl DeboaRequestBuilder {
     /// * `Self` - The request builder
     ///
     #[inline]
-    pub fn file(mut self, file: PathBuf) -> Self {
-        self.file = Some(file);
+    pub fn file(mut self, file: File) -> Self {
+        self.body = HttpBody::from_file(file);
         self
     }
 
@@ -602,8 +600,24 @@ impl DeboaRequestBuilder {
     /// * `Self` - The request builder.
     ///
     #[inline]
-    pub fn raw_body(mut self, body: &[u8]) -> Self {
-        self.body = body.into();
+    pub fn bytes(mut self, body: &[u8]) -> Self {
+        self.body = HttpBody::from_bytes(body);
+        self
+    }
+
+    /// Set the body of the request as raw bytes.
+    ///
+    /// # Arguments
+    ///
+    /// * `body` - The body.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The request builder.
+    ///
+    #[inline]
+    pub fn body(mut self, body: HttpBody) -> Self {
+        self.body = body;
         self
     }
 
@@ -764,9 +778,7 @@ impl DeboaRequestBuilder {
     /// ```
     #[inline]
     pub fn text(mut self, text: &str) -> Self {
-        self.body = text
-            .as_bytes()
-            .into();
+        self.body = HttpBody::from_bytes(text.as_bytes());
         self
     }
 
@@ -793,18 +805,16 @@ impl DeboaRequestBuilder {
     /// });
     ///
     /// let request = post("https://some.api.com/ping")?
-    ///   .header(header::CONTENT_TYPE, "application/json")
-    ///   .body_as(JsonBody, body)
-    ///   .build()?;
+    ///   .body_as(JsonBody, body)?;
     /// let response = request.send_with(&mut client).await?;
     /// assert_eq!(response.status(), 200);
     /// ```
     #[inline]
-    pub fn body_as<T: RequestBody, B: Serialize>(mut self, body_type: T, body: B) -> Result<Self> {
-        self.body = body_type
-            .serialize(body)?
-            .into();
-        Ok(self)
+    pub fn body_as<T: RequestBody, B: Serialize>(self, body_type: T, body: B) -> Result<Self> {
+        Ok(self
+            .header(header::CONTENT_TYPE, body_type.mime_type())
+            .header(header::ACCEPT, body_type.mime_type())
+            .body(HttpBody::from_bytes(&body_type.serialize(body)?)))
     }
 
     /// Add bearer auth to the request.
@@ -886,24 +896,36 @@ impl DeboaRequestBuilder {
             retries: self.retries,
             method: self.method,
             body: self.body,
-            file: self.file,
         };
 
         if let Some(host) = request.url().host() {
-            request.add_header(
-                header::HOST,
+            match HeaderValue::from_str(
                 host.to_string()
                     .as_str(),
-            );
+            ) {
+                Ok(value) => {
+                    request
+                        .headers_mut()
+                        .insert(header::HOST, value);
+                }
+                Err(err) => return Err(DeboaError::Header { message: err.to_string() }),
+            }
         }
 
-        let content_length = request
-            .raw_body()
-            .len();
-        request.add_header(header::CONTENT_LENGTH, &content_length.to_string());
-
         if let Some(form) = self.form {
-            request.set_form(form);
+            let (content_type, body) = match form {
+                Form::EncodedForm(form) => (form.content_type(), form.build()),
+                Form::MultiPartForm(form) => (form.content_type(), form.build()),
+            };
+            match HeaderValue::from_str(content_type.as_str()) {
+                Ok(value) => {
+                    request
+                        .headers_mut()
+                        .insert(header::CONTENT_TYPE, value);
+                }
+                Err(err) => return Err(DeboaError::Header { message: err.to_string() }),
+            }
+            request.body = HttpBody::from_bytes(&body);
         }
 
         Ok(request)
@@ -987,8 +1009,7 @@ pub struct DeboaRequest {
     cookies: Option<HashMap<String, DeboaCookie>>,
     retries: u32,
     method: http::Method,
-    body: Arc<[u8]>,
-    file: Option<PathBuf>,
+    body: HttpBody,
 }
 
 impl Debug for DeboaRequest {
@@ -999,8 +1020,6 @@ impl Debug for DeboaRequest {
             .field("cookies", &self.cookies)
             .field("retries", &self.retries)
             .field("method", &self.method)
-            .field("body", &self.body)
-            .field("file", &self.file)
             .finish()
     }
 }
@@ -1136,8 +1155,7 @@ impl FromStr for DeboaRequest {
             method: method
                 .parse::<http::Method>()
                 .unwrap(),
-            body: body.into(),
-            file: None,
+            body: HttpBody::from_bytes(&body),
         })
     }
 }
@@ -1202,8 +1220,7 @@ impl DeboaRequest {
             cookies: None,
             retries: 0,
             method,
-            file: None,
-            body: Arc::new([]),
+            body: HttpBody::from_bytes(&[]),
             form: None,
         })
     }
@@ -1341,22 +1358,6 @@ impl DeboaRequest {
         Ok(DeboaRequest::from(url)?.method(Method::DELETE))
     }
 
-    /// Allow change request method at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `method` - The new method.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The request.
-    ///
-    #[inline]
-    pub fn set_method(&mut self, method: http::Method) -> &mut Self {
-        self.method = method;
-        self
-    }
-
     /// Get request method at any time.
     ///
     /// # Returns
@@ -1366,35 +1367,6 @@ impl DeboaRequest {
     #[inline]
     pub fn method(&self) -> &http::Method {
         &self.method
-    }
-
-    /// Allow change request url at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `url` - The new url.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<&mut Self>` - The request.
-    ///
-    #[inline]
-    pub fn set_url<T: IntoUrl>(&mut self, url: T) -> Result<&mut Self> {
-        let parsed_url = url.into_url();
-        if let Err(e) = parsed_url {
-            error!("Failed to parse url: {}", e);
-            return Err(DeboaError::Request(RequestError::UrlParse { message: e.to_string() }));
-        }
-
-        let parsed_url = parsed_url.unwrap();
-        if self.has_header(&header::HOST) {
-            self.headers
-                .remove(&header::HOST);
-            self.add_header(HOST, parsed_url.authority());
-        }
-
-        self.url = parsed_url.into();
-        Ok(self)
     }
 
     /// Allow get request url at any time.
@@ -1441,158 +1413,6 @@ impl DeboaRequest {
         &mut self.headers
     }
 
-    /// Allow add header at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `key` - The header key to add.
-    /// * `value` - The header value to add.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The request.
-    ///
-    #[inline]
-    pub fn add_header(&mut self, key: HeaderName, value: &str) -> &mut Self {
-        self.headers
-            .insert(key, HeaderValue::from_str(value).unwrap());
-        self
-    }
-
-    /// Allow check if header exists at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `key` - The header key to check.
-    ///
-    /// # Returns
-    ///
-    /// * `bool` - True if the header exists, false otherwise.
-    ///
-    #[inline]
-    fn has_header(&self, key: &HeaderName) -> bool {
-        self.headers
-            .contains_key(key)
-    }
-
-    /// Allow add bearer auth at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `token` - The token to be used in the Authorization header.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The request.
-    ///
-    #[inline]
-    pub fn add_bearer_auth(&mut self, token: &str) -> &mut Self {
-        let auth = format!("Bearer {token}");
-        self.add_header(header::AUTHORIZATION, &auth);
-        self
-    }
-
-    /// Allow add basic auth at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `username` - The username.
-    /// * `password` - The password.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The request.
-    ///
-    #[inline]
-    pub fn add_basic_auth(&mut self, username: &str, password: &str) -> &mut Self {
-        let auth = format!("Basic {}", STANDARD.encode(format!("{username}:{password}")));
-        self.add_header(header::AUTHORIZATION, &auth);
-        self
-    }
-
-    /// Allow add cookie at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `cookie` - The cookie to be added.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The request.
-    ///
-    #[inline]
-    pub fn add_cookie(&mut self, cookie: DeboaCookie) -> &mut Self {
-        if let Some(cookies) = &mut self.cookies {
-            cookies.insert(
-                cookie
-                    .name()
-                    .to_string(),
-                cookie,
-            );
-        } else {
-            self.cookies = Some(HashMap::from([(
-                cookie
-                    .name()
-                    .to_string(),
-                cookie,
-            )]));
-        }
-        self
-    }
-
-    /// Allow remove cookie at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `name` - The cookie name.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The request.
-    ///
-    #[inline]
-    pub fn remove_cookie(&mut self, name: &str) -> &mut Self {
-        if let Some(cookies) = &mut self.cookies {
-            cookies.remove(name);
-        }
-        self
-    }
-
-    /// Allow check if cookie exists at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `name` - The cookie name to check.
-    ///
-    /// # Returns
-    ///
-    /// * `bool` - True if the cookie exists, false otherwise.
-    ///
-    #[inline]
-    pub fn has_cookie(&self, name: &str) -> bool {
-        if let Some(cookies) = &self.cookies {
-            cookies.contains_key(name)
-        } else {
-            false
-        }
-    }
-
-    /// Allow add cookies at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `cookies` - The cookies to be added.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The request.
-    ///
-    #[inline]
-    pub fn set_cookies(&mut self, cookies: HashMap<String, DeboaCookie>) -> &mut Self {
-        self.cookies = Some(cookies);
-        self
-    }
-
     /// Allow get cookies at any time.
     ///
     /// # Returns
@@ -1605,124 +1425,14 @@ impl DeboaRequest {
             .as_ref()
     }
 
-    /// Allow set form at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `form` - The form to be set.
+    /// Allow get body at any time.
     ///
     /// # Returns
     ///
-    /// * `&mut Self` - The request.
+    /// * `&DeboaBody` - The body.
     ///
-    #[inline]
-    pub fn set_form(&mut self, form: Form) -> &mut Self {
-        let (content_type, body) = match form {
-            Form::EncodedForm(form) => (form.content_type(), form.build()),
-            Form::MultiPartForm(form) => (form.content_type(), form.build()),
-        };
-        self.add_header(header::CONTENT_TYPE, &content_type);
-        self.set_raw_body(&body);
-        self
-    }
-
-    /// Allow set text body at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `text` - The text to be set.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The request.
-    ///
-    #[inline]
-    pub fn set_text(&mut self, text: String) -> &mut Self {
-        self.set_raw_body(text.as_bytes());
-        self
-    }
-
-    /// Allow get file at any time
-    ///
-    /// # Returns
-    ///
-    /// * `Option<&PathBuf>` - The file.
-    ///
-    #[inline]
-    pub fn file(&self) -> Option<&PathBuf> {
-        self.file.as_ref()
-    }
-
-    /// Allow set file at any time
-    ///
-    /// # Arguments
-    ///
-    /// * `file` - The file to be set.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The request.
-    ///
-    #[inline]
-    pub fn set_file(&mut self, file: PathBuf) -> &mut Self {
-        self.file = Some(file);
-        self
-    }
-
-    /// Allow set body at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `body` - The body to be set.
-    ///
-    /// # Returns
-    ///
-    /// * `&mut Self` - The request.
-    ///
-    #[inline]
-    pub fn set_raw_body(&mut self, body: &[u8]) -> &mut Self {
-        self.add_header(
-            header::CONTENT_LENGTH,
-            &body
-                .len()
-                .to_string(),
-        );
-        self.body = body.into();
-        self
-    }
-
-    /// Allow get raw body at any time.
-    ///
-    /// # Returns
-    ///
-    /// * `&Vec<u8>` - The raw body.
-    ///
-    #[inline]
-    pub fn raw_body(&self) -> &[u8] {
-        &self.body
-    }
-
-    /// Allow set body at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `body_type` - The body type to be set.
-    /// * `body` - The body to be set.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<&mut Self>` - The request.
-    ///
-    #[inline]
-    pub fn set_body_as<T: RequestBody, B: Serialize>(
-        &mut self,
-        body_type: T,
-        body: B,
-    ) -> Result<&mut Self> {
-        body_type.register_content_type(self);
-        let body = body_type.serialize(body)?;
-        self.set_raw_body(&body);
-        Ok(self)
+    pub fn body(self) -> HttpBody {
+        self.body
     }
 }
 mod private {

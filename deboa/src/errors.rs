@@ -93,8 +93,8 @@ pub enum RequestError {
     #[error("Failed to parse request: {message}")]
     Parse { message: String },
 
-    #[error("Failed to send request: {method} {url}: {message}")]
-    Send { url: String, method: String, message: String },
+    #[error("Failed to send request: {url} - {message}")]
+    Send { url: String, message: String },
 
     #[error("Failed to prepare request: {message}")]
     Prepare { message: String },

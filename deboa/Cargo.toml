@@ -23,6 +23,7 @@ tokio-rt = [
   "quinn/runtime-tokio",
   "tokio-util/io",
   "rt-gate/tokio-rt",
+  "hyper-body-utils/tokio-rt",
 ]
 smol-rt = [
   "dep:smol",
@@ -33,6 +34,7 @@ smol-rt = [
   "deboa-tests/smol-rt",
   "quinn/runtime-smol",
   "rt-gate/smol-rt",
+  "hyper-body-utils/smol-rt",
 ]
 
 # tls
@@ -115,6 +117,7 @@ http = "1"
 http-body = "1"
 http-body-util = "0.1"
 hyper = { version = "1.8.1", features = ["client"], default-features = false }
+hyper-body-utils = { version = "0.1.2", optional = true, default-features = false}
 hyper-util = { version = "0.1.20", features = [
   "client",
   "client-legacy",

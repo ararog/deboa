@@ -3,19 +3,16 @@ use std::io::Cursor;
 use deboa::client::serde::{RequestBody, ResponseBody};
 use deboa::{
     errors::{ContentError, DeboaError},
-    request::DeboaRequest,
     Result,
 };
-use http::header;
 use serde::{Deserialize, Serialize};
 pub struct CborBody;
 
 const APPLICATION_CBOR: &str = "application/cbor";
 
 impl RequestBody for CborBody {
-    fn register_content_type(&self, request: &mut DeboaRequest) {
-        request.add_header(header::CONTENT_TYPE, APPLICATION_CBOR);
-        request.add_header(header::ACCEPT, APPLICATION_CBOR);
+    fn mime_type(&self) -> &str {
+        APPLICATION_CBOR
     }
 
     fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>> {

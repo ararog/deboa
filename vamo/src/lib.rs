@@ -588,7 +588,7 @@ impl Vamo {
         let request = DeboaRequest::from(base_url.as_str())?
             .method(self.method.clone())
             .headers(self.headers.clone())
-            .raw_body(&self.body)
+            .bytes(&self.body)
             .build()?;
 
         self.client

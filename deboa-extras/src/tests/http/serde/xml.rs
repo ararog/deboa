@@ -1,10 +1,10 @@
 use crate::http::serde::xml::XmlBody;
 use deboa::{request::DeboaRequest, response::DeboaResponse, Result};
-
 use deboa_tests::{
     data::{sample_post, Post, XML_POST},
     utils::fake_url,
 };
+use http_body_util::BodyExt;
 
 #[tokio::test]
 async fn test_set_xml() -> Result<()> {
@@ -12,7 +12,14 @@ async fn test_set_xml() -> Result<()> {
         .body_as(XmlBody, sample_post())?
         .build()?;
 
-    assert_eq!(*request.raw_body(), XML_POST[..]);
+    let bytes = request
+        .body()
+        .collect()
+        .await
+        .unwrap()
+        .to_bytes();
+
+    assert_eq!(bytes, XML_POST[..]);
 
     Ok(())
 }

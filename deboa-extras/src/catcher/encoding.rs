@@ -6,7 +6,7 @@ use deboa::{
     response::DeboaResponse,
     Result,
 };
-use http::header;
+use http::{header, HeaderValue};
 use std::collections::HashMap;
 
 pub struct EncodingCatcher<D: Decompressor> {
@@ -32,7 +32,9 @@ impl<D: Decompressor> DeboaCatcher for EncodingCatcher<D> {
             .map(|decoder| decoder.name())
             .collect::<Vec<String>>();
 
-        request.add_header(header::ACCEPT_ENCODING, &encodings.join(","));
+        request
+            .headers_mut()
+            .insert(header::ACCEPT_ENCODING, HeaderValue::from_str(&encodings.join(",")).unwrap());
 
         Ok(None)
     }

@@ -33,14 +33,14 @@ async fn do_post() -> TestResult<()> {
         .text("{ \"title\": \"foo\", \"body\": \"bar\", \"userId\": 1 }")
         .build()?;
 
-    let mut response = client
+    let response = client
         .execute(request)
         .await?;
 
     assert_eq!(response.status(), StatusCode::CREATED);
     assert_eq!(
         response
-            .raw_body()
+            .bytes()
             .await,
         b"{\n  \"id\": 101\n}",
     );
@@ -101,14 +101,14 @@ async fn do_post_encoded_form() -> TestResult<()> {
         .form(form.into())
         .build()?;
 
-    let mut response = client
+    let response = client
         .execute(request)
         .await?;
 
     assert_eq!(response.status(), StatusCode::CREATED);
     assert_eq!(
         response
-            .raw_body()
+            .bytes()
             .await,
         b"ping"
     );
@@ -168,14 +168,14 @@ async fn do_post_multipart_form() -> TestResult<()> {
         .form(form.into())
         .build()?;
 
-    let mut response = client
+    let response = client
         .execute(request)
         .await?;
 
     assert_eq!(response.status(), StatusCode::CREATED);
     assert_eq!(
         response
-            .raw_body()
+            .bytes()
             .await,
         b"ping"
     );

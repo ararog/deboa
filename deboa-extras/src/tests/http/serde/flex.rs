@@ -2,14 +2,22 @@ use crate::http::serde::flex::FlexBody;
 use deboa::{request::DeboaRequest, response::DeboaResponse, Result};
 use deboa_tests::data::{sample_post, Post, FLEX_POST};
 use deboa_tests::utils::fake_url;
+use http_body_util::BodyExt;
 
-#[test]
-fn test_set_flex() -> Result<()> {
+#[tokio::test]
+async fn test_set_flex() -> Result<()> {
     let request = DeboaRequest::post(fake_url())?
         .body_as(FlexBody, sample_post())?
         .build()?;
 
-    assert_eq!(*request.raw_body(), FLEX_POST[..]);
+    let bytes = request
+        .body()
+        .collect()
+        .await
+        .unwrap()
+        .to_bytes();
+
+    assert_eq!(bytes, FLEX_POST[..]);
 
     Ok(())
 }

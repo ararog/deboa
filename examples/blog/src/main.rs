@@ -1,6 +1,6 @@
 use deboa::{Client, Result, async_trait};
 use deboa_extras::http::serde::json::JsonBody;
-use http::header::AUTHORIZATION;
+use http::{HeaderValue, header::AUTHORIZATION};
 use serde::Deserialize;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -22,7 +22,9 @@ impl deboa::catcher::DeboaCatcher for AuthCatcher {
         &self,
         request: &mut deboa::request::DeboaRequest,
     ) -> Result<Option<deboa::response::DeboaResponse>> {
-        request.add_header(AUTHORIZATION, "Bearer token");
+        request
+            .headers_mut()
+            .insert(AUTHORIZATION, HeaderValue::from_str("Bearer token").unwrap());
         Ok(None)
     }
 

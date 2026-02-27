@@ -1,10 +1,9 @@
 use deboa::{
     client::serde::{RequestBody, ResponseBody},
     errors::{ContentError, DeboaError},
-    request::DeboaRequest,
+    Result,
 };
-use http::header;
-use mime_typed::Json;
+use mime_typed::MimeStrExt;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "simd_json")]
 use std::io::Cursor;
@@ -12,20 +11,11 @@ use std::io::Cursor;
 pub struct JsonBody;
 
 impl RequestBody for JsonBody {
-    fn register_content_type(&self, request: &mut DeboaRequest) {
-        request.add_header(
-            header::CONTENT_TYPE,
-            Json.to_string()
-                .as_str(),
-        );
-        request.add_header(
-            header::ACCEPT,
-            Json.to_string()
-                .as_str(),
-        );
+    fn mime_type(&self) -> &str {
+        mime_typed::ApplicationJson::MIME_STR
     }
 
-    fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>, DeboaError> {
+    fn serialize<T: Serialize>(&self, data: T) -> Result<Vec<u8>> {
         #[cfg(feature = "sonic_json")]
         let result = sonic_rs::to_vec(&data);
         #[cfg(feature = "simd_json")]
@@ -42,7 +32,7 @@ impl RequestBody for JsonBody {
 }
 
 impl ResponseBody for JsonBody {
-    fn deserialize<T: for<'a> Deserialize<'a>>(&self, body: Vec<u8>) -> Result<T, DeboaError> {
+    fn deserialize<T: for<'a> Deserialize<'a>>(&self, body: Vec<u8>) -> Result<T> {
         #[cfg(feature = "sonic_json")]
         let json = {
             let binding = body;

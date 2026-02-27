@@ -1,8 +1,9 @@
 use std::marker::PhantomData;
 
 use http::version::Version;
-use hyper::{body::Incoming, client::conn::http2::handshake, Request, Response};
+use hyper::{client::conn::http2::handshake, Request, Response};
 
+use hyper_body_utils::HttpBody;
 use rt_gate::spawn_worker;
 
 #[cfg(feature = "smol-rt")]
@@ -25,7 +26,7 @@ use hyper_util::rt::TokioIo;
 use crate::{
     alpn,
     client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
-    request::{BytesBody, Http2Request},
+    request::Http2Request,
     Result,
 };
 
@@ -39,10 +40,10 @@ type DeboaIo<T> = TokioIo<T>;
 #[cfg(feature = "tokio-rt")]
 type DeboaExecutor = TokioExecutor;
 
-impl DeboaTcpConnection for BaseHttpConnection<Http2Request, BytesBody, Incoming> {
+impl DeboaTcpConnection for BaseHttpConnection<Http2Request, HttpBody, HttpBody> {
     type Sender = Http2Request;
-    type ReqBody = BytesBody;
-    type ResBody = Incoming;
+    type ReqBody = HttpBody;
+    type ResBody = HttpBody;
 
     #[inline]
     fn protocol(&self) -> Version {
@@ -107,6 +108,6 @@ impl DeboaTcpConnection for BaseHttpConnection<Http2Request, BytesBody, Incoming
 }
 
 impl crate::client::conn::tcp::private::DeboaTcpConnectionSealed
-    for BaseHttpConnection<Http2Request, BytesBody, Incoming>
+    for BaseHttpConnection<Http2Request, HttpBody, HttpBody>
 {
 }

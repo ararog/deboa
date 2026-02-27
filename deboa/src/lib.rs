@@ -107,25 +107,17 @@ pub(crate) fn alpn() -> &'static [&'static str] {
 
 use cfg_if::cfg_if;
 
-use futures::{stream, TryStreamExt};
-use http_body::Frame;
-
 #[cfg(feature = "tokio-rt")]
 use tokio::sync::{RwLock, RwLockWriteGuard};
 
 #[cfg(feature = "smol-rt")]
-use smol::{io::AsyncReadExt, lock::RwLock};
-
-#[cfg(feature = "tokio-rt")]
-use tokio_util::io::ReaderStream;
+use smol::lock::RwLock;
 
 use std::fmt::{Debug, Display};
 use std::net::IpAddr;
 use std::ops::Shl;
 
-use bytes::Bytes;
 use http::{header, HeaderValue, Request};
-use http_body_util::{BodyExt, StreamBody};
 use log::{error, info};
 
 use crate::cert::{Certificate, Identity};
@@ -134,7 +126,7 @@ use crate::client::conn::{ConnectionConfig, ConnectionFactory};
 
 use crate::catcher::DeboaCatcher;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
-use crate::errors::{DeboaError, IoError, RequestError};
+use crate::errors::{DeboaError, RequestError};
 use crate::request::{DeboaRequest, IntoRequest};
 use crate::response::DeboaResponse;
 
@@ -1038,51 +1030,12 @@ impl Client {
             }
         }
 
-        #[cfg(feature = "tokio-rt")]
-        let request = if let Some(file) = request.file() {
-            let file = File::open(file)
-                .await
-                .map_err(|e| DeboaError::Io(IoError::File { message: e.to_string() }))?;
-            let content = ReaderStream::new(file).map_ok(Frame::data);
-            let body = StreamBody::new(content);
-            builder.body(body.boxed())
-        } else {
-            let all_bytes = Bytes::copy_from_slice(
-                request
-                    .as_ref()
-                    .raw_body(),
-            );
-            let content = stream::iter(vec![Ok(all_bytes)]).map_ok(Frame::data);
-            let body = StreamBody::new(content);
-            builder.body(body.boxed())
-        };
-
-        #[cfg(feature = "smol-rt")]
-        let request = if let Some(file) = request.file() {
-            let file = File::open(file)
-                .await
-                .map_err(|e| DeboaError::Io(IoError::File { message: e.to_string() }))?;
-            let content = file
-                .bytes()
-                .map_ok(|data| Frame::data(bytes::Bytes::copy_from_slice(&[data])));
-            let body = StreamBody::new(content);
-            builder.body(body.boxed())
-        } else {
-            let all_bytes = Bytes::copy_from_slice(
-                request
-                    .as_ref()
-                    .raw_body(),
-            );
-            let content = stream::iter(vec![Ok(all_bytes)]).map_ok(Frame::data);
-            let body = StreamBody::new(content);
-            builder.body(body.boxed())
-        };
+        let request = builder.body(request.body());
 
         if let Err(err) = request {
             error!("Failed to send request: {}", err);
             return Err(DeboaError::Request(RequestError::Send {
                 url: url.to_string(),
-                method: method.to_string(),
                 message: err.to_string(),
             }));
         }

@@ -9,7 +9,7 @@ use deboa::{request::DeboaRequest, Client, Result};
 
 async fn get_async() -> Result<()> {
     let client = Client::default();
-    let res = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")?
+    let _res = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts")?
         .send_with(client)
         .await;
 
@@ -17,7 +17,7 @@ async fn get_async() -> Result<()> {
 }
 
 async fn post_async() -> Result<()> {
-    let client = Client::new();
+    let client = Client::default();
     let _ = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts")?
         .text("Some test to do")
         .send_with(client)
@@ -40,7 +40,6 @@ fn deboa(c: &mut Criterion) {
             });
     });
 
-    /*
     c.bench_function("deboa_post", move |b| {
         #[cfg(feature = "tokio-rt")]
         b.to_async(Runtime::new().unwrap())
@@ -54,7 +53,6 @@ fn deboa(c: &mut Criterion) {
                 let _ = post_async().await;
             });
     });
-    */
 }
 
 criterion_group!(benches, deboa);

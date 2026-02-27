@@ -29,6 +29,7 @@ use crate::{
     Result,
 };
 
+#[cfg(any(feature = "http1", feature = "http2"))]
 use trust_dns_resolver::{
     config::{ResolverConfig, ResolverOpts},
     TokioAsyncResolver,

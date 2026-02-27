@@ -6,8 +6,8 @@ use h3_quinn::RecvStream;
 use http::response::Parts;
 use http::{Request, Response, StatusCode, Version};
 use http_body::Body;
+use hyper_body_utils::HttpBody;
 
-use crate::response::DeboaBody;
 use crate::{
     client::conn::{BaseHttpConnection, ConnectionConfig},
     errors::{DeboaError, ResponseError},
@@ -84,7 +84,7 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
         &self,
         parts: Parts,
         mut stream: RequestStream<RecvStream, Bytes>,
-    ) -> impl Future<Output = Result<Response<DeboaBody>>> + Send {
+    ) -> impl Future<Output = Result<Response<HttpBody>>> + Send {
         async move {
             let status_code = parts.status;
 
