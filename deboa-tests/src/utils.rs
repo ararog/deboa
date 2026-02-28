@@ -10,9 +10,12 @@ use easyhttpmock::{
 };
 
 use url::Url;
-use vetis::config::Protocol;
+use vetis::config::server::Protocol;
 
-pub use vetis::{errors::VetisError, Request, Response};
+pub use vetis::{
+    errors::VetisError,
+    server::http::{Request, Response},
+};
 
 pub const CA_CERT: &[u8] = include_bytes!("../certs/ca.der");
 pub const CA_CERT_PEM: &[u8] = include_bytes!("../certs/ca.crt");
