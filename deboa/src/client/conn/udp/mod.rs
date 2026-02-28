@@ -1,6 +1,6 @@
 use std::future::Future;
 
-use bytes::{Buf, Bytes, BytesMut};
+use bytes::{Buf, Bytes};
 use h3::client::RequestStream;
 use h3_quinn::RecvStream;
 use http::response::Parts;
@@ -11,7 +11,6 @@ use hyper_body_utils::HttpBody;
 use crate::{
     client::conn::{BaseHttpConnection, ConnectionConfig},
     errors::{DeboaError, ResponseError},
-    response::IntoBody,
     Result, MAX_ERROR_MESSAGE_SIZE,
 };
 
@@ -116,19 +115,8 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
                 }));
             }
 
-            let mut body = BytesMut::new();
-            while let Ok(Some(chunk)) = stream
-                .recv_data()
-                .await
-            {
-                body.extend_from_slice(chunk.chunk());
-            }
-
-            let response = Response::from_parts(
-                parts,
-                body.freeze()
-                    .into_body(),
-            );
+            let body = HttpBody::QuicClientIncoming(stream);
+            let response = Response::from_parts(parts, body);
 
             Ok(response)
         }

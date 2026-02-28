@@ -26,7 +26,7 @@ _tokio-native-tls = []
 _smol-native-tls = []
 
 [dependencies]
-deboa = { version = "0.1.0-beta.2" }
+deboa = { version = "0.1.0-beta.3" }
 fory = "0.14.1"
 fory-core = "0.14.0"
 http = "1.4.0"
@@ -35,6 +35,6 @@ tokio = { version = "1.38.1", features = [
 ], default-features = false, optional = true }
 smol = { version = "2.0.2", default-features = false, optional = true }
 smol-macros = { version = "0.1.1", default-features = false, optional = true }
- 
+
 [dev-dependencies]
 deboa-tests = { path = "../deboa-tests", default-features = false, version = "0.0.1" }

@@ -24,7 +24,7 @@ impl ForyRequestBuilder for DeboaRequestBuilder {
         }
 
         let builder = self
-            .raw_body(&result.unwrap())
+            .bytes(&result.unwrap())
             .header(header::CONTENT_TYPE, "application/fory");
 
         Ok(builder)
@@ -33,18 +33,14 @@ impl ForyRequestBuilder for DeboaRequestBuilder {
 
 pub trait ForyResponse {
     fn body_as_fory<T: Serializer + ForyDefault>(
-        &mut self,
+        self,
         fory: &Fory,
     ) -> impl std::future::Future<Output = Result<T>> + Send;
 }
 
 impl ForyResponse for DeboaResponse {
-    async fn body_as_fory<T: Serializer + ForyDefault>(&mut self, fory: &Fory) -> Result<T> {
-        let result = fory.deserialize(
-            &self
-                .raw_body()
-                .await,
-        );
+    async fn body_as_fory<T: Serializer + ForyDefault>(self, fory: &Fory) -> Result<T> {
+        let result = fory.deserialize(&self.bytes().await);
         if let Err(error) = result {
             return Err(DeboaError::Content(ContentError::Deserialization {
                 message: error.to_string(),

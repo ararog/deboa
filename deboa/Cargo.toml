@@ -98,6 +98,7 @@ http3 = [
   "deboa-tests/http3",
   "trust-dns-resolver",
   "async-std-resolver",
+  "hyper-body-utils/http3",
 ]
 
 [dependencies]
@@ -117,7 +118,7 @@ http = "1"
 http-body = "1"
 http-body-util = "0.1"
 hyper = { version = "1.8.1", features = ["client"], default-features = false }
-hyper-body-utils = { version = "0.1.2", optional = true, default-features = false}
+hyper-body-utils = { version = "0.1.4", optional = true, default-features = false}
 hyper-util = { version = "0.1.20", features = [
   "client",
   "client-legacy",
