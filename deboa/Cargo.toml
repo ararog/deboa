@@ -19,7 +19,7 @@ default = ["tokio-rt", "http2", "tokio-rust-tls"]
 tokio-rt = [
   "tokio/fs",
   "tokio/macros",
-  #"deboa-tests/tokio-rt",
+  "deboa-tests/tokio-rt",
   "quinn/runtime-tokio",
   "tokio-util/io",
   "rt-gate/tokio-rt",
@@ -31,7 +31,7 @@ smol-rt = [
   "dep:async-executor",
   "dep:smol-macros",
   "dep:macro_rules_attribute",
-  #"deboa-tests/smol-rt",
+  "deboa-tests/smol-rt",
   "quinn/runtime-smol",
   "rt-gate/smol-rt",
   "hyper-body-utils/smol-rt",
@@ -43,7 +43,7 @@ tokio-rust-tls = [
   "dep:rustls-native-certs",
   "dep:tokio-rustls",
   "dep:webpki-roots",
-  #"deboa-tests/tokio-rust-tls",
+  "deboa-tests/tokio-rust-tls",
   "rustls-provider",
 ]
 
@@ -52,7 +52,7 @@ smol-rust-tls = [
   "dep:rustls-native-certs",
   "dep:futures-rustls",
   "dep:webpki-roots",
-  #"deboa-tests/smol-rust-tls",
+  "deboa-tests/smol-rust-tls",
   "rustls-provider",
 ]
 
@@ -67,27 +67,27 @@ __rustls_rustcrypto = ["dep:rustls-rustcrypto"]
 tokio-native-tls = [
   "dep:async-native-tls",
   "async-native-tls/runtime-tokio",
-  #"deboa-tests/tokio-rust-tls",
+  "deboa-tests/tokio-rust-tls",
 ]
 
 smol-native-tls = [
   "dep:async-native-tls",
   "async-native-tls/runtime-async-std",
-  #"deboa-tests/smol-rust-tls",
+  "deboa-tests/smol-rust-tls",
 ]
 
 # protocols
 http1 = [
   "hyper/http1",
   "hyper-util/http1",
-  #"deboa-tests/http1",
+  "deboa-tests/http1",
   "trust-dns-resolver",
   "async-std-resolver",
 ]
 http2 = [
   "hyper/http2",
   "hyper-util/http2",
-  #"deboa-tests/http2",
+  "deboa-tests/http2",
   "trust-dns-resolver",
   "async-std-resolver",
 ]
@@ -95,7 +95,7 @@ http3 = [
   "dep:h3",
   "dep:h3-quinn",
   "dep:quinn",
-  #"deboa-tests/http3",
+  "deboa-tests/http3",
   "trust-dns-resolver",
   "async-std-resolver",
   "hyper-body-utils/http3",
@@ -158,7 +158,7 @@ criterion = { version = "0.8.2", features = [
   "async_smol",
   "async_tokio",
 ] }
-#deboa-tests = { path = "../deboa-tests", version = "0.0.1", default-features = false }
+deboa-tests = { path = "../deboa-tests", version = "0.0.1", default-features = false }
 futures-util = "0.3.31"
 mime = { version = "0.3.17" }
 multer = "3.1.0"
