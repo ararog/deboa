@@ -1,7 +1,7 @@
 [package]
 name = "vamo-macros"
 edition = "2021"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 description = "Macros for quick client development using vamo"
 license = "MIT"
@@ -37,9 +37,9 @@ _smol-native-tls = []
 proc-macro = true
 
 [dependencies]
-deboa = { version = "0.1.0-beta.3" }
-deboa-extras = { version = "0.0.7", features=["json"] }
-vamo = { version = "0.0.7" }
+deboa = { version = "0.1.0-beta.5" }
+deboa-extras = { version = "0.0.8", path = "../deboa-extras", features=["json"] }
+vamo = { version = "0.0.8", path = "../vamo" }
 proc-macro2 = "1.0.103"
 serde = "1.0.228"
 syn = { version = "2.0", features = ["full"] }

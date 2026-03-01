@@ -1,6 +1,6 @@
 [package]
 name = "deboa-extras"
-version = "0.0.7"
+version = "0.0.8"
 edition = "2021"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 repository = "https://github.com/ararog/deboa"
@@ -13,7 +13,14 @@ publish = true
 rust-version = "1.75.0"
 
 [features]
-default = ["serialization", "compression", "sse", "utils", "websockets", "tokio"]
+default = [
+  "serialization",
+  "compression",
+  "sse",
+  "utils",
+  "websockets",
+  "tokio-rt",
+]
 sse = ["dep:hyper-body-utils", "dep:http-body-util", "dep:deboa"]
 utils = ["dep:deboa"]
 websockets = ["dep:deboa", "dep:base64", "dep:rand", "dep:ws-framer"]
@@ -36,15 +43,29 @@ simd_json = ["dep:simd-json"]
 sonic_json = ["dep:sonic-rs"]
 
 # runtime
-tokio = ["dep:tokio", "dep:tokio-util", "dep:hyper", "dep:hyper-util"]
-smol = ["dep:smol", "dep:smol-hyper", "dep:hyper", "dep:hyper-util"]
+tokio-rt = [
+  "deboa/tokio-rt",
+  "dep:tokio",
+  "dep:tokio-util",
+  "dep:hyper",
+  "dep:hyper-util",
+  "hyper-body-utils/tokio-rt",
+]
+smol-rt = [
+  "deboa/smol-rt",
+  "dep:smol",
+  "dep:smol-hyper",
+  "dep:hyper",
+  "dep:hyper-util",
+  "hyper-body-utils/smol-rt",
+]
 
 [dependencies]
 base64 = { version = "0.22.1", optional = true }
 brotli = { version = "8.0.2", optional = true }
 bytes = { version = "1.11.1", optional = true }
 ciborium = { version = "0.2.2", optional = true }
-deboa = { version = "0.1.0-beta.3", optional = true }
+deboa = { version = "0.1.0-beta.5", path = "../../deboa/deboa", optional = true }
 flate2 = { version = "1.1.9", optional = true }
 flexbuffers = { version = "25.12.19", optional = true }
 futures = "0.3.31"
@@ -52,7 +73,7 @@ futures-util = "0.3.31"
 http = { version = "1.4.0", optional = true }
 http-body-util = { version = "0.1.3", optional = true }
 hyper = { version = "1.8.1", optional = true }
-hyper-body-utils = { version = "0.1.4", optional = true}
+hyper-body-utils = { version = "0.1.6-beta.2", optional = true }
 hyper-util = { version = "0.1.20", optional = true }
 mime = { version = "0.3.17", optional = true }
 mime_typed = "0.1.7"

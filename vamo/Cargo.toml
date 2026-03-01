@@ -1,6 +1,6 @@
 [package]
 name = "vamo"
-version = "0.0.7"
+version = "0.0.8"
 edition = "2021"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 repository = "https://github.com/ararog/deboa"
@@ -28,8 +28,8 @@ _smol-native-tls = []
 
 [dependencies]
 base64 = "0.22.1"
-deboa = { version = "0.1.0-beta.3" }
-deboa-extras = { version = "0.0.7", features = [
+deboa = { version = "0.1.0-beta.5" }
+deboa-extras = { version = "0.0.8", path = "../deboa-extras", features = [
   "json",
 ] }
 http = "1.4.0"

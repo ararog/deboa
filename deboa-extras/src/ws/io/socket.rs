@@ -8,14 +8,14 @@ use std::{
 use pin_project_lite::pin_project;
 
 use hyper::upgrade::Upgraded;
-#[cfg(feature = "tokio")]
+#[cfg(feature = "tokio-rt")]
 use hyper_util::rt::TokioIo;
-#[cfg(feature = "smol")]
+#[cfg(feature = "smol-rt")]
 use smol_hyper::rt::FuturesIo;
 
-#[cfg(feature = "smol")]
+#[cfg(feature = "smol-rt")]
 use smol::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
-#[cfg(feature = "tokio")]
+#[cfg(feature = "tokio-rt")]
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, ReadBuf};
 
 use ws_framer::{WsFrame, WsRxFramer, WsTxFramer};
@@ -25,10 +25,10 @@ use crate::{
     ws::protocol::Message,
 };
 
-#[cfg(feature = "tokio")]
+#[cfg(feature = "tokio-rt")]
 pub type UpgradedIo = TokioIo<Upgraded>;
 
-#[cfg(feature = "smol")]
+#[cfg(feature = "smol-rt")]
 pub type UpgradedIo = FuturesIo<Upgraded>;
 
 pub trait DeboaWebSocket {
@@ -336,7 +336,7 @@ impl DeboaWebSocket for WebSocket<UpgradedIo> {
     }
 }
 
-#[cfg(feature = "tokio")]
+#[cfg(feature = "tokio-rt")]
 impl AsyncRead for WebSocket<UpgradedIo> {
     fn poll_read(
         self: Pin<&mut Self>,
@@ -349,7 +349,7 @@ impl AsyncRead for WebSocket<UpgradedIo> {
     }
 }
 
-#[cfg(feature = "tokio")]
+#[cfg(feature = "tokio-rt")]
 impl AsyncWrite for WebSocket<UpgradedIo> {
     fn poll_write(
         self: Pin<&mut Self>,
@@ -399,7 +399,7 @@ impl AsyncWrite for WebSocket<UpgradedIo> {
     }
 }
 
-#[cfg(feature = "smol")]
+#[cfg(feature = "smol-rt")]
 impl<T> AsyncRead for WebSocket<FuturesIo<T>>
 where
     T: hyper::rt::Read,
@@ -413,7 +413,7 @@ where
     }
 }
 
-#[cfg(feature = "smol")]
+#[cfg(feature = "smol-rt")]
 impl<T> AsyncWrite for WebSocket<FuturesIo<T>>
 where
     T: hyper::rt::Write,
