@@ -83,7 +83,7 @@ use std::{fmt::Debug, sync::Arc};
 
 use http::{header, HeaderName, HeaderValue, Response};
 use http_body_util::combinators::BoxBody;
-use http_body_util::{BodyExt, Either};
+use http_body_util::BodyExt;
 use hyper::{
     body::{Bytes, Incoming},
     upgrade::on,
@@ -96,11 +96,13 @@ use serde::Deserialize;
 #[cfg(feature = "smol-rt")]
 use smol_hyper::rt::FuturesIo;
 
-use crate::errors::{ConnectionError, DeboaError, IoError};
-use crate::{client::serde::ResponseBody, cookie::DeboaCookie, Result};
+use crate::{
+    client::serde::ResponseBody,
+    cookie::DeboaCookie,
+    errors::{ConnectionError, DeboaError, IoError},
+    Result,
+};
 use url::Url;
-
-pub type DeboaBody = Either<Incoming, BoxBody<Bytes, std::io::Error>>;
 
 /// Trait to allow converting a type into a DeboaBody.
 ///
@@ -549,8 +551,11 @@ impl DeboaResponse {
             .inner_body()
             .collect()
             .await;
-        if let Ok(bytes) = bytes {
-            data.extend_from_slice(&bytes.to_bytes());
+        match bytes {
+            Ok(bytes) => data.extend_from_slice(&bytes.to_bytes()),
+            Err(e) => {
+                error!("Failed to collect response body: {}", e);
+            }
         }
         data
     }

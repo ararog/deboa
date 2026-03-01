@@ -115,7 +115,7 @@ pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
                 }));
             }
 
-            let body = HttpBody::QuicClientIncoming(stream);
+            let body = HttpBody::from_quic_client(stream);
             let response = Response::from_parts(parts, body);
 
             Ok(response)

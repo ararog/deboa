@@ -3,6 +3,7 @@ use time::Duration;
 
 use crate::{
     client::conn::{ConnectionConfig, ConnectionFactory, DeboaConnection},
+    errors::DeboaError,
     Result,
 };
 
@@ -119,6 +120,11 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         &'a mut self,
         config: &ConnectionConfig<'a>,
     ) -> Result<&'a mut DeboaConnection> {
+        if self.max_idle_connections == 0 {
+            self.connections
+                .clear();
+        }
+
         let host = config.host();
         if self
             .connections

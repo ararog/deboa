@@ -275,7 +275,7 @@ pub struct ClientBuilder {
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     skip_cert_verification: bool,
-    pool: Option<RwLock<HttpConnectionPool>>,
+    pool: RwLock<HttpConnectionPool>,
     bind_addr: IpAddr,
 }
 
@@ -546,7 +546,7 @@ impl ClientBuilder {
     /// ```
     #[inline]
     pub fn pool(mut self, pool: HttpConnectionPool) -> Self {
-        self.pool = Some(RwLock::new(pool));
+        self.pool = RwLock::new(pool);
         self
     }
 
@@ -658,7 +658,7 @@ pub struct Client {
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     skip_cert_verification: bool,
-    pool: Option<RwLock<HttpConnectionPool>>,
+    pool: RwLock<HttpConnectionPool>,
     bind_addr: IpAddr,
 }
 
@@ -706,7 +706,7 @@ impl Default for Client {
             catchers: None,
             protocol: default_protocol(),
             skip_cert_verification: false,
-            pool: None,
+            pool: RwLock::new(HttpConnectionPool::default()),
             bind_addr: "0.0.0.0"
                 .parse()
                 .unwrap(),
@@ -763,7 +763,7 @@ impl Client {
             catchers: None,
             protocol: default_protocol(),
             skip_cert_verification: false,
-            pool: None,
+            pool: RwLock::new(HttpConnectionPool::default()),
             bind_addr: "0.0.0.0"
                 .parse()
                 .unwrap(),
@@ -786,7 +786,7 @@ impl Client {
             catchers: None,
             protocol: default_protocol(),
             skip_cert_verification: false,
-            pool: None,
+            pool: RwLock::new(HttpConnectionPool::default()),
             bind_addr: "0.0.0.0"
                 .parse()
                 .unwrap(),
@@ -833,14 +833,14 @@ impl Client {
     ///
     #[inline]
     #[cfg(feature = "tokio-rt")]
-    pub async fn connection_pool(&self) -> Option<&tokio::sync::RwLock<HttpConnectionPool>> {
-        self.pool.as_ref()
+    pub async fn connection_pool(&self) -> &tokio::sync::RwLock<HttpConnectionPool> {
+        &self.pool
     }
 
     #[inline]
     #[cfg(feature = "smol-rt")]
-    pub async fn connection_pool(&self) -> Option<&smol::lock::RwLock<HttpConnectionPool>> {
-        self.pool.as_ref()
+    pub async fn connection_pool(&self) -> &smol::lock::RwLock<HttpConnectionPool> {
+        &self.pool
     }
 
     #[inline]
@@ -1078,23 +1078,26 @@ impl Client {
             .client_bind_addr(self.bind_addr)
             .build();
 
-        let response = if let Some(pool) = &self.pool {
-            #[cfg(feature = "tokio-rt")]
-            let mut pool = RwLockWriteGuard::map(pool.write().await, |f| f);
-            #[cfg(feature = "smol-rt")]
-            let mut pool = pool.write().await;
+        #[cfg(feature = "tokio-rt")]
+        let mut pool = RwLockWriteGuard::map(
+            self.pool
+                .write()
+                .await,
+            |f| f,
+        );
+        #[cfg(feature = "smol-rt")]
+        let mut pool = self
+            .pool
+            .write()
+            .await;
 
-            let conn = pool
-                .create_connection(&config)
-                .await?;
+        let conn = pool
+            .create_connection(&config)
+            .await?;
 
-            conn.send_request(url.clone(), request)
-                .await?
-        } else {
-            let mut conn = ConnectionFactory::create_connection(&self.protocol, &config).await?;
-            conn.send_request(url.clone(), request)
-                .await?
-        };
+        let response = conn
+            .send_request(url.clone(), request)
+            .await?;
 
         Ok(response)
     }

@@ -6,8 +6,8 @@ authors = ["Kelvin Andrade <contato@kelvinandrade.com>"]
 publish = false
 
 [dependencies]
-deboa = { path = "../../deboa" }
-deboa-extras = { path = "../../deboa-extras", features = ["cbor"] }
+deboa = { version = "0.1.0-beta.5" }
+deboa-extras = { version = "0.0.8", path = "../../deboa-extras", features = ["cbor"] }
 ciborium = "0.2.2"
 tokio = { version = "1" }
-serde = { version = "1"}
+serde = { version = "1" }
