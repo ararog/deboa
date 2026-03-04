@@ -37,9 +37,9 @@ _smol-native-tls = []
 proc-macro = true
 
 [dependencies]
-deboa = { version = "0.1.0-beta.5", path = "../deboa" }
-deboa-extras = { version = "0.0.8", path = "../deboa-extras", features=["json"] }
-vamo = { version = "0.0.8", path = "../vamo" }
+deboa = { version = "0.1.0-beta.5" }
+deboa-extras = { version = "0.0.8", features=["json"] }
+vamo = { version = "0.0.8" }
 proc-macro2 = "1.0.103"
 serde = "1.0.228"
 syn = { version = "2.0", features = ["full"] }

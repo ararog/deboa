@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-deboa = { version = "0.1.0-beta.5", path = "../../deboa" }
-deboa-extras = { version = "0.0.8", path = "../../deboa-extras" }
-vamo = { version = "0.0.8", path = "../../vamo" }
+deboa = { version = "0.1.0-beta.5" }
+deboa-extras = { version = "0.0.8" }
+vamo = { version = "0.0.8" }
 tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"], default-features = false }
 http = { version = "1.4.0" }
 serde = "1.0.226"
