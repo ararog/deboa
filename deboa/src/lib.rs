@@ -71,7 +71,7 @@ compile_error!("HTTP3 is not supported within tokio-native-tls runtime.");
 #[cfg(all(feature = "smol-native-tls", feature = "http3"))]
 compile_error!("HTTP3 is not supported within smol-native-tls runtime.");
 
-#[cfg(all(feature = "tokio-rt", feature = "smol-rt"))]
+#[cfg(all(feature = "tokio-rt", feature = "smol-rt", feature = "compio-rt"))]
 compile_error!("Only one runtime feature can be enabled at a time.");
 
 #[cfg(not(any(feature = "http1", feature = "http2", feature = "http3")))]
@@ -79,7 +79,7 @@ compile_error!("At least one HTTP version feature must be enabled.");
 
 pub(crate) const MAX_ERROR_MESSAGE_SIZE: usize = 50000;
 
-#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
+#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls"))]
 #[inline]
 pub(crate) fn alpn() -> Vec<Vec<u8>> {
     vec![
@@ -92,7 +92,11 @@ pub(crate) fn alpn() -> Vec<Vec<u8>> {
     ]
 }
 
-#[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
+#[cfg(any(
+    feature = "tokio-native-tls",
+    feature = "smol-native-tls",
+    feature = "compio-native-tls"
+))]
 #[inline]
 pub(crate) fn alpn() -> &'static [&'static str] {
     &[
@@ -113,6 +117,9 @@ use tokio::sync::{RwLock, RwLockWriteGuard};
 #[cfg(feature = "smol-rt")]
 use smol::lock::RwLock;
 
+#[cfg(feature = "compio-rt")]
+use std::sync::Mutex;
+
 use std::fmt::{Debug, Display};
 use std::net::IpAddr;
 use std::ops::Shl;
@@ -122,7 +129,7 @@ use log::{error, info};
 
 use crate::cert::{Certificate, Identity};
 
-use crate::client::conn::{ConnectionConfig, ConnectionFactory};
+use crate::client::conn::ConnectionConfig;
 
 use crate::catcher::DeboaCatcher;
 use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
@@ -136,6 +143,8 @@ pub use async_trait::async_trait;
 pub type File = tokio::fs::File;
 #[cfg(feature = "smol-rt")]
 pub type File = smol::fs::File;
+#[cfg(feature = "compio-rt")]
+pub type File = compio_fs::File;
 
 pub mod cache;
 pub mod catcher;
@@ -275,7 +284,10 @@ pub struct ClientBuilder {
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     skip_cert_verification: bool,
+    #[cfg(any(feature = "tokio-rt", feature = "smol-rt"))]
     pool: RwLock<HttpConnectionPool>,
+    #[cfg(feature = "compio-rt")]
+    pool: Mutex<HttpConnectionPool>,
     bind_addr: IpAddr,
 }
 
@@ -544,7 +556,14 @@ impl ClientBuilder {
     ///     .pool(HttpConnectionPool::default())
     ///     .build();
     /// ```
+    #[cfg(feature = "compio-rt")]
     #[inline]
+    pub fn pool(mut self, pool: HttpConnectionPool) -> Self {
+        self.pool = Mutex::new(pool);
+        self
+    }
+
+    #[cfg(any(feature = "tokio-rt", feature = "smol-rt"))]
     pub fn pool(mut self, pool: HttpConnectionPool) -> Self {
         self.pool = RwLock::new(pool);
         self
@@ -658,7 +677,10 @@ pub struct Client {
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     skip_cert_verification: bool,
+    #[cfg(any(feature = "tokio-rt", feature = "smol-rt"))]
     pool: RwLock<HttpConnectionPool>,
+    #[cfg(feature = "compio-rt")]
+    pool: Mutex<HttpConnectionPool>,
     bind_addr: IpAddr,
 }
 
@@ -706,7 +728,10 @@ impl Default for Client {
             catchers: None,
             protocol: default_protocol(),
             skip_cert_verification: false,
+            #[cfg(any(feature = "tokio-rt", feature = "smol-rt"))]
             pool: RwLock::new(HttpConnectionPool::default()),
+            #[cfg(feature = "compio-rt")]
+            pool: Mutex::new(HttpConnectionPool::default()),
             bind_addr: "0.0.0.0"
                 .parse()
                 .unwrap(),
@@ -763,7 +788,10 @@ impl Client {
             catchers: None,
             protocol: default_protocol(),
             skip_cert_verification: false,
+            #[cfg(any(feature = "tokio-rt", feature = "smol-rt"))]
             pool: RwLock::new(HttpConnectionPool::default()),
+            #[cfg(feature = "compio-rt")]
+            pool: Mutex::new(HttpConnectionPool::default()),
             bind_addr: "0.0.0.0"
                 .parse()
                 .unwrap(),
@@ -786,6 +814,9 @@ impl Client {
             catchers: None,
             protocol: default_protocol(),
             skip_cert_verification: false,
+            #[cfg(feature = "compio-rt")]
+            pool: Mutex::new(HttpConnectionPool::default()),
+            #[cfg(any(feature = "tokio-rt", feature = "smol-rt"))]
             pool: RwLock::new(HttpConnectionPool::default()),
             bind_addr: "0.0.0.0"
                 .parse()
@@ -1090,6 +1121,12 @@ impl Client {
             .pool
             .write()
             .await;
+
+        #[cfg(feature = "compio-rt")]
+        let mut pool = self
+            .pool
+            .lock()
+            .unwrap();
 
         let conn = pool
             .create_connection(&config)

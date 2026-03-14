@@ -65,3 +65,9 @@ async fn test_patch() -> TestResult<()> {
 async fn test_patch() -> TestResult<()> {
     do_patch().await
 }
+
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_patch() -> TestResult<()> {
+    do_patch().await
+}

@@ -23,6 +23,9 @@
 //! features = ["tokio-rt"]  # or "smol-rt"
 //! ```
 
+#[cfg(feature = "compio-rt")]
+pub mod compio;
+
 #[cfg(feature = "tokio-rt")]
 pub mod tokio;
 

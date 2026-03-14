@@ -17,9 +17,11 @@ default = ["tokio-rt", "http2", "tokio-rust-tls"]
 
 tokio-rt = ["easyhttpmock/tokio-rt", "vetis/tokio-rt"]
 smol-rt = ["easyhttpmock/smol-rt", "vetis/smol-rt"]
+#compio-rt = ["easyhttpmock/compio-rt", "vetis/compio-rt"]
 
 tokio-rust-tls = ["easyhttpmock/tokio-rust-tls", "vetis/tokio-rust-tls"]
 smol-rust-tls = ["easyhttpmock/smol-rust-tls", "vetis/smol-rust-tls"]
+#compio-rust-tls = ["easyhttpmock/compio-rust-tls", "vetis/compio-rust-tls"]
 
 http1 = ["easyhttpmock/http1", "vetis/http1"]
 http2 = ["easyhttpmock/http2", "vetis/http2"]

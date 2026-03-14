@@ -1,10 +1,18 @@
 use std::marker::PhantomData;
+use std::result;
 
 use http::version::Version;
 use hyper::{client::conn::http2::handshake, Request, Response};
 
 use hyper_body_utils::HttpBody;
 use rt_gate::spawn_worker;
+
+#[cfg(feature = "compio-rt")]
+use crate::rt::compio::executor::CompioExecutor;
+#[cfg(feature = "compio-rt")]
+use crate::rt::compio::tls::{plain_connection, tls_connection};
+#[cfg(feature = "compio-rt")]
+use crate::rt::compio::CompioIo;
 
 #[cfg(feature = "smol-rt")]
 use crate::rt::smol::executor::SmolExecutor;
@@ -29,6 +37,11 @@ use crate::{
     request::Http2Request,
     Result,
 };
+
+#[cfg(feature = "compio-rt")]
+type DeboaIo<T> = CompioIo<T>;
+#[cfg(feature = "compio-rt")]
+type DeboaExecutor = CompioExecutor;
 
 #[cfg(feature = "smol-rt")]
 type DeboaIo<T> = FuturesIo<T>;

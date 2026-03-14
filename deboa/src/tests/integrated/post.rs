@@ -64,6 +64,12 @@ async fn test_post() -> TestResult<()> {
     do_post().await
 }
 
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_post() -> TestResult<()> {
+    do_post().await
+}
+
 async fn do_post_encoded_form() -> TestResult<()> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "POST" && req.uri().path() == "/posts" {
@@ -132,6 +138,12 @@ async fn test_post_encoded_form() -> TestResult<()> {
     do_post_encoded_form().await
 }
 
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_post_encoded_form() -> TestResult<()> {
+    do_post_encoded_form().await
+}
+
 async fn do_post_multipart_form() -> TestResult<()> {
     let mut form = MultiPartForm::builder();
     form.field("name", "deboa");
@@ -195,6 +207,12 @@ async fn test_post_multipart_form() -> TestResult<()> {
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
+async fn test_post_multipart_form() -> TestResult<()> {
+    do_post_multipart_form().await
+}
+
+#[cfg(feature = "compio-rt")]
+#[compio::test]
 async fn test_post_multipart_form() -> TestResult<()> {
     do_post_multipart_form().await
 }

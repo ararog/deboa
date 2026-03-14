@@ -1,7 +1,7 @@
 use bytes::Bytes;
 use http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
 
-use crate::{
+use deboa::{
     catcher::{DeboaCatcher, MockDeboaCatcher},
     cert::{Certificate, ContentEncoding},
     request::DeboaRequest,
@@ -14,18 +14,6 @@ use deboa_tests::{
     server::Server,
     utils::{make_response, test_url, tls_server_config, url_from_string, CA_CERT},
 };
-
-#[cfg(all(feature = "tokio-rt", any(feature = "http1", feature = "http2")))]
-use deboa_tests::server::tcp::tokio::HttpServer;
-
-#[cfg(all(feature = "smol-rt", any(feature = "http1", feature = "http2")))]
-use deboa_tests::server::tcp::smol::HttpServer;
-
-#[cfg(all(feature = "tokio-rt", feature = "http3"))]
-use deboa_tests::server::udp::tokio::HttpServer;
-
-#[cfg(all(feature = "smol-rt", feature = "http3"))]
-use deboa_tests::server::udp::smol::HttpServer;
 
 #[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;

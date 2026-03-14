@@ -895,9 +895,9 @@ checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 
 [[package]]
 name = "crossfire"
-version = "3.1.4"
+version = "3.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fb12e9c05ae4854f743f0acec2f817148ba59a902484f6aa298d4fc7df2fac4"
+checksum = "cf877d485f079160883c76912869ac04132035f7ea787712264d422793f808df"
 dependencies = [
  "crossbeam-utils",
  "futures-core",
@@ -998,7 +998,7 @@ dependencies = [
  "http-body",
  "http-body-util",
  "hyper",
- "hyper-body-utils",
+ "hyper-body-utils 0.1.6-beta.5",
  "hyper-util",
  "indexmap",
  "log",
@@ -1010,11 +1010,12 @@ dependencies = [
  "quinn",
  "rand 0.9.2",
  "regex",
- "rt-gate",
+ "rt-gate 0.1.4",
  "rustls",
  "rustls-native-certs",
  "rustls-pki-types",
  "rustls-rustcrypto",
+ "send_wrapper",
  "serde",
  "smol",
  "smol-hyper",
@@ -1051,7 +1052,7 @@ dependencies = [
  "http-body",
  "http-body-util",
  "hyper",
- "hyper-body-utils",
+ "hyper-body-utils 0.1.6-beta.4",
  "hyper-util",
  "indexmap",
  "log",
@@ -1061,7 +1062,7 @@ dependencies = [
  "quinn",
  "rand 0.9.2",
  "regex",
- "rt-gate",
+ "rt-gate 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustls",
  "rustls-native-certs",
  "rustls-pki-types",
@@ -1096,7 +1097,7 @@ dependencies = [
  "http",
  "http-body-util",
  "hyper",
- "hyper-body-utils",
+ "hyper-body-utils 0.1.6-beta.4",
  "hyper-util",
  "mime",
  "mime_typed",
@@ -1131,7 +1132,7 @@ dependencies = [
  "http-body-util",
  "httpmock",
  "hyper",
- "hyper-body-utils",
+ "hyper-body-utils 0.1.6-beta.4",
  "hyper-util",
  "mime",
  "mime_typed",
@@ -1977,7 +1978,16 @@ version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51462b35dc551217e1d1dd3f8c5eebbb5df7103370b1e55d24c19a3411d290f7"
 dependencies = [
- "hotpath-macros",
+ "hotpath-macros 0.13.0",
+]
+
+[[package]]
+name = "hotpath"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2fde50be006a0fe95cc2fd6d25d884aa6932218e4055d7df2fa0d95c386acf8d"
+dependencies = [
+ "hotpath-macros 0.14.0",
 ]
 
 [[package]]
@@ -1985,6 +1995,12 @@ name = "hotpath-macros"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f022365c90cc04455f17a2b9ba5fe0e661cde1ab27434d382f1f8693fe124e7d"
+
+[[package]]
+name = "hotpath-macros"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd884cee056e269e41e1127549458e1c4e309f31897ebbc1416982a74d40a5b5"
 
 [[package]]
 name = "http"
@@ -2099,11 +2115,29 @@ dependencies = [
  "futures-util",
  "h3",
  "h3-quinn",
- "hotpath",
+ "hotpath 0.13.0",
  "http-body-util",
  "hyper",
  "macro_rules_attribute",
  "pin-project-lite",
+ "smol",
+ "smol-macros",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
+name = "hyper-body-utils"
+version = "0.1.6-beta.5"
+dependencies = [
+ "bytes",
+ "futures",
+ "h3",
+ "h3-quinn",
+ "hotpath 0.14.0",
+ "http-body-util",
+ "hyper",
+ "macro_rules_attribute",
  "smol",
  "smol-macros",
  "tokio",
@@ -2124,7 +2158,7 @@ dependencies = [
  "hyper",
  "libc",
  "pin-project-lite",
- "socket2 0.6.2",
+ "socket2 0.6.3",
  "tokio",
  "tower-service",
  "tracing",
@@ -3227,7 +3261,7 @@ dependencies = [
  "rustc-hash",
  "rustls",
  "smol",
- "socket2 0.6.2",
+ "socket2 0.6.3",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
@@ -3570,9 +3604,17 @@ dependencies = [
 
 [[package]]
 name = "rt-gate"
-version = "0.1.3"
+version = "0.1.4"
+dependencies = [
+ "smol",
+ "tokio",
+]
+
+[[package]]
+name = "rt-gate"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55077df4d19e50d09bf521fcea498ad9aea0fed6419f3552d16eff42e005ff6e"
+checksum = "a02e9900bd3f67a0ffd86cb79cdde5e5c4c19213d51d8d3b6cbb443ed3ccdf0d"
 dependencies = [
  "smol",
  "tokio",
@@ -3859,6 +3901,12 @@ name = "semver-parser"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
+
+[[package]]
+name = "send_wrapper"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd0b0ec5f1c1ca621c432a25813d8d60c88abe6d3e08a3eb9cf37d97a0fe3d73"
 
 [[package]]
 name = "serde"
@@ -4153,9 +4201,9 @@ dependencies = [
 
 [[package]]
 name = "socket2"
-version = "0.6.2"
+version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86f4aa3ad99f2088c990dfa82d367e19cb29268ed67c574d10d0a4bfe71f07e0"
+checksum = "3a766e1110788c36f4fa1c2b71b387a7815aa65f88ce0229841826633d93723e"
 dependencies = [
  "libc",
  "windows-sys 0.60.2",
@@ -4510,9 +4558,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.49.0"
+version = "1.50.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72a2903cd7736441aac9df9d7688bd0ce48edccaadf181c3b90be801e81d3d86"
+checksum = "27ad5e34374e03cfffefc301becb44e9dc3c17584f414349ebe29ed26661822d"
 dependencies = [
  "bytes",
  "libc",
@@ -4520,7 +4568,7 @@ dependencies = [
  "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
- "socket2 0.6.2",
+ "socket2 0.6.3",
  "tokio-macros",
  "windows-sys 0.61.2",
 ]
@@ -4938,7 +4986,7 @@ dependencies = [
  "quinn",
  "radix_trie",
  "rand 0.9.2",
- "rt-gate",
+ "rt-gate 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustls",
  "serde",
  "serde_yaml_ng",

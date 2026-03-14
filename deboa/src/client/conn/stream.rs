@@ -1,23 +1,31 @@
 #[cfg(all(
     any(feature = "http1", feature = "http2", feature = "http3"),
-    any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
+    any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls")
 ))]
 use std::sync::Arc;
 
-#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
+#[cfg(any(
+    feature = "tokio-rust-tls",
+    feature = "smol-rust-tls",
+    feature = "compio-rust-tls"
+))]
 use rustls::ClientConfig;
 
-#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
+#[cfg(any(
+    feature = "tokio-rust-tls",
+    feature = "smol-rust-tls",
+    feature = "compio-rust-tls"
+))]
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
 #[cfg(all(
     any(feature = "http1", feature = "http2", feature = "http3"),
-    any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
+    any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls")
 ))]
 use crate::cert::Certificate;
 #[cfg(all(
     any(feature = "http1", feature = "http2", feature = "http3"),
-    any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
+    any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls")
 ))]
 use crate::{
     cert::Identity as DeboaIdentity,
@@ -27,7 +35,7 @@ use crate::{
 
 #[cfg(all(
     any(feature = "http1", feature = "http2", feature = "http3"),
-    any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
+    any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls")
 ))]
 pub fn setup_rust_tls(
     host: &str,
@@ -111,7 +119,8 @@ pub fn setup_rust_tls(
 #[cfg(all(
     any(
         all(feature = "tokio-rt", feature = "tokio-rust-tls"),
-        all(feature = "smol-rt", feature = "smol-rust-tls")
+        all(feature = "smol-rt", feature = "smol-rust-tls"),
+        all(feature = "compio-rt", feature = "compio-rust-tls"),
     ),
     any(feature = "http1", feature = "http2", feature = "http3")
 ))]

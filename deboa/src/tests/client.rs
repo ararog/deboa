@@ -15,7 +15,7 @@ fn test_set_connection_timeout() -> Result<()> {
         .connection_timeout(5)
         .build();
 
-    assert_eq!(api.connection_timeout, 5);
+    assert_eq!(api.connection_timeout(), 5);
 
     Ok(())
 }
@@ -26,7 +26,7 @@ fn test_set_request_timeout() -> Result<()> {
         .request_timeout(5)
         .build();
 
-    assert_eq!(api.request_timeout, 5);
+    assert_eq!(api.request_timeout(), 5);
 
     Ok(())
 }
@@ -37,7 +37,7 @@ fn test_set_protocol() -> Result<()> {
         .protocol(default_protocol())
         .build();
 
-    assert_eq!(api.protocol, default_protocol());
+    assert_eq!(*api.protocol(), default_protocol());
 
     Ok(())
 }
@@ -48,7 +48,7 @@ fn test_set_skip_cert_verification() -> Result<()> {
         .skip_cert_verification(true)
         .build();
 
-    assert!(api.skip_cert_verification);
+    assert!(api.skip_cert_verification());
 
     Ok(())
 }
@@ -70,6 +70,12 @@ async fn test_shl() -> Result<()> {
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
+async fn test_shl() -> Result<()> {
+    shl().await
+}
+
+#[cfg(feature = "compio-rt")]
+#[compio::test]
 async fn test_shl() -> Result<()> {
     shl().await
 }

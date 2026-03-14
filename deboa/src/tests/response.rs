@@ -76,6 +76,12 @@ async fn test_raw_body() -> Result<()> {
     raw_body().await
 }
 
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_raw_body() -> Result<()> {
+    raw_body().await
+}
+
 async fn text_body() -> Result<()> {
     let response = DeboaResponse::builder(fake_url())
         .status(http::StatusCode::OK)
@@ -99,6 +105,12 @@ async fn test_text_body() -> Result<()> {
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
+async fn test_text_body() -> Result<()> {
+    text_body().await
+}
+
+#[cfg(feature = "compio-rt")]
+#[compio::test]
 async fn test_text_body() -> Result<()> {
     text_body().await
 }
@@ -128,6 +140,12 @@ async fn test_to_file() -> Result<()> {
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
+async fn test_to_file() -> Result<()> {
+    to_file().await
+}
+
+#[cfg(feature = "compio-rt")]
+#[compio::test]
 async fn test_to_file() -> Result<()> {
     to_file().await
 }

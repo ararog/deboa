@@ -97,6 +97,12 @@ async fn test_multipart_validate_form() -> Result<()> {
     multipart_validate_form().await
 }
 
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_multipart_validate_form() -> Result<()> {
+    multipart_validate_form().await
+}
+
 async fn multipart_validate_form_file() -> Result<()> {
     let input_file = "input.txt";
     let output_file = "output.txt";
@@ -159,6 +165,12 @@ async fn test_multipart_validate_form_file() -> Result<()> {
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
+async fn test_multipart_validate_form_file() -> Result<()> {
+    multipart_validate_form_file().await
+}
+
+#[cfg(feature = "compio-rt")]
+#[compio::test]
 async fn test_multipart_validate_form_file() -> Result<()> {
     multipart_validate_form_file().await
 }

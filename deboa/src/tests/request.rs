@@ -165,6 +165,14 @@ async fn test_from_str_body() {
         .unwrap();
 }
 
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_from_str_body() {
+    do_test_from_str_body()
+        .await
+        .unwrap();
+}
+
 #[test]
 fn test_set_retries() -> Result<(), Box<dyn Error>> {
     let api = DeboaRequest::get(test_url(None))?
@@ -297,6 +305,12 @@ async fn test_set_text_body() -> Result<(), Box<dyn Error>> {
     do_test_set_text_body().await
 }
 
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_set_text_body() -> Result<(), Box<dyn Error>> {
+    do_test_set_text_body().await
+}
+
 async fn do_test_raw_body() -> Result<(), Box<dyn Error>> {
     let test_url = test_url(None);
     let request = DeboaRequest::post(&test_url)?
@@ -323,6 +337,12 @@ async fn test_raw_body() -> Result<(), Box<dyn Error>> {
 
 #[cfg(feature = "smol-rt")]
 #[apply(test!)]
+async fn test_raw_body() -> Result<(), Box<dyn Error>> {
+    do_test_raw_body().await
+}
+
+#[cfg(feature = "compio-rt")]
+#[compio::test]
 async fn test_raw_body() -> Result<(), Box<dyn Error>> {
     do_test_raw_body().await
 }

@@ -1,4 +1,3 @@
-#[cfg(test)]
 use crate::request::DeboaRequest;
 use crate::tests::{helpers::client_with_cert, TestResult};
 
@@ -50,4 +49,11 @@ async fn test_delete() -> TestResult<()> {
 #[apply(test!)]
 async fn test_delete() -> TestResult<()> {
     do_delete().await
+}
+
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_delete() -> TestResult<()> {
+    do_delete().await?;
+    Ok(())
 }

@@ -55,3 +55,9 @@ async fn test_put() -> TestResult<()> {
 async fn test_put() -> TestResult<()> {
     do_put().await
 }
+
+#[cfg(feature = "compio-rt")]
+#[compio::test]
+async fn test_put() -> TestResult<()> {
+    do_put().await
+}

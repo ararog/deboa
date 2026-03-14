@@ -98,6 +98,9 @@ pub type File = smol::fs::File;
 #[cfg(feature = "tokio-rt")]
 pub type File = tokio::fs::File;
 
+#[cfg(feature = "compio-rt")]
+pub type File = compio_fs::File;
+
 #[cfg(feature = "http1")]
 pub type Http1Request = hyper::client::conn::http1::SendRequest<HttpBody>;
 #[cfg(feature = "http2")]
