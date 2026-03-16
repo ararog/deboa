@@ -185,11 +185,17 @@ impl<'a> ConnectionConfigBuilder<'a> {
             is_secure: false,
             host: "",
             port: 80,
-            #[cfg(feature = "http1")]
+            #[cfg(all(feature = "http1", not(feature = "http2"), not(feature = "http3")))]
             protocol: HttpVersion::Http1,
-            #[cfg(feature = "http2")]
+            #[cfg(all(feature = "http1", feature = "http2", not(feature = "http3")))]
+            protocol: HttpVersion::Http1,
+            #[cfg(all(feature = "http1", feature = "http3", not(feature = "http2")))]
+            protocol: HttpVersion::Http1,
+            #[cfg(all(feature = "http2", not(feature = "http1"), not(feature = "http3")))]
             protocol: HttpVersion::Http2,
-            #[cfg(feature = "http3")]
+            #[cfg(all(feature = "http2", feature = "http3", not(feature = "http1")))]
+            protocol: HttpVersion::Http2,
+            #[cfg(all(feature = "http3", not(feature = "http1"), not(feature = "http2")))]
             protocol: HttpVersion::Http3,
             identity: None,
             certificate: None,
