@@ -17,14 +17,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        runtime: ["tokio-rt", "smol-rt"]
-        protocols: ["http1", "http2", "http3"]
-        tls: ["native", "rust"]
-        exclude:
-          - os: windows-latest
-            tls: "native"
-          - os: macos-latest
-            tls: "native"
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -78,14 +70,14 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        runtime: ["tokio-rt", "smol-rt"]
+        runtime: ["tokio", "smol"]
         protocols: ["http1", "http2", "http3"]
-        tls: ["native", "rust"]
+        tls: ["native-tls", "rust-tls"]
         exclude:
           - os: windows-latest
-            tls: "native"
+            tls: "native-tls"
           - os: macos-latest
-            tls: "native"
+            tls: "native-tls"
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -96,7 +88,7 @@ jobs:
     - name: Run deboa tests with selected features
       run: |
         cd deboa
-        cargo test --features "${{ matrix.protocols }} ${{ matrix.runtime }} ${{ matrix.tls }}" --no-default-features
+        cargo test --features "${{ matrix.protocols }} ${{ matrix.runtime }}-rt ${{ matrix.runtime }}-${{ matrix.tls }}" --no-default-features
 
   build-android:
     runs-on: ubuntu-latest
