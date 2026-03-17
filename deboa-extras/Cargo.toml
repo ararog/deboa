@@ -54,6 +54,9 @@ tokio-rt = [
   "dep:hyper",
   "dep:hyper-util",
   "hyper-body-utils/tokio-rt",
+  "deboa-tests/tokio-rt",
+  "deboa-tests/tokio-rust-tls",
+  "deboa-tests/http1"
 ]
 smol-rt = [
   "deboa/smol-rt",
@@ -63,6 +66,9 @@ smol-rt = [
   "dep:hyper",
   "dep:hyper-util",
   "hyper-body-utils/smol-rt",
+  "deboa-tests/smol-rt",
+  "deboa-tests/smol-rust-tls",
+  "deboa-tests/http1"
 ]
 
 [dependencies]
@@ -99,6 +105,6 @@ url = "2.5.8"
 ws-framer = { version = "0.3.1", optional = true }
 
 [dev-dependencies]
-deboa-tests = { path = "../deboa-tests", version = "0.0.1" }
+deboa-tests = { path = "../deboa-tests", version = "0.0.1", default-features = false}
 tokio = { version = "1.49.0", features = ["rt-multi-thread"] }
 ws-mock = "0.4.0"

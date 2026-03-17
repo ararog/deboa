@@ -8,6 +8,14 @@ cd deboa-extras
 cargo test --features "serialization_all compression_all"
 cd ..
 
+cd deboa-extras
+cargo test --features "tokio-rt" --no-default-features
+cd ..        
+
+cd deboa-extras
+cargo test --features "smol-rt" --no-default-features
+cd ..  
+
 cd deboa-fory
 cargo test
 cd ..
