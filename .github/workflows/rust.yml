@@ -33,13 +33,13 @@ jobs:
     - name: Run deboa-extras with tokio-only
       run: |
         cd deboa-extras
-        cargo test --features "tokio-rt" -no-default-features
+        cargo test --features "tokio-rt" --no-default-features
         cd ..        
 
     - name: Run deboa-extras with smol-only
       run: |
         cd deboa-extras
-        cargo test --features "smol-rt" -no-default-features
+        cargo test --features "smol-rt" --no-default-features
         cd ..        
 
     - name: Run deboa-fory tests
@@ -73,11 +73,6 @@ jobs:
         runtime: ["tokio", "smol"]
         protocols: ["http1", "http2", "http3"]
         tls: ["native-tls", "rust-tls"]
-        exclude:
-          - os: windows-latest
-            tls: "native-tls"
-          - os: macos-latest
-            tls: "native-tls"
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -86,6 +81,7 @@ jobs:
     - uses: Swatinem/rust-cache@v2
         
     - name: Run deboa tests with selected features
+      if: (matrix.os != 'windows-latest' && matrix.tls != 'native-tls') || (matrix.os != 'macos-latest' && matrix.tls != 'native-tls')
       run: |
         cd deboa
         cargo test --features "${{ matrix.protocols }} ${{ matrix.runtime }}-rt ${{ matrix.runtime }}-${{ matrix.tls }}" --no-default-features
