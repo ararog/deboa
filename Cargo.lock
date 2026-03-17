@@ -479,7 +479,7 @@ dependencies = [
 name = "blog"
 version = "0.1.0"
 dependencies = [
- "deboa 0.1.0-beta.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras 0.0.8",
  "http",
  "rayon",
@@ -539,7 +539,7 @@ name = "cbor"
 version = "0.1.0"
 dependencies = [
  "ciborium",
- "deboa 0.1.0-beta.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras 0.0.8",
  "serde",
  "tokio",
@@ -954,7 +954,7 @@ checksum = "d7a1e2f27636f116493b8b860f5546edb47c8d8f8ea73e1d2a20be88e28d1fea"
 
 [[package]]
 name = "deboa"
-version = "0.1.0-beta.8"
+version = "0.1.0-beta.9"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -1010,9 +1010,9 @@ dependencies = [
 
 [[package]]
 name = "deboa"
-version = "0.1.0-beta.8"
+version = "0.1.0-beta.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50be6634c0a9b555d01bb0246173de96492a4ae3e2d9c3f86e9696aa509acc0d"
+checksum = "f6350e6d582813b061aff007ffeca894a421f4ccd58c03d289062a7a4f86f868"
 dependencies = [
  "async-executor",
  "async-std-resolver",
@@ -1067,7 +1067,7 @@ dependencies = [
  "base64",
  "bytes",
  "ciborium",
- "deboa 0.1.0-beta.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2",
  "futures",
  "futures-util",
@@ -1093,13 +1093,13 @@ dependencies = [
 
 [[package]]
 name = "deboa-extras"
-version = "0.0.9-beta.3"
+version = "0.0.9-beta.5"
 dependencies = [
  "base64",
  "brotli",
  "bytes",
  "ciborium",
- "deboa 0.1.0-beta.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-tests",
  "flate2",
  "flexbuffers",
@@ -1131,10 +1131,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "deboa-extras"
+version = "0.0.9-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d55b395b792bd46b5fff38db5e2d61a37a1d74af0e58b48e0637d92cd29ac09"
+dependencies = [
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "futures",
+ "futures-util",
+ "http",
+ "hyper",
+ "hyper-body-utils",
+ "hyper-util",
+ "mime",
+ "mime_typed",
+ "pin-project-lite",
+ "rmp-serde",
+ "serde",
+ "serde-xml-rust",
+ "simd-json",
+ "smol",
+ "smol-hyper",
+ "thiserror 2.0.18",
+ "url",
+]
+
+[[package]]
 name = "deboa-fory"
 version = "0.1.5"
 dependencies = [
- "deboa 0.1.0-beta.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-tests",
  "fory",
  "fory-core",
@@ -1148,7 +1174,7 @@ dependencies = [
 name = "deboa-macros"
 version = "0.0.9"
 dependencies = [
- "deboa 0.1.0-beta.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras 0.0.8",
  "http",
  "serde",
@@ -2998,7 +3024,7 @@ name = "postman"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "deboa 0.1.0-beta.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras 0.0.8",
  "http",
  "serde",
@@ -3964,12 +3990,26 @@ checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
 name = "simple"
 version = "0.0.0"
 dependencies = [
- "deboa 0.1.0-beta.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras 0.0.8",
  "http",
  "serde",
  "serde_json",
  "tokio",
+]
+
+[[package]]
+name = "simple-smol"
+version = "0.0.0"
+dependencies = [
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa-extras 0.0.9-beta.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "http",
+ "macro_rules_attribute",
+ "serde",
+ "serde_json",
+ "smol",
+ "smol-macros",
 ]
 
 [[package]]
@@ -4708,7 +4748,7 @@ name = "vamo"
 version = "0.0.8"
 dependencies = [
  "base64",
- "deboa 0.1.0-beta.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras 0.0.8",
  "deboa-tests",
  "http",
@@ -4726,7 +4766,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "abe591d67ff30a8e6bbeb83542c11dbb6906df3774a3c5fb03797305a4873731"
 dependencies = [
  "base64",
- "deboa 0.1.0-beta.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras 0.0.8",
  "http",
  "serde",
@@ -4738,7 +4778,7 @@ dependencies = [
 name = "vamo-macros"
 version = "0.0.8"
 dependencies = [
- "deboa 0.1.0-beta.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras 0.0.8",
  "deboa-tests",
  "http",
@@ -4760,7 +4800,7 @@ version = "0.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c5ffc5d28fe3ceae908d0101257540cbe81a7a81028085c02b38d1ee60bd155"
 dependencies = [
- "deboa 0.1.0-beta.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras 0.0.8",
  "http",
  "proc-macro2",
@@ -4797,7 +4837,7 @@ dependencies = [
  "cfg-if",
  "clap",
  "crossfire",
- "deboa 0.1.0-beta.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger",
  "futures-lite",
  "futures-rustls",

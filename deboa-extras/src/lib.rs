@@ -84,7 +84,7 @@
 //! }
 //! ```
 
-pub mod catcher;
+//pub mod catcher;
 pub mod errors;
 pub mod http;
 

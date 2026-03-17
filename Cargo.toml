@@ -12,6 +12,7 @@ members = [
     "examples/cbor",
     "examples/postman",
     "examples/simple",
+    "examples/simple-smol",
     "vamo",
     "vamo-macros", 
 ]
