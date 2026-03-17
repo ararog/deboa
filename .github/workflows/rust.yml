@@ -1,4 +1,4 @@
-name: Rust
+name: Deboa Unit Tests
 
 permissions:
   contents: read
@@ -13,64 +13,90 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  test-crates:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        runtime: ["tokio-rt", "smol-rt"]
+        protocols: ["http1", "http2", "http3"]
+        tls: ["native", "rust"]
+        exclude:
+          - os: windows-latest
+            tls: "native"
+          - os: macos-latest
+            tls: "native"
+
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v6
 
     - uses: Swatinem/rust-cache@v2
 
-    - name: Run all tests on all crates
+    - name: Run deboa-extras with default serialization and compression
       run: |
         cd deboa-extras
         cargo test --features "serialization_all compression_all"
         cd ..
 
+    - name: Run deboa-extras with tokio-only
+      run: |
+        cd deboa-extras
+        cargo test --features "tokio-rt" -no-default-features
+        cd ..        
+
+    - name: Run deboa-extras with smol-only
+      run: |
+        cd deboa-extras
+        cargo test --features "smol-rt" -no-default-features
+        cd ..        
+
+    - name: Run deboa-fory tests
+      run: |
         cd deboa-fory
         cargo test
         cd ..
 
+    - name: Run deboa-macros tests
+      run: |
         cd deboa-macros
         cargo test
         cd ..
 
+    - name: Run vamo tests
+      run: |
         cd vamo
         cargo test
         cd ..
 
+    - name: Run vamo-macros tests
+      run: |
         cd vamo-macros
         cargo test
         cd ..
         
-    - name: Run all HTTP1 tests with native TLS
-      run: |
-        cd deboa
-        cargo test --features "http1 tokio-rt tokio-native-tls" --no-default-features
-        cargo test --features "http1 smol-rt smol-native-tls" --no-default-features
+  test-deboa:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        runtime: ["tokio-rt", "smol-rt"]
+        protocols: ["http1", "http2", "http3"]
+        tls: ["native", "rust"]
+        exclude:
+          - os: windows-latest
+            tls: "native"
+          - os: macos-latest
+            tls: "native"
 
-    - name: Run all HTTP2 tests with native TLS
-      run: |
-        cd deboa
-        cargo test --features "http2 tokio-rt tokio-native-tls" --no-default-features
-        cargo test --features "http2 smol-rt smol-native-tls" --no-default-features
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v6
 
-    - name: Run all HTTP1 tests with rust TLS
+    - uses: Swatinem/rust-cache@v2
+        
+    - name: Run deboa tests with selected features
       run: |
         cd deboa
-        cargo test --features "http1 tokio-rt tokio-rust-tls" --no-default-features
-        cargo test --features "http1 smol-rt smol-rust-tls" --no-default-features
-
-    - name: Run all HTTP2 tests with rust TLS
-      run: |
-        cd deboa
-        cargo test --features "http2 tokio-rt tokio-rust-tls" --no-default-features
-        cargo test --features "http2 smol-rt smol-rust-tls" --no-default-features
-
-    - name: Run all HTTP3 tests with rust TLS
-      run: |
-        cd deboa
-        cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
-        cargo test --features "http3 smol-rt smol-rust-tls" --no-default-features
+        cargo test --features "${{ matrix.protocols }} ${{ matrix.runtime }} ${{ matrix.tls }}" --no-default-features
 
   build-android:
     runs-on: ubuntu-latest
@@ -104,129 +130,3 @@ jobs:
         cd vamo-macros
         cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
         cd ..        
-
-  build-windows:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v6
-
-    - uses: Swatinem/rust-cache@v2
-
-    - name: Install Rust toolchains
-      run: rustup target add x86_64-pc-windows-msvc
-
-    - name: Build for x86_64-pc-windows-msvc
-      run: cargo build --target x86_64-pc-windows-msvc --release
-    
-    - name: Run all tests on all crates
-      run: |
-        cd deboa-extras
-        cargo test --features "serialization_all compression_all"
-        cd ..
-
-        cd deboa-macros
-        cargo test
-        cd ..
-
-        cd vamo
-        cargo test
-        cd ..
-
-        cd vamo-macros
-        cargo test
-        cd ..
-              
-    # - name: Run all HTTP1 tests with native TLS
-    #   run: |
-    #     cd deboa
-    #     cargo test --features "http1 tokio-rt tokio-native-tls" --no-default-features
-    #     cargo test --features "http1 smol-rt smol-native-tls" --no-default-features
-
-    # - name: Run all HTTP2 tests with native TLS
-    #   run: |
-    #     cd deboa
-    #     cargo test --features "http2 tokio-rt tokio-native-tls" --no-default-features
-    #     cargo test --features "http2 smol-rt smol-native-tls" --no-default-features
-
-    - name: Run all HTTP1 tests with rust TLS
-      run: |
-        cd deboa
-        cargo test --features "http1 tokio-rt tokio-rust-tls" --no-default-features
-        cargo test --features "http1 smol-rt smol-rust-tls" --no-default-features
-
-    - name: Run all HTTP2 tests with rust TLS
-      run: |
-        cd deboa
-        cargo test --features "http2 tokio-rt tokio-rust-tls" --no-default-features
-        cargo test --features "http2 smol-rt smol-rust-tls" --no-default-features
-
-    - name: Run all HTTP3 tests with rust TLS
-      run: |
-        cd deboa
-        cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
-        cargo test --features "http3 smol-rt smol-rust-tls" --no-default-features
-
-  build-macos:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v6
-
-    - name: Install Rust toolchains
-      run: rustup target add x86_64-apple-darwin
-
-    - uses: Swatinem/rust-cache@v2
-
-    - name: Build for x86_64-apple-darwin
-      run: cargo build --target x86_64-apple-darwin --release
-    
-    - name: Run all tests on all crates
-      run: |
-        cd deboa-extras
-        cargo test --features "serialization_all compression_all"
-        cd ..
-
-        cd deboa-fory
-        cargo test
-        cd ..
-
-        cd deboa-macros
-        cargo test
-        cd ..
-
-        cd vamo
-        cargo test
-        cd ..
-
-        cd vamo-macros
-        cargo test
-        cd ..
-              
-    # - name: Run all HTTP1 tests with native TLS
-    #   run: |
-    #     cd deboa
-    #     cargo test --features "http1 tokio-rt tokio-native-tls" --no-default-features
-    #     cargo test --features "http1 smol-rt smol-native-tls" --no-default-features
-
-    # - name: Run all HTTP2 tests with native TLS
-    #   run: |
-    #     cd deboa
-    #     cargo test --features "http2 tokio-rt tokio-native-tls" --no-default-features
-    #     cargo test --features "http2 smol-rt smol-native-tls" --no-default-features
-
-    - name: Run all HTTP1 tests with rust TLS
-      run: |
-        cd deboa
-        cargo test --features "http1 tokio-rt tokio-rust-tls" --no-default-features
-        cargo test --features "http1 smol-rt smol-rust-tls" --no-default-features
-
-    - name: Run all HTTP2 tests with rust TLS
-      run: |
-        cd deboa
-        cargo test --features "http2 tokio-rt tokio-rust-tls" --no-default-features
-        cargo test --features "http2 smol-rt smol-rust-tls" --no-default-features
-
-    - name: Run all HTTP3 tests with rust TLS
-      run: |
-        cd deboa
-        cargo test --features "http3 tokio-rt tokio-rust-tls" --no-default-features
-        cargo test --features "http3 smol-rt smol-rust-tls" --no-default-features
