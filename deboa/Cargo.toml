@@ -40,6 +40,7 @@ smol-rt = [
   "quinn/runtime-smol",
   "rt-gate/smol-rt",
   "hyper-body-utils/smol-rt",
+  "dep:trust-dns-resolver",
   "async-std-resolver",
 ]
 
