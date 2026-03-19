@@ -27,6 +27,7 @@ tokio-rt = [
   "tokio-util/io",
   "rt-gate/tokio-rt",
   "hyper-body-utils/tokio-rt",
+  "trust-dns-resolver/tokio-runtime",
 ]
 
 smol-rt = [
@@ -39,6 +40,7 @@ smol-rt = [
   "quinn/runtime-smol",
   "rt-gate/smol-rt",
   "hyper-body-utils/smol-rt",
+  "async-std-resolver",
 ]
 
 # compio-rt = [
@@ -94,13 +96,11 @@ __rustls_ring = ["futures-rustls/ring"]
 __rustls_rustcrypto = ["dep:rustls-rustcrypto"]
 
 tokio-native-tls = [
-  "dep:async-native-tls",
   "async-native-tls/runtime-tokio",
   "deboa-tests/tokio-rust-tls",
 ]
 
 smol-native-tls = [
-  "dep:async-native-tls",
   "async-native-tls/runtime-async-std",
   "deboa-tests/smol-rust-tls",
 ]
@@ -115,23 +115,17 @@ http1 = [
   "hyper/http1",
   "hyper-util/http1",
   "deboa-tests/http1",
-  "trust-dns-resolver",
-  "async-std-resolver",
 ]
 http2 = [
   "hyper/http2",
   "hyper-util/http2",
   "deboa-tests/http2",
-  "trust-dns-resolver",
-  "async-std-resolver",
 ]
 http3 = [
   "dep:h3",
   "dep:h3-quinn",
   "dep:quinn",
   "deboa-tests/http3",
-  "trust-dns-resolver",
-  "async-std-resolver",
   "hyper-body-utils/http3",
 ]
 futures-util = ["dep:futures-util"]
