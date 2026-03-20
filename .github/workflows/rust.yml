@@ -2,12 +2,12 @@ name: Deboa Unit Tests
 
 permissions:
   contents: read
-  
+
 on:
   push:
-    branches: [ "**" ]
+    branches: ["**"]
   pull_request:
-    branches: [ "**" ]
+    branches: ["**"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -20,52 +20,52 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-    - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
 
-    - name: Run deboa-extras with default serialization and compression
-      run: |
-        cd deboa-extras
-        cargo test --features "serialization_all compression_all"
-        cd ..
+      - name: Run deboa-extras with default serialization and compression
+        run: |
+          cd deboa-extras
+          cargo test --features "serialization_all compression_all"
+          cd ..
 
-    - name: Run deboa-extras with tokio-only
-      run: |
-        cd deboa-extras
-        cargo test --features "tokio-rt" --no-default-features
-        cd ..        
+      - name: Run deboa-extras with tokio-only
+        run: |
+          cd deboa-extras
+          cargo test --features "tokio-rt" --no-default-features
+          cd ..
 
-    - name: Run deboa-extras with smol-only
-      run: |
-        cd deboa-extras
-        cargo test --features "smol-rt" --no-default-features
-        cd ..        
+      - name: Run deboa-extras with smol-only
+        run: |
+          cd deboa-extras
+          cargo test --features "smol-rt" --no-default-features
+          cd ..
 
-    - name: Run deboa-fory tests
-      run: |
-        cd deboa-fory
-        cargo test
-        cd ..
+      - name: Run deboa-fory tests
+        run: |
+          cd deboa-fory
+          cargo test
+          cd ..
 
-    - name: Run deboa-macros tests
-      run: |
-        cd deboa-macros
-        cargo test
-        cd ..
+      - name: Run deboa-macros tests
+        run: |
+          cd deboa-macros
+          cargo test
+          cd ..
 
-    - name: Run vamo tests
-      run: |
-        cd vamo
-        cargo test
-        cd ..
+      - name: Run vamo tests
+        run: |
+          cd vamo
+          cargo test
+          cd ..
 
-    - name: Run vamo-macros tests
-      run: |
-        cd vamo-macros
-        cargo test
-        cd ..
-        
+      - name: Run vamo-macros tests
+        run: |
+          cd vamo-macros
+          cargo test
+          cd ..
+
   test-deboa:
     strategy:
       matrix:
@@ -76,45 +76,45 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-    - uses: Swatinem/rust-cache@v2
-        
-    - name: Run deboa tests with selected features
-      if: (matrix.os != 'windows-latest' && matrix.tls != 'native-tls') || (matrix.os != 'macos-latest' && matrix.tls != 'native-tls')
-      run: |
-        cd deboa
-        cargo test --features "${{ matrix.protocols }} ${{ matrix.runtime }}-rt ${{ matrix.runtime }}-${{ matrix.tls }} ${{ matrix.tls == 'rust-tls' && 'default-rustls-provider' || '' }}" --no-default-features
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run deboa tests with selected features
+        if: (matrix.os != 'windows-latest' && matrix.tls != 'native-tls') || (matrix.os != 'macos-latest' && matrix.tls != 'native-tls')
+        run: |
+          cd deboa
+          cargo test --features "${{ matrix.protocols }} ${{ matrix.runtime }}-rt ${{ matrix.runtime }}-${{ matrix.tls }} ${{ matrix.tls == 'rust-tls' && 'default-rustls-provider' || '' }} ${{ matrix.tls == 'rust-tls' && 'default-rustls-verifier' || '' }}" --no-default-features
 
   build-android:
     runs-on: ubuntu-latest
     container: instrumentisto/cargo-ndk
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-    - name: Install Rust toolchains
-      run: rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+      - name: Install Rust toolchains
+        run: rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
 
-    - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
 
-    - name: Build for android archs with cargo-ndk
-      run: |
-        cd deboa
-        cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
-        cd ..
+      - name: Build for android archs with cargo-ndk
+        run: |
+          cd deboa
+          cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
+          cd ..
 
-        cd deboa-extras
-        cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
-        cd ..        
+          cd deboa-extras
+          cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
+          cd ..        
 
-        cd deboa-macros
-        cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
-        cd ..        
+          cd deboa-macros
+          cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
+          cd ..        
 
-        cd vamo
-        cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
-        cd ..        
+          cd vamo
+          cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
+          cd ..        
 
-        cd vamo-macros
-        cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
-        cd ..        
+          cd vamo-macros
+          cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
+          cd ..
