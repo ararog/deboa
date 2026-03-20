@@ -1,6 +1,6 @@
 [package]
 name = "deboa"
-version = "0.1.0-beta.13"
+version = "0.1.0-beta.14"
 edition = "2021"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 repository = "https://github.com/ararog/deboa"
@@ -16,35 +16,34 @@ rust-version = "1.75.0"
 all-features = true
 
 [features]
-default = ["tokio-rt", "http2", "tokio-rust-tls", "default-rustls-provider"]
+default = ["tokio-rt", "http2", "tokio-rust-tls", "default-rustls-provider", "default-rustls-verifier"]
 
 # runtimes
 tokio-rt = [
-  "tokio/fs",
-  "tokio/macros",
-  "deboa-tests/tokio-rt",
-  "quinn/runtime-tokio",
-  "tokio-util/io",
-  "rt-gate/tokio-rt",
-  "hyper-util/tokio",
-  "hyper-body-utils/tokio-rt",
-  "trust-dns-resolver/tokio-runtime",
+    "tokio/fs",
+    "tokio/macros",
+    "deboa-tests/tokio-rt",
+    "quinn/runtime-tokio",
+    "tokio-util/io",
+    "rt-gate/tokio-rt",
+    "hyper-util/tokio",
+    "hyper-body-utils/tokio-rt",
+    "trust-dns-resolver/tokio-runtime",
 ]
 
 smol-rt = [
-  "dep:smol",
-  "smol-hyper/smol",
-  "dep:async-executor",
-  "dep:smol-macros",
-  "dep:macro_rules_attribute",
-  "deboa-tests/smol-rt",
-  "quinn/runtime-smol",
-  "rt-gate/smol-rt",
-  "hyper-body-utils/smol-rt",
-  "dep:trust-dns-resolver",
-  "async-std-resolver",
+    "dep:smol",
+    "smol-hyper/smol",
+    "dep:async-executor",
+    "dep:smol-macros",
+    "dep:macro_rules_attribute",
+    "deboa-tests/smol-rt",
+    "quinn/runtime-smol",
+    "rt-gate/smol-rt",
+    "hyper-body-utils/smol-rt",
+    "dep:trust-dns-resolver",
+    "async-std-resolver",
 ]
-
 # compio-rt = [
 #   "compio/macros",
 #   "compio/io-compat",
@@ -61,21 +60,19 @@ smol-rt = [
 
 # tls
 tokio-rust-tls = [
-  "dep:rustls",
-  "dep:rustls-native-certs",
-  "dep:tokio-rustls",
-  "dep:webpki-roots",
-  "deboa-tests/tokio-rust-tls",
-  "dep:rustls-pki-types",
+    "dep:rustls",
+    "dep:rustls-native-certs",
+    "dep:tokio-rustls",
+    "deboa-tests/tokio-rust-tls",
+    "dep:rustls-pki-types",
 ]
 
 smol-rust-tls = [
-  "dep:rustls",
-  "dep:rustls-native-certs",
-  "dep:futures-rustls",
-  "dep:webpki-roots",
-  "deboa-tests/smol-rust-tls",
-  "dep:rustls-pki-types",
+    "dep:rustls",
+    "dep:rustls-native-certs",
+    "dep:futures-rustls",
+    "deboa-tests/smol-rust-tls",
+    "dep:rustls-pki-types",
 ]
 
 # compio-rust-tls = [
@@ -87,8 +84,13 @@ smol-rust-tls = [
 #   "compio-tls/rustls",
 # ]
 
+default-rustls-verifier = ["__webpki_rustls_verifier"]
+__webpki_rustls_verifier = ["dep:webpki-roots"]
+__platform_rustls_verifier = ["dep:rustls-platform-verifier"]
+
 # rustls providers
 no-provider = []
+aws-lc-rustls-provider = ["__rustls_aws_lc_rs"]
 ring-rustls-provider = ["__rustls_ring"]
 rustcrypto-rustl-provider = ["__rustls_rustcrypto"]
 
@@ -98,38 +100,23 @@ __rustls_ring = ["futures-rustls/ring", "quinn/rustls-ring"]
 __rustls_rustcrypto = ["dep:rustls-rustcrypto"]
 
 # tls implementations
-tokio-native-tls = [
-  "async-native-tls/runtime-tokio",
-  "deboa-tests/tokio-rust-tls",
-]
+tokio-native-tls = ["async-native-tls/runtime-tokio", "deboa-tests/tokio-rust-tls"]
 
-smol-native-tls = [
-  "async-native-tls/runtime-async-std",
-  "deboa-tests/smol-rust-tls",
-]
-
+smol-native-tls = ["async-native-tls/runtime-async-std", "deboa-tests/smol-rust-tls"]
 # compio-native-tls = [
 #   "compio-tls/native-tls",
 #   "deboa-tests/compio-rust-tls",
 # ]
 
 # protocols
-http1 = [
-  "hyper/http1",
-  "hyper-util/http1",
-  "deboa-tests/http1",
-]
-http2 = [
-  "hyper/http2",
-  "hyper-util/http2",
-  "deboa-tests/http2",
-]
+http1 = ["hyper/http1", "hyper-util/http1", "deboa-tests/http1"]
+http2 = ["hyper/http2", "hyper-util/http2", "deboa-tests/http2"]
 http3 = [
-  "dep:h3",
-  "dep:h3-quinn",
-  "dep:quinn",
-  "deboa-tests/http3",
-  "hyper-body-utils/http3",
+    "dep:h3",
+    "dep:h3-quinn",
+    "dep:quinn",
+    "deboa-tests/http3",
+    "hyper-body-utils/http3",
 ]
 futures-util = ["dep:futures-util"]
 
@@ -148,8 +135,8 @@ cfg-if = "1.0.4"
 # compio-tls = { git = "https://github.com/compio-rs/compio.git", optional = true, default-features = false }
 cookie = "0.15.2"
 futures = "0.3.31"
-futures-util = { version = "0.3.31", optional = true, default-features = false }
 futures-rustls = { version = "0.26.0", optional = true, default-features = false }
+futures-util = { version = "0.3.31", optional = true, default-features = false }
 h3 = { version = "0.0.8", optional = true, default-features = false }
 h3-quinn = { version = "0.0.10", optional = true, default-features = false }
 http = "1"
@@ -173,6 +160,7 @@ rt-gate = { version = "0.1.5", optional = true, default-features = false }
 rustls = { version = "0.23.36", optional = true, default-features = false }
 rustls-native-certs = { version = "0.8.0", optional = true, default-features = false }
 rustls-pki-types = { version = "1.13.2", optional = true, default-features = false }
+rustls-platform-verifier = { version = "0.6.2", optional = true, default-features = false }
 rustls-rustcrypto = { version = "0.0.2-alpha", optional = true, default-features = false }
 send_wrapper = { version = "0.6.0", optional = true, default-features = false }
 serde = { version = "1.0.217", features = ["derive"] }

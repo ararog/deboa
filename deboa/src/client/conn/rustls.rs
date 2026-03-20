@@ -27,42 +27,59 @@ pub fn setup_rust_tls(
     skip_server_verification: bool,
     alpn: Vec<Vec<u8>>,
 ) -> Result<ClientConfig> {
-    let mut root_store = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
     let provider = default_provider();
-    let config = rustls::ClientConfig::builder_with_provider(provider)
-        .with_protocol_versions(&[&rustls::version::TLS13])
-        .expect("Failed to set TLS version");
 
     if skip_server_verification {
         use crate::client::conn::rustls::verify::SkipServerVerification;
-
-        let config = config
+        let config = rustls::ClientConfig::builder_with_provider(provider)
+            .with_protocol_versions(&[&rustls::version::TLS13])
+            .expect("Failed to set TLS version")
             .dangerous()
             .with_custom_certificate_verifier(SkipServerVerification::new())
             .with_no_client_auth();
         return Ok(config);
     }
 
-    let config = if let Some(ca) = certificate {
-        let cert = ca.try_into();
-        if let Err(e) = cert {
-            return Err(DeboaError::Connection(ConnectionError::Tls {
-                host: host.to_string(),
-                message: format!("Invalid CA certificate: {}", e),
-            }));
-        }
+    #[cfg(feature = "__webpki_rustls_verifier")]
+    let config = {
+        let config = rustls::ClientConfig::builder_with_provider(provider)
+            .with_protocol_versions(&[&rustls::version::TLS13])
+            .expect("Failed to set TLS version");
 
-        let result = root_store.add(cert.unwrap());
-        if let Err(e) = result {
-            return Err(DeboaError::Connection(ConnectionError::Tls {
-                host: host.to_string(),
-                message: format!("Could not add CA certificate to the store: {}", e),
-            }));
-        }
+        let mut root_store =
+            rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
+        if let Some(ca) = certificate {
+            let cert = ca.try_into();
+            if let Err(e) = cert {
+                return Err(DeboaError::Connection(ConnectionError::Tls {
+                    host: host.to_string(),
+                    message: format!("Invalid CA certificate: {}", e),
+                }));
+            }
 
-        config.with_root_certificates(root_store)
-    } else {
-        config.with_root_certificates(root_store)
+            let result = root_store.add(cert.unwrap());
+            if let Err(e) = result {
+                return Err(DeboaError::Connection(ConnectionError::Tls {
+                    host: host.to_string(),
+                    message: format!("Could not add CA certificate to the store: {}", e),
+                }));
+            }
+
+            config.with_root_certificates(root_store)
+        } else {
+            config.with_root_certificates(root_store)
+        }
+    };
+
+    #[cfg(feature = "__platform_rustls_verifier")]
+    let config = {
+        use rustls_platform_verifier::Verifier;
+        let verifier = Verifier::new(provider).expect("Failed to create platform verifier");
+        rustls::ClientConfig::builder_with_provider(default_provider())
+            .with_protocol_versions(&[&rustls::version::TLS13])
+            .expect("Failed to set TLS version")
+            .dangerous()
+            .with_custom_certificate_verifier(Arc::new(verifier))
     };
 
     let mut config = if let Some(id) = identity {

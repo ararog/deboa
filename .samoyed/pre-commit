@@ -42,16 +42,16 @@ cargo test --features "http2 tokio-rt tokio-native-tls" --no-default-features
 cargo test --features "http2 smol-rt smol-native-tls" --no-default-features
 #cargo test --features "http2 compio-rt compio-native-tls" --no-default-features
 
-cargo test --features "http1 tokio-rt tokio-rust-tls default-rustls-provider" --no-default-features
-cargo test --features "http1 smol-rt smol-rust-tls default-rustls-provider" --no-default-features
-#cargo test --features "http1 compio-rt compio-rust-tls default-rustls-provider" --no-default-features
+cargo test --features "http1 tokio-rt tokio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+cargo test --features "http1 smol-rt smol-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+#cargo test --features "http1 compio-rt compio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
 
-cargo test --features "http2 tokio-rt tokio-rust-tls default-rustls-provider" --no-default-features
-cargo test --features "http2 smol-rt smol-rust-tls default-rustls-provider" --no-default-features
-#cargo test --features "http2 compio-rt compio-rust-tls default-rustls-provider" --no-default-features
+cargo test --features "http2 tokio-rt tokio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+cargo test --features "http2 smol-rt smol-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+#cargo test --features "http2 compio-rt compio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
 
-cargo test --features "http3 tokio-rt tokio-rust-tls default-rustls-provider" --no-default-features
-cargo test --features "http3 smol-rt smol-rust-tls default-rustls-provider" --no-default-features
-#cargo test --features "http3 compio-rt compio-rust-tls default-rustls-provider" --no-default-features
+cargo test --features "http3 tokio-rt tokio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+cargo test --features "http3 smol-rt smol-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+#cargo test --features "http3 compio-rt compio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
 
 cd ..
