@@ -84,6 +84,9 @@ smol-rust-tls = [
 #   "compio-tls/rustls",
 # ]
 
+webpki-rustls-verifier = ["__webpki_rustls_verifier"]
+platform-rustls-verifier = ["__platform_rustls_verifier"]
+
 default-rustls-verifier = ["__webpki_rustls_verifier"]
 __webpki_rustls_verifier = ["dep:webpki-roots"]
 __platform_rustls_verifier = ["dep:rustls-platform-verifier"]
@@ -118,7 +121,6 @@ http3 = [
     "deboa-tests/http3",
     "hyper-body-utils/http3",
 ]
-futures-util = ["dep:futures-util"]
 
 [dependencies]
 async-executor = { version = "1.13.3", optional = true, default-features = false }

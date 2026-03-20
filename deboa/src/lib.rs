@@ -65,6 +65,42 @@
 //! ```
 //!
 
+#[cfg(all(
+    any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls"),
+    not(all(
+        any(
+            feature = "no-provider",
+            feature = "default-rustls-provider",
+            feature = "aws-lc-rustls-provider",
+            feature = "ring-rustls-provider",
+            feature = "rustcrypto-rustl-provider"
+        ),
+        any(
+            feature = "default-rustls-verifier",
+            feature = "webpki-rustls-verifier",
+            feature = "platform-rustls-verifier"
+        )
+    ))
+))]
+compile_error!(
+    "When enabling rust-tls features, you must also enable default-rustls-provider and default-rustls-verifier features."
+);
+
+#[cfg(all(feature = "tokio-native-tls", feature = "tokio-rust-tls"))]
+compile_error!(
+    "You cannot enable both tokio-native-tls and tokio-rust-tls features at the same time."
+);
+
+#[cfg(all(feature = "smol-native-tls", feature = "smol-rust-tls"))]
+compile_error!(
+    "You cannot enable both smol-native-tls and smol-rust-tls features at the same time."
+);
+
+#[cfg(all(feature = "compio-native-tls", feature = "compio-rust-tls"))]
+compile_error!(
+    "You cannot enable both compio-native-tls and compio-rust-tls features at the same time."
+);
+
 #[cfg(all(feature = "tokio-native-tls", feature = "http3"))]
 compile_error!("HTTP3 is not supported within tokio-native-tls runtime.");
 
