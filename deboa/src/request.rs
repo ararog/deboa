@@ -131,24 +131,28 @@ pub trait IntoRequest: private::IntoRequestSealed {
 }
 
 impl IntoRequest for DeboaRequest {
+    #[inline]
     fn into_request(self) -> Result<DeboaRequest> {
         Ok(self)
     }
 }
 
 impl IntoRequest for &str {
+    #[inline]
     fn into_request(self) -> Result<DeboaRequest> {
         DeboaRequest::get(self)?.build()
     }
 }
 
 impl IntoRequest for String {
+    #[inline]
     fn into_request(self) -> Result<DeboaRequest> {
         DeboaRequest::get(self)?.build()
     }
 }
 
 impl IntoRequest for Url {
+    #[inline]
     fn into_request(self) -> Result<DeboaRequest> {
         DeboaRequest::get(self)?.build()
     }
@@ -174,12 +178,14 @@ pub trait IntoHeaders: private::IntoHeadersSealed {
 }
 
 impl IntoHeaders for HeaderMap {
+    #[inline]
     fn into_headers(self) -> Result<HeaderMap> {
         Ok(self)
     }
 }
 
 impl IntoHeaders for Vec<(HeaderName, String)> {
+    #[inline]
     fn into_headers(self) -> Result<HeaderMap> {
         let mut headers = HeaderMap::new();
         for (key, value) in self {
@@ -190,6 +196,7 @@ impl IntoHeaders for Vec<(HeaderName, String)> {
 }
 
 impl IntoHeaders for Vec<(String, String)> {
+    #[inline]
     fn into_headers(self) -> Result<HeaderMap> {
         let mut headers = HeaderMap::new();
         for (key, value) in self {
@@ -203,6 +210,7 @@ impl IntoHeaders for Vec<(String, String)> {
 }
 
 impl<'a> IntoHeaders for Vec<(&'a str, &'a str)> {
+    #[inline]
     fn into_headers(self) -> Result<HeaderMap> {
         let mut headers = HeaderMap::new();
         for (key, value) in self {
@@ -252,6 +260,7 @@ impl MethodExt for Method {
 }
 
 impl MethodExt for &str {
+    #[inline]
     fn from_url(self, url: &str) -> Result<DeboaRequestBuilder> {
         match self {
             "GET" | "get" => DeboaRequest::get(url),
@@ -263,6 +272,7 @@ impl MethodExt for &str {
         }
     }
 
+    #[inline]
     fn to_url(self, url: &str) -> Result<DeboaRequestBuilder> {
         self.from_url(url)
     }
@@ -297,6 +307,7 @@ pub trait Fetch {
 
 #[allow(deprecated)]
 impl Fetch for &str {
+    #[inline]
     async fn fetch<T>(&self, client: T) -> Result<DeboaResponse>
     where
         T: AsRef<Client> + Send,
@@ -347,6 +358,7 @@ pub trait FetchWith {
 }
 
 impl FetchWith for &str {
+    #[inline]
     async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
     where
         T: AsRef<Client> + Send,
@@ -358,6 +370,7 @@ impl FetchWith for &str {
 }
 
 impl FetchWith for String {
+    #[inline]
     async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
     where
         T: AsRef<Client> + Send,

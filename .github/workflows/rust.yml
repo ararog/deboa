@@ -84,7 +84,7 @@ jobs:
       if: (matrix.os != 'windows-latest' && matrix.tls != 'native-tls') || (matrix.os != 'macos-latest' && matrix.tls != 'native-tls')
       run: |
         cd deboa
-        cargo test --features "${{ matrix.protocols }} ${{ matrix.runtime }}-rt ${{ matrix.runtime }}-${{ matrix.tls }}" --no-default-features
+        cargo test --features "${{ matrix.protocols }} ${{ matrix.runtime }}-rt ${{ matrix.runtime }}-${{ matrix.tls }} ${{ matrix.tls == 'rust-tls' && 'default-rustls-provider' || '' }}" --no-default-features
 
   build-android:
     runs-on: ubuntu-latest

@@ -45,7 +45,7 @@ pub fn setup_rust_tls(
     alpn: Vec<Vec<u8>>,
 ) -> Result<ClientConfig> {
     let mut root_store = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
-    #[cfg(feature = "__rustls_awc_lc_rs")]
+    #[cfg(feature = "__rustls_aws_lc_rs")]
     let provider = rustls::crypto::aws_lc_rs::default_provider();
     #[cfg(feature = "__rustls_ring")]
     let provider = rustls::crypto::ring::default_provider();

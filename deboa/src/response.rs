@@ -139,18 +139,21 @@ pub trait IntoBody {
 }
 
 impl IntoBody for Incoming {
+    #[inline]
     fn into_body(self) -> HttpBody {
         HttpBody::Incoming(self)
     }
 }
 
 impl IntoBody for &[u8] {
+    #[inline]
     fn into_body(self) -> HttpBody {
         HttpBody::from_bytes(self)
     }
 }
 
 impl IntoBody for Vec<u8> {
+    #[inline]
     fn into_body(self) -> HttpBody {
         HttpBody::from_bytes(&self)
     }
@@ -158,6 +161,7 @@ impl IntoBody for Vec<u8> {
 
 #[cfg(not(feature = "compio-rt"))]
 impl IntoBody for BoxBody<Bytes, std::io::Error> {
+    #[inline]
     fn into_body(self) -> HttpBody {
         HttpBody::Stream(self)
     }
@@ -167,6 +171,7 @@ impl IntoBody for BoxBody<Bytes, std::io::Error> {
 impl IntoBody
     for Pin<Box<dyn Stream<Item = std::result::Result<Frame<Bytes>, std::io::Error>> + Send>>
 {
+    #[inline]
     fn into_body(self) -> HttpBody {
         HttpBody::Stream(self)
     }
@@ -703,6 +708,7 @@ impl DeboaResponse {
     /// ```compile_fail
     /// let (parts, body) = response.into_parts();
     /// ```
+    #[inline]
     pub fn into_parts(self) -> (http::response::Parts, HttpBody) {
         let (parts, body) = self
             .inner

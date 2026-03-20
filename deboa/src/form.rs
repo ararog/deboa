@@ -154,12 +154,14 @@ pub enum Form {
 }
 
 impl From<EncodedForm> for Form {
+    #[inline]
     fn from(val: EncodedForm) -> Self {
         Form::EncodedForm(val)
     }
 }
 
 impl From<MultiPartForm> for Form {
+    #[inline]
     fn from(val: MultiPartForm) -> Self {
         Form::MultiPartForm(val)
     }

@@ -17,6 +17,7 @@ pub trait IntoUrl: private::IntoUrlSealed {
     ///
     /// * `Result<Url>` - The url.
     ///
+    #[inline]
     fn parse_url(&self) -> Result<Url>
     where
         Self: AsRef<str>,
@@ -41,30 +42,35 @@ pub trait IntoUrl: private::IntoUrlSealed {
 }
 
 impl IntoUrl for Url {
+    #[inline]
     fn into_url(self) -> Result<Url> {
         Ok(self)
     }
 }
 
 impl IntoUrl for &str {
+    #[inline]
     fn into_url(self) -> Result<Url> {
         self.parse_url()
     }
 }
 
 impl IntoUrl for &mut String {
+    #[inline]
     fn into_url(self) -> Result<Url> {
         self.parse_url()
     }
 }
 
 impl IntoUrl for &String {
+    #[inline]
     fn into_url(self) -> Result<Url> {
         self.parse_url()
     }
 }
 
 impl IntoUrl for String {
+    #[inline]
     fn into_url(self) -> Result<Url> {
         self.parse_url()
     }
