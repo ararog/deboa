@@ -13,7 +13,7 @@ use trust_dns_resolver::error::ResolveErrorKind;
 use crate::{
     alpn,
     client::conn::{
-        stream::setup_rust_tls, udp::DeboaUdpConnection, BaseHttpConnection, ConnectionConfig,
+        rustls::setup_rust_tls, udp::DeboaUdpConnection, BaseHttpConnection, ConnectionConfig,
     },
     errors::{ConnectionError, DeboaError, RequestError, ResponseError},
     request::Http3Request,

@@ -100,7 +100,8 @@ pub mod pool;
 /// // Create a TLS connection
 /// let stream = tls_connection("example.com:443", None).await?;
 /// ```
-pub(crate) mod stream;
+#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls"))]
+pub(crate) mod rustls;
 
 /// Enum that represents the connection type.
 ///

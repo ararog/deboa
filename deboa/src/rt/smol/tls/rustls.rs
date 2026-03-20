@@ -7,7 +7,7 @@ use crate::rt::smol::stream::SmolStream;
 use smol::net::TcpStream;
 
 #[cfg(all(feature = "smol-rust-tls", any(feature = "http1", feature = "http2")))]
-use crate::client::conn::stream::setup_rust_tls;
+use crate::client::conn::rustls::setup_rust_tls;
 #[cfg(all(feature = "smol-rust-tls", any(feature = "http1", feature = "http2")))]
 use futures_rustls::TlsConnector;
 #[cfg(all(feature = "smol-rust-tls", any(feature = "http1", feature = "http2")))]

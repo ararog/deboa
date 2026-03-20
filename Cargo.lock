@@ -1003,7 +1003,7 @@ dependencies = [
 
 [[package]]
 name = "deboa"
-version = "0.1.0-beta.12"
+version = "0.1.0-beta.13"
 dependencies = [
  "async-executor",
  "async-native-tls",

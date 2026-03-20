@@ -9,7 +9,7 @@ use tokio::net::TcpStream;
 use trust_dns_resolver::error::ResolveErrorKind;
 
 #[cfg(any(feature = "http1", feature = "http2"))]
-use crate::client::conn::stream::setup_rust_tls;
+use crate::client::conn::rustls::setup_rust_tls;
 #[cfg(any(feature = "http1", feature = "http2"))]
 use rustls::pki_types::ServerName;
 #[cfg(any(feature = "http1", feature = "http2"))]

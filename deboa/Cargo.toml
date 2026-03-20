@@ -1,6 +1,6 @@
 [package]
 name = "deboa"
-version = "0.1.0-beta.12"
+version = "0.1.0-beta.13"
 edition = "2021"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 repository = "https://github.com/ararog/deboa"
@@ -87,6 +87,7 @@ smol-rust-tls = [
 #   "compio-tls/rustls",
 # ]
 
+# rustls providers
 no-provider = []
 ring-rustls-provider = ["__rustls_ring"]
 rustcrypto-rustl-provider = ["__rustls_rustcrypto"]
@@ -96,6 +97,7 @@ __rustls_aws_lc_rs = ["futures-rustls/aws-lc-rs", "quinn/rustls-aws-lc-rs"]
 __rustls_ring = ["futures-rustls/ring", "quinn/rustls-ring"]
 __rustls_rustcrypto = ["dep:rustls-rustcrypto"]
 
+# tls implementations
 tokio-native-tls = [
   "async-native-tls/runtime-tokio",
   "deboa-tests/tokio-rust-tls",

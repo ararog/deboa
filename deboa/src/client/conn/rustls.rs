@@ -1,42 +1,25 @@
-#[cfg(all(
-    any(feature = "http1", feature = "http2", feature = "http3"),
-    any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls")
-))]
 use std::sync::Arc;
 
-#[cfg(any(
-    feature = "tokio-rust-tls",
-    feature = "smol-rust-tls",
-    feature = "compio-rust-tls"
-))]
+use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use rustls::ClientConfig;
 
-#[cfg(any(
-    feature = "tokio-rust-tls",
-    feature = "smol-rust-tls",
-    feature = "compio-rust-tls"
-))]
-use rustls::pki_types::{CertificateDer, PrivateKeyDer};
-
-#[cfg(all(
-    any(feature = "http1", feature = "http2", feature = "http3"),
-    any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls")
-))]
 use crate::cert::Certificate;
-#[cfg(all(
-    any(feature = "http1", feature = "http2", feature = "http3"),
-    any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls")
-))]
 use crate::{
     cert::Identity as DeboaIdentity,
     errors::{ConnectionError, DeboaError},
     Result,
 };
 
-#[cfg(all(
-    any(feature = "http1", feature = "http2", feature = "http3"),
-    any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls")
-))]
+pub(crate) fn default_provider() -> Arc<rustls::crypto::CryptoProvider> {
+    #[cfg(feature = "__rustls_aws_lc_rs")]
+    let provider = rustls::crypto::aws_lc_rs::default_provider();
+    #[cfg(feature = "__rustls_ring")]
+    let provider = rustls::crypto::ring::default_provider();
+    #[cfg(feature = "__rustls_rustcrypto")]
+    let provider = rustls_rustcrypto::provider();
+    Arc::new(provider)
+}
+
 pub fn setup_rust_tls(
     host: &str,
     identity: &Option<DeboaIdentity>,
@@ -45,19 +28,13 @@ pub fn setup_rust_tls(
     alpn: Vec<Vec<u8>>,
 ) -> Result<ClientConfig> {
     let mut root_store = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
-    #[cfg(feature = "__rustls_aws_lc_rs")]
-    let provider = rustls::crypto::aws_lc_rs::default_provider();
-    #[cfg(feature = "__rustls_ring")]
-    let provider = rustls::crypto::ring::default_provider();
-    #[cfg(feature = "__rustls_rustcrypto")]
-    let provider = rustls_rustcrypto::provider();
-
-    let config = rustls::ClientConfig::builder_with_provider(Arc::new(provider))
+    let provider = default_provider();
+    let config = rustls::ClientConfig::builder_with_provider(provider)
         .with_protocol_versions(&[&rustls::version::TLS13])
         .expect("Failed to set TLS version");
 
     if skip_server_verification {
-        use crate::client::conn::stream::verify::SkipServerVerification;
+        use crate::client::conn::rustls::verify::SkipServerVerification;
 
         let config = config
             .dangerous()
@@ -116,14 +93,6 @@ pub fn setup_rust_tls(
     Ok(config)
 }
 
-#[cfg(all(
-    any(
-        all(feature = "tokio-rt", feature = "tokio-rust-tls"),
-        all(feature = "smol-rt", feature = "smol-rust-tls"),
-        all(feature = "compio-rt", feature = "compio-rust-tls"),
-    ),
-    any(feature = "http1", feature = "http2", feature = "http3")
-))]
 pub(crate) mod verify {
     use std::sync::Arc;
 
@@ -134,7 +103,8 @@ pub(crate) mod verify {
 
     impl SkipServerVerification {
         pub(crate) fn new() -> Arc<Self> {
-            Arc::new(Self(Arc::new(rustls::crypto::aws_lc_rs::default_provider())))
+            let provider = super::default_provider();
+            Arc::new(Self(provider))
         }
     }
 

@@ -6,7 +6,7 @@ use compio::net::TcpStream;
 use std::sync::Arc;
 
 #[cfg(any(feature = "http1", feature = "http2"))]
-use crate::client::conn::stream::setup_rust_tls;
+use crate::client::conn::rustls::setup_rust_tls;
 #[cfg(any(feature = "http1", feature = "http2"))]
 use compio_tls::TlsConnector;
 #[cfg(any(feature = "http1", feature = "http2"))]
