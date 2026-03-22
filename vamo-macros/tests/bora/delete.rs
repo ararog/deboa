@@ -15,7 +15,7 @@ use crate::SKIP_CERT_VERIFICATION;
 #[bora(api(delete(name = "delete_post", path = "/posts/<id:i32>")))]
 pub struct PostService;
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_delete_by_id() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {

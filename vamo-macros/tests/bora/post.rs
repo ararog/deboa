@@ -66,13 +66,13 @@ async fn do_post_by_id() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_post_by_id() -> Result<(), Box<dyn std::error::Error>> {
     do_post_by_id().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_post_by_id() -> Result<(), Box<dyn std::error::Error>> {
     do_post_by_id().await

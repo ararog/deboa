@@ -6,7 +6,7 @@ use http::Method;
 mod integrated;
 
 pub(crate) const SKIP_CERT_VERIFICATION: bool =
-    cfg!(any(feature = "_tokio-native-tls", feature = "_smol-native-tls"));
+    cfg!(any(feature = "tokio-native-tls", feature = "smol-native-tls"));
 
 #[test]
 fn test_create_vamo() -> Result<()> {

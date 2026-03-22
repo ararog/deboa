@@ -1,4 +1,11 @@
-#[cfg(feature = "serialization")]
+#[cfg(any(
+    feature = "json",
+    feature = "xml",
+    feature = "msgpack",
+    feature = "yaml",
+    feature = "flex",
+    feature = "cbor"
+))]
 pub mod serde;
 
 #[cfg(feature = "sse")]

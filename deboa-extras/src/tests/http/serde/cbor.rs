@@ -1,8 +1,14 @@
 use crate::http::serde::cbor::CborBody;
-use deboa::errors::{ContentError, DeboaError};
-use deboa::{request::DeboaRequest, response::DeboaResponse, Result};
-use deboa_tests::data::{sample_post, Post};
-use deboa_tests::utils::fake_url;
+use deboa::{
+    errors::{ContentError, DeboaError},
+    request::DeboaRequest,
+    response::DeboaResponse,
+    Result,
+};
+use deboa_tests::{
+    data::{sample_post, Post},
+    utils::fake_url,
+};
 use http_body_util::BodyExt;
 
 fn build_sample_cbor_body() -> Vec<u8> {

@@ -1,10 +1,10 @@
 [package]
 name = "vamo-macros"
 edition = "2021"
-version = "0.0.8"
+version = "0.0.9-beta.1"
 authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
 description = "Macros for quick client development using vamo"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/ararog/deboa"
 readme = "README.md"
 keywords = ["compiler-plugin", "macros", "resources", "http", "rest"]
@@ -13,9 +13,7 @@ publish = true
 rust-version = "1.75.0"
 
 [features]
-default = ["json", "tests", "_tokio-rt", "_http2", "_tokio-rust-tls"]
-
-tests = []
+default = ["json"]
 
 # Serialization formats
 json = ["deboa-extras/json"]
@@ -23,35 +21,81 @@ xml = ["deboa-extras/xml"]
 msgpack = ["deboa-extras/msgpack"]
 
 # For testing purposes (internal use only)
-_tokio-rt = ["dep:tokio", "deboa-tests/tokio-rt"]
-_smol-rt = ["dep:smol", "dep:smol-macros", "deboa-tests/smol-rt"]
-_http1 = ["deboa-tests/http1"]
-_http2 = ["deboa-tests/http2"]
-_http3 = ["deboa-tests/http3"]
-_tokio-rust-tls = ["deboa-tests/tokio-rust-tls"]
-_smol-rust-tls = ["deboa-tests/smol-rust-tls"]
-_tokio-native-tls = []
-_smol-native-tls = []
+tokio-rt = [
+  "vamo/tokio-rt", 
+  "dep:tokio",
+  #1 Comment out line below before publish to crates.io
+  "deboa-tests/tokio-rt"
+]
+smol-rt = [
+  "vamo/smol-rt", 
+  "dep:smol", 
+  "dep:smol-macros",
+  #1
+  "deboa-tests/smol-rt"
+]
+#compio-rt = []
+http1 = [
+  "vamo/http1",
+  #1 
+  "deboa-tests/http1"
+]
+http2 = [
+  "vamo/http2",
+  #1 
+  "deboa-tests/http2"
+]
+http3 = [
+  "vamo/http3",
+  #1 
+  "deboa-tests/http3"
+]
+tokio-rust-tls = [
+  "vamo/tokio-rust-tls",
+  #1 
+  "deboa-tests/tokio-rust-tls"
+]
+smol-rust-tls = [
+  "vamo/smol-rust-tls",
+  #1 
+  "deboa-tests/smol-rust-tls"
+]
+# compio-rust-tls = [
+#   "vamo/compio-rust-tls", 
+#   "deboa-tests/compio-rust-tls"
+# ]
+tokio-native-tls = [
+  "vamo/tokio-native-tls",
+  #1 
+  "deboa-tests/tokio-rust-tls"
+]
+smol-native-tls = [
+  "vamo/smol-native-tls",
+  #1 
+  "deboa-tests/smol-rust-tls"
+]
+# compio-native-tls = [
+#   "vamo/compio-native-tls", 
+#   "deboa-tests/compio-rust-tls"
+# ]
 
 [lib]
 proc-macro = true
 
 [dependencies]
-deboa = { version = "0.1.0-beta.5" }
-deboa-extras = { version = "0.0.8", features=["json"] }
-vamo = { version = "0.0.8" }
+deboa = { version = "0.1.0-beta.15", default-features = false, optional = true }
+deboa-extras = { version = "0.0.9-beta.9", default-features = false, optional = true }
+vamo = { version = "0.0.9-beta.1" }
 proc-macro2 = "1.0.103"
 serde = "1.0.228"
 syn = { version = "2.0", features = ["full"] }
 quote = "1.0.41"
 http = "1.4.0"
 regex = "1.9.6"
-titlecase = "2.2.1"
-tokio = { version = "1.38.1", features = [
-  "rt-multi-thread",
-], default-features = false, optional = true }
 smol = { version = "2.0.2", default-features = false, optional = true }
 smol-macros = { version = "0.1.1", default-features = false, optional = true }
+titlecase = "2.2.1"
+tokio = { version = "1.38.1", default-features = false, optional = true }
 
 [dev-dependencies]
 deboa-tests = { path = "../deboa-tests", version = "0.0.1" }

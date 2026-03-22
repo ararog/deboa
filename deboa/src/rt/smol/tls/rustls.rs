@@ -1,4 +1,4 @@
-#[cfg(all(feature = "smol-rust-tls", any(feature = "http1", feature = "http2")))]
+#[cfg(any(feature = "http1", feature = "http2"))]
 use std::sync::Arc;
 
 #[cfg(any(feature = "http1", feature = "http2"))]
@@ -6,11 +6,11 @@ use crate::rt::smol::stream::SmolStream;
 #[cfg(any(feature = "http1", feature = "http2"))]
 use smol::net::TcpStream;
 
-#[cfg(all(feature = "smol-rust-tls", any(feature = "http1", feature = "http2")))]
+#[cfg(any(feature = "http1", feature = "http2"))]
 use crate::client::conn::rustls::setup_rust_tls;
-#[cfg(all(feature = "smol-rust-tls", any(feature = "http1", feature = "http2")))]
+#[cfg(any(feature = "http1", feature = "http2"))]
 use futures_rustls::TlsConnector;
-#[cfg(all(feature = "smol-rust-tls", any(feature = "http1", feature = "http2")))]
+#[cfg(any(feature = "http1", feature = "http2"))]
 use rustls::pki_types::ServerName;
 #[cfg(any(feature = "http1", feature = "http2"))]
 use trust_dns_resolver::error::ResolveErrorKind;

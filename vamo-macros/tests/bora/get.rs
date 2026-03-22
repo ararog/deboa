@@ -7,12 +7,6 @@ use deboa_tests::{
     utils::{start_mock_server, CA_CERT},
 };
 
-#[cfg(all(feature = "_smol-rt", any(feature = "_http1", feature = "_http2")))]
-use deboa_tests::server::tcp::smol::HttpServer;
-
-#[cfg(all(feature = "_tokio-rt", feature = "_http3"))]
-use deboa_tests::server::udp::tokio::HttpServer;
-
 use http::StatusCode;
 use vamo::Vamo;
 use vamo_macros::bora;
@@ -72,13 +66,13 @@ async fn do_get_by_id() -> std::result::Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_get_by_id() -> Result<(), Box<dyn std::error::Error>> {
     do_get_by_id().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_get_by_id() -> Result<(), Box<dyn std::error::Error>> {
     do_get_by_id().await
@@ -121,13 +115,13 @@ async fn do_get_all() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_get_all() -> Result<(), Box<dyn std::error::Error>> {
     do_get_all().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_get_all() -> Result<(), Box<dyn std::error::Error>> {
     do_get_all().await
@@ -171,13 +165,13 @@ async fn do_query_by_id() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_query_by_id() -> Result<(), Box<dyn std::error::Error>> {
     do_query_by_id().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_query_by_id() -> Result<(), Box<dyn std::error::Error>> {
     do_query_by_id().await
@@ -223,13 +217,13 @@ async fn do_query_by_title() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_query_by_title() -> Result<(), Box<dyn std::error::Error>> {
     do_query_by_title().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_query_by_title() -> Result<()> {
     do_query_by_title().await

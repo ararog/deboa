@@ -7,34 +7,39 @@ repository = "https://github.com/ararog/deboa"
 homepage = "https://github.com/ararog/deboa"
 description = "Apache Fory serializer support for Deboa"
 readme = "README.md"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 keywords = ["http", "networking", "rest", "serializer", "fory"]
 rust-version = "1.70.0"
 
 [features]
-default = ["_tokio-rt", "_http2", "_tokio-rust-tls"]
+default = [
+  "tokio-rt", 
+  "http1", 
+  "tokio-rust-tls"
+]
 
 # For testing purposes (internal use only)
-_tokio-rt = ["dep:tokio", "deboa-tests/tokio-rt"]
-_smol-rt = ["dep:smol", "dep:smol-macros", "deboa-tests/smol-rt"]
-_http1 = ["deboa-tests/http1"]
-_http2 = ["deboa-tests/http2"]
-_http3 = ["deboa-tests/http3"]
-_tokio-rust-tls = ["deboa-tests/tokio-rust-tls"]
-_smol-rust-tls = ["deboa-tests/smol-rust-tls"]
-_tokio-native-tls = []
-_smol-native-tls = []
+tokio-rt = ["deboa/tokio-rt", "dep:tokio", "deboa-tests/tokio-rt"]
+smol-rt = ["deboa/smol-rt", "dep:smol", "dep:smol-macros", "deboa-tests/smol-rt"]
+#compio-rt = []
+http1 = ["deboa/http1", "deboa-tests/http1"]
+http2 = ["deboa/http2", "deboa-tests/http2"]
+http3 = ["deboa/http3", "deboa-tests/http3"]
+tokio-rust-tls = ["deboa/tokio-rust-tls", "deboa-tests/tokio-rust-tls"]
+smol-rust-tls = ["deboa/smol-rust-tls", "deboa-tests/smol-rust-tls"]
+#compio-rust-tls = ["deboa/compio-rust-tls", "deboa-tests/compio-rust-tls"]
+tokio-native-tls = ["deboa/tokio-native-tls", "deboa-tests/tokio-rust-tls"]
+smol-native-tls = ["deboa/smol-native-tls", "deboa-tests/smol-rust-tls"]
+#compio-native-tls = ["deboa/compio-native-tls", "deboa-tests/compio-rust-tls"]
 
 [dependencies]
-deboa = { version = "0.1.0-beta.5" }
+deboa = { version = "0.1.0-beta.15", default-features = false, optional = true }
 fory = "0.14.1"
 fory-core = "0.14.0"
 http = "1.4.0"
-tokio = { version = "1.38.1", features = [
-  "rt-multi-thread",
-], default-features = false, optional = true }
 smol = { version = "2.0.2", default-features = false, optional = true }
 smol-macros = { version = "0.1.1", default-features = false, optional = true }
+tokio = { version = "1.38.1", default-features = false, optional = true }
 
 [dev-dependencies]
 deboa-tests = { path = "../deboa-tests", default-features = false, version = "0.0.1" }

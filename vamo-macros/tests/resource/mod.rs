@@ -61,13 +61,13 @@ async fn do_post_resource() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_post_resource() -> Result<(), Box<dyn std::error::Error>> {
     do_post_resource().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_post_resource() -> Result<(), Box<dyn std::error::Error>> {
     do_post_resource().await

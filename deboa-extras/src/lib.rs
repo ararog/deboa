@@ -88,7 +88,7 @@
 pub mod errors;
 pub mod http;
 
-#[cfg(feature = "compression")]
+#[cfg(any(feature = "deflate", feature = "gzip", feature = "brotli"))]
 //pub mod io;
 #[cfg(test)]
 mod tests;

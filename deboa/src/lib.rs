@@ -37,24 +37,26 @@
 //! To avoid compiling unused dependencies, Deboa feature-gates optional
 //! functionality, some enabled by default:
 //!
-//! | Feature           | Default? | Description                                             |
-//! |-------------------|----------|---------------------------------------------------------|
-//! | `tokio_rt`        | Yes      | Support tokio runtime (enabled by default).             |
-//! | `smol_rt`         | No       | Support smol runtime.                                   |
-//! | `http1`           | No       | Support for HTTP/1.                                     |
-//! | `http2`           | Yes      | Support for HTTP/2 (enabled by default).                |
-//! | `http3`           | No       | Support for HTTP/3.                                     |
-//! | `http3-smol`      | No       | Support for HTTP/3 on Smol.                             |
-//! | `tokio-rust-tls`  | Yes      | Support for tokio-rust-tls (enabled by default).        |
-//! | `tokio-native-tls`| No       | Support for tokio-native-tls.                           |
-//! | `smol-rust-tls`   | No       | Support for smol-rust-tls.                              |
-//! | `smol-native-tls` | No       | Support for smol-native-tls.                            |
+//! | Feature             | Default? | Description                                             |
+//! |---------------------|----------|---------------------------------------------------------|
+//! | `tokio_rt`          | Yes      | Support tokio runtime (enabled by default).             |
+//! | `smol_rt`           | No       | Support smol runtime.                                   |
+//! | `http1`             | No       | Support for HTTP/1.                                     |
+//! | `http2`             | Yes      | Support for HTTP/2 (enabled by default).                |
+//! | `http3`             | No       | Support for HTTP/3.                                     |
+//! | `http3-smol`        | No       | Support for HTTP/3 on Smol.                             |
+//! | `tokio-rust-tls`    | Yes      | Support for tokio-rust-tls (enabled by default).        |
+//! | `tokio-native-tls`  | No       | Support for tokio-native-tls.                           |
+//! | `compio-rust-tls`   | No       | Support for compio-rust-tls.                            |
+//! | `compio-native-tls` | No       | Support for compio-native-tls.                          |
+//! | `smol-rust-tls`     | No       | Support for smol-rust-tls.                              |
+//! | `smol-native-tls`   | No       | Support for smol-native-tls.                            |
 //!
 //! Disabled features can be selectively enabled in `Cargo.toml`:
 //!
 //! ```toml
 //! [dependencies]
-//! deboa = { version = "0.1.0", features = ["tokio_rt", "http2", "tokio-rust-tls"] }
+//! deboa = { version = "0.1.0", features = ["tokio_rt", "http2", "tokio-rust-tls", "default-rustls-provider", "default-rustls-verifier"] }
 //! ```
 //!
 //! Conversely, HTTP/2 can be disabled:
@@ -67,6 +69,11 @@
 
 #[cfg(all(
     any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls"),
+    not(any(
+        feature = "tokio-native-tls",
+        feature = "smol-native-tls",
+        feature = "compio-native-tls"
+    )),
     not(all(
         any(
             feature = "no-provider",
@@ -87,18 +94,14 @@ compile_error!(
 );
 
 #[cfg(all(feature = "tokio-native-tls", feature = "tokio-rust-tls"))]
-compile_error!(
-    "You cannot enable both tokio-native-tls and tokio-rust-tls features at the same time."
-);
+compile_error!("You cannot enable tokio-native-tls and tokio-rust-tls features at the same time.");
 
 #[cfg(all(feature = "smol-native-tls", feature = "smol-rust-tls"))]
-compile_error!(
-    "You cannot enable both smol-native-tls and smol-rust-tls features at the same time."
-);
+compile_error!("You cannot enable smol-native-tls and smol-rust-tls features at the same time.");
 
 #[cfg(all(feature = "compio-native-tls", feature = "compio-rust-tls"))]
 compile_error!(
-    "You cannot enable both compio-native-tls and compio-rust-tls features at the same time."
+    "You cannot enable compio-native-tls and compio-rust-tls features at the same time."
 );
 
 #[cfg(all(feature = "tokio-native-tls", feature = "http3"))]
@@ -106,6 +109,9 @@ compile_error!("HTTP3 is not supported within tokio-native-tls runtime.");
 
 #[cfg(all(feature = "smol-native-tls", feature = "http3"))]
 compile_error!("HTTP3 is not supported within smol-native-tls runtime.");
+
+#[cfg(all(feature = "compio-native-tls", feature = "http3"))]
+compile_error!("HTTP3 is not supported within compio-native-tls runtime.");
 
 #[cfg(all(feature = "tokio-rt", feature = "smol-rt", feature = "compio-rt"))]
 compile_error!("Only one runtime feature can be enabled at a time.");

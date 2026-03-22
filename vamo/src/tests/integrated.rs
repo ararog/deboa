@@ -92,19 +92,21 @@ async fn do_get() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+/*
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_get() -> Result<()> {
     do_get().await
 }
+*/
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_get() -> Result<()> {
     do_get().await
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 async fn do_put() -> Result<()> {
     let server = start_mock_server(|req| async move {
         if req.method() == "PUT" && req.uri().path() == "/posts" {
@@ -136,13 +138,13 @@ async fn do_put() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_put() -> Result<()> {
     do_put().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_put() -> Result<()> {
     do_put().await
@@ -188,13 +190,13 @@ async fn do_post() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_post() -> Result<()> {
     do_post().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_post() -> Result<()> {
     do_post().await
@@ -229,13 +231,13 @@ async fn do_patch() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_patch() -> Result<()> {
     do_patch().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_patch() -> Result<()> {
     do_patch().await
@@ -270,13 +272,13 @@ async fn do_delete() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_delete() -> Result<()> {
     do_delete().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_delete() -> Result<()> {
     do_delete().await
@@ -318,13 +320,13 @@ async fn do_post_resource() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_post_resource() -> Result<()> {
     do_post_resource().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_post_resource() -> Result<()> {
     do_post_resource().await
@@ -366,13 +368,13 @@ async fn do_put_resource() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_put_resource() -> Result<()> {
     do_put_resource().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_put_resource() -> Result<()> {
     do_put_resource().await
@@ -409,13 +411,13 @@ async fn do_patch_resource() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_patch_resource() -> Result<()> {
     do_patch_resource().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_patch_resource() -> Result<()> {
     do_patch_resource().await
@@ -452,13 +454,13 @@ async fn do_remove_resource() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "_tokio-rt")]
+#[cfg(feature = "tokio-rt")]
 #[tokio::test]
 async fn test_remove_resource() -> Result<()> {
     do_remove_resource().await
 }
 
-#[cfg(feature = "_smol-rt")]
+#[cfg(feature = "smol-rt")]
 #[apply(test!)]
 async fn test_remove_resource() -> Result<()> {
     do_remove_resource().await

@@ -2,18 +2,26 @@
 # Add your pre-commit checks here. For example:
 # echo "Running Samoyed sample pre-commit"
 # exit 0
+
 cargo fmt --check
 
 cd deboa-extras
+
+echo "-------------"
+echo "Running deboa-extras tests: serialization_all"
+echo "-------------"
 cargo test --features "serialization_all compression_all"
-cd ..
 
-cd deboa-extras
-cargo test --features "tokio-rt" --no-default-features
-cd ..        
+echo "-------------"
+echo "Running deboa-extras tests: tokio-rt, http1, tokio-rust-tls"
+echo "-------------"
+cargo test --features "tokio-rt http1 tokio-rust-tls deboa/default-rustls-provider deboa/default-rustls-verifier" --no-default-features
 
-cd deboa-extras
-cargo test --features "smol-rt" --no-default-features
+echo "-------------"
+echo "Running deboa-extras tests: smol-rt, http1, smol-rust-tls"
+echo "-------------"
+cargo test --features "smol-rt http1 smol-rust-tls deboa/default-rustls-provider deboa/default-rustls-verifier" --no-default-features
+
 cd ..  
 
 cd deboa-fory
@@ -34,24 +42,60 @@ cd ..
 
 cd deboa
 
+echo "-------------"
+echo "Running deboa tests: http1, tokio-rt, tokio-native-tls"
+echo "-------------"
 cargo test --features "http1 tokio-rt tokio-native-tls" --no-default-features
-cargo test --features "http1 smol-rt smol-native-tls" --no-default-features
-#cargo test --features "http1 compio-rt compio-native-tls" --no-default-features
 
+echo "-------------"
+echo "Running deboa tests: http2, tokio-rt, tokio-native-tls"
+echo "-------------"
 cargo test --features "http2 tokio-rt tokio-native-tls" --no-default-features
-cargo test --features "http2 smol-rt smol-native-tls" --no-default-features
-#cargo test --features "http2 compio-rt compio-native-tls" --no-default-features
 
+echo "-------------"
+echo "Running deboa tests: http1, tokio-rt, tokio-rust-tls"
+echo "-------------"
 cargo test --features "http1 tokio-rt tokio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
-cargo test --features "http1 smol-rt smol-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
-#cargo test --features "http1 compio-rt compio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
 
+echo "-------------"
+echo "Running deboa tests: http2, tokio-rt, tokio-rust-tls"
+echo "-------------"
 cargo test --features "http2 tokio-rt tokio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
-cargo test --features "http2 smol-rt smol-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
-#cargo test --features "http2 compio-rt compio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
 
+echo "-------------"
+echo "Running deboa tests: http3, tokio-rt, tokio-rust-tls"
+echo "-------------"
 cargo test --features "http3 tokio-rt tokio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+
+echo "-------------"
+echo "Running deboa tests: http1, smol-rt, smol-native-tls"
+echo "-------------"
+cargo test --features "http1 smol-rt smol-native-tls" --no-default-features
+
+echo "-------------"
+echo "Running deboa tests: http2, smol-rt, smol-native-tls"
+echo "-------------"
+cargo test --features "http2 smol-rt smol-native-tls" --no-default-features
+
+echo "-------------"
+echo "Running deboa tests: http1, smol-rt, smol-rust-tls"
+echo "-------------"
+cargo test --features "http1 smol-rt smol-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+
+echo "-------------"
+echo "Running deboa tests: http2, smol-rt, smol-rust-tls"
+echo "-------------"
+cargo test --features "http2 smol-rt smol-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+
+echo "-------------"
+echo "Running deboa tests: http3, smol-rt, smol-rust-tls"
+echo "-------------"
 cargo test --features "http3 smol-rt smol-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+
+#cargo test --features "http1 compio-rt compio-native-tls" --no-default-features
+#cargo test --features "http2 compio-rt compio-native-tls" --no-default-features
+#cargo test --features "http1 compio-rt compio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+#cargo test --features "http2 compio-rt compio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
 #cargo test --features "http3 compio-rt compio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
 
 cd ..

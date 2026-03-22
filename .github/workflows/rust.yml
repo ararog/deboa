@@ -33,13 +33,13 @@ jobs:
       - name: Run deboa-extras with tokio-only
         run: |
           cd deboa-extras
-          cargo test --features "tokio-rt" --no-default-features
+          cargo test --features "tokio-rt deboa/default-rustls-provider deboa/default-rustls-verifier" --no-default-features
           cd ..
 
       - name: Run deboa-extras with smol-only
         run: |
           cd deboa-extras
-          cargo test --features "smol-rt" --no-default-features
+          cargo test --features "smol-rt deboa/default-rustls-provider deboa/default-rustls-verifier" --no-default-features
           cd ..
 
       - name: Run deboa-fory tests
