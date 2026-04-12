@@ -81,37 +81,17 @@
 use std::fs::write;
 use std::{fmt::Debug, sync::Arc};
 
-#[cfg(feature = "compio-rt")]
-use futures::Stream;
-#[cfg(feature = "compio-rt")]
-use http_body::Frame;
-#[cfg(feature = "compio-rt")]
-use std::pin::Pin;
-
-#[cfg(not(feature = "compio-rt"))]
-use http_body_util::combinators::BoxBody;
-
 use http::{header, HeaderName, HeaderValue, Response};
 use http_body_util::BodyExt;
-use hyper::{
-    body::{Bytes, Incoming},
-    upgrade::on,
-};
+use hyper::body::Incoming;
 use hyper_body_utils::HttpBody;
 use log::error;
 use serde::Deserialize;
 
-#[cfg(feature = "compio-rt")]
-use crate::rt::compio::CompioIo;
-#[cfg(feature = "tokio-rt")]
-use hyper_util::rt::TokioIo;
-#[cfg(feature = "smol-rt")]
-use smol_hyper::rt::FuturesIo;
-
 use crate::{
-    client::serde::ResponseBody,
     cookie::DeboaCookie,
-    errors::{ConnectionError, DeboaError, IoError},
+    errors::{DeboaError, IoError},
+    serde::ResponseBody,
     Result,
 };
 use url::Url;
@@ -156,24 +136,6 @@ impl IntoBody for Vec<u8> {
     #[inline]
     fn into_body(self) -> HttpBody {
         HttpBody::from_bytes(&self)
-    }
-}
-
-#[cfg(not(feature = "compio-rt"))]
-impl IntoBody for BoxBody<Bytes, std::io::Error> {
-    #[inline]
-    fn into_body(self) -> HttpBody {
-        HttpBody::Stream(self)
-    }
-}
-
-#[cfg(feature = "compio-rt")]
-impl IntoBody
-    for Pin<Box<dyn Stream<Item = std::result::Result<Frame<Bytes>, std::io::Error>> + Send>>
-{
-    #[inline]
-    fn into_body(self) -> HttpBody {
-        HttpBody::Stream(self)
     }
 }
 
@@ -714,65 +676,5 @@ impl DeboaResponse {
             .inner
             .into_parts();
         (parts, body)
-    }
-
-    #[cfg(feature = "tokio-rt")]
-    #[inline]
-    pub async fn upgrade(self) -> Result<hyper_util::rt::TokioIo<hyper::upgrade::Upgraded>> {
-        if self.inner.version() != http::Version::HTTP_11 {
-            error!("Upgrade is only supported for HTTP/1.1");
-            return Err(DeboaError::Connection(ConnectionError::Upgrade {
-                message: "Upgrade is only supported for HTTP/1.1".to_string(),
-            }));
-        }
-
-        let upgrade = on(self.inner).await;
-        if let Err(e) = upgrade {
-            error!("Failed to upgrade connection: {}", e);
-            return Err(DeboaError::Connection(ConnectionError::Upgrade {
-                message: e.to_string(),
-            }));
-        }
-        Ok(TokioIo::new(upgrade.unwrap()))
-    }
-
-    #[cfg(feature = "smol-rt")]
-    #[inline]
-    pub async fn upgrade(self) -> Result<FuturesIo<hyper::upgrade::Upgraded>> {
-        if self.inner.version() != http::Version::HTTP_11 {
-            error!("Upgrade is only supported for HTTP/1.1");
-            return Err(DeboaError::Connection(ConnectionError::Upgrade {
-                message: "Upgrade is only supported for HTTP/1.1".to_string(),
-            }));
-        }
-
-        let upgrade = on(self.inner).await;
-        if let Err(e) = upgrade {
-            error!("Failed to upgrade connection: {}", e);
-            return Err(DeboaError::Connection(ConnectionError::Upgrade {
-                message: e.to_string(),
-            }));
-        }
-        Ok(FuturesIo::new(upgrade.unwrap()))
-    }
-
-    #[cfg(feature = "compio-rt")]
-    #[inline]
-    pub async fn upgrade(self) -> Result<CompioIo<hyper::upgrade::Upgraded>> {
-        if self.inner.version() != http::Version::HTTP_11 {
-            error!("Upgrade is only supported for HTTP/1.1");
-            return Err(DeboaError::Connection(ConnectionError::Upgrade {
-                message: "Upgrade is only supported for HTTP/1.1".to_string(),
-            }));
-        }
-
-        let upgrade = on(self.inner).await;
-        if let Err(e) = upgrade {
-            error!("Failed to upgrade connection: {}", e);
-            return Err(DeboaError::Connection(ConnectionError::Upgrade {
-                message: e.to_string(),
-            }));
-        }
-        Ok(CompioIo::new(upgrade.unwrap()))
     }
 }

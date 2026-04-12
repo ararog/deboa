@@ -4,17 +4,20 @@ resolver = "3"
 # Include both parts of the library in the workspace
 members = [
     "deboa",
+    #"deboa-compio",
     "deboa-extras",
     "deboa-fory",
     "deboa-macros",
-    "examples/blog",
+    "deboa-smol",
+    "deboa-tokio",
+    # "examples/blog",
     # "examples/catcher",
-    "examples/cbor",
-    "examples/postman",
-    "examples/simple",
-    "examples/simple-smol",
-    "vamo",
-    "vamo-macros", 
+    # "examples/cbor",
+    # "examples/postman",
+    # "examples/simple",
+    # "examples/simple-smol",
+    # "vamo",
+    # "vamo-macros", 
 ]
 
 [profile.release]

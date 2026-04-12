@@ -65,7 +65,6 @@
 use std::{collections::HashMap, fmt::Debug, future::Future, str::FromStr, sync::Arc};
 
 use bytes::Bytes;
-#[cfg(feature = "http3")]
 use h3_quinn::OpenStreams;
 use http::{
     header::{self},
@@ -81,31 +80,18 @@ use serde::Serialize;
 use url::Url;
 
 use crate::{
-    client::serde::RequestBody,
     cookie::DeboaCookie,
     errors::{DeboaError, RequestError},
     form::{DeboaForm, Form},
     response::DeboaResponse,
+    serde::RequestBody,
     url::IntoUrl,
-    Client, Result,
+    HttpClient, Result,
 };
-
 pub type BytesBody = BoxBody<Bytes, std::io::Error>;
 
-#[cfg(feature = "smol-rt")]
-pub type File = smol::fs::File;
-
-#[cfg(feature = "tokio-rt")]
-pub type File = tokio::fs::File;
-
-#[cfg(feature = "compio-rt")]
-pub type File = compio_fs::File;
-
-#[cfg(feature = "http1")]
 pub type Http1Request = hyper::client::conn::http1::SendRequest<HttpBody>;
-#[cfg(feature = "http2")]
 pub type Http2Request = hyper::client::conn::http2::SendRequest<HttpBody>;
-#[cfg(feature = "http3")]
 pub type Http3Request = h3::client::SendRequest<OpenStreams, Bytes>;
 
 /// Trait to allow making a request from different types.
@@ -302,15 +288,15 @@ pub trait Fetch {
     ///
     fn fetch<T>(&self, client: T) -> impl Future<Output = Result<DeboaResponse>>
     where
-        T: AsRef<Client> + Send;
+        T: HttpClient + Send;
 }
 
 #[allow(deprecated)]
 impl Fetch for &str {
     #[inline]
-    async fn fetch<T>(&self, client: T) -> Result<DeboaResponse>
+    async fn fetch<T>(&self, ref client: T) -> Result<DeboaResponse>
     where
-        T: AsRef<Client> + Send,
+        T: HttpClient + Send,
     {
         DeboaRequest::get(*self)?
             .send_with(client)
@@ -354,14 +340,14 @@ pub trait FetchWith {
     ///
     fn fetch_with<T>(&self, client: T) -> impl Future<Output = Result<DeboaResponse>>
     where
-        T: AsRef<Client> + Send;
+        T: HttpClient + Send;
 }
 
 impl FetchWith for &str {
     #[inline]
-    async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
+    async fn fetch_with<T>(&self, ref client: T) -> Result<DeboaResponse>
     where
-        T: AsRef<Client> + Send,
+        T: HttpClient + Send,
     {
         DeboaRequest::get(*self)?
             .send_with(client)
@@ -371,9 +357,9 @@ impl FetchWith for &str {
 
 impl FetchWith for String {
     #[inline]
-    async fn fetch_with<T>(&self, client: T) -> Result<DeboaResponse>
+    async fn fetch_with<T>(&self, ref client: T) -> Result<DeboaResponse>
     where
-        T: AsRef<Client> + Send,
+        T: HttpClient + Send,
     {
         DeboaRequest::get(self)?
             .send_with(client)
@@ -586,22 +572,6 @@ impl DeboaRequestBuilder {
     #[inline]
     pub fn method(mut self, method: http::Method) -> Self {
         self.method = method;
-        self
-    }
-
-    /// Set file to upload
-    ///
-    /// # Arguments:
-    ///
-    /// * `file` - File to upload
-    ///
-    /// # Returns
-    ///
-    /// * `Self` - The request builder
-    ///
-    #[inline]
-    pub fn file(mut self, file: File) -> Self {
-        self.body = HttpBody::from_file(file);
         self
     }
 
@@ -973,10 +943,9 @@ impl DeboaRequestBuilder {
     #[inline]
     pub async fn go<T>(self, client: T) -> Result<DeboaResponse>
     where
-        T: AsRef<Client>,
+        T: HttpClient,
     {
         client
-            .as_ref()
             .execute(self.build()?)
             .await
     }
@@ -1008,12 +977,11 @@ impl DeboaRequestBuilder {
     /// assert_eq!(response.status(), 201);
     /// ```
     #[inline]
-    pub async fn send_with<T>(self, client: T) -> Result<DeboaResponse>
+    pub async fn send_with<T>(self, client: &T) -> Result<DeboaResponse>
     where
-        T: AsRef<Client>,
+        T: HttpClient,
     {
         client
-            .as_ref()
             .execute(self.build()?)
             .await
     }
