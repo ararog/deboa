@@ -1,20 +1,15 @@
 use std::{future::Future, net::IpAddr};
 
-use easyhttpmock::{
+#[cfg(feature = "http2")]
+use easyhttpmock_vetis_tokio::Protocol;
+use easyhttpmock_vetis_tokio::{
     config::EasyHttpMockConfig,
-    server::{
-        adapters::vetis_adapter::{VetisAdapter, VetisAdapterConfig},
-        PortGenerator,
-    },
+    errors::EasyHttpMockError,
+    expect::{Then, When},
+    server::PortGenerator,
+    vetis_adapter::{VetisAdapter, VetisAdapterConfig},
     EasyHttpMock,
 };
-
-use url::Url;
-use vetis::config::server::Protocol;
-
-pub use vetis::server::http::{Request, Response};
-
-pub use vetis::errors::VetisError;
 
 use crate::{
     cert::{Certificate, ContentEncoding},
@@ -59,8 +54,8 @@ pub(crate) fn client_with_cert() -> Client {
 
 pub async fn start_mock_server<H, Fut>(handler: H) -> EasyHttpMock<VetisAdapter>
 where
-    H: Fn(Request) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<Response, VetisError>> + Send + Sync + 'static,
+    H: Fn(When) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Result<Then, EasyHttpMockError>> + Send + Sync + 'static,
 {
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
@@ -99,7 +94,7 @@ where
 
     #[allow(unused_must_use)]
     let result = server
-        .start(handler)
+        .mock(handler)
         .await;
 
     result.unwrap_or_else(|err| {

@@ -4,7 +4,6 @@ use crate::tests::{
 };
 
 use deboa::request::DeboaRequest;
-use easyhttpmock::mock_response;
 use http::StatusCode;
 
 //
@@ -12,12 +11,13 @@ use http::StatusCode;
 //
 #[tokio::test]
 async fn test_delete() -> TestResult<()> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "DELETE" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, ""))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
+    let mut server = start_mock_server(|when| async move {
+        Ok(when
+            .path(String::from("/posts/1"))
+            .method(String::from("PATCH"))
+            .then()
+            .with_status(StatusCode::OK)
+            .with_body(String::from("")))
     })
     .await;
 
@@ -30,7 +30,7 @@ async fn test_delete() -> TestResult<()> {
     assert_eq!(response.status(), StatusCode::OK);
 
     server
-        .stop()
+        .assert()
         .await?;
 
     Ok(())

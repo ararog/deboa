@@ -18,19 +18,19 @@ use deboa::{
     HttpClient,
 };
 
-use easyhttpmock::mock_response;
 use http::StatusCode;
 //
 // GET
 //
 #[tokio::test]
 async fn do_get_http() -> TestResult<()> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, "Hello World!"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
+    let mut server = start_mock_server(|when| async move {
+        Ok(when
+            .path(String::from("/posts/1"))
+            .method(String::from("GET"))
+            .then()
+            .with_status(StatusCode::OK)
+            .with_body(String::from("Hello World!")))
     })
     .await;
 
@@ -53,19 +53,20 @@ async fn do_get_http() -> TestResult<()> {
     );
 
     server
-        .stop()
+        .assert()
         .await?;
 
     Ok(())
 }
 
 async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, "Hello World!"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
+    let mut server = start_mock_server(|when| async move {
+        Ok(when
+            .path(String::from("/posts/1"))
+            .method(String::from("GET"))
+            .then()
+            .with_status(StatusCode::OK)
+            .with_body(String::from("Hello World!")))
     })
     .await;
 
@@ -116,7 +117,7 @@ async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
     }
 
     server
-        .stop()
+        .assert()
         .await?;
 
     Ok(())
@@ -142,12 +143,13 @@ async fn test_get_http_verify() -> TestResult<()> {
 
 #[tokio::test]
 async fn test_get_http_mutual_authentication() -> TestResult<()> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, "Hello World!"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
+    let mut server = start_mock_server(|when| async move {
+        Ok(when
+            .path(String::from("/posts/1"))
+            .method(String::from("GET"))
+            .then()
+            .with_status(StatusCode::OK)
+            .with_body(String::from("Hello World!")))
     })
     .await;
 
@@ -171,7 +173,7 @@ async fn test_get_http_mutual_authentication() -> TestResult<()> {
     assert_eq!(response?.status(), StatusCode::OK);
 
     server
-        .stop()
+        .assert()
         .await?;
 
     Ok(())
@@ -205,7 +207,7 @@ async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
     assert_eq!(response?.status(), StatusCode::OK);
 
     server
-        .stop()
+        .assert()
         .await?;
 
     Ok(())
@@ -216,9 +218,15 @@ async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
 //
 #[tokio::test]
 async fn test_get_not_found() -> TestResult<()> {
-    let mut server =
-        start_mock_server(|_| async move { Ok(mock_response(StatusCode::NOT_FOUND, "Not found")) })
-            .await;
+    let mut server = start_mock_server(|when| async move {
+        Ok(when
+            .path(String::from("/asasa/posts/1ddd"))
+            .method(String::from("GET"))
+            .then()
+            .with_status(StatusCode::NOT_FOUND)
+            .with_body(String::from("Not found")))
+    })
+    .await;
 
     let client = client_with_cert();
 
@@ -237,7 +245,7 @@ async fn test_get_not_found() -> TestResult<()> {
     );
 
     server
-        .stop()
+        .assert()
         .await?;
 
     Ok(())
@@ -274,12 +282,13 @@ async fn test_get_invalid_server() -> TestResult<()> {
 //
 #[tokio::test]
 async fn test_get_by_query() -> TestResult<()> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/comments/1" {
-            Ok(mock_response(StatusCode::OK, "My comment"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
+    let mut server = start_mock_server(|when| async move {
+        Ok(when
+            .path(String::from("/comments/1"))
+            .method(String::from("GET"))
+            .then()
+            .with_status(StatusCode::OK)
+            .with_body(String::from("My comment")))
     })
     .await;
 
@@ -307,7 +316,7 @@ async fn test_get_by_query() -> TestResult<()> {
     assert_eq!(comments.unwrap(), "My comment");
 
     server
-        .stop()
+        .assert()
         .await?;
 
     Ok(())
@@ -400,12 +409,13 @@ async fn test_get_with_redirect() {
 
 #[tokio::test]
 async fn test_try_into() -> TestResult<()> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, ""))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
+    let mut server = start_mock_server(|when| async move {
+        Ok(when
+            .path(String::from("/posts/1"))
+            .method(String::from("GET"))
+            .then()
+            .with_status(StatusCode::OK)
+            .with_body(String::from("")))
     })
     .await;
 
@@ -417,7 +427,7 @@ async fn test_try_into() -> TestResult<()> {
     assert_eq!(response.status(), 200);
 
     server
-        .stop()
+        .assert()
         .await?;
 
     Ok(())
@@ -425,12 +435,13 @@ async fn test_try_into() -> TestResult<()> {
 
 #[tokio::test]
 async fn test_fetch_from_str() -> TestResult<()> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, ""))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
+    let mut server = start_mock_server(|when| async move {
+        Ok(when
+            .path(String::from("/posts/1"))
+            .method(String::from("GET"))
+            .then()
+            .with_status(StatusCode::OK)
+            .with_body(String::from("")))
     })
     .await;
 
@@ -442,7 +453,7 @@ async fn test_fetch_from_str() -> TestResult<()> {
     assert_eq!(response.status(), 200);
 
     server
-        .stop()
+        .assert()
         .await?;
 
     Ok(())

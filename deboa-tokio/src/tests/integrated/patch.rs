@@ -7,8 +7,7 @@ use crate::{
 };
 
 use deboa::{request::DeboaRequest, HttpClient};
-use easyhttpmock::mock_response;
-use http::{header::HOST, StatusCode};
+use http::StatusCode;
 
 //
 // PATCH
@@ -16,15 +15,13 @@ use http::{header::HOST, StatusCode};
 
 #[tokio::test]
 async fn test_patch() -> TestResult<()> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "PATCH" && req.uri().path() == "/posts/1" {
-            assert!(req
-                .headers()
-                .contains_key(HOST));
-            Ok(mock_response(StatusCode::OK, "done"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
+    let mut server = start_mock_server(|when| async move {
+        Ok(when
+            .path(String::from("/posts/1"))
+            .method(String::from("PATCH"))
+            .then()
+            .with_status(StatusCode::OK)
+            .with_body(String::from("")))
     })
     .await;
 
@@ -47,7 +44,7 @@ async fn test_patch() -> TestResult<()> {
     );
 
     server
-        .stop()
+        .assert()
         .await?;
 
     Ok(())
