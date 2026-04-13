@@ -34,7 +34,7 @@ http = "1"
 http-body = "1"
 http-body-util = "0.1"
 hyper = { version = "1.8.1", features = ["client", "http1", "http2"], default-features = false }
-hyper-body-utils = { version = "0.1.6-beta.6", default-features = false }
+hyper-body-utils = { path = "../../hyper-body-utils", default-features = false }
 hyper-util = { version = "0.1.20", features = [
   "client",
   "client-legacy",

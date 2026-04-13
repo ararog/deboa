@@ -21,7 +21,7 @@ async fn test_patch() -> TestResult<()> {
             .method(String::from("PATCH"))
             .then()
             .with_status(StatusCode::OK)
-            .with_body(String::from("")))
+            .with_body(String::from("done")))
     })
     .await;
 

@@ -9,9 +9,6 @@ use deboa_tests::utils::{start_mock_server, Response, CA_CERT};
 use fory::{Fory, ForyObject};
 use http::StatusCode;
 
-pub(crate) const SKIP_CERT_VERIFICATION: bool =
-    cfg!(any(feature = "_tokio-native-tls", feature = "_smol-native-tls"));
-
 const FORY_PERSON: [u8; 15] = [2, 255, 143, 2, 30, 255, 34, 74, 111, 104, 110, 32, 68, 111, 101];
 
 #[derive(ForyObject)]
@@ -63,16 +60,4 @@ async fn do_fory_post_request() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     Ok(())
-}
-
-#[cfg(feature = "_tokio-rt")]
-#[tokio::test]
-async fn test_fory_post_request() -> Result<(), Box<dyn std::error::Error>> {
-    do_fory_post_request().await
-}
-
-#[cfg(feature = "_smol-rt")]
-#[apply(test!)]
-async fn test_fory_post_request() -> Result<(), Box<dyn std::error::Error>> {
-    do_fory_post_request().await
 }

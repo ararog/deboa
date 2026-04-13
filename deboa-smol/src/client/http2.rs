@@ -58,7 +58,8 @@ impl DeboaTcpConnection for BaseHttpConnection<Http2Request, HttpBody, HttpBody>
                 Ok(_) => (),
                 Err(_err) => {}
             };
-        });
+        })
+        .detach();
 
         Ok(BaseHttpConnection::<Self::Sender, Self::ReqBody, Self::ResBody> {
             sender,

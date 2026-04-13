@@ -127,6 +127,7 @@ use deboa::{
     errors::{DeboaError, RequestError},
     request::{DeboaRequest, IntoRequest},
     response::DeboaResponse,
+    HttpClient,
 };
 use smol::lock::RwLock;
 
@@ -879,7 +880,9 @@ impl Client {
         self.identity
             .as_ref()
     }
+}
 
+impl HttpClient for Client {
     /// Executes an HTTP request and returns the response.
     ///
     /// This is the primary method for making HTTP requests. It handles the entire
@@ -967,7 +970,7 @@ impl Client {
     /// - Uses connection pooling for better performance
     /// - Automatically reuses connections when possible
     /// - Supports HTTP/1.1, HTTP/2 and HTTP/3
-    pub async fn execute<R>(&self, request: R) -> Result<DeboaResponse>
+    async fn execute<R>(&self, request: R) -> Result<DeboaResponse>
     where
         R: IntoRequest,
     {

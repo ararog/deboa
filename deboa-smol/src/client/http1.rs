@@ -5,18 +5,12 @@ use hyper::{client::conn::http1::handshake, Request, Response};
 
 use rt_gate::spawn_worker;
 
-#[cfg(all(feature = "smol-rt", any(feature = "smol-rust-tls", feature = "smol-native-tls")))]
+#[cfg(all(any(feature = "smol-rust-tls", feature = "smol-native-tls")))]
 use crate::rt::smol::tls::{plain_connection, tls_connection};
-#[cfg(feature = "smol-rt")]
 use smol_hyper::rt::FuturesIo;
 
-#[cfg(all(
-    feature = "tokio-rt",
-    any(feature = "tokio-rust-tls", feature = "tokio-native-tls")
-))]
+#[cfg(all(any(feature = "rust-tls", feature = "native-tls")))]
 use crate::rt::tokio::tls::{plain_connection, tls_connection};
-#[cfg(feature = "tokio-rt")]
-use hyper_util::rt::TokioIo;
 
 use hyper_body_utils::HttpBody;
 
@@ -26,12 +20,6 @@ use crate::{
     request::Http1Request,
     Result,
 };
-
-#[cfg(feature = "smol-rt")]
-type DeboaIo<T> = FuturesIo<T>;
-
-#[cfg(feature = "tokio-rt")]
-type DeboaIo<T> = TokioIo<T>;
 
 impl DeboaTcpConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody> {
     type Sender = Http1Request;
@@ -64,11 +52,11 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody>
             return Err(e);
         }
 
-        let result = handshake(DeboaIo::new(stream.unwrap())).await;
+        let result = handshake(FuturesIo::new(stream.unwrap())).await;
 
         let (sender, conn) = result.unwrap();
 
-        spawn_worker(async move {
+        smol::spawn(async move {
             match conn
                 .with_upgrades()
                 .await
@@ -76,7 +64,8 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody>
                 Ok(_) => (),
                 Err(_err) => {}
             };
-        });
+        })
+        .detach();
 
         Ok(BaseHttpConnection::<Self::Sender, Self::ReqBody, Self::ResBody> {
             sender,

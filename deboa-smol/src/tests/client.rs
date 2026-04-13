@@ -4,9 +4,7 @@ use url::Url;
 
 use crate::{default_protocol, Client, Result};
 
-#[cfg(feature = "smol-rt")]
 use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
 use smol_macros::test;
 
 #[test]
@@ -62,20 +60,7 @@ async fn shl() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_shl() -> Result<()> {
-    shl().await
-}
-
-#[cfg(feature = "smol-rt")]
 #[apply(test!)]
-async fn test_shl() -> Result<()> {
-    shl().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
 async fn test_shl() -> Result<()> {
     shl().await
 }

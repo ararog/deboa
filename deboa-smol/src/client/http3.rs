@@ -20,16 +20,9 @@ use crate::{
     Result,
 };
 
-#[cfg(feature = "smol-rt")]
 use async_std_resolver::{
     config::{ResolverConfig, ResolverOpts},
     resolver,
-};
-
-#[cfg(feature = "tokio-rt")]
-use trust_dns_resolver::{
-    config::{ResolverConfig, ResolverOpts},
-    TokioAsyncResolver,
 };
 
 async fn lookup_and_connect(
@@ -37,11 +30,7 @@ async fn lookup_and_connect(
     port: u16,
     client_endpoint: &Endpoint,
 ) -> std::result::Result<h3_quinn::Connection, DeboaError> {
-    #[cfg(feature = "smol-rt")]
     let resolver = resolver(ResolverConfig::default(), ResolverOpts::default()).await;
-
-    #[cfg(feature = "tokio-rt")]
-    let resolver = TokioAsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default());
 
     let response = resolver
         .lookup_ip(host)
@@ -172,10 +161,11 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, HttpBody, HttpBody>
 
         let (mut conn, send_request) = client.unwrap();
 
-        spawn_worker(async move {
+        smol::spawn(async move {
             future::poll_fn(|cx| conn.poll_close(cx)).await;
             Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
-        });
+        })
+        .detach();
 
         Ok(BaseHttpConnection::<Self::Sender, Self::ReqBody, Self::ResBody> {
             sender: send_request,

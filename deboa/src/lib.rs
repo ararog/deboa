@@ -50,6 +50,8 @@
 //! ```
 //!
 
+use std::future::Future;
+
 use crate::{errors::DeboaError, request::IntoRequest, response::DeboaResponse};
 
 pub mod cache;
@@ -80,7 +82,7 @@ pub mod url;
 pub type Result<T> = std::result::Result<T, DeboaError>;
 
 pub trait HttpClient {
-    async fn execute<R>(&self, request: R) -> Result<DeboaResponse>
+    fn execute<R>(&self, request: R) -> impl Future<Output = Result<DeboaResponse>>
     where
         R: IntoRequest;
 }
