@@ -26,7 +26,7 @@ compile_error!(
 compile_error!("You cannot enable native-tls and rust-tls features at the same time.");
 
 #[cfg(all(feature = "native-tls", feature = "http3"))]
-compile_error!("HTTP3 is not supported within smol-native-tls runtime.");
+compile_error!("HTTP3 is not supported within native-tls runtime.");
 
 #[cfg(not(any(feature = "http1", feature = "http2", feature = "http3")))]
 compile_error!("At least one HTTP version feature must be enabled.");
@@ -120,7 +120,8 @@ pub type Result<T> = std::result::Result<T, DeboaError>;
 /// # Examples
 ///
 /// ``` rust,ignore
-/// use deboa::{Client, Result};
+/// use deboa::Result;
+/// use deboa_smol::Client;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {

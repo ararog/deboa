@@ -66,7 +66,7 @@ use deboa::{
     response::DeboaResponse,
     HttpClient, Result,
 };
-use tokio::sync::{RwLock, RwLockWriteGuard};
+use tokio::sync::RwLock;
 
 use std::fmt::{Debug, Display};
 use std::net::IpAddr;
