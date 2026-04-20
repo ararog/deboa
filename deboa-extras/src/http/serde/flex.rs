@@ -7,6 +7,7 @@ use deboa::{
 use http::{header, HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
 
+/// Flexbuffers body serializer/deserializer
 pub struct FlexBody;
 
 const FLEXBUFFERS_CONTENT_TYPE: &str = "application/x-flexbuffers";

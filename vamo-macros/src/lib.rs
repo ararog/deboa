@@ -1,4 +1,5 @@
-#[doc = include_str!("../README.md")]
+#![doc = include_str!("../README.md")]
+#![deny(missing_docs)]
 use proc_macro::TokenStream;
 
 extern crate proc_macro;

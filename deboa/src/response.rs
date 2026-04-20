@@ -115,6 +115,7 @@ use url::Url;
 /// assert_eq!(response, DeboaBody::Right(Full::<Bytes>::from(b"Some bytes")));
 /// ```
 pub trait IntoBody {
+    /// Convert self to a HttpBody
     fn into_body(self) -> HttpBody;
 }
 
@@ -139,6 +140,7 @@ impl IntoBody for Vec<u8> {
     }
 }
 
+/// Deboa response builder
 pub struct DeboaResponseBuilder {
     url: Url,
     inner: Response<HttpBody>,
@@ -333,6 +335,7 @@ impl DeboaResponse {
         Self { url, inner }
     }
 
+    /// Create a new DeboaResponseBuilder
     #[inline]
     pub fn builder(url: Url) -> DeboaResponseBuilder {
         DeboaResponseBuilder { url, inner: Response::new(HttpBody::from_bytes(&[])) }

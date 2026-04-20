@@ -21,9 +21,9 @@ deboa-fory = "0.0.1"
 
 ## Usage
 
-```rust
-use deboa_fory::{ForyRequestBuilder, ForyResponse};
+```rust, ignore
 use deboa::{errors::DeboaError, request::post, Deboa};
+use deboa_fory::{ForyRequestBuilder, ForyResponse};
 use fory::{Fory, ForyObject};
 
 #[derive(ForyObject)]

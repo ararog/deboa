@@ -78,12 +78,20 @@ async fn lookup_and_connect(
 
     let conn = match conn {
         Ok(conn) => conn,
-        Err(e) => {
-            return Err(DeboaError::Connection(ConnectionError::Udp {
-                host: host.to_string(),
-                message: format!("Could not connect to server: {}", e),
-            }))
-        }
+        Err(e) => match e {
+            quinn::ConnectionError::TransportError(e) => {
+                return Err(DeboaError::Connection(ConnectionError::Tls {
+                    host: host.to_string(),
+                    message: format!("Could not connect to server: {}", e),
+                }))
+            }
+            _ => {
+                return Err(DeboaError::Connection(ConnectionError::Udp {
+                    host: host.to_string(),
+                    message: format!("Could not connect to server: {}", e),
+                }))
+            }
+        },
     };
 
     let quinn_conn: h3_quinn::Connection = h3_quinn::Connection::new(conn);

@@ -6,6 +6,7 @@ use deboa::{
 use mime_typed::{ApplicationMsgpack, MimeStrExt};
 use serde::{Deserialize, Serialize};
 
+/// MessagePack body serializer/deserializer
 pub struct MsgPackBody;
 
 impl RequestBody for MsgPackBody {

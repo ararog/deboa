@@ -47,29 +47,29 @@ Either run from command line:
 Or add to your `Cargo.toml`:
 
 ```toml
-deboa = { version = "0.0.9", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.0.9" }
+deboa-extras = { version = "0.1.0" } 
+deboa-tokio = { version = "0.1.0" }
 http = "1.3.1"
 ```
 
 ## Crate features
 
-- tokio-rt (default)
-- smol-rt
 - http1
 - http2 (default)
 - http3
-- tokio-rust-tls (default)
-- tokio-native-tls
-- smol-rust-tls
-- smol-native-tls
+- rust-tls
+- native-tls
 
 ## Usage
 
-```rust
+```rust, compile_fail
 use deboa::{
-    Client, Result, request::{DeboaRequest, FetchWith, get}
+    request::{DeboaRequest, FetchWith, get},
+    Result
 };
 use deboa_extras::http::{self, serde::json::JsonBody};
+use deboa_tokio::Client;
 
 use ::http::Method;
 
@@ -154,7 +154,7 @@ You can create a new project from the template using `cargo generate`:
 
 ## License
 
-MIT
+MIT or Apache-2.0
 
 ## Author
 

@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+#![deny(missing_docs)]
 use deboa::{
     errors::{ContentError, DeboaError},
     request::DeboaRequestBuilder,
@@ -10,7 +12,9 @@ use http::header;
 //#[cfg(test)]
 //mod tests;
 
+/// Fory request builder extension
 pub trait ForyRequestBuilder {
+    /// Set the request body as Fory
     fn body_as_fory<T: Serializer>(self, fory: &Fory, body: T) -> Result<DeboaRequestBuilder>;
 }
 
@@ -31,7 +35,9 @@ impl ForyRequestBuilder for DeboaRequestBuilder {
     }
 }
 
+/// Fory response extension
 pub trait ForyResponse {
+    /// Get the response body as Fory
     fn body_as_fory<T: Serializer + ForyDefault>(
         self,
         fory: &Fory,

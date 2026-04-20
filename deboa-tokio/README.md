@@ -152,7 +152,7 @@ You can create a new project from the template using `cargo generate`:
 
 ## License
 
-MIT
+MIT or Apache-2.0
 
 ## Author
 

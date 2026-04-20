@@ -88,10 +88,14 @@ use crate::{
     url::IntoUrl,
     HttpClient, Result,
 };
+/// Bytes body type
 pub type BytesBody = BoxBody<Bytes, std::io::Error>;
 
+/// HTTP/1 request type
 pub type Http1Request = hyper::client::conn::http1::SendRequest<HttpBody>;
+/// HTTP/2 request type
 pub type Http2Request = hyper::client::conn::http2::SendRequest<HttpBody>;
+/// HTTP/3 request type
 pub type Http3Request = h3::client::SendRequest<OpenStreams, Bytes>;
 
 /// Trait to allow making a request from different types.
@@ -113,6 +117,7 @@ pub type Http3Request = h3::client::SendRequest<OpenStreams, Bytes>;
 /// assert_eq!(response.status(), 200);
 /// ```
 pub trait IntoRequest: private::IntoRequestSealed {
+    /// Convert self to a DeboaRequest
     fn into_request(self) -> Result<DeboaRequest>;
 }
 
@@ -160,6 +165,7 @@ impl IntoRequest for Url {
 ///     .build()?;
 /// ```
 pub trait IntoHeaders: private::IntoHeadersSealed {
+    /// Convert self to a HeaderMap
     fn into_headers(self) -> Result<HeaderMap>;
 }
 
@@ -224,7 +230,9 @@ impl<'a> IntoHeaders for Vec<(&'a str, &'a str)> {
 /// let request = "GET".from_url("https://example.com")?;
 /// ```
 pub trait MethodExt: private::MethodExtSealed {
+    /// Create a request from a URL
     fn from_url(self, url: &str) -> Result<DeboaRequestBuilder>;
+    /// Create a request to a URL
     fn to_url(self, url: &str) -> Result<DeboaRequestBuilder>;
 }
 
@@ -987,6 +995,7 @@ impl DeboaRequestBuilder {
     }
 }
 
+/// Deboa request
 pub struct DeboaRequest {
     url: Arc<Url>,
     headers: HeaderMap,

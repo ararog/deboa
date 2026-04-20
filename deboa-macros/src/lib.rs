@@ -1,4 +1,5 @@
 #![doc = include_str!("../README.md")]
+#![deny(missing_docs)]
 
 #[macro_export]
 /// Make a GET request to the specified URL.

@@ -24,54 +24,16 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Run deboa-extras with default serialization and compression
+      - name: Run all tests
         run: |
-          cd deboa-extras
-          cargo test --features "serialization_all compression_all"
-          cd ..
-
-      - name: Run deboa-extras with tokio-only
-        run: |
-          cd deboa-extras
-          cargo test --features "tokio-rt deboa/default-rustls-provider deboa/default-rustls-verifier" --no-default-features
-          cd ..
-
-      - name: Run deboa-extras with smol-only
-        run: |
-          cd deboa-extras
-          cargo test --features "smol-rt deboa/default-rustls-provider deboa/default-rustls-verifier" --no-default-features
-          cd ..
-
-      - name: Run deboa-fory tests
-        run: |
-          cd deboa-fory
-          cargo test
-          cd ..
-
-      - name: Run deboa-macros tests
-        run: |
-          cd deboa-macros
-          cargo test
-          cd ..
-
-      - name: Run vamo tests
-        run: |
-          cd vamo
-          cargo test
-          cd ..
-
-      - name: Run vamo-macros tests
-        run: |
-          cd vamo-macros
-          cargo test
-          cd ..
+          cargo test 
 
   test-deboa:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        runtime: ["tokio", "smol"]
-        protocols: ["http1", "http2", "http3"]
+        runtime: ["smol", "tokio"]
+        protocol: ["http1", "http2", "http3"]
         tls: ["native-tls", "rust-tls"]
 
     runs-on: ${{ matrix.os }}
@@ -80,11 +42,11 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Run deboa tests with selected features
+      - name: Run deboa-${{ matrix.runtime }} tests on ${{ matrix.os }} with ${{ matrix.protocol }} using ${{ matrix.tls }}
         if: (matrix.os != 'windows-latest' && matrix.tls != 'native-tls') || (matrix.os != 'macos-latest' && matrix.tls != 'native-tls')
         run: |
-          cd deboa
-          cargo test --features "${{ matrix.protocols }} ${{ matrix.runtime }}-rt ${{ matrix.runtime }}-${{ matrix.tls }} ${{ matrix.tls == 'rust-tls' && 'default-rustls-provider' || '' }} ${{ matrix.tls == 'rust-tls' && 'default-rustls-verifier' || '' }}" --no-default-features
+          cd deboa-${{ matrix.runtime }}
+          cargo test --features "${{ matrix.protocol }} ${{ matrix.tls }} ${{ matrix.tls == 'rust-tls' && 'default-rustls-provider' || '' }} ${{ matrix.tls == 'rust-tls' && 'default-rustls-verifier' || '' }} easyhttpmock-vetis-${{ matrix.runtime }}/${{ matrix.protocol }} easyhttpmock-vetis-${{ matrix.runtime }}/rust-tls" --no-default-features
 
   build-android:
     runs-on: ubuntu-latest

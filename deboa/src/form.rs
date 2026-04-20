@@ -149,7 +149,9 @@ pub trait DeboaForm {
 /// * `MultiPartForm` - The multi part form.
 #[derive(Debug)]
 pub enum Form {
+    /// Encoded form
     EncodedForm(EncodedForm),
+    /// Multi part form
     MultiPartForm(MultiPartForm),
 }
 
@@ -167,6 +169,7 @@ impl From<MultiPartForm> for Form {
     }
 }
 
+/// Encoded form
 #[derive(Debug, Clone)]
 pub struct EncodedForm {
     fields: IndexMap<String, String>,
@@ -231,6 +234,7 @@ impl DeboaForm for EncodedForm {
     }
 }
 
+/// Multi part form
 #[derive(Debug, Clone)]
 pub struct MultiPartForm {
     fields: IndexMap<String, String>,

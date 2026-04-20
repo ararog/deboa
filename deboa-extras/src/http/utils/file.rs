@@ -33,6 +33,7 @@ pub struct ToFile {
 ///     .unwrap();
 /// ```
 pub trait IntoFile {
+    /// Convert the response into a file writer
     fn into_file(self) -> ToFile;
 }
 

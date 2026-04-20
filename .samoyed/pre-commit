@@ -7,22 +7,22 @@ cargo fmt --check
 
 cargo test
 
-# cd deboa-smol
+cd deboa-smol
 
-# cargo test --features "http1 rust-tls easyhttpmock-vetis-smol/http1 easyhttpmock-vetis-smol/rust-tls" --no-default-features
-# cargo test --features "http2 rust-tls easyhttpmock-vetis-smol/http2 easyhttpmock-vetis-smol/rust-tls" --no-default-features
-# cargo test --features "http3 rust-tls easyhttpmock-vetis-smol/http3 easyhttpmock-vetis-smol/rust-tls" --no-default-features
-# cargo test --features "http1 native-tls easyhttpmock-vetis-smol/http1 easyhttpmock-vetis-smol/rust-tls" --no-default-features
-# cargo test --features "http2 native-tls easyhttpmock-vetis-smol/http2 easyhttpmock-vetis-smol/rust-tls" --no-default-features
+cargo test --features "http1 rust-tls default-rustls-provider default-rustls-verifier easyhttpmock-vetis-smol/http1 easyhttpmock-vetis-smol/rust-tls" --no-default-features
+cargo test --features "http2 rust-tls default-rustls-provider default-rustls-verifier easyhttpmock-vetis-smol/http2 easyhttpmock-vetis-smol/rust-tls" --no-default-features
+cargo test --features "http3 rust-tls default-rustls-provider default-rustls-verifier easyhttpmock-vetis-smol/http3 easyhttpmock-vetis-smol/rust-tls" --no-default-features
+cargo test --features "http1 native-tls easyhttpmock-vetis-smol/http1 easyhttpmock-vetis-smol/rust-tls" --no-default-features
+cargo test --features "http2 native-tls easyhttpmock-vetis-smol/http2 easyhttpmock-vetis-smol/rust-tls" --no-default-features
 
-# cd ..
+cd ..
 
-# cd deboa-tokio
+cd deboa-tokio
 
-# cargo test --features "http1 rust-tls easyhttpmock-vetis-tokio/http1 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
-# cargo test --features "http2 rust-tls easyhttpmock-vetis-tokio/http2 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
-# cargo test --features "http3 rust-tls easyhttpmock-vetis-tokio/http3 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
-# cargo test --features "http1 native-tls easyhttpmock-vetis-tokio/http1 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
-# cargo test --features "http2 native-tls easyhttpmock-vetis-tokio/http2 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
+cargo test --features "http1 rust-tls default-rustls-provider default-rustls-verifier easyhttpmock-vetis-tokio/http1 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
+cargo test --features "http2 rust-tls default-rustls-provider default-rustls-verifier easyhttpmock-vetis-tokio/http2 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
+cargo test --features "http3 rust-tls default-rustls-provider default-rustls-verifier easyhttpmock-vetis-tokio/http3 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
+cargo test --features "http1 native-tls easyhttpmock-vetis-tokio/http1 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
+cargo test --features "http2 native-tls easyhttpmock-vetis-tokio/http2 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
 
-# cd ..
+cd ..

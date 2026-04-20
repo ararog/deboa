@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "simd_json")]
 use std::io::Cursor;
 
+/// JSON body serializer/deserializer
 pub struct JsonBody;
 
 impl RequestBody for JsonBody {

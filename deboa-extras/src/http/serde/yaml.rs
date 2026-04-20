@@ -6,6 +6,8 @@ use deboa::{
 };
 use http::{header, HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
+
+/// YAML body serializer/deserializer
 pub struct YamlBody;
 
 const YAML_CONTENT_TYPE: &str = "application/yaml";

@@ -56,112 +56,236 @@ use thiserror::Error;
 /// and source information.
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum DeboaError {
+    /// Invalid cookie header error
     #[error("Invalid cookie header: {message}")]
-    Cookie { message: String },
+    Cookie {
+        /// Error message
+        message: String,
+    },
 
+    /// Invalid client certificate error (deprecated, use Identity instead)
     #[deprecated = "Use `Identity` instead"]
     #[error("Invalid client certificate: {message}")]
-    ClientCert { message: String },
+    ClientCert {
+        /// Error message
+        message: String,
+    },
 
+    /// Invalid certificate error
     #[error("Invalid certificate: {message}")]
-    Certificate { message: String },
+    Certificate {
+        /// Error message
+        message: String,
+    },
 
+    /// Invalid identity error
     #[error("Invalid identity: {message}")]
-    Identity { message: String },
+    Identity {
+        /// Error message
+        message: String,
+    },
 
+    /// Invalid header error
     #[error("Invalid header: {message}")]
-    Header { message: String },
+    Header {
+        /// Error message
+        message: String,
+    },
 
+    /// Connection error
     #[error("Connection error: {0}")]
     Connection(#[from] ConnectionError),
 
+    /// Request error
     #[error("Request error: {0}")]
     Request(#[from] RequestError),
 
+    /// Response error
     #[error("Response error: {0}")]
     Response(#[from] ResponseError),
 
+    /// Content error
     #[error("Content error: {0}")]
     Content(#[from] ContentError),
 
+    /// Io error
     #[error("Io error: {0}")]
     Io(#[from] IoError),
 }
 
+/// Request error
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum RequestError {
+    /// Failed to parse request
     #[error("Failed to parse request: {message}")]
-    Parse { message: String },
+    Parse {
+        /// Error message
+        message: String,
+    },
 
+    /// Failed to send request
     #[error("Failed to send request: {message}")]
-    Send { message: String },
+    Send {
+        /// Error message
+        message: String,
+    },
 
+    /// Failed to prepare request
     #[error("Failed to prepare request: {message}")]
-    Prepare { message: String },
+    Prepare {
+        /// Error message
+        message: String,
+    },
 
+    /// Failed to parse url
     #[error("Failed to parse url: {message}")]
-    UrlParse { message: String },
+    UrlParse {
+        /// Error message
+        message: String,
+    },
 
+    /// Failed to parse method
     #[error("Failed to parse method: {message}")]
-    MethodParse { message: String },
+    MethodParse {
+        /// Error message
+        message: String,
+    },
 }
 
+/// Response error
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum ResponseError {
+    /// Failed to receive response
     #[error("Failed to receive response: {status_code}: {message}")]
-    Receive { status_code: StatusCode, message: String },
+    Receive {
+        /// Status code
+        status_code: StatusCode,
+        /// Error message
+        message: String,
+    },
 
+    /// Failed to process response
     #[error("Failed to process response: {message}")]
-    Process { message: String },
+    Process {
+        /// Error message
+        message: String,
+    },
 }
 
+/// Connection error
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum ConnectionError {
+    /// Tcp connection error
     #[error("Tcp connection error: {host} {message}")]
-    Tcp { host: String, message: String },
+    Tcp {
+        /// Host
+        host: String,
+        /// Error message
+        message: String,
+    },
 
+    /// Tls connection error
     #[error("Tls connection error: {host} {message}")]
-    Tls { host: String, message: String },
+    Tls {
+        /// Host
+        host: String,
+        /// Error message
+        message: String,
+    },
 
+    /// Udp connection error
     #[error("Udp connection error: {message}")]
-    Udp { host: String, message: String },
+    Udp {
+        /// Host
+        host: String,
+        /// Error message
+        message: String,
+    },
 
+    /// Connection handshake error
     #[error("Connection handshake error: {host} {message}")]
-    Handshake { host: String, message: String },
+    Handshake {
+        /// Host
+        host: String,
+        /// Error message
+        message: String,
+    },
 
+    /// Connection upgrade error
     #[error("Connection upgrade error: {message}")]
-    Upgrade { message: String },
+    Upgrade {
+        /// Error message
+        message: String,
+    },
 
+    /// Unsupported scheme error
     #[error("Unsupported scheme: {message}")]
-    UnsupportedScheme { message: String },
+    UnsupportedScheme {
+        /// Error message
+        message: String,
+    },
 }
 
+/// Content error
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum ContentError {
+    /// Failed to serialize data
     #[error("Failed to serialize data: {message}")]
-    Serialization { message: String },
+    Serialization {
+        /// Error message
+        message: String,
+    },
 
+    /// Failed to deserialize data
     #[error("Failed to deserialize data: {message}")]
-    Deserialization { message: String },
+    Deserialization {
+        /// Error message
+        message: String,
+    },
 }
 
+/// Io error
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum IoError {
+    /// Failed to write file
     #[error("Failed to write file: {message}")]
-    File { message: String },
+    File {
+        /// Error message
+        message: String,
+    },
 
+    /// Failed to compress data
     #[error("Failed to compress data: {message}")]
-    Compress { message: String },
+    Compress {
+        /// Error message
+        message: String,
+    },
 
+    /// Failed to decompress data
     #[error("Failed to decompress data: {message}")]
-    Decompress { message: String },
+    Decompress {
+        /// Error message
+        message: String,
+    },
 
+    /// Failed to write to stdout
     #[error("Failed to write to stdout: {message}")]
-    Stdout { message: String },
+    Stdout {
+        /// Error message
+        message: String,
+    },
 
+    /// Failed to write to stderr
     #[error("Failed to write to stderr: {message}")]
-    Stderr { message: String },
+    Stderr {
+        /// Error message
+        message: String,
+    },
 
+    /// Failed to read from stdin
     #[error("Failed to read from stdin: {message}")]
-    Stdin { message: String },
+    Stdin {
+        /// Error message
+        message: String,
+    },
 }

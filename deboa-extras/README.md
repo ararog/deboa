@@ -2,7 +2,6 @@
 
 [![Crates.io downloads](https://img.shields.io/crates/d/deboa-extras)](https://crates.io/crates/deboa-extras) [![crates.io](https://img.shields.io/crates/v/deboa-extras?style=flat-square)](https://crates.io/crates/deboa-extras) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) ![Crates.io MSRV](https://img.shields.io/crates/msrv/deboa-extras) [![Documentation](https://docs.rs/deboa-extras/badge.svg)](https://docs.rs/deboa-extras/latest/deboa-extras) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ararog/deboa/blob/main/LICENSE.md)  ![Codecov](https://img.shields.io/codecov/c/github/ararog/deboa-extras) 
 
-
 This crate provides additional features for Deboa like compression and serialization.
 
 ## Install
@@ -32,7 +31,7 @@ deboa-extras = "0.0.1"
 
 ### Decompression
 
-```rust
+```rust, ignore
 use deboa::{Deboa, errors::DeboaError, interceptor::DeboaCatcher, request::DeboaRequest};
 use deboa_extras::{
     interceptor::encoding::EncodingCatcher,
@@ -44,7 +43,7 @@ let encoding_catcher = EncodingCatcher::register_decoders(vec![Box::new(BrotliDe
 
 let client = Deboa::builder()
   .catch(encoding_catcher)
-  .build()?
+  .build()?;
 
 let posts = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts/1")?
   .send_with(&client)
@@ -56,7 +55,7 @@ println!("{:?}", posts.raw_body());
 
 ### Serialization
 
-```rust
+```rust, ignore
 use deboa::{Deboa, errors::DeboaError, request::post};
 use deboa_extras::http::serde::json::JsonBody;
 
@@ -79,7 +78,7 @@ println!("Response Status Code: {}", response.status());
 
 ### SSE
 
-```rust
+```rust, ignore
 use deboa::{Deboa, Result};
 use deboa_extras::http::sse::response::{IntoEventStream};
 
@@ -98,7 +97,7 @@ println!("Connection closed");
 
 ### Websockets
 
-```rust
+```rust, ignore
 use deboa::{Deboa, Result, request::DeboaRequestBuilder};
 use deboa_extras::ws::{
     io::socket::DeboaWebSocket,

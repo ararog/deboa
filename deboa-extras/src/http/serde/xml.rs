@@ -7,6 +7,8 @@ use deboa::{
 };
 use mime_typed::{MimeStrExt, TextXml};
 use serde::{Deserialize, Serialize};
+
+/// XML body serializer/deserializer
 pub struct XmlBody;
 
 impl RequestBody for XmlBody {

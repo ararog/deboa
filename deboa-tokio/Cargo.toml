@@ -72,11 +72,9 @@ http3 = [
 [dependencies]
 async-executor = { version = "1.13.3", optional = true, default-features = false }
 async-native-tls = { version = "0.5.0", optional = true, default-features = false }
-async-std-resolver = { version = "=0.23.2", default-features = false }
 async-trait = "0.1.89"
 base64 = "0.22.1"
 bytes = { version = "1.11" }
-cfg-if = "1.0.4"
 cookie = "0.15.2"
 deboa = { path = "../deboa" }
 futures = "0.3.31"
@@ -98,7 +96,6 @@ hyper-util = { version = "0.1.20", features = [
 ], default-features = false }
 indexmap = "2.11.4"
 log = "0.4.28"
-macro_rules_attribute = { version = "0.2.2", optional = true, default-features = false }
 minimime = "1.0.0"
 mockall = "0.14.0"
 quinn = { version = "0.11.7", optional = true, features = [
@@ -111,7 +108,6 @@ rustls-native-certs = { version = "0.8.0", optional = true, default-features = f
 rustls-pki-types = { version = "1.13.2", optional = true, default-features = false }
 rustls-platform-verifier = { version = "0.6.2", optional = true, default-features = false }
 rustls-rustcrypto = { version = "0.0.2-alpha", optional = true, default-features = false }
-send_wrapper = { version = "0.6.0", optional = true, default-features = false }
 serde = { version = "1.0.217", features = ["derive"] }
 thiserror = "2.0.17"
 time = "=0.2.27"
