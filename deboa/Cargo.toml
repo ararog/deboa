@@ -62,13 +62,8 @@ criterion = { version = "0.8.2", features = [
   "async_smol",
   "async_tokio",
 ] }
-deboa-tests = { path = "../deboa-tests", version = "0.0.1", default-features = false }
 futures-util = "0.3.31"
 mime = { version = "0.3.17" }
 multer = "3.1.0"
 smol = "2.0.2"
 tokio = { version = "1.49.0" }
-
-[[bench]]
-name = "benchmark"
-harness = false

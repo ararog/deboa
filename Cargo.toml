@@ -16,8 +16,8 @@ members = [
     # "examples/postman",
     # "examples/simple",
     # "examples/simple-smol",
-    # "vamo",
-    # "vamo-macros", 
+    "vamo",
+    "vamo-macros", 
 ]
 
 [profile.release]

@@ -46,7 +46,7 @@
 //!     }
 //! }
 //! ```
-use deboa::{client::serde::RequestBody, Result};
+use deboa::{serde::RequestBody, Result};
 use serde::Serialize;
 
 /// Trait to be implemented by structs which will behave as rest resources.

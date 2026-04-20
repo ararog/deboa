@@ -4,7 +4,8 @@ use crate::tests::{
 };
 
 use deboa::{request::DeboaRequest, HttpClient};
-use http::StatusCode;
+use easyhttpmock_vetis_smol::mock::{MethodExt, Mock, StatusCodeExt};
+use http::{Method, StatusCode};
 
 use macro_rules_attribute::apply;
 use smol_macros::test;
@@ -14,15 +15,18 @@ use smol_macros::test;
 //
 
 async fn do_put() -> TestResult<()> {
-    let mut server = start_mock_server(|when| async move {
-        Ok(when
-            .method(String::from("PUT"))
-            .path(String::from("/posts/1"))
-            .then()
-            .with_status(StatusCode::OK)
-            .with_body(String::from("")))
-    })
-    .await;
+    let mock = Mock::of(
+        Method::PUT
+            .has()
+            .path("/posts/1")
+            .will_return(
+                StatusCode::OK
+                    .respond()
+                    .no_body(),
+            ),
+    );
+
+    let mut server = start_mock_server(mock).await;
 
     let client = client_with_cert();
 

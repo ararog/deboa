@@ -104,6 +104,15 @@ pub mod pool;
 #[cfg(feature = "rust-tls")]
 pub(crate) mod rustls;
 
+pub(crate) const fn default_protocol() -> HttpVersion {
+    #[cfg(feature = "http1")]
+    return HttpVersion::Http1;
+    #[cfg(feature = "http2")]
+    return HttpVersion::Http2;
+    #[cfg(feature = "http3")]
+    return HttpVersion::Http3;
+}
+
 /// Enum that represents the connection type.
 ///
 /// # Variants
@@ -187,7 +196,7 @@ impl<'a> ConnectionConfigBuilder<'a> {
             is_secure: false,
             host: "",
             port: 80,
-            protocol: HttpVersion::Http2,
+            protocol: default_protocol(),
             identity: None,
             certificate: None,
             skip_cert_verification: false,

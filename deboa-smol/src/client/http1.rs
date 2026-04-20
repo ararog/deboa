@@ -1,23 +1,18 @@
 use std::marker::PhantomData;
 
+use deboa::request::Http1Request;
 use http::version::Version;
 use hyper::{client::conn::http1::handshake, Request, Response};
 
-use rt_gate::spawn_worker;
-
-#[cfg(all(any(feature = "smol-rust-tls", feature = "smol-native-tls")))]
-use crate::rt::smol::tls::{plain_connection, tls_connection};
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+use crate::rt::tls::{plain_connection, tls_connection};
 use smol_hyper::rt::FuturesIo;
-
-#[cfg(all(any(feature = "rust-tls", feature = "native-tls")))]
-use crate::rt::tokio::tls::{plain_connection, tls_connection};
 
 use hyper_body_utils::HttpBody;
 
 use crate::{
     alpn,
     client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
-    request::Http1Request,
     Result,
 };
 

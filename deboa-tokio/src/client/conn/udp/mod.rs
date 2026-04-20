@@ -1,6 +1,7 @@
 use std::future::Future;
 
 use bytes::{Buf, Bytes};
+use deboa::errors::{DeboaError, ResponseError};
 use h3::client::RequestStream;
 use h3_quinn::RecvStream;
 use http::response::Parts;
@@ -10,7 +11,6 @@ use hyper_body_utils::HttpBody;
 
 use crate::{
     client::conn::{BaseHttpConnection, ConnectionConfig},
-    errors::{DeboaError, ResponseError},
     Result, MAX_ERROR_MESSAGE_SIZE,
 };
 

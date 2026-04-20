@@ -20,18 +20,12 @@ default = [
   "json",
   "xml",
   "msgpack",
-  "sse",
+  #"sse",
   "utils",
-  "websockets",
-  "tokio-rt",
-  "http1",
-  "tokio-rust-tls",  
-  "deboa/default-rustls-provider",
-  "deboa/default-rustls-verifier",
 ]
-sse = ["dep:hyper-body-utils", "dep:http-body-util", "dep:bytes"]
+sse = ["dep:hyper-body-utils", "dep:http-body-util", "dep:hyper", "dep:bytes"]
 utils = []
-websockets = ["dep:base64", "dep:rand", "ws-framer/http", "ws-framer/alloc"]
+#websockets = ["dep:base64", "dep:rand", "ws-framer/http", "ws-framer/alloc"]
 # serialization
 serialization_all = ["json", "xml", "msgpack", "yaml", "flex", "cbor"]
 json = ["simd_json", "dep:serde", "dep:http", "dep:mime", "dep:deboa"]
@@ -49,83 +43,12 @@ gzip = ["flate2/rust_backend", "dep:http", "dep:bytes", "dep:deboa"]
 simd_json = ["simd-json/serde_impl"]
 sonic_json = ["dep:sonic-rs"]
 
-# runtime
-tokio-rt = [
-  "deboa/tokio-rt",
-  "dep:tokio",
-  "dep:tokio-util",
-  "dep:hyper",
-  "dep:hyper-util",
-  "hyper-body-utils/tokio-rt",
-  #1 Comment out line below before publish to crates.io
-  "deboa-tests/tokio-rt",
-]
-
-smol-rt = [
-  "deboa/smol-rt",
-  "dep:smol",
-  "dep:smol-hyper",
-  "dep:hyper",
-  "dep:hyper-util",
-  "hyper-body-utils/smol-rt",
-  #1
-  "deboa-tests/smol-rt",
-]
-
-#compio-rt = [
-#  "deboa/compio-rt",
-#  "dep:compio",
-#  "hyper-body-utils/compio-rt",
-#  "deboa-tests/compio-rt"
-#]
-
-http1 = [
-  "deboa/http1", 
-  #1
-  "deboa-tests/http1"
-]
-http2 = [
-  "deboa/http2", 
-  #1
-  "deboa-tests/http2"
-]
-http3 = [
-  "deboa/http3", 
-  #1
-  "deboa-tests/http3"
-]
-tokio-rust-tls = [
-  "deboa/tokio-rust-tls",
-  #1
-  "deboa-tests/tokio-rust-tls"
-]
-smol-rust-tls = [
-  "deboa/smol-rust-tls", 
-  #1
-  "deboa-tests/smol-rust-tls"
-]
-#_compio-rust-tls = ["deboa/compio-rust-tls", "deboa-tests/compio-rust-tls"]
-tokio-native-tls = [
-  "deboa/tokio-native-tls", 
-  #1
-  "deboa-tests/tokio-rust-tls"
-]
-smol-native-tls = [
-  "deboa/smol-native-tls", 
-  #1
-  "deboa-tests/smol-rust-tls"
-]
-#_compio-native-tls = [
-#  "deboa/compio-native-tls", 
-#  "deboa-tests/compio-rust-tls"
-#]
-
 [dependencies]
 base64 = { version = "0.22.1", optional = true, default-features = false }
 brotli = { version = "8.0.2", optional = true, default-features = false }
 bytes = { version = "1.11.1", optional = true, default-features = false }
 ciborium = { version = "0.2.2", optional = true, default-features = false }
-deboa = { version = "0.1.0-beta.15", optional = true, default-features = false }
+deboa = { path = "../deboa", optional = true, default-features = false }
 flate2 = { version = "1.1.9", optional = true, default-features = false }
 flexbuffers = { version = "25.12.19", optional = true, default-features = false }
 futures = "0.3.31"
@@ -144,15 +67,10 @@ serde = { version = "1.0.217", features = ["derive"], optional = true, default-f
 serde-saphyr = { version = "0.0.11", optional = true, default-features = false }
 serde-xml-rust = { version = "0.6.0", optional = true, default-features = false }
 simd-json = { version = "0.14.3", optional = true, default-features = false }
-smol = { version = "2.0.2", optional = true, default-features = false }
-smol-hyper = { version = "0.1.1", optional = true, default-features = false }
 sonic-rs = { version = "0.5.6", optional = true, default-features = false }
 thiserror = "2.0.17"
-tokio = { version = "1.38.1", optional = true, default-features = false }
-tokio-util = { version = "0.7.11", optional = true, default-features = false }
 url = "2.5.8"
 ws-framer = { version = "0.3.1", optional = true, default-features = false }
 
 [dev-dependencies]
-deboa-tests = { path = "../deboa-tests", version = "0.0.1", default-features = false}
 ws-mock = "0.4.0"

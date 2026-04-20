@@ -1,19 +1,16 @@
-use crate::rt::stream::SmolStream;
-use smol::net::TcpStream;
-
 use async_native_tls::{Certificate, Identity, TlsConnector};
-
+use async_std_resolver::{
+    config::{ResolverConfig, ResolverOpts},
+    resolver,
+};
+use deboa::errors::{ConnectionError, DeboaError};
+use smol::net::TcpStream;
 use trust_dns_resolver::error::ResolveErrorKind;
 
 use crate::{
     cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
-    errors::{ConnectionError, DeboaError},
+    rt::stream::SmolStream,
     Result,
-};
-
-use async_std_resolver::{
-    config::{ResolverConfig, ResolverOpts},
-    resolver,
 };
 
 async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {

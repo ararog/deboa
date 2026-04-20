@@ -1,7 +1,7 @@
-use deboa::client::serde::{RequestBody, ResponseBody};
 use deboa::{
     errors::{ContentError, DeboaError},
     request::DeboaRequest,
+    serde::{RequestBody, ResponseBody},
     Result,
 };
 use http::{header, HeaderMap, HeaderValue};

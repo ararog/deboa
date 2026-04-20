@@ -1,18 +1,17 @@
-use crate::rt::tokio::stream::TokioStream;
-use tokio::net::TcpStream;
-use trust_dns_resolver::error::ResolveErrorKind;
-
 use async_native_tls::{Certificate, Identity, TlsConnector};
 
 use crate::{
-    cert::Certificate as DeboaCertificate,
-    cert::Identity as DeboaIdentity,
+    cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
+    rt::stream::TokioStream,
+};
+use deboa::{
     errors::{ConnectionError, DeboaError},
     Result,
 };
-
+use tokio::net::TcpStream;
 use trust_dns_resolver::{
     config::{ResolverConfig, ResolverOpts},
+    error::ResolveErrorKind,
     TokioAsyncResolver,
 };
 

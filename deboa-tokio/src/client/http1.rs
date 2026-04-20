@@ -1,20 +1,18 @@
 use std::marker::PhantomData;
 
-use http::version::Version;
-use hyper::{client::conn::http1::handshake, Request, Response};
-
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 use crate::rt::tls::{plain_connection, tls_connection};
-use hyper_util::rt::TokioIo;
-
-use hyper_body_utils::HttpBody;
 
 use crate::{
     alpn,
     client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
-    request::Http1Request,
-    Result,
 };
+
+use deboa::{request::Http1Request, Result};
+use http::version::Version;
+use hyper::{client::conn::http1::handshake, Request, Response};
+use hyper_body_utils::HttpBody;
+use hyper_util::rt::TokioIo;
 
 impl DeboaTcpConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody> {
     type Sender = Http1Request;
@@ -47,7 +45,7 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody>
             return Err(e);
         }
 
-        let result = handshake(DeboaIo::new(stream.unwrap())).await;
+        let result = handshake(TokioIo::new(stream.unwrap())).await;
 
         let (sender, conn) = result.unwrap();
 

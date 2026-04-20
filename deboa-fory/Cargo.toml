@@ -12,34 +12,10 @@ keywords = ["http", "networking", "rest", "serializer", "fory"]
 rust-version = "1.70.0"
 
 [features]
-default = [
-  "tokio-rt", 
-  "http1", 
-  "tokio-rust-tls"
-]
-
-# For testing purposes (internal use only)
-tokio-rt = ["deboa/tokio-rt", "dep:tokio", "deboa-tests/tokio-rt"]
-smol-rt = ["deboa/smol-rt", "dep:smol", "dep:smol-macros", "deboa-tests/smol-rt"]
-#compio-rt = []
-http1 = ["deboa/http1", "deboa-tests/http1"]
-http2 = ["deboa/http2", "deboa-tests/http2"]
-http3 = ["deboa/http3", "deboa-tests/http3"]
-tokio-rust-tls = ["deboa/tokio-rust-tls", "deboa-tests/tokio-rust-tls"]
-smol-rust-tls = ["deboa/smol-rust-tls", "deboa-tests/smol-rust-tls"]
-#compio-rust-tls = ["deboa/compio-rust-tls", "deboa-tests/compio-rust-tls"]
-tokio-native-tls = ["deboa/tokio-native-tls", "deboa-tests/tokio-rust-tls"]
-smol-native-tls = ["deboa/smol-native-tls", "deboa-tests/smol-rust-tls"]
-#compio-native-tls = ["deboa/compio-native-tls", "deboa-tests/compio-rust-tls"]
+default = []
 
 [dependencies]
-deboa = { version = "0.1.0-beta.15", default-features = false, optional = true }
+deboa = { path = "../deboa", default-features = false }
 fory = "0.14.1"
 fory-core = "0.14.0"
 http = "1.4.0"
-smol = { version = "2.0.2", default-features = false, optional = true }
-smol-macros = { version = "0.1.1", default-features = false, optional = true }
-tokio = { version = "1.38.1", default-features = false, optional = true }
-
-[dev-dependencies]
-deboa-tests = { path = "../deboa-tests", default-features = false, version = "0.0.1" }

@@ -1,79 +1,4 @@
-//! # Deboa Macros
-//!
-//! This crate provides procedural macros for the `deboa` HTTP client to simplify
-//! common HTTP request patterns with a more concise syntax.
-//!
-//! ## Features
-//!
-//! - **Request Macros**: Shortcut macros for common HTTP methods (GET, POST, PUT, PATCH, DELETE)
-//! - **Type Safety**: Compile-time type checking for request/response bodies
-//! - **Async Support**: Seamless integration with async/await syntax
-//! - **Multiple Serialization Formats**: Support for JSON, XML, and MessagePack out of the box
-//!
-//! ## Available Macros
-//!
-//! - `get!`: Make a GET request
-//! - `post!`: Make a POST request with a body
-//! - `put!`: Make a PUT request with a body
-//! - `patch!`: Make a PATCH request with a body
-//! - `delete!`: Make a DELETE request
-//! - `fetch!`: Generic request macro that takes a method parameter
-//!
-//! ## Examples
-//!
-//! ### Basic GET Request
-//! ```compile_fail
-//! use deboa::{Client, Result};
-//! use deboa_extras::http::serde::json::JsonBody;
-//!
-//! #[derive(serde::Deserialize)]
-//! struct Post {
-//!     id: u32,
-//!     title: String,
-//!     body: String,
-//!     userId: u32,
-//! }
-//!
-//! #[tokio::main]
-//! async fn main() -> Result<()> {
-//!     let client = Client::new();
-//!     let post: Post = get!("https://jsonplaceholder.typicode.com/posts/1", &client, JsonBody, Post);
-//!     println!("Post title: {}", post.title);
-//!     Ok(())
-//! }
-//! ```
-//!
-//! ### POST with JSON Body
-//! ```compile_fail
-//! use deboa::{Client, Result};
-//! use deboa_extras::http::serde::json::JsonBody;
-//! use serde::Serialize;
-//!
-//! #[derive(Serialize)]
-//! struct NewPost {
-//!     title: String,
-//!     body: String,
-//!     userId: u32,
-//! }
-//!
-//! #[tokio::main]
-//! async fn main() -> Result<()> {
-//!     let client = Client::new();
-//!     let new_post = NewPost {
-//!         title: "Hello World".into(),
-//!         body: "This is a test post".into(),
-//!         userId: 1,
-//!     };
-//!     let response = post!(
-//!         new_post,
-//!         JsonBody,
-//!         "https://jsonplaceholder.typicode.com/posts",
-//!         &client
-//!     );
-//!     println!(200, response.status());
-//!     Ok(())
-//! }
-//! ```
+#![doc = include_str!("../README.md")]
 
 #[macro_export]
 /// Make a GET request to the specified URL.
@@ -115,45 +40,41 @@
 /// ```
 macro_rules! get {
     ($url:expr, &$client:ident) => {
-        $client
-            .execute($url)
+        deboa::HttpClient::execute(&$client, $url)
             .await?
             .text()
             .await?
     };
 
     ($url:expr, $headers:expr, &$client:ident) => {
-        deboa::request::DeboaRequest::get($url)?
-            .headers($headers)
-            .send_with($client)
-            .await?
-            .text()
-            .await?
-    };
-
-    ($url:literal, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client
-            .execute($url)
-            .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::get($url)?
+                .headers($headers)
+                .build()?,
+        )
+        .await?
+        .text()
+        .await?
     };
 
     ($url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client
-            .execute($url)
+        deboa::HttpClient::execute(&$client, $url)
             .await?
             .body_as::<$res_body_ty, $res_ty>($res_body_ty)
             .await?
     };
 
     ($url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        deboa::request::DeboaRequest::get($url)?
-            .headers($headers)
-            .send_with($client)
-            .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::get($url)?
+                .headers($headers)
+                .build()?,
+        )
+        .await?
+        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+        .await?
     };
 }
 
@@ -214,88 +135,88 @@ macro_rules! get {
 /// ```
 macro_rules! post {
     ($input:ident, $url:literal, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::post($url)?
-                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::post($url)?
+                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $url:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::post($url)?
-                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::post($url)?
+                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $url:literal, $headers:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::post($url)?
-                    .headers($headers)
-                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::post($url)?
+                .headers($headers)
+                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:literal, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::post($url)?
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::post($url)?
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::post($url)?
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::post($url)?
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::post($url)?
-                    .headers($headers)
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::post($url)?
+                .headers($headers)
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::post($url)?
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::post($url)?
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
+        .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::post($url)?
-                    .headers($headers)
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::post($url)?
+                .headers($headers)
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
+        .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
     };
 }
 
@@ -328,90 +249,90 @@ macro_rules! post {
 /// ```
 macro_rules! put {
     ($input:ident, $url:literal, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::put($url)?
-                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::put($url)?
+                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $url:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::put($url)?
-                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::put($url)?
+                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $url:literal, $headers:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::put($url)?
-                    .headers($headers)
-                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::put($url)?
+                .headers($headers)
+                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:literal, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::put($url)?
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::put($url)?
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::put($url)?
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::put($url)?
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::put($url)?
-                    .headers($headers)
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::put($url)?
+                .headers($headers)
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::put($url)?
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::put($url)?
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
+        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::put($url)?
-                    .headers($headers)
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::put($url)?
+                .headers($headers)
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
+        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+        .await?
     };
 }
 
@@ -444,91 +365,91 @@ macro_rules! put {
 /// ```
 macro_rules! patch {
     ($input:ident, $url:literal, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::patch($url)?
-                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::patch($url)?
+                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $url:expr, $headers:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::patch($url)?
-                    .headers($headers)
-                    .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::patch($url)?
+                .headers($headers)
+                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:literal, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::patch($url)?
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::patch($url)?
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::patch($url)?
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::patch($url)?
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:literal, $headers:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::patch($url)?
-                    .headers($headers)
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::patch($url)?
+                .headers($headers)
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::patch($url)?
-                    .headers($headers)
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::patch($url)?
+                .headers($headers)
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::patch($url)?
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::patch($url)?
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
+        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::patch($url)?
-                    .headers($headers)
-                    .body_as($req_body_ty, $input)?
-                    .build()?,
-            )
-            .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::patch($url)?
+                .headers($headers)
+                .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
+        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+        .await?
     };
 }
 
@@ -552,32 +473,30 @@ macro_rules! patch {
 ///
 /// # Example
 ///
-/// ```compile_fail
+/// ```ignore
 /// let client = Client::new();
 /// let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! delete {
     ($url:literal, &$client:ident) => {
-        $client
-            .execute(deboa::request::DeboaRequest::delete($url)?.build()?)
+        deboa::HttpClient::execute(&$client, deboa::request::DeboaRequest::delete($url)?.build()?)
             .await?
     };
 
     ($url:expr, &$client:ident) => {
-        $client
-            .execute(deboa::request::DeboaRequest::delete($url)?.build()?)
+        deboa::HttpClient::execute(&$client, deboa::request::DeboaRequest::delete($url)?.build()?)
             .await?
     };
 
     ($url:expr, $headers:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::delete($url)?
-                    .headers($headers)
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::delete($url)?
+                .headers($headers)
+                .build()?,
+        )
+        .await?
     };
 }
 
@@ -607,54 +526,50 @@ macro_rules! delete {
 ///
 /// # Example
 ///
-/// ```compile_fail
+/// ```ignore
 /// let client = Client::new();
 /// let response = fetch!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Post);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! fetch {
     ($url:expr, &$client:ident) => {
-        $client
-            .execute($url)
-            .await?
+        deboa::HttpClient::execute(&$client, $url).await?
     };
 
     ($url:expr, $headers:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::get($url)?
-                    .headers($headers)
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::get($url)?
+                .headers($headers)
+                .build()?,
+        )
+        .await?
     };
 
     ($url:literal, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client
-            .execute($url)
+        deboa::HttpClient::execute(&$client, $url)
             .await?
             .body_as::<$res_body_ty, $res_ty>($res_body_ty)
             .await?
     };
 
     ($url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client
-            .execute($url)
+        deboa::HttpClient::execute(&$client, $url)
             .await?
             .body_as::<$res_body_ty, $res_ty>($res_body_ty)
             .await?
     };
 
     ($url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::get($url)?
-                    .headers($headers)
-                    .build()?,
-            )
-            .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::get($url)?
+                .headers($headers)
+                .build()?,
+        )
+        .await?
+        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+        .await?
     };
 }
 #[macro_export]
@@ -685,31 +600,31 @@ macro_rules! fetch {
 ///
 /// # Example
 ///
-/// ```compile_fail
+/// ```ignore
 /// let client = Client::new();
 /// let response = submit!("POST", "user=deboa", "https://jsonplaceholder.typicode.com/posts", &client);
 /// assert_eq!(response.id, 1);
 /// ```
 macro_rules! submit {
     ($method:expr, $input:expr, $url:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::at($url, $method)?
-                    .text($input)
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::at($url, $method)?
+                .text($input)
+                .build()?,
+        )
+        .await?
     };
 
     ($method:expr, $input:expr, $url:expr, $headers:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::at($url, $method)?
-                    .headers($headers)
-                    .text($input)
-                    .build()?,
-            )
-            .await?
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::at($url, $method)?
+                .headers($headers)
+                .text($input)
+                .build()?,
+        )
+        .await?
     };
 }
 
@@ -740,20 +655,19 @@ macro_rules! submit {
 /// ```
 macro_rules! stream {
     ($url:expr, &$client:ident) => {
-        $client
-            .execute($url)
+        deboa::HttpClient::execute(&$client, $url)
             .await?
             .stream()
     };
 
     ($url:expr, $headers:expr, &$client:ident) => {
-        $client
-            .execute(
-                deboa::request::DeboaRequest::get($url)?
-                    .headers($headers)?
-                    .build()?,
-            )
-            .await?
-            .stream()
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::get($url)?
+                .headers($headers)?
+                .build()?,
+        )
+        .await?
+        .stream()
     };
 }

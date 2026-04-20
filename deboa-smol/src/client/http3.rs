@@ -1,12 +1,14 @@
 use std::{marker::PhantomData, net::SocketAddr, sync::Arc};
 
-use hyper_body_utils::HttpBody;
-use rt_gate::spawn_worker;
-
+use deboa::{
+    errors::{ConnectionError, DeboaError, RequestError, ResponseError},
+    request::Http3Request,
+};
 use futures::future;
 use http::{version::Version, StatusCode};
 use http_body_util::BodyExt;
 use hyper::{Request, Response};
+use hyper_body_utils::HttpBody;
 use quinn::{crypto::rustls::QuicClientConfig, Endpoint};
 use trust_dns_resolver::error::ResolveErrorKind;
 
@@ -15,8 +17,6 @@ use crate::{
     client::conn::{
         rustls::setup_rust_tls, udp::DeboaUdpConnection, BaseHttpConnection, ConnectionConfig,
     },
-    errors::{ConnectionError, DeboaError, RequestError, ResponseError},
-    request::Http3Request,
     Result,
 };
 
@@ -43,13 +43,13 @@ async fn lookup_and_connect(
                 let query_name = query
                     .name()
                     .to_string();
-                return Err(DeboaError::Connection(ConnectionError::Tcp {
+                return Err(DeboaError::Connection(ConnectionError::Udp {
                     host: host.to_string(),
                     message: format!("Could not resolve host: {}", query_name),
                 }));
             }
             _ => {
-                return Err(DeboaError::Connection(ConnectionError::Tcp {
+                return Err(DeboaError::Connection(ConnectionError::Udp {
                     host: host.to_string(),
                     message: format!("Could not resolve host: {}", e),
                 }));
@@ -197,10 +197,7 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, HttpBody, HttpBody>
             .await;
 
         if let Err(err) = request {
-            return Err(DeboaError::Request(RequestError::Send {
-                url: url.to_string(),
-                message: err.to_string(),
-            }));
+            return Err(DeboaError::Request(RequestError::Send { message: err.to_string() }));
         }
 
         let request_stream = request.unwrap();
@@ -216,7 +213,6 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, HttpBody, HttpBody>
 
                     if let Err(err) = result {
                         return Err(DeboaError::Request(RequestError::Send {
-                            url: url.to_string(),
                             message: err.to_string(),
                         }));
                     }
@@ -228,10 +224,7 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, HttpBody, HttpBody>
             .finish()
             .await;
         if let Err(err) = finish_request {
-            return Err(DeboaError::Request(RequestError::Send {
-                url: url.to_string(),
-                message: err.to_string(),
-            }));
+            return Err(DeboaError::Request(RequestError::Send { message: err.to_string() }));
         }
 
         let response = recv_stream

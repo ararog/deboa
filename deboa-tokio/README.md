@@ -1,10 +1,10 @@
-# deboa
+# deboa-tokio
 
-[![Crates.io downloads](https://img.shields.io/crates/d/deboa)](https://crates.io/crates/deboa) [![crates.io](https://img.shields.io/crates/v/deboa?style=flat-square)](https://crates.io/crates/deboa) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) ![Crates.io MSRV](https://img.shields.io/crates/msrv/deboa) [![Documentation](https://docs.rs/deboa/badge.svg)](https://docs.rs/deboa/latest/deboa) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ararog/deboa/blob/main/LICENSE.md)  [![codecov](https://codecov.io/gh/ararog/deboa/graph/badge.svg?token=T0HSBAPVSI)](https://codecov.io/gh/ararog/deboa)
+[![Crates.io downloads](https://img.shields.io/crates/d/deboa-tokio)](https://crates.io/crates/deboa-tokio) [![crates.io](https://img.shields.io/crates/v/deboa-tokio?style=flat-square)](https://crates.io/crates/deboa-tokio) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) ![Crates.io MSRV](https://img.shields.io/crates/msrv/deboa-tokio) [![Documentation](https://docs.rs/deboa-tokio/badge.svg)](https://docs.rs/deboa-tokio/latesto/deboa_tokio) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ararog/deboa/blob/main/LICENSE.md)  [![codecov](https://codecov.io/gh/ararog/deboa/graph/badge.svg?token=T0HSBAPVSI)](https://codecov.io/gh/ararog/deboa)
 
 ## Description
 
-**deboa** ("fine" portuguese slang) is a straightforward, non opinionated, developer-centric HTTP client library for Rust. It offers a rich array of modern features—from flexible authentication and serialization formats to runtime compatibility and middleware support—while maintaining simplicity and ease of use. It’s especially well-suited for Rust projects that require a lightweight, efficient HTTP client without sacrificing control or extensibility.
+**deboa-tokio** ("fine" portuguese slang) is a deboa implementation for tokio runtime.
 
 ## Attention
 
@@ -42,33 +42,31 @@ As of the latest benchmark run, Deboa demonstrates competitive performance compa
 
 Either run from command line:
 
-`cargo add deboa http`
+`cargo add deboa-tokio http`
 
 Or add to your `Cargo.toml`:
 
 ```toml
-deboa = { version = "0.0.9", features = ["http1", "tokio-rt"] }
+deboa-tokio = { version = "0.0.9", features = ["http1"] }
 http = "1.3.1"
 ```
 
 ## Crate features
 
-- tokio-rt (default)
-- smol-rt
 - http1
 - http2 (default)
 - http3
-- tokio-rust-tls (default)
-- tokio-native-tls
-- smol-rust-tls
-- smol-native-tls
+- rust-tls (default)
+- native-tls
 
 ## Usage
 
 ```rust
 use deboa::{
-    Client, Result, request::{DeboaRequest, FetchWith, get}
+    request::{DeboaRequest, FetchWith, get},
+    Result, 
 };
+use deboa_tokio::Client;
 use deboa_extras::http::{self, serde::json::JsonBody};
 
 use ::http::Method;
@@ -135,7 +133,7 @@ async fn main() -> Result<()> {
     */
 
     let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
-      .send_with(client)
+      .send_with(&client)
       .await?
       .body_as(JsonBody)
       .await?;

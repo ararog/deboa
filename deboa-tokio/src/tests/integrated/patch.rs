@@ -7,7 +7,8 @@ use crate::{
 };
 
 use deboa::{request::DeboaRequest, HttpClient};
-use http::StatusCode;
+use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
+use http::{Method, StatusCode};
 
 //
 // PATCH
@@ -15,15 +16,18 @@ use http::StatusCode;
 
 #[tokio::test]
 async fn test_patch() -> TestResult<()> {
-    let mut server = start_mock_server(|when| async move {
-        Ok(when
-            .path(String::from("/posts/1"))
-            .method(String::from("PATCH"))
-            .then()
-            .with_status(StatusCode::OK)
-            .with_body(String::from("done")))
-    })
-    .await;
+    let mock = Mock::of(
+        Method::PATCH
+            .has()
+            .path("/posts/1")
+            .will_return(
+                StatusCode::OK
+                    .respond()
+                    .with_body(b"done"),
+            ),
+    );
+
+    let mut server = start_mock_server(mock).await;
 
     let client: Client = client_with_cert();
 

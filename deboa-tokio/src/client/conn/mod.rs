@@ -25,7 +25,7 @@ use url::Url;
 
 use crate::{
     cert::{Certificate, Identity},
-    HttpVersion,
+    default_protocol, HttpVersion,
 };
 
 use deboa::{response::DeboaResponse, Result};
@@ -187,7 +187,7 @@ impl<'a> ConnectionConfigBuilder<'a> {
             is_secure: false,
             host: "",
             port: 80,
-            protocol: HttpVersion::Http2,
+            protocol: default_protocol(),
             identity: None,
             certificate: None,
             skip_cert_verification: false,

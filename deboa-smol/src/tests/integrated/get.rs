@@ -1,3 +1,5 @@
+#[cfg(feature = "http2")]
+use crate::HttpVersion;
 use crate::{
     cert::{ContentEncoding, Identity},
     tests::{
@@ -9,17 +11,16 @@ use crate::{
 
 #[cfg(feature = "rust-tls")]
 use crate::tests::helpers::{CLIENT_CERT, CLIENT_KEY};
-#[cfg(all(any(feature = "http1", feature = "http2"), feature = "rust-tls"))]
-use deboa::errors::{ConnectionError, DeboaError};
+#[cfg(feature = "native-tls")]
+use crate::tests::helpers::{CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
 use deboa::{
-    errors::ResponseError,
+    errors::{ConnectionError, DeboaError, ResponseError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
     HttpClient,
 };
-#[cfg(feature = "native-tls")]
-use deboa_tests::utils::{CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
 
+use easyhttpmock_vetis_smol::mock::{MethodExt, Mock, StatusCodeExt};
 use http::StatusCode;
 
 use macro_rules_attribute::apply;
@@ -29,16 +30,20 @@ use smol_macros::test;
 // GET
 //
 
-async fn do_get_http() -> TestResult<()> {
-    let mut server = start_mock_server(|when| async move {
-        Ok(when
-            .method(String::from("GET"))
-            .path(String::from("/posts/1"))
-            .then()
-            .with_status(StatusCode::OK)
-            .with_body(String::from("Hello World!")))
-    })
-    .await;
+#[apply(test!)]
+async fn test_get_http() -> TestResult<()> {
+    let mock = Mock::of(
+        "GET"
+            .has()
+            .path("/posts/1")
+            .will_return(
+                StatusCode::OK
+                    .respond()
+                    .with_body(b"Hello World!"),
+            ),
+    );
+
+    let mut server = start_mock_server(mock).await;
 
     let client = client_with_cert();
 
@@ -65,21 +70,19 @@ async fn do_get_http() -> TestResult<()> {
     Ok(())
 }
 
-#[apply(test!)]
-async fn test_get_http() -> TestResult<()> {
-    do_get_http().await
-}
-
 async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
-    let mut server = start_mock_server(|when| async move {
-        Ok(when
-            .path(String::from("/posts/1"))
-            .method(String::from("GET"))
-            .then()
-            .with_status(StatusCode::OK)
-            .with_body(String::from("Hello World!")))
-    })
-    .await;
+    let mock = Mock::of(
+        "GET"
+            .has()
+            .path("/posts/1")
+            .will_return(
+                StatusCode::OK
+                    .respond()
+                    .with_body(b"Hello World!"),
+            ),
+    );
+
+    let mut server = start_mock_server(mock).await;
 
     let client = Client::builder()
         .skip_cert_verification(skip)
@@ -92,39 +95,67 @@ async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
         .await;
 
     if skip {
-        #[cfg(any(feature = "http1", feature = "http2"))]
-        {
-            let response = response?;
-            assert_eq!(response.status(), StatusCode::OK);
+        match client.protocol() {
+            #[cfg(feature = "http1")]
+            HttpVersion::Http1 => {
+                let response = response?;
+                assert_eq!(response.status(), StatusCode::OK);
+            }
+            #[cfg(feature = "http2")]
+            HttpVersion::Http2 => {
+                let response = response?;
+                assert_eq!(response.status(), StatusCode::OK);
+            }
+            #[cfg(feature = "http3")]
+            HttpVersion::Http3 => {
+                let error = DeboaError::Connection(ConnectionError::Udp {
+                    host: "localhost".to_string(),
+                    message: "Could not connect to server: aborted by peer: the cryptographic handshake failed: error 120: peer doesn't support any known protocol".to_string(),
+                });
+                assert_eq!(response.unwrap_err(), error);
+            }
         }
-        #[cfg(feature = "http3")]
+    } else {
+        #[cfg(feature = "rust-tls")]
         {
-            let error = DeboaError::Connection(ConnectionError::Udp {
+            let error = match client.protocol() {
+                #[cfg(feature = "http1")]
+                HttpVersion::Http1 => {
+                    DeboaError::Connection(ConnectionError::Tls {
+                        host: "localhost".to_string(),
+                        message:
+                            "Could not connect to server: invalid peer certificate: UnknownIssuer"
+                                .to_string(),
+                    })
+                }
+                #[cfg(feature = "http2")]
+                HttpVersion::Http2 => {
+                    DeboaError::Connection(ConnectionError::Tls {
+                        host: "localhost".to_string(),
+                        message:
+                            "Could not connect to server: invalid peer certificate: UnknownIssuer"
+                                .to_string(),
+                    })
+                }
+                #[cfg(feature = "http3")]
+                HttpVersion::Http3 => {
+                    DeboaError::Connection(ConnectionError::Tls {
+                        host: "localhost".to_string(),
+                        message: "Could not connect to server: the cryptographic handshake failed: error 48: invalid peer certificate: UnknownIssuer".to_string(),
+                    })
+                }
+            };
+            assert_eq!(response.unwrap_err(), error);
+        }
+
+        #[cfg(feature = "native-tls")]
+        {
+            let error = DeboaError::Connection(ConnectionError::Tls {
                 host: "localhost".to_string(),
-                message: "Could not connect to server: aborted by peer: the cryptographic handshake failed: error 120: peer doesn't support any known protocol".to_string(),
+                message: "Could not connect to server: error:0A000086:SSL routines:tls_post_process_server_certificate:certificate verify failed:../ssl/statem/statem_clnt.c:1889: (self-signed certificate in certificate chain)".to_string(),
             });
             assert_eq!(response.unwrap_err(), error);
         }
-    } else {
-        #[cfg(all(any(feature = "http1", feature = "http2"), feature = "rust-tls"))]
-        let error = DeboaError::Connection(ConnectionError::Tls {
-            host: "localhost".to_string(),
-            message: "Could not connect to server: invalid peer certificate: UnknownIssuer"
-                .to_string(),
-        });
-
-        #[cfg(all(feature = "http3", feature = "rust-tls"))]
-        let error = DeboaError::Connection(ConnectionError::Udp {
-            host: "localhost".to_string(),
-            message: "Could not connect to server: the cryptographic handshake failed: error 48: invalid peer certificate: UnknownIssuer".to_string(),
-        });
-
-        #[cfg(feature = "native-tls")]
-        let error = DeboaError::Connection(ConnectionError::Tls {
-            host: "localhost".to_string(),
-            message: "Could not connect to server: error:0A000086:SSL routines:tls_post_process_server_certificate:certificate verify failed:../ssl/statem/statem_clnt.c:1889: (self-signed certificate in certificate chain)".to_string(),
-        });
-        assert_eq!(response.unwrap_err(), error);
     }
 
     server
@@ -153,15 +184,18 @@ async fn test_get_http_verify() -> TestResult<()> {
 }
 
 async fn do_get_http_mutual_authentication() -> TestResult<()> {
-    let mut server = start_mock_server(|when| async move {
-        Ok(when
-            .path(String::from("/posts/1"))
-            .method(String::from("GET"))
-            .then()
-            .with_status(StatusCode::OK)
-            .with_body(String::from("Hello World!")))
-    })
-    .await;
+    let mock = Mock::of(
+        "GET"
+            .has()
+            .path("/posts/1")
+            .will_return(
+                StatusCode::OK
+                    .respond()
+                    .with_body(b"Hello World!"),
+            ),
+    );
+
+    let mut server = start_mock_server(mock).await;
 
     #[cfg(feature = "rust-tls")]
     let identity = Identity::from_pkcs8(CLIENT_CERT, CLIENT_KEY, ContentEncoding::DER);
@@ -196,14 +230,17 @@ async fn test_get_http_mutual_authentication() -> TestResult<()> {
 
 #[cfg(feature = "native-tls")]
 async fn do_get_http_mutual_authentication_with_password() -> TestResult<()> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, "Hello World!"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
-    })
-    .await;
+    let mock = Mock::of(
+        "GET"
+            .has()
+            .path("/posts/1")
+            .will_return(
+                StatusCode::OK
+                    .respond()
+                    .with_body(b"Hello World!"),
+            ),
+    );
+    let mut server = start_mock_server(mock).await;
 
     let identity = Identity::from_pkcs12(CLIENT_P12, Some("test".to_string()));
 
@@ -221,7 +258,7 @@ async fn do_get_http_mutual_authentication_with_password() -> TestResult<()> {
     assert_eq!(response?.status(), StatusCode::OK);
 
     server
-        .stop()
+        .assert()
         .await?;
 
     Ok(())
@@ -237,16 +274,20 @@ async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
 // GET NOT FOUND
 //
 
-async fn do_get_not_found() -> TestResult<()> {
-    let mut server = start_mock_server(|when| async move {
-        Ok(when
-            .path(String::from("/asasa/posts/1ddd"))
-            .method(String::from("GET"))
-            .then()
-            .with_status(StatusCode::NOT_FOUND)
-            .with_body(String::from("Not found")))
-    })
-    .await;
+#[apply(test!)]
+async fn test_get_not_found() -> TestResult<()> {
+    let mock = Mock::of(
+        "GET"
+            .has()
+            .path("/posts/1")
+            .will_return(
+                StatusCode::NOT_FOUND
+                    .respond()
+                    .with_body(b"Not found"),
+            ),
+    );
+
+    let mut server = start_mock_server(mock).await;
 
     let client = client_with_cert();
 
@@ -271,30 +312,39 @@ async fn do_get_not_found() -> TestResult<()> {
     Ok(())
 }
 
-#[apply(test!)]
-async fn test_get_not_found() -> TestResult<()> {
-    do_get_not_found().await
-}
-
 //
 // GET INVALID SERVER
 //
 
-async fn do_get_invalid_server() -> TestResult<()> {
-    let api = Client::default();
+#[apply(test!)]
+async fn test_get_invalid_server() -> TestResult<()> {
+    let client = Client::default();
 
     let request = DeboaRequest::get("https://invalid-server.com/posts")?
         .text("test")
         .build()?;
 
-    let response: crate::Result<DeboaResponse> = api
+    let response: crate::Result<DeboaResponse> = client
         .execute(request)
         .await;
 
-    let error = DeboaError::Connection(ConnectionError::Tcp {
-        host: "invalid-server.com".to_string(),
-        message: "Could not resolve host: invalid-server.com.".to_string(),
-    });
+    let error = match client.protocol() {
+        #[cfg(feature = "http1")]
+        HttpVersion::Http1 => DeboaError::Connection(ConnectionError::Tcp {
+            host: "invalid-server.com".to_string(),
+            message: "Could not resolve host: invalid-server.com.".to_string(),
+        }),
+        #[cfg(feature = "http2")]
+        HttpVersion::Http2 => DeboaError::Connection(ConnectionError::Tcp {
+            host: "invalid-server.com".to_string(),
+            message: "Could not resolve host: invalid-server.com.".to_string(),
+        }),
+        #[cfg(feature = "http3")]
+        HttpVersion::Http3 => DeboaError::Connection(ConnectionError::Udp {
+            host: "invalid-server.com".to_string(),
+            message: "Could not resolve host: invalid-server.com.".to_string(),
+        }),
+    };
 
     assert!(response.is_err());
     assert_eq!(response.unwrap_err(), error);
@@ -302,26 +352,24 @@ async fn do_get_invalid_server() -> TestResult<()> {
     Ok(())
 }
 
-#[apply(test!)]
-async fn test_get_invalid_server() -> TestResult<()> {
-    do_get_invalid_server().await
-}
-
 //
 // GET BY QUERY
 //
 
-async fn do_get_by_query() -> TestResult<()> {
-    let mut server = start_mock_server(|when| async move {
-        Ok(when
-            .path(String::from("/comments/1"))
-            .method(String::from("GET"))
-            .then()
-            .with_status(StatusCode::OK)
-            .with_body(String::from("My comment")))
-    })
-    .await;
+#[apply(test!)]
+async fn test_get_by_query() -> TestResult<()> {
+    let mock = Mock::of(
+        "GET"
+            .has()
+            .path("/comments/1")
+            .will_return(
+                StatusCode::OK
+                    .respond()
+                    .with_body(b"My comment"),
+            ),
+    );
 
+    let mut server = start_mock_server(mock).await;
     let client = client_with_cert();
 
     let response = DeboaRequest::get(server.url("/comments/1"))?
@@ -350,11 +398,6 @@ async fn do_get_by_query() -> TestResult<()> {
         .await?;
 
     Ok(())
-}
-
-#[apply(test!)]
-async fn test_get_by_query() -> TestResult<()> {
-    do_get_by_query().await
 }
 
 /*
@@ -442,16 +485,20 @@ async fn test_get_with_redirect() {
 }
 */
 
-async fn try_intro() -> TestResult<()> {
-    let mut server = start_mock_server(|when| async move {
-        Ok(when
-            .path(String::from("/posts/1"))
-            .method(String::from("GET"))
-            .then()
-            .with_status(StatusCode::OK)
-            .with_body(String::from("")))
-    })
-    .await;
+#[apply(test!)]
+async fn test_try_into() -> TestResult<()> {
+    let mock = Mock::of(
+        "GET"
+            .has()
+            .path("/posts/1")
+            .will_return(
+                StatusCode::OK
+                    .respond()
+                    .no_body(),
+            ),
+    );
+
+    let mut server = start_mock_server(mock).await;
 
     let client = client_with_cert();
     let first_post = server.url("/posts/1");
@@ -468,20 +515,19 @@ async fn try_intro() -> TestResult<()> {
 }
 
 #[apply(test!)]
-async fn test_try_into() -> TestResult<()> {
-    try_intro().await
-}
+async fn test_fetch_from_str() -> TestResult<()> {
+    let mock = Mock::of(
+        "GET"
+            .has()
+            .path("/posts/1")
+            .will_return(
+                StatusCode::OK
+                    .respond()
+                    .no_body(),
+            ),
+    );
 
-async fn fetch_from_str() -> TestResult<()> {
-    let mut server = start_mock_server(|when| async move {
-        Ok(when
-            .path(String::from("/posts/1"))
-            .method(String::from("GET"))
-            .then()
-            .with_status(StatusCode::OK)
-            .with_body(String::from("")))
-    })
-    .await;
+    let mut server = start_mock_server(mock).await;
 
     let client = client_with_cert();
     let first_post = server.url("/posts/1");
@@ -495,9 +541,4 @@ async fn fetch_from_str() -> TestResult<()> {
         .await?;
 
     Ok(())
-}
-
-#[apply(test!)]
-async fn test_fetch_from_str() -> TestResult<()> {
-    fetch_from_str().await
 }

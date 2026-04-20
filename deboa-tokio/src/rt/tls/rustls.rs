@@ -1,22 +1,20 @@
 use std::sync::Arc;
 
-use crate::rt::stream::TokioStream;
-use tokio::net::TcpStream;
-use trust_dns_resolver::error::ResolveErrorKind;
-
-use crate::client::conn::rustls::setup_rust_tls;
-use rustls::pki_types::ServerName;
-use tokio_rustls::TlsConnector;
-
+use crate::{
+    cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
+    client::conn::rustls::setup_rust_tls,
+    rt::stream::TokioStream,
+};
 use deboa::{
     errors::{ConnectionError, DeboaError},
     Result,
 };
-
-use crate::{cert::Certificate as DeboaCertificate, cert::Identity as DeboaIdentity};
-
+use rustls::pki_types::ServerName;
+use tokio::net::TcpStream;
+use tokio_rustls::TlsConnector;
 use trust_dns_resolver::{
     config::{ResolverConfig, ResolverOpts},
+    error::ResolveErrorKind,
     TokioAsyncResolver,
 };
 

@@ -14,21 +14,21 @@ use structs as resources to be sent over vamo as client.
 
 Either run from command line:
 
-`cargo add vamo-macros vamo deboa`
+`cargo add vamo-macros vamo deboa-tokio`
 
 Or add to your `Cargo.toml`:
 
 ```toml
-vamo-macros = "0.0.1"
 vamo = "0.0.1"
-deboa = "0.0.1"
+vamo-macros = "0.0.1"
+deboa-tokio = "0.1.0"
 ```
 
 ## Usage
 
 ### Resource macro
 
-```rust
+```rust, compile_fail
 use vamo_macros::Resource;
 use vamo::{Vamo, ResourceMethod};
 
@@ -41,7 +41,7 @@ pub struct User {
     name: String,
 }
 
-let mut vamo = Vamo::new("https://api.example.com")?;
+let mut vamo = Vamo::<deboa_tokio::Client>::new("https://api.example.com")?;
 
 // post
 let response = vamo
@@ -69,7 +69,7 @@ vamo.remove(user)?
 
 ### bora macro
 
-```rust
+```rust, compile_fail
 use deboa::errors::DeboaError;
 use vamo::Vamo;
 use vamo_macros::bora;
@@ -93,7 +93,7 @@ pub struct PostService;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client = Vamo::new("https://jsonplaceholder.typicode.com")?;
+    let client = Vamo::<deboa_tokio::Client>::new("https://jsonplaceholder.typicode.com")?;
     let mut post_service = PostService::new(client);
     let post = post_service.get_by_id(1).await?;
 

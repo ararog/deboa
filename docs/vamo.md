@@ -37,7 +37,7 @@ struct User {
 #[tokio::main]
 async fn main() -> Result<()> {
     // Create a client
-    let client = Vamo::new("https://api.example.com");
+    let client = Vamo::<deboa_tokio::Client>::new("https://api.example.com");
     
     // Create a new user
     let mut user = User {

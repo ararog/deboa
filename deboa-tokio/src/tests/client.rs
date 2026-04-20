@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use url::Url;
 
-use crate::{default_protocol, Client, Result};
+use crate::{Client, Result};
 
 #[tokio::test]
 async fn test_shl() -> Result<()> {

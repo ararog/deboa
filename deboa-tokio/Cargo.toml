@@ -59,11 +59,15 @@ __rustls_rustcrypto = ["dep:rustls-rustcrypto"]
 # tls implementations
 native-tls = ["async-native-tls/runtime-tokio"]
 
-
 # protocols
 http1 = ["hyper/http1", "hyper-util/http1"]
 http2 = ["hyper/http2", "hyper-util/http2"]
-http3 = ["dep:h3", "dep:h3-quinn", "dep:quinn", "hyper-body-utils/http3"]
+http3 = [
+  "dep:h3",
+  "dep:h3-quinn",
+  "quinn/runtime-tokio",
+  "hyper-body-utils/http3",
+]
 
 [dependencies]
 async-executor = { version = "1.13.3", optional = true, default-features = false }
@@ -128,17 +132,28 @@ webpki-roots = { version = "1.0.6", optional = true, default-features = false }
 criterion = { version = "0.8.2", features = [
   "html_reports",
   "async",
-  "async_smol",
   "async_tokio",
 ] }
+deboa-extras = { path = "../deboa-extras", default-features = false }
+deboa-fory = { path = "../deboa-fory", default-features = false }
+deboa-macros = { path = "../deboa-macros" }
 easyhttpmock-vetis-tokio = { path = "../../easyhttpmock/easyhttpmock-vetis-tokio", features = [
   "http2",
   "rust-tls",
 ], default-features = false }
+fory = "0.14.1"
+fory-core = "0.14.0"
 futures-util = "0.3.31"
 mime = { version = "0.3.17" }
 multer = "3.1.0"
-tokio = { version = "1.49.0" }
+tokio = { version = "1.38.1", features = [
+  "macros",
+  "fs",
+], default-features = false }
+vamo = { path = "../vamo", default-features = false }
+vamo-macros = { path = "../vamo-macros", features = [
+  "json",
+], default-features = false }
 
 [[bench]]
 name = "benchmark"

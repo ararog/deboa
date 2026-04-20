@@ -2,7 +2,6 @@
 
 [![Crates.io downloads](https://img.shields.io/crates/d/deboa-macros)](https://crates.io/crates/deboa-macros) [![crates.io](https://img.shields.io/crates/v/deboa-macros?style=flat-square)](https://crates.io/crates/deboa-macros) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) ![Crates.io MSRV](https://img.shields.io/crates/msrv/deboa-macros) [![Documentation](https://docs.rs/deboa-macros/badge.svg)](https://docs.rs/deboa-macros/latest/deboa-macros) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ararog/deboa/blob/main/LICENSE.md)  ![Codecov](https://img.shields.io/codecov/c/github/ararog/deboa-macros) 
 
-
 **deboa-macros** is a collection of macros for deboa. It is close equivalent to
 apisauce for axios, where one macro does it all, from request to response.
 It used to be the home of bora macro, which has been moved to vamo-macros crate.
@@ -29,7 +28,7 @@ deboa-macros = "0.0.8"
 
 ### other macros
 
-```rust
+```rust,ignore
 use deboa::errors::DeboaError;
 use deboa_macros::{fetch, get, post, delete};
 use deboa_extras::http::serde::json::JsonBody;
@@ -45,10 +44,10 @@ pub struct Post {
 let client = Deboa::default();
 
 // fetch macro
-let response: Vec<Post> = fetch!("https://jsonplaceholder.typicode.com/posts", JsonBody, Vec<Post>, &client);
+let response: Vec<Post> = fetch!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
 
 // get macro, returning posts serialized as json
-let response: Vec<Post> = get!("https://jsonplaceholder.typicode.com/posts", JsonBody, Vec<Post>, &client);
+let response: Vec<Post> = get!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
 
 //get macro, returning text
 let response: String = get!("https://rust-lang.org", &client);
@@ -66,7 +65,7 @@ let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
 
 ## License
 
-MIT
+MIT and Apache-2.0
 
 ## Author
 

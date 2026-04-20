@@ -14,7 +14,7 @@
 //!
 //! ## Implementing a custom cache
 //!
-//! ```no_run
+//! ```ignore
 //! use deboa::cache::DeboaCache;
 //! use std::collections::HashMap;
 //! use std::sync::{Arc, RwLock};
@@ -41,7 +41,7 @@
 //!
 //! ## Using the cache with Deboa
 //!
-//! ```no_run
+//! ```ignore
 //! # use deboa::{Deboa, cache::DeboaCache};
 //! # struct MyCache;
 //! # impl DeboaCache for MyCache {

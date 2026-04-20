@@ -5,97 +5,24 @@
 
 cargo fmt --check
 
-# cd deboa-extras
+cargo test
 
-# echo "-------------"
-# echo "Running deboa-extras tests: serialization_all"
-# echo "-------------"
-# cargo test --features "serialization_all compression_all"
+# cd deboa-smol
 
-# echo "-------------"
-# echo "Running deboa-extras tests: tokio-rt, http1, tokio-rust-tls"
-# echo "-------------"
-# cargo test --features "tokio-rt http1 tokio-rust-tls deboa/default-rustls-provider deboa/default-rustls-verifier" --no-default-features
+# cargo test --features "http1 rust-tls easyhttpmock-vetis-smol/http1 easyhttpmock-vetis-smol/rust-tls" --no-default-features
+# cargo test --features "http2 rust-tls easyhttpmock-vetis-smol/http2 easyhttpmock-vetis-smol/rust-tls" --no-default-features
+# cargo test --features "http3 rust-tls easyhttpmock-vetis-smol/http3 easyhttpmock-vetis-smol/rust-tls" --no-default-features
+# cargo test --features "http1 native-tls easyhttpmock-vetis-smol/http1 easyhttpmock-vetis-smol/rust-tls" --no-default-features
+# cargo test --features "http2 native-tls easyhttpmock-vetis-smol/http2 easyhttpmock-vetis-smol/rust-tls" --no-default-features
 
-# echo "-------------"
-# echo "Running deboa-extras tests: smol-rt, http1, smol-rust-tls"
-# echo "-------------"
-# cargo test --features "smol-rt http1 smol-rust-tls deboa/default-rustls-provider deboa/default-rustls-verifier" --no-default-features
-
-# cd ..  
-
-# cd deboa-fory
-# cargo test
 # cd ..
 
-# cd deboa-macros
-# cargo test
-# cd ..
+# cd deboa-tokio
 
-# cd vamo
-# cargo test
-# cd ..
-
-# cd vamo-macros
-# cargo test
-# cd ..
-
-# cd deboa
-
-# echo "-------------"
-# echo "Running deboa tests: http1, tokio-rt, tokio-native-tls"
-# echo "-------------"
-# cargo test --features "http1 tokio-rt tokio-native-tls" --no-default-features
-
-# echo "-------------"
-# echo "Running deboa tests: http2, tokio-rt, tokio-native-tls"
-# echo "-------------"
-# cargo test --features "http2 tokio-rt tokio-native-tls" --no-default-features
-
-# echo "-------------"
-# echo "Running deboa tests: http1, tokio-rt, tokio-rust-tls"
-# echo "-------------"
-# cargo test --features "http1 tokio-rt tokio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
-
-# echo "-------------"
-# echo "Running deboa tests: http2, tokio-rt, tokio-rust-tls"
-# echo "-------------"
-# cargo test --features "http2 tokio-rt tokio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
-
-# echo "-------------"
-# echo "Running deboa tests: http3, tokio-rt, tokio-rust-tls"
-# echo "-------------"
-# cargo test --features "http3 tokio-rt tokio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
-
-# echo "-------------"
-# echo "Running deboa tests: http1, smol-rt, smol-native-tls"
-# echo "-------------"
-# cargo test --features "http1 smol-rt smol-native-tls" --no-default-features
-
-# echo "-------------"
-# echo "Running deboa tests: http2, smol-rt, smol-native-tls"
-# echo "-------------"
-# cargo test --features "http2 smol-rt smol-native-tls" --no-default-features
-
-# echo "-------------"
-# echo "Running deboa tests: http1, smol-rt, smol-rust-tls"
-# echo "-------------"
-# cargo test --features "http1 smol-rt smol-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
-
-# echo "-------------"
-# echo "Running deboa tests: http2, smol-rt, smol-rust-tls"
-# echo "-------------"
-# cargo test --features "http2 smol-rt smol-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
-
-# echo "-------------"
-# echo "Running deboa tests: http3, smol-rt, smol-rust-tls"
-# echo "-------------"
-# cargo test --features "http3 smol-rt smol-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
-
-#cargo test --features "http1 compio-rt compio-native-tls" --no-default-features
-#cargo test --features "http2 compio-rt compio-native-tls" --no-default-features
-#cargo test --features "http1 compio-rt compio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
-#cargo test --features "http2 compio-rt compio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
-#cargo test --features "http3 compio-rt compio-rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+# cargo test --features "http1 rust-tls easyhttpmock-vetis-tokio/http1 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
+# cargo test --features "http2 rust-tls easyhttpmock-vetis-tokio/http2 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
+# cargo test --features "http3 rust-tls easyhttpmock-vetis-tokio/http3 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
+# cargo test --features "http1 native-tls easyhttpmock-vetis-tokio/http1 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
+# cargo test --features "http2 native-tls easyhttpmock-vetis-tokio/http2 easyhttpmock-vetis-tokio/rust-tls" --no-default-features
 
 # cd ..

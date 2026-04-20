@@ -4,22 +4,26 @@ use crate::tests::{
 };
 
 use deboa::request::DeboaRequest;
-use http::StatusCode;
+use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
+use http::{Method, StatusCode};
 
 //
 // DELETE
 //
 #[tokio::test]
 async fn test_delete() -> TestResult<()> {
-    let mut server = start_mock_server(|when| async move {
-        Ok(when
-            .path(String::from("/posts/1"))
-            .method(String::from("PATCH"))
-            .then()
-            .with_status(StatusCode::OK)
-            .with_body(String::from("")))
-    })
-    .await;
+    let mock = Mock::of(
+        Method::DELETE
+            .has()
+            .path("/posts/1")
+            .will_return(
+                StatusCode::OK
+                    .respond()
+                    .no_body(),
+            ),
+    );
+
+    let mut server = start_mock_server(mock).await;
 
     let client = client_with_cert();
 

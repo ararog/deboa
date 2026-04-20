@@ -14,29 +14,29 @@ struct Post {
     body: String,
 }
 
-struct AuthCatcher;
+// struct AuthCatcher;
 
-#[async_trait]
-impl deboa::catcher::DeboaCatcher for AuthCatcher {
-    async fn on_request(
-        &self,
-        request: &mut deboa::request::DeboaRequest,
-    ) -> Result<Option<deboa::response::DeboaResponse>> {
-        request
-            .headers_mut()
-            .insert(AUTHORIZATION, HeaderValue::from_str("Bearer token").unwrap());
-        Ok(None)
-    }
+// #[async_trait]
+// impl deboa::catcher::DeboaCatcher for AuthCatcher {
+//     async fn on_request(
+//         &self,
+//         request: &mut deboa::request::DeboaRequest,
+//     ) -> Result<Option<deboa::response::DeboaResponse>> {
+//         request
+//             .headers_mut()
+//             .insert(AUTHORIZATION, HeaderValue::from_str("Bearer token").unwrap());
+//         Ok(None)
+//     }
 
-    async fn on_response(&self, _response: &mut deboa::response::DeboaResponse) -> Result<()> {
-        Ok(())
-    }
-}
+//     async fn on_response(&self, _response: &mut deboa::response::DeboaResponse) -> Result<()> {
+//         Ok(())
+//     }
+// }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let client = Client::builder()
-        .catch(AuthCatcher)
+        //.catch(AuthCatcher)
         .build();
     let vamo = Arc::new(Mutex::new(Vamo::new("https://jsonplaceholder.typicode.com")?));
     vamo.lock()

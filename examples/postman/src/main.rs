@@ -7,31 +7,31 @@ use crate::post_service::{Post, PostService};
 
 mod post_service;
 
-use deboa::catcher::DeboaCatcher;
+//use deboa::catcher::DeboaCatcher;
 
-struct AuthCatcher;
+//struct AuthCatcher;
 
-#[async_trait]
-impl DeboaCatcher for AuthCatcher {
-    async fn on_request(
-        &self,
-        request: &mut DeboaRequest,
-    ) -> Result<Option<deboa::response::DeboaResponse>> {
-        request
-            .headers_mut()
-            .insert(header::AUTHORIZATION, HeaderValue::from_str("Bearer token").unwrap());
-        Ok(None)
-    }
+// #[async_trait]
+// impl DeboaCatcher for AuthCatcher {
+//     async fn on_request(
+//         &self,
+//         request: &mut DeboaRequest,
+//     ) -> Result<Option<deboa::response::DeboaResponse>> {
+//         request
+//             .headers_mut()
+//             .insert(header::AUTHORIZATION, HeaderValue::from_str("Bearer token").unwrap());
+//         Ok(None)
+//     }
 
-    async fn on_response(&self, _response: &mut DeboaResponse) -> Result<()> {
-        Ok(())
-    }
-}
+//     async fn on_response(&self, _response: &mut DeboaResponse) -> Result<()> {
+//         Ok(())
+//     }
+// }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let client = Client::builder()
-        .catch(AuthCatcher)
+        //.catch(AuthCatcher)
         .build();
     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
     vamo.client(client);

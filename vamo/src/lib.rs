@@ -1,230 +1,15 @@
-//! # Vamo: A High-Level HTTP Client for Deboa
-//!
-//! `vamo` provides an ergonomic, high-level API on top of the `deboa` HTTP client,
-//! making it easier to work with RESTful APIs and other HTTP services. It offers
-//! a more intuitive interface for building and sending HTTP requests while maintaining
-//! full compatibility with the underlying `deboa` client.
-//!
-//! ## Features
-//!
-//! - **Fluent API**: Chainable methods for building and sending requests
-//! - **Resource-Oriented**: First-class support for REST resources with the `Resource` trait
-//! - **Authentication**: Built-in support for common authentication methods
-//! - **Type Safety**: Strong typing for request/response bodies
-//! - **Flexible**: Works with any HTTP method and content type
-//! - **Async by Default**: Built on top of async/await for high performance
-//!
-//! ## Getting Started
-//!
-//! Add `vamo` and its dependencies to your `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies]
-//! vamo = { version = "0.1", path = "../vamo" }
-//! deboa = { version = "0.1.0", path = ".." }
-//! deboa-extras = { version = "0.1", path = "../deboa-extras" }
-//! serde = { version = "1.0", features = ["derive"] }
-//! tokio = { version = "1.0", features = ["full"] }
-//! ```
-//!
-//! ## Basic Usage
-//!
-//! ### Making Simple Requests
-//!
-//! ```ignore
-//! use vamo::Vamo;
-//! use deboa::Result;
-//! use deboa_extras::http::serde::json::JsonBody;
-//!
-//! #[tokio::main]
-//! async fn main() -> Result<()> {
-//!     // Create a new Vamo client with a base URL
-//!     let mut vamo = Vamo::new("https://api.example.com")?;
-//!
-//!     // Make a GET request
-//!     let response = vamo
-//!         .get("/users/1")?
-//!         .send()
-//!         .await?;
-//!     
-//!     // Parse response as JSON
-//!     let user: User = response
-//!         .body_as(JsonBody)
-//!         .await?;
-//!     println!("User: {:?}", user);
-//!
-//!     // Make a POST request with JSON body
-//!     let new_user = json!({
-//!         "name": "John Doe",
-//!         "email": "john@example.com"
-//!     });
-//!     
-//!     let response = vamo
-//!         .post("/users")?
-//!         .body_as(JsonBody, &new_user)?
-//!         .send()
-//!         .await?;
-//!     
-//!     println!("Created user: {:?}", response.status());
-//!     Ok(())
-//! }
-//! ```
-//!
-//! ## Working with Resources
-//!
-//! Vamo provides a `Resource` trait that makes it easy to work with REST resources:
-//!
-//! ```ignore
-//! use deboa::Result;
-//! use deboa_extras::http::serde::json::JsonBody;
-//! use serde::{Deserialize, Serialize};
-//! use vamo::{Vamo, resource::{Resource, ResourceMethod}};
-//!
-//! #[derive(Debug, Serialize, Deserialize)]
-//! struct User {
-//!     id: Option<u64>,
-//!     name: String,
-//!     email: String,
-//! }
-//!
-//! impl Resource for User {
-//!     // Return the resource ID as a string
-//!     fn id(&self) -> String {
-//!         self.id.map(|id| id.to_string()).unwrap_or_default()
-//!     }
-//!     
-//!     // Return the base path for this resource (e.g., "users")
-//!     fn name(&self) -> &str {
-//!         "users"
-//!     }
-//!     
-//!     // Specify how to serialize this resource
-//!     fn body_type(&self) -> impl deboa::client::serde::RequestBody {
-//!         JsonBody
-//!     }
-//! }
-//!
-//! #[tokio::main]
-//! async fn main() -> Result<()> {
-//!     let mut vamo = Vamo::new("https://api.example.com")?;
-//!     
-//!     // List all users
-//!     let mut user_template = User {
-//!         id: None,
-//!         name: String::new(),
-//!         email: String::new(),
-//!     };
-//!     
-//!     let users: Vec<User> = vamo
-//!        .load(&mut user_template)?
-//!        .send()
-//!        .await?
-//!        .body_as(JsonBody)
-//!        .await?;
-//!     println!("All users: {:?}", users);
-//!     
-//!     // Create a new user
-//!     let mut new_user = User {
-//!         id: None,
-//!         name: "John Doe".to_string(),
-//!         email: "john@example.com".to_string(),
-//!     };
-//!     
-//!     let created: User = vamo
-//!        .create(&mut new_user)?
-//!        .send()
-//!        .await?
-//!        .body_as(JsonBody)
-//!        .await?;
-//!     println!("Created user: {:?}", created);
-//!     
-//!     // Update a user
-//!     let mut updated_user = User {
-//!         id: created.id,
-//!         name: "John Updated".to_string(),
-//!         email: created.email,
-//!     };
-//!     
-//!     let updated: User = vamo
-//!        .update(&mut updated_user)?
-//!        .send()
-//!        .await?
-//!        .body_as(JsonBody)
-//!        .await?;
-//!     println!("Updated user: {:?}", updated);
-//!     
-//!     // Delete a user
-//!     vamo
-//!       .remove(&mut updated_user)?
-//!       .send()
-//!       .await?;
-//!     println!("User deleted");
-//!     
-//!     Ok(())
-//! }
-//! ```
-//!
-//! ## Authentication
-//!
-//! Vamo provides convenience methods for common authentication methods:
-//!
-//! ```ignore
-//! use vamo::Vamo;
-//! use deboa::Result;
-//!
-//! #[tokio::main]
-//! async fn main() -> Result<()> {
-//!     // Bearer token authentication
-//!     let mut vamo = Vamo::new("https://api.example.com")?;
-//!     vamo
-//!       .get("/users/1")
-//!       .bearer_auth("your-token-here")
-//!       .send()
-//!       .await?;
-//!
-//!     // Basic authentication
-//!     let mut vamo = Vamo::new("https://api.example.com")?;
-//!     vamo
-//!       .get("/users/1")
-//!       .basic_auth("username", "password")
-//!       .send()
-//!       .await?;
-//!     Ok(())
-//! }
-//! ```
-//!
-//! ## Error Handling
-//!
-//! Vamo uses the `deboa::Result` type for error handling, which provides detailed
-//! error information including:
-//! - Network errors
-//! - Serialization/deserialization errors
-//! - HTTP protocol errors
-//! - URL parsing errors
-//!
-//! ## Examples
-//!
-//! Check the `examples/` directory for more comprehensive examples of using Vamo
-//! with different types of APIs and authentication methods.
-//!
-//! ## License
-//!
-//! MIT license
-//!
-//! ## Author
-//!
-//! Rogerio Pacheco <rogerio.pacheco@gmail.com>
+#[doc = include_str!("../README.md")]
 use std::sync::Arc;
 
 use crate::resource::{Resource, ResourceMethod};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use deboa::{
-    client::serde::RequestBody,
     errors::{DeboaError, RequestError},
     request::DeboaRequest,
     response::DeboaResponse,
+    serde::RequestBody,
     url::IntoUrl,
-    Client, Result,
+    Result,
 };
 use http::{
     header::{self, CONTENT_TYPE, HOST},
@@ -239,8 +24,8 @@ pub mod resource;
 mod tests;
 
 /// A builder for HTTP requests.
-pub struct Vamo {
-    client: Client,
+pub struct Vamo<C> {
+    client: C,
     base_url: Url,
     method: Method,
     path: String,
@@ -248,7 +33,10 @@ pub struct Vamo {
     body: Arc<[u8]>,
 }
 
-impl Vamo {
+impl<C> Vamo<C>
+where
+    C: deboa::HttpClient + Default,
+{
     /// Create a new Vamo instance.
     ///
     /// # Arguments
@@ -261,8 +49,8 @@ impl Vamo {
     ///
     /// # Examples
     ///
-    /// ``` rust, compile_fail
-    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// ``` rust, ignore
+    /// let mut vamo = Vamo::<deboa_tokio::Client>::new("https://api.example.com")?;
     /// let response = vamo.get("/path").send().await?;
     /// ```
     ///
@@ -270,7 +58,7 @@ impl Vamo {
     ///
     /// If the URL is invalid, or headers are invalid, the function will panic.
     ///
-    pub fn new<U: IntoUrl>(url: U) -> Result<Vamo> {
+    pub fn new<U: IntoUrl>(url: U) -> Result<Vamo<C>> {
         let base_url = url.into_url()?;
         let mut headers = HeaderMap::new();
         let host = base_url.host_str();
@@ -299,7 +87,7 @@ impl Vamo {
         headers.insert(CONTENT_TYPE, content_type_header.unwrap());
 
         Ok(Vamo {
-            client: Client::default(),
+            client: C::default(),
             base_url,
             path: String::new(),
             method: Method::GET,
@@ -318,7 +106,7 @@ impl Vamo {
     ///
     /// * `&mut Self` - The builder.
     #[inline]
-    pub fn client(&mut self, client: Client) -> &mut Self {
+    pub fn client(&mut self, client: C) -> &mut Self {
         self.client = client;
         self
     }
@@ -336,8 +124,8 @@ impl Vamo {
     ///
     /// # Examples
     ///
-    /// ``` rust, compile_fail
-    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// ``` rust, ignore
+    /// let mut vamo = Vamo::<deboa_tokio::Client>::new("https://api.example.com")?;
     /// let response = vamo.get("/api")
     ///    .header("Content-Type", "application/json")
     ///    .send()
@@ -384,8 +172,8 @@ impl Vamo {
     ///
     /// # Examples
     ///
-    /// ``` rust, compile_fail
-    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// ``` rust, ignore
+    /// let mut vamo = Vamo::<deboa_tokio::Client>::new("https://api.example.com")?;
     /// let response = vamo.get("/path").send().await?;
     /// ```
     #[inline]
@@ -407,8 +195,8 @@ impl Vamo {
     ///
     /// # Examples
     ///
-    /// ``` rust, compile_fail
-    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// ``` rust, ignore
+    /// let mut vamo = Vamo::<deboa_tokio::Client>::new("https://api.example.com")?;
     /// let response = vamo.post("/path").body_as(JSON, body).send().await?;
     /// ```
     #[inline]
@@ -430,8 +218,8 @@ impl Vamo {
     ///
     /// # Examples
     ///
-    /// ``` rust, compile_fail
-    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// ``` rust, ignore
+    /// let mut vamo = Vamo::<deboa_tokio::Client>::new("https://api.example.com")?;
     /// let response = vamo.put("/path/1").body_as(JSON, body).send().await?;
     /// ```
     #[inline]
@@ -453,8 +241,8 @@ impl Vamo {
     ///
     /// # Examples
     ///
-    /// ``` rust, compile_fail
-    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// ``` rust, ignore
+    /// let mut vamo = Vamo::<deboa_tokio::Client>::new("https://api.example.com")?;
     /// let response = vamo.patch("/path/1").body_as(JsonBody, body).send().await?;
     /// ```
     #[inline]
@@ -476,8 +264,8 @@ impl Vamo {
     ///
     /// # Examples
     ///
-    /// ``` rust, compile_fail
-    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// ``` rust, ignore
+    /// let mut vamo = Vamo::<deboa_tokio::Client>::new("https://api.example.com")?;
     /// let response = vamo.delete("/path/1").send().await?;
     /// ```
     #[inline]
@@ -499,8 +287,8 @@ impl Vamo {
     ///
     /// # Examples
     ///
-    /// ``` rust, compile_fail
-    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// ``` rust, ignore
+    /// let mut vamo = Vamo::<deboa_tokio::Client>::new("https://api.example.com")?;
     /// let response = vamo.get("/api")
     ///    .bearer_auth("your-token-here")
     ///    .send()
@@ -525,8 +313,8 @@ impl Vamo {
     ///
     /// # Examples
     ///
-    /// ``` rust, compile_fail
-    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// ``` rust, ignore
+    /// let mut vamo = Vamo::<<deboa_tokio::Client>>::new("https://api.example.com")?;
     /// let response = vamo.get("/api")
     ///    .basic_auth("username", "password")
     ///    .send()
@@ -553,8 +341,8 @@ impl Vamo {
     ///
     /// # Examples
     ///
-    /// ``` rust, compile_fail
-    /// let mut vamo = Vamo::new("https://api.example.com")?;
+    /// ``` rust, ignore
+    /// let mut vamo = Vamo::<deboa_tokio::Client>::new("https://api.example.com")?;
     /// let response = vamo.get("/path").send().await?;
     /// ```
     ///
@@ -597,7 +385,10 @@ impl Vamo {
     }
 }
 
-impl<R: Resource + Serialize> ResourceMethod<R> for Vamo {
+impl<R: Resource + Serialize, C> ResourceMethod<R> for Vamo<C>
+where
+    C: deboa::HttpClient,
+{
     fn load(&mut self, resource: &mut R) -> Result<&mut Self> {
         self.path = format!("/{}/{}", resource.name(), resource.id());
         self.method = Method::GET;

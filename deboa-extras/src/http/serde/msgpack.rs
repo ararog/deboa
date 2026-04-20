@@ -1,6 +1,6 @@
 use deboa::{
-    client::serde::{RequestBody, ResponseBody},
     errors::{ContentError, DeboaError},
+    serde::{RequestBody, ResponseBody},
     Result,
 };
 use mime_typed::{ApplicationMsgpack, MimeStrExt};

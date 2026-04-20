@@ -13,22 +13,23 @@
 
 ## Install
 
-Either run from command line: 
+Either run from command line:
 
-`cargo add vamo`
+`cargo add vamo deboa-smol`
 
 Or add to your `Cargo.toml`:
 
 ```toml
 vamo = "0.0.1"
+deboa-smol = "0.1.0"
 ```
 
 ## Usage
 
-```rust
+```rust, compile_fail
 use vamo::Vamo;
 
-let vamo = Vamo::new("https://api.example.com")?;
+let vamo = Vamo::<deboa_smol::Client>::new("https://api.example.com")?;
 let response = vamo
     .get("/users")?
     .send()

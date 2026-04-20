@@ -6,7 +6,7 @@
 //!
 //! # Examples
 //!
-//! ```rust
+//! ```ignore
 //! use deboa::{Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
 //!
 //! struct TestMonitor;

@@ -78,12 +78,15 @@ impl Parse for FormatStruct {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let format = FormatStruct { _equal_token: input.parse()?, value: input.parse()? };
 
+        let formats = avaliable_formats();
+        if formats.is_empty() {
+            return Err(input.error("no formats available, please check feature flags"));
+        }
+
         let format_name = format.value.value();
         if !is_valid_format(&format_name) {
-            return Err(input.error(format!(
-                "expected one of {}, found '{format_name}'",
-                avaliable_formats().join(", ")
-            )));
+            return Err(input
+                .error(format!("expected one of {}, found '{format_name}'", formats.join(", "))));
         }
 
         Ok(format)

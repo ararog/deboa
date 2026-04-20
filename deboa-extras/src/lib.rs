@@ -92,6 +92,3 @@ pub mod http;
 //pub mod io;
 #[cfg(test)]
 mod tests;
-
-#[cfg(feature = "websockets")]
-pub mod ws;

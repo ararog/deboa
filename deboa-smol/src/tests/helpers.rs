@@ -1,9 +1,8 @@
-use std::{future::Future, net::IpAddr};
+use std::net::IpAddr;
 
 use easyhttpmock_vetis_smol::{
     config::EasyHttpMockConfig,
-    errors::EasyHttpMockError,
-    expect::{Then, When},
+    mock::Mock,
     server::PortGenerator,
     vetis_adapter::{VetisAdapter, VetisAdapterConfig},
     EasyHttpMock, Protocol,
@@ -16,16 +15,16 @@ use crate::{
 };
 
 pub const CA_CERT: &[u8] = include_bytes!("../../../certs/ca.der");
-pub const CA_CERT_PEM: &[u8] = include_bytes!("../../../certs/ca.crt");
+// pub const CA_CERT_PEM: &[u8] = include_bytes!("../../../certs/ca.crt");
 
 pub const SERVER_CERT: &[u8] = include_bytes!("../../../certs/server.der");
 pub const SERVER_KEY: &[u8] = include_bytes!("../../../certs/server.key.der");
 
-pub const IP6_SERVER_CERT: &[u8] = include_bytes!("../../../certs/ip6-server.der");
-pub const IP6_SERVER_KEY: &[u8] = include_bytes!("../../../certs/ip6-server.key.der");
+// pub const IP6_SERVER_CERT: &[u8] = include_bytes!("../../../certs/ip6-server.der");
+// pub const IP6_SERVER_KEY: &[u8] = include_bytes!("../../../certs/ip6-server.key.der");
 
-pub const SERVER_CERT_PEM: &[u8] = include_bytes!("../../../certs/server.crt");
-pub const SERVER_KEY_PEM: &[u8] = include_bytes!("../../../certs/server.key");
+// pub const SERVER_CERT_PEM: &[u8] = include_bytes!("../../../certs/server.crt");
+// pub const SERVER_KEY_PEM: &[u8] = include_bytes!("../../../certs/server.key");
 
 pub const CLIENT_CERT: &[u8] = include_bytes!("../../../certs/client.der");
 pub const CLIENT_KEY: &[u8] = include_bytes!("../../../certs/client.key.der");
@@ -69,11 +68,7 @@ pub(crate) fn client_with_cert() -> Client {
         .build()
 }
 
-pub async fn start_mock_server<H, Fut>(handler: H) -> EasyHttpMock<VetisAdapter>
-where
-    H: Fn(When) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<Then, EasyHttpMockError>> + Send + Sync + 'static,
-{
+pub async fn start_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
 
@@ -103,9 +98,9 @@ where
     };
 
     #[allow(unused_must_use)]
-    let result = server
-        .mock(handler)
-        .await;
+    server.register_mock(mock);
+
+    let result = server.start().await;
 
     result.unwrap_or_else(|err| {
         panic!("Failed to start mock server: {}", err);

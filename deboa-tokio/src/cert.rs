@@ -207,7 +207,7 @@ impl TryFrom<&Identity> for NativeIdentity {
 /// # Examples
 ///
 /// ```
-/// use deboa::cert::{Certificate, ContentEncoding};
+/// use deboa_tokio::cert::{Certificate, ContentEncoding};
 ///
 /// // Load a DER encoded certificate from a file
 /// let cert = Certificate::from_file(

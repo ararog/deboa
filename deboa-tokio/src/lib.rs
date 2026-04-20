@@ -1,71 +1,4 @@
-//! # Deboa - Core API Documentation
-//!
-//! Hello, and welcome to the core Deboa API documentation!
-//!
-//! This API documentation is highly technical and is purely a reference.
-//!
-//! Depend on `deboa` in `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies]
-//! deboa = "0.1.0"
-//! ```
-//!
-//! <small>Note that development versions, tagged with `-dev`, are not published
-//! and need to be specified as [git dependencies].</small>
-//!
-//! ``` rust,ignore
-//! use deboa::{Client, Result, errors::DeboaError, request::DeboaRequest};
-//!
-//! #[tokio::main]
-//! async fn main() -> Result<()> {
-//!     let mut client = Client::builder()
-//!         .build();
-//!
-//!     let response = DeboaRequest::get("https://httpbin.org/get")?
-//!         .send_with(&mut client)
-//!         .await?;
-//!
-//!     println!("Response: {:#?}", response);
-//!
-//!     Ok(())
-//! }
-//! ```
-//!
-//! ## Features
-//!
-//! To avoid compiling unused dependencies, Deboa feature-gates optional
-//! functionality, some enabled by default:
-//!
-//! | Feature             | Default? | Description                                             |
-//! |---------------------|----------|---------------------------------------------------------|
-//! | `tokio_rt`          | Yes      | Support tokio runtime (enabled by default).             |
-//! | `smol_rt`           | No       | Support smol runtime.                                   |
-//! | `http1`             | No       | Support for HTTP/1.                                     |
-//! | `http2`             | Yes      | Support for HTTP/2 (enabled by default).                |
-//! | `http3`             | No       | Support for HTTP/3.                                     |
-//! | `http3-smol`        | No       | Support for HTTP/3 on Smol.                             |
-//! | `tokio-rust-tls`    | Yes      | Support for tokio-rust-tls (enabled by default).        |
-//! | `tokio-native-tls`  | No       | Support for tokio-native-tls.                           |
-//! | `compio-rust-tls`   | No       | Support for compio-rust-tls.                            |
-//! | `compio-native-tls` | No       | Support for compio-native-tls.                          |
-//! | `smol-rust-tls`     | No       | Support for smol-rust-tls.                              |
-//! | `smol-native-tls`   | No       | Support for smol-native-tls.                            |
-//!
-//! Disabled features can be selectively enabled in `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies]
-//! deboa = { version = "0.1.0", features = ["tokio_rt", "http2", "tokio-rust-tls", "default-rustls-provider", "default-rustls-verifier"] }
-//! ```
-//!
-//! Conversely, HTTP/2 can be disabled:
-//!
-//! ```toml
-//! [dependencies]
-//! deboa = { version = "0.1.0", default-features = false }
-//! ```
-//!
+#![doc = include_str!("../README.md")]
 
 #[cfg(all(
     feature = "rust-tls",
@@ -90,10 +23,10 @@ compile_error!(
 );
 
 #[cfg(all(feature = "native-tls", feature = "rust-tls"))]
-compile_error!("You cannot enable tokio-native-tls and tokio-rust-tls features at the same time.");
+compile_error!("You cannot enable native-tls and rust-tls features at the same time.");
 
 #[cfg(all(feature = "native-tls", feature = "http3"))]
-compile_error!("HTTP3 is not supported within tokio-native-tls runtime.");
+compile_error!("HTTP3 is not supported within native-tls runtime.");
 
 #[cfg(not(any(feature = "http1", feature = "http2", feature = "http3")))]
 compile_error!("At least one HTTP version feature must be enabled.");
@@ -125,8 +58,6 @@ pub(crate) fn alpn() -> &'static [&'static str] {
         "h3",
     ]
 }
-
-use cfg_if::cfg_if;
 
 use deboa::{
     catcher::DeboaCatcher,
@@ -202,6 +133,7 @@ impl Shl<&str> for &Client {
 ///
 /// * `Http1` - The HTTP/1.1 version.
 /// * `Http2` - The HTTP/2 version.
+/// * `Http3` - The HTTP/3 version.
 pub enum HttpVersion {
     #[cfg(feature = "http1")]
     Http1,
@@ -283,7 +215,7 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` rust, no_run
-    /// use deboa::Client;
+    /// use deboa_tokio::Client;
     /// let builder = Client::builder()
     ///     .connection_timeout(10);  // 10 seconds
     /// ```
@@ -308,7 +240,7 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` rust, no_run
-    /// use deboa::Client;
+    /// use deboa_tokio::Client;
     /// let builder = Client::builder()
     ///     .request_timeout(30);  // 30 seconds
     /// ```
@@ -364,7 +296,7 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` compile_fail
-    /// use deboa::{Client, Identity, Result};
+    /// use deboa_tokio::{Client, Identity, Result};
     ///
     /// #[tokio::main]
     ///
@@ -390,7 +322,7 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` compile_fail
-    /// use deboa::{Client, Certificate, Result};
+    /// use deboa_tokio::{Client, Certificate, Result};
     ///
     /// #[tokio::main]
     ///
@@ -422,7 +354,7 @@ impl ClientBuilder {
     /// ## Automatic Retries
     ///
     /// ```ignore
-    /// use deboa::{Client, Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
+    /// use deboa_tokio::{Client, Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
     ///
     /// struct AddAuthorization;
     ///
@@ -468,7 +400,7 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` rust,ignore
-    /// use deboa::{Client, HttpVersion};
+    /// use deboa_tokio::{Client, HttpVersion};
     ///
     /// let builder = Client::builder()
     ///     .protocol(HttpVersion::Http2);  // Use HTTP/2
@@ -492,7 +424,7 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` rust, no_run
-    /// use deboa::Client;
+    /// use deboa_tokio::Client;
     ///
     /// let builder = Client::builder()
     ///     .skip_cert_verification(true);  // Skip certificate verification
@@ -529,7 +461,7 @@ impl ClientBuilder {
     /// # Example
     ///
     /// ```compile_fail
-    /// use deboa::Client;
+    /// use deboa_tokio::Client;
     ///
     /// let client = Client::builder()
     ///     .pool(HttpConnectionPool::default())
@@ -558,7 +490,7 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` rust,ignore
-    /// use deboa::{Client, Result};
+    /// use deboa_tokio::{Client, Result};
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -614,7 +546,7 @@ pub type Deboa = Client;
 /// ## Basic Usage
 ///
 /// ``` ignore
-/// use deboa::{Client, Result};
+/// use deboa_tokio::{Client, Result};
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -675,15 +607,12 @@ impl Debug for Client {
 }
 
 pub(crate) const fn default_protocol() -> HttpVersion {
-    cfg_if! {
-        if #[cfg(feature = "http1")] {
-            HttpVersion::Http1
-        } else if #[cfg(feature = "http2")] {
-            HttpVersion::Http2
-        } else {
-            HttpVersion::Http3
-        }
-    }
+    #[cfg(feature = "http1")]
+    return HttpVersion::Http1;
+    #[cfg(feature = "http2")]
+    return HttpVersion::Http2;
+    #[cfg(feature = "http3")]
+    return HttpVersion::Http3;
 }
 
 impl Default for Client {

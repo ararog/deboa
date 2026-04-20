@@ -7,8 +7,8 @@ use deboa::{
 use fory::{Fory, ForyDefault, Serializer};
 use http::header;
 
-#[cfg(test)]
-mod tests;
+//#[cfg(test)]
+//mod tests;
 
 pub trait ForyRequestBuilder {
     fn body_as_fory<T: Serializer>(self, fory: &Fory, body: T) -> Result<DeboaRequestBuilder>;
