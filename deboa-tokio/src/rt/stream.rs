@@ -14,6 +14,7 @@ use tokio::{
     net::TcpStream,
 };
 
+/// Stream enum for runtime-specific stream implementations.
 pub enum TokioStream {
     /// A plain TCP connection.
     Plain(TcpStream),

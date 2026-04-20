@@ -54,6 +54,9 @@ pub struct Identity {
     encoding: Option<ContentEncoding>,
 }
 
+/// Deprecated: Use `Identity` instead.
+///
+/// This type alias is kept for backward compatibility but will be removed in a future version.
 #[deprecated(note = "Use `Identity` instead")]
 pub type ClientCert = Identity;
 
@@ -100,6 +103,18 @@ impl Identity {
         }
     }
 
+    /// Load DER encoded certificate and key from files
+    ///
+    /// # Arguments
+    ///
+    /// * `cert` - The path to the DER encoded certificate.
+    /// * `key` - The path to the DER encoded PKCS8 private key.
+    /// * `encoding` - The encoding of the certificate and key.
+    ///
+    /// # Returns
+    ///
+    /// * `Identity` - The new Identity instance.
+    ///
     pub fn from_pkcs8_file(
         cert: &str,
         key: &str,

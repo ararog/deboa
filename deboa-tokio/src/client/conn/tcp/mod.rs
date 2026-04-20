@@ -18,10 +18,15 @@ use crate::{
 /// # Type Parameters
 ///
 /// * `Sender` - The sender to use.
+/// * `ReqBody` - The request body type.
+/// * `ResBody` - The response body type.
 ///
 pub trait DeboaTcpConnection: private::DeboaTcpConnectionSealed {
+    /// The sender to use.
     type Sender;
+    /// The request body type.
     type ReqBody: Body + Unpin;
+    /// The response body type.
     type ResBody: Body + Unpin;
 
     /// Create a new connection.

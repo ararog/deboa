@@ -28,4 +28,5 @@
 ))]
 pub(crate) mod tls;
 
+/// Stream module for runtime-specific stream implementations.
 pub mod stream;

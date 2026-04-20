@@ -7,7 +7,7 @@
 
 #[cfg(feature = "native-tls")]
 use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdentity};
-#[cfg(any(feature = "rust-tls",))]
+#[cfg(feature = "rust-tls")]
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
 #[derive(Debug, Clone)]
@@ -54,6 +54,9 @@ pub struct Identity {
     encoding: Option<ContentEncoding>,
 }
 
+/// Deprecated: Use `Identity` instead.
+///
+/// This type alias is kept for backward compatibility but will be removed in a future version.
 #[deprecated(note = "Use `Identity` instead")]
 pub type ClientCert = Identity;
 
@@ -100,6 +103,18 @@ impl Identity {
         }
     }
 
+    /// Load DER encoded certificate and key from files
+    ///
+    /// # Arguments
+    ///
+    /// * `cert` - The path to the DER encoded certificate file.
+    /// * `key` - The path to the DER encoded PKCS8 private key file.
+    /// * `encoding` - The encoding of the certificate and key.
+    ///
+    /// # Returns
+    ///
+    /// * `std::io::Result<Self>` - The new Identity instance.
+    ///
     pub fn from_pkcs8_file(
         cert: &str,
         key: &str,

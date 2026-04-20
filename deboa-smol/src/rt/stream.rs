@@ -14,6 +14,7 @@ use smol::{
     net::TcpStream,
 };
 
+/// A stream that can be either plain TCP or TLS-secured.
 pub enum SmolStream {
     /// A plain TCP connection.
     Plain(TcpStream),
@@ -28,6 +29,16 @@ pub enum SmolStream {
 }
 
 impl AsyncRead for SmolStream {
+    /// Polls for reading data from the stream.
+    ///
+    /// # Arguments
+    ///
+    /// * `cx` - The context to use for polling.
+    /// * `buf` - The buffer to read data into.
+    ///
+    /// # Returns
+    ///
+    /// * `Poll<io::Result<usize>>` - The result of the read operation.
     fn poll_read(
         mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
@@ -41,6 +52,16 @@ impl AsyncRead for SmolStream {
 }
 
 impl AsyncWrite for SmolStream {
+    /// Polls for writing data to the stream.
+    ///
+    /// # Arguments
+    ///
+    /// * `cx` - The context to use for polling.
+    /// * `buf` - The buffer to write data from.
+    ///
+    /// # Returns
+    ///
+    /// * `Poll<io::Result<usize>>` - The result of the write operation.
     fn poll_write(
         mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,

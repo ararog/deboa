@@ -1,5 +1,5 @@
 #![doc = include_str!("../README.md")]
-
+#![deny(missing_docs)]
 #[cfg(all(
     feature = "rust-tls",
     not(feature = "native-tls"),
@@ -135,10 +135,13 @@ impl Shl<&str> for &Client {
 /// * `Http2` - The HTTP/2 version.
 /// * `Http3` - The HTTP/3 version.
 pub enum HttpVersion {
+    /// HTTP/1.1 version
     #[cfg(feature = "http1")]
     Http1,
+    /// HTTP/2 version
     #[cfg(feature = "http2")]
     Http2,
+    /// HTTP/3 version
     #[cfg(feature = "http3")]
     Http3,
 }
@@ -156,6 +159,9 @@ impl Display for HttpVersion {
     }
 }
 
+/// Deprecated: Use `ClientBuilder` instead.
+///
+/// This type alias is kept for backward compatibility but will be removed in a future version.
 #[deprecated(note = "DeboaBuilder is now ClientBuilder")]
 pub type DeboaBuilder = ClientBuilder;
 
@@ -472,6 +478,26 @@ impl ClientBuilder {
         self
     }
 
+    /// Set the bind address for the client.
+    ///
+    /// # Arguments
+    ///
+    /// * `bind_addr` - The bind address to use.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The builder.
+    ///
+    /// # Example
+    ///
+    /// ``` rust, no_run
+    /// use deboa_tokio::Client;
+    /// use std::net::IpAddr;
+    ///
+    /// let client = Client::builder()
+    ///     .bind_addr(IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1)))
+    ///     .build();
+    /// ```
     #[inline]
     pub fn bind_addr(mut self, bind_addr: IpAddr) -> Self {
         self.bind_addr = bind_addr;
@@ -524,6 +550,9 @@ impl ClientBuilder {
     }
 }
 
+/// Deprecated: Use `Client` instead.
+///
+/// This type alias is kept for backward compatibility but will be removed in a future version.
 #[deprecated(note = "Deboa is now Client")]
 pub type Deboa = Client;
 
@@ -755,6 +784,12 @@ impl Client {
         &self.pool
     }
 
+    /// Allow get bind address at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `IpAddr` - The bind address.
+    ///
     #[inline]
     pub fn bind_addr(&self) -> IpAddr {
         self.bind_addr

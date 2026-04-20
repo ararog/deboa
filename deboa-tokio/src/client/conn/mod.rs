@@ -112,15 +112,28 @@ pub(crate) mod rustls;
 /// * `Http2` - The HTTP/2 connection.
 /// * `Http3` - The HTTP/3 connection.
 pub enum DeboaConnection {
+    /// HTTP/1.1 connection.
     #[cfg(feature = "http1")]
     Http1(Box<BaseHttpConnection<Http1Request, HttpBody, HttpBody>>),
+    /// HTTP/2 connection.
     #[cfg(feature = "http2")]
     Http2(Box<BaseHttpConnection<Http2Request, HttpBody, HttpBody>>),
+    /// HTTP/3 connection.
     #[cfg(feature = "http3")]
     Http3(Box<BaseHttpConnection<Http3Request, HttpBody, HttpBody>>),
 }
 
 impl DeboaConnection {
+    /// Send a request over the connection.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - The URL to send the request to.
+    /// * `request` - The request to send.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<DeboaResponse>` - The response or error.
     pub async fn send_request(
         &mut self,
         url: Arc<Url>,
@@ -169,6 +182,7 @@ pub struct BaseHttpConnection<T, ReqBody, ResBody> {
     pub(crate) res_body: PhantomData<ResBody>,
 }
 
+/// Builder for creating a connection configuration.
 pub struct ConnectionConfigBuilder<'a> {
     is_secure: bool,
     host: &'a str,
@@ -181,6 +195,7 @@ pub struct ConnectionConfigBuilder<'a> {
 }
 
 impl<'a> ConnectionConfigBuilder<'a> {
+    /// Create a new builder for creating a connection configuration.
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
@@ -197,46 +212,55 @@ impl<'a> ConnectionConfigBuilder<'a> {
         }
     }
 
+    /// Set whether the connection is secure.
     pub fn is_secure(mut self, is_secure: bool) -> Self {
         self.is_secure = is_secure;
         self
     }
 
+    /// Set the host to connect to.
     pub fn host(mut self, host: &'a str) -> Self {
         self.host = host;
         self
     }
 
+    /// Set the port to connec to.
     pub fn port(mut self, port: u16) -> Self {
         self.port = port;
         self
     }
 
+    /// Set the protocol to use.
     pub fn protocol(mut self, protocol: HttpVersion) -> Self {
         self.protocol = protocol;
         self
     }
 
+    /// Set the identity to use.
     pub fn identity(mut self, identity: Option<Identity>) -> Self {
         self.identity = identity;
         self
     }
 
+    /// Set the certificate to use.
     pub fn certificate(mut self, certificate: Option<Certificate>) -> Self {
         self.certificate = certificate;
         self
     }
 
+    /// Set whether to skip certificate verification.
     pub fn skip_cert_verification(mut self, skip_cert_verification: bool) -> Self {
         self.skip_cert_verification = skip_cert_verification;
         self
     }
 
+    /// Set the client bind address.
     pub fn client_bind_addr(mut self, client_bind_addr: IpAddr) -> Self {
         self.client_bind_addr = client_bind_addr;
         self
     }
 
+    /// Build the connection configuration.
     pub fn build(self) -> ConnectionConfig<'a> {
         ConnectionConfig {
             is_secure: self.is_secure,
@@ -251,6 +275,7 @@ impl<'a> ConnectionConfigBuilder<'a> {
     }
 }
 
+/// Configuration for a connection.
 pub struct ConnectionConfig<'a> {
     is_secure: bool,
     host: &'a str,
@@ -263,46 +288,57 @@ pub struct ConnectionConfig<'a> {
 }
 
 impl<'a> ConnectionConfig<'a> {
+    /// Create a new builder for creating a connection configuration.
     pub fn builder() -> ConnectionConfigBuilder<'a> {
         ConnectionConfigBuilder::new()
     }
 
+    /// Get whether the connection is secure.
     pub fn is_secure(&self) -> bool {
         self.is_secure
     }
 
+    /// Get the host to connect to.
     pub fn host(&self) -> &str {
         self.host
     }
 
+    /// Get the port to connect to.
     pub fn port(&self) -> u16 {
         self.port
     }
 
+    /// Get the protocol to use.
     pub fn protocol(&self) -> &HttpVersion {
         &self.protocol
     }
 
+    /// Get the identity to use.
     pub fn identity(&self) -> &Option<Identity> {
         &self.identity
     }
 
+    /// Get the certificate to use.
     pub fn certificate(&self) -> &Option<Certificate> {
         &self.certificate
     }
 
+    /// Get whether to skip certificate verification.
     pub fn skip_cert_verification(&self) -> bool {
         self.skip_cert_verification
     }
 
+    /// Get the client bind address.
     pub fn client_bind_addr(&self) -> &IpAddr {
         &self.client_bind_addr
     }
 }
 
+/// Factory for creating connections.
 pub struct ConnectionFactory {}
 
 impl ConnectionFactory {
+    /// Create a new connection.
     pub async fn create_connection<'a>(
         protocol: &HttpVersion,
         config: &'a ConnectionConfig<'a>,
