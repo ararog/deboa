@@ -99,7 +99,7 @@ mod tests;
 ///
 /// # Examples
 ///
-/// ``` rust,ignore
+/// ``` rust,no_run
 /// use deboa::{Client, Result};
 ///
 /// #[tokio::main]
@@ -173,7 +173,7 @@ pub type DeboaBuilder = ClientBuilder;
 ///
 /// # Examples
 ///
-/// ``` rust,ignore
+/// ``` rust,no_run
 /// use deboa::{Client, Result, HttpVersion};
 ///
 /// #[tokio::main]
@@ -405,7 +405,7 @@ impl ClientBuilder {
     ///
     /// # Examples
     ///
-    /// ``` rust,ignore
+    /// ``` rust,no_run
     /// use deboa_tokio::{Client, HttpVersion};
     ///
     /// let builder = Client::builder()
@@ -515,7 +515,7 @@ impl ClientBuilder {
     ///
     /// # Examples
     ///
-    /// ``` rust,ignore
+    /// ``` rust,no_run
     /// use deboa_tokio::{Client, Result};
     ///
     /// #[tokio::main]
@@ -682,7 +682,7 @@ impl Client {
     ///
     /// # Examples
     ///
-    /// ``` rust,ignore
+    /// ``` rust,no_run
     /// use deboa::{Client, Result};
     ///
     /// #[tokio::main]
@@ -855,7 +855,7 @@ impl HttpClient for Client {
     ///
     /// ## Simple GET Request
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use deboa::{Client, Result};
     ///
     /// #[tokio::main]
@@ -870,7 +870,7 @@ impl HttpClient for Client {
     ///
     /// ## POST Request with JSON Body
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use deboa::{Client, Result, request::post};
     /// use serde_json::json;
     ///
@@ -899,7 +899,7 @@ impl HttpClient for Client {
     ///
     /// By default, failed requests are not automatically retried. To enable retries:
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use deboa::{Client, Result, request::get};
     ///
     /// #[tokio::main]

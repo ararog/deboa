@@ -14,7 +14,7 @@
 //! <small>Note that development versions, tagged with `-dev`, are not published
 //! and need to be specified as [git dependencies].</small>
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use deboa::{errors::DeboaError, Result};
 //! use vamo::Vamo;
 //! use vamo_macros::bora;

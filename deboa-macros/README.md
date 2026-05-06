@@ -28,7 +28,7 @@ deboa-macros = "0.0.8"
 
 ### other macros
 
-```rust,ignore
+```rust,no_run
 use deboa::errors::DeboaError;
 use deboa_macros::{fetch, get, post, delete};
 use deboa_extras::http::serde::json::JsonBody;

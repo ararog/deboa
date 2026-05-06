@@ -31,15 +31,11 @@ deboa = { version = "0.0.9", features = ["http1", "http2", "tokio-rt"] }
 
 ## Crate features
 
-- tokio-rt (default)
-- smol-rt
 - http1
 - http2 (default)
 - http3
-- tokio-rust-tls (default)
-- tokio-native-tls
-- smol-rust-tls
-- smol-native-tls
+- rust-tls
+- native-tls
 
 ## Usage
 
@@ -86,9 +82,13 @@ A crate with collection of convenience macros for deboa. It is close equivalent 
 apisauce for axios, where one macro does it all, from request to response.
 It used to be the home of bora macro, which has been moved to vamo-macros crate.
 
-### [deboa-tests](https://github.com/ararog/deboa/tree/develop/deboa-tests)
+### [deboa-smol](https://github.com/ararog/deboa/tree/develop/deboa-smol)
 
-A crate with testing utilities to be used with deboa and other crates.
+Deboa implementation for smol runtime.
+
+### [deboa-tokio](https://github.com/ararog/deboa/tree/develop/deboa-tokio)
+
+Deboa implmentation for tokio runtime.
 
 ### [vamo](https://github.com/ararog/deboa/tree/develop/vamo)
 

@@ -14,7 +14,7 @@
 //! <small>Note that development versions, tagged with `-dev`, are not published
 //! and need to be specified as [git dependencies].</small>
 //!
-//! ``` rust,ignore
+//! ``` rust,no_run
 //! use deboa::{Client, Result, errors::DeboaError, request::DeboaRequest};
 //!
 //! #[tokio::main]
@@ -174,7 +174,7 @@ pub type Result<T> = std::result::Result<T, DeboaError>;
 ///
 /// # Examples
 ///
-/// ``` rust,ignore
+/// ``` rust,no_run
 /// use deboa::{Client, Result};
 ///
 /// #[tokio::main]
@@ -241,7 +241,7 @@ pub type DeboaBuilder = ClientBuilder;
 ///
 /// # Examples
 ///
-/// ``` rust,ignore
+/// ``` rust,no_run
 /// use deboa::{Client, Result, HttpVersion};
 ///
 /// #[tokio::main]
@@ -473,7 +473,7 @@ impl ClientBuilder {
     ///
     /// # Examples
     ///
-    /// ``` rust,ignore
+    /// ``` rust,no_run
     /// use deboa::{Client, HttpVersion};
     ///
     /// let builder = Client::builder()
@@ -564,7 +564,7 @@ impl ClientBuilder {
     ///
     /// # Examples
     ///
-    /// ``` rust,ignore
+    /// ``` rust,no_run
     /// use deboa::{Client, Result};
     ///
     /// #[tokio::main]
@@ -731,7 +731,7 @@ impl Client {
     ///
     /// # Examples
     ///
-    /// ``` rust,ignore
+    /// ``` rust,no_run
     /// use deboa::{Client, Result};
     ///
     /// #[tokio::main]
@@ -896,7 +896,7 @@ impl Client {
     ///
     /// ## Simple GET Request
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use deboa::{Client, Result};
     ///
     /// #[tokio::main]
@@ -911,7 +911,7 @@ impl Client {
     ///
     /// ## POST Request with JSON Body
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use deboa::{Client, Result, request::post};
     /// use serde_json::json;
     ///
@@ -940,7 +940,7 @@ impl Client {
     ///
     /// By default, failed requests are not automatically retried. To enable retries:
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use deboa::{Client, Result, request::get};
     ///
     /// #[tokio::main]
