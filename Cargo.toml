@@ -20,6 +20,15 @@ members = [
     "vamo-macros", 
 ]
 
+[workspace.dependencies]
+deboa = { path = "deboa" }
+deboa-extras = { path = "deboa-extras" }
+deboa-fory = { path = "deboa-fory" }
+deboa-macros = { path = "deboa-macros" }
+vamo = { path = "vamo" }
+vamo-macros = { path = "vamo-macros" }
+
+
 [profile.release]
 strip = true
 opt-level = "z" 

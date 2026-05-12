@@ -21,8 +21,8 @@ json = ["deboa-extras/json"]
 
 [dependencies]
 base64 = "0.22.1"
-deboa = { path = "../deboa", default-features = false }
-deboa-extras = { path = "../deboa-extras", default-features = false }
+deboa = { workspace = true, default-features = false }
+deboa-extras = { workspace = true, default-features = false }
 http = "1.4.0"
 serde = "1.0.228"
 url = "2.5.8"

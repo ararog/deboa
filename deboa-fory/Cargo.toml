@@ -15,7 +15,7 @@ rust-version = "1.70.0"
 default = []
 
 [dependencies]
-deboa = { path = "../deboa", default-features = false }
+deboa = { workspace = true, default-features = false }
 fory = "0.14.1"
 fory-core = "0.14.0"
 http = "1.4.0"

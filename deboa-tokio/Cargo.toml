@@ -76,7 +76,7 @@ async-trait = "0.1.89"
 base64 = "0.22.1"
 bytes = { version = "1.11" }
 cookie = "0.15.2"
-deboa = { path = "../deboa" }
+deboa = { workspace = true }
 futures = "0.3.31"
 futures-rustls = { version = "0.26.0", optional = true, default-features = false }
 futures-util = { version = "0.3.31", optional = true, default-features = false }
@@ -130,9 +130,9 @@ criterion = { version = "0.8.2", features = [
   "async",
   "async_tokio",
 ] }
-deboa-extras = { path = "../deboa-extras", default-features = false }
-deboa-fory = { path = "../deboa-fory", default-features = false }
-deboa-macros = { path = "../deboa-macros" }
+deboa-extras = { workspace = true, default-features = false }
+deboa-fory = { workspace = true, default-features = false }
+deboa-macros = { workspace = true }
 easyhttpmock-vetis-tokio = { path = "../../easyhttpmock/easyhttpmock-vetis-tokio", features = [
   "http2",
   "rust-tls",
@@ -146,8 +146,8 @@ tokio = { version = "1.38.1", features = [
   "macros",
   "fs",
 ], default-features = false }
-vamo = { path = "../vamo", default-features = false }
-vamo-macros = { path = "../vamo-macros", features = [
+vamo = { workspace = true, default-features = false }
+vamo-macros = { workspace = true, features = [
   "json",
 ], default-features = false }
 

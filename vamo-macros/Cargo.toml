@@ -24,8 +24,8 @@ msgpack = ["deboa-extras/msgpack"]
 proc-macro = true
 
 [dependencies]
-deboa = { path = "../deboa", default-features = false }
-deboa-extras = { path = "../deboa-extras", default-features = false, optional = true }
+deboa = { workspace = true, default-features = false }
+deboa-extras = { workspace = true, default-features = false, optional = true }
 vamo = { path = "../vamo" }
 proc-macro2 = "1.0.103"
 serde = "1.0.228"

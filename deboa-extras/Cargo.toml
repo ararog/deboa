@@ -48,7 +48,7 @@ base64 = { version = "0.22.1", optional = true, default-features = false }
 brotli = { version = "8.0.2", optional = true, default-features = false }
 bytes = { version = "1.11.1", optional = true, default-features = false }
 ciborium = { version = "0.2.2", optional = true, default-features = false }
-deboa = { path = "../deboa", optional = true, default-features = false }
+deboa = { workspace = true, optional = true, default-features = false }
 flate2 = { version = "1.1.9", optional = true, default-features = false }
 flexbuffers = { version = "25.12.19", optional = true, default-features = false }
 futures = "0.3.31"

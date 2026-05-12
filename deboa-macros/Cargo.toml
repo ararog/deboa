@@ -21,7 +21,7 @@ xml = ["deboa-extras/xml"]
 msgpack = ["deboa-extras/msgpack"]
 
 [dependencies]
-deboa = { path = "../deboa", default-features = false }
-deboa-extras = { path = "../deboa-extras", default-features = false, optional = true }
+deboa = { workspace = true, default-features = false }
+deboa-extras = { workspace = true, default-features = false, optional = true }
 http = "1.4.0"
 serde = "1.0.228"
