@@ -40,8 +40,12 @@ deboa = { version = "0.0.9", features = ["http1", "http2", "tokio-rt"] }
 ## Usage
 
 ```rust
-use deboa::{Client, errors::DeboaError, request::get, Result};
-use deboa_extras::http::serde::json::JsonBody;
+use deboa::{
+    request::{DeboaRequest, FetchWith, get},
+    Result, 
+};
+use deboa_tokio::Client;
+use deboa_extras::http::{self, serde::json::JsonBody};
 
 #[tokio::main]
 async fn main() -> Result<()> {
