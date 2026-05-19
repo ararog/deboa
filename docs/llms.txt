@@ -1,6 +1,6 @@
-# deboa
+# Deboa
 
-> **deboa** is a straightforward, non opinionated, developer-centric HTTP client library for Rust. 
+> **Deboa** is a straightforward, non opinionated, developer-centric HTTP client library for Rust. 
 It offers a rich array of modern features—from flexible authentication and serialization formats 
 to runtime compatibility and middleware support—while maintaining simplicity and ease of use. 
 It’s especially well-suited for Rust projects that require a lightweight, efficient HTTP client 
@@ -13,7 +13,7 @@ without sacrificing control or extensibility.
 deboa = { version = "0.0.9", features = ["http1", "tokio-rt"] }
 ```
 
-## quickstart
+## Quickstart
 
 ```rust
 use deboa::{Client, request::get, Result};
@@ -54,6 +54,8 @@ async fn main() -> Result<(), Result> {
 ## Crates
 
 - [deboa](https://crates.io/crates/deboa)
+- [deboa-tokio](https://crates.io/crates/deboa-tokio)
+- [deboa-smol](https://crates.io/crates/deboa-smol)
 - [deboa_macros](https://crates.io/crates/deboa_macros)
 - [deboa_extras](https://crates.io/crates/deboa_extras)
 - [vamo](https://crates.io/crates/vamo)

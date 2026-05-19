@@ -20,7 +20,7 @@ This release has a major api change. Please check the [migration guide](https://
 
 ## Install
 
-```rust
+```toml
 deboa = { version = "0.0.9", features = ["http1", "http2", "tokio-rt"] }
 ```
 
