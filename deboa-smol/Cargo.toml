@@ -87,9 +87,7 @@ http = "1"
 http-body = "1"
 http-body-util = "0.1"
 hyper = { version = "1.8.1", features = ["client"], default-features = false }
-hyper-body-utils = { path = "../../hyper-body-utils", features = [
-  "smol-rt",
-], default-features = false }
+hyper-body-utils = { version = "0.1.7" }
 hyper-util = { version = "0.1.20", features = [
   "client",
   "client-legacy",

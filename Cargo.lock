@@ -994,7 +994,7 @@ dependencies = [
  "http-body",
  "http-body-util",
  "hyper",
- "hyper-body-utils 0.1.6-beta.7",
+ "hyper-body-utils",
  "hyper-util",
  "indexmap",
  "log",
@@ -1033,7 +1033,7 @@ dependencies = [
  "http",
  "http-body-util",
  "hyper",
- "hyper-body-utils 0.1.6-beta.6",
+ "hyper-body-utils",
  "hyper-util",
  "mime",
  "mime_typed",
@@ -1099,7 +1099,7 @@ dependencies = [
  "http-body",
  "http-body-util",
  "hyper",
- "hyper-body-utils 0.1.6-beta.7",
+ "hyper-body-utils",
  "hyper-util",
  "indexmap",
  "log",
@@ -1157,7 +1157,7 @@ dependencies = [
  "http-body",
  "http-body-util",
  "hyper",
- "hyper-body-utils 0.1.6-beta.7",
+ "hyper-body-utils",
  "hyper-util",
  "indexmap",
  "log",
@@ -1977,21 +1977,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hotpath"
-version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7d9982fcb4356a5260502f0e646411ec1feb2962cc98c230777104a8d1c5ed3"
-dependencies = [
- "hotpath-macros",
-]
-
-[[package]]
-name = "hotpath-macros"
-version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4398eddb78466298f1ddcc739abbbd8a942e541d1972c7590bd83de364e626e0"
-
-[[package]]
 name = "http"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2069,20 +2054,9 @@ dependencies = [
 
 [[package]]
 name = "hyper-body-utils"
-version = "0.1.6-beta.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4eff608807e6c410941de3e22c17044fecec132e20dc21f33247cc31509f14f"
-dependencies = [
- "bytes",
- "futures",
- "hotpath",
- "http-body-util",
- "hyper",
-]
-
-[[package]]
-name = "hyper-body-utils"
-version = "0.1.6-beta.7"
+checksum = "6119ecb58bafa9e02715d3ad46be58c769065082e8bf92291cc8a6e1dabc01ca"
 dependencies = [
  "bytes",
  "futures",
@@ -2090,11 +2064,6 @@ dependencies = [
  "h3-quinn",
  "http-body-util",
  "hyper",
- "macro_rules_attribute",
- "smol",
- "smol-macros",
- "tokio",
- "tokio-util",
 ]
 
 [[package]]
@@ -4849,7 +4818,7 @@ dependencies = [
  "futures-util",
  "http",
  "http-body-util",
- "hyper-body-utils 0.1.6-beta.7",
+ "hyper-body-utils",
  "log",
  "mimalloc",
  "radix_trie",
@@ -4881,7 +4850,7 @@ dependencies = [
  "http",
  "http-body-util",
  "hyper",
- "hyper-body-utils 0.1.6-beta.7",
+ "hyper-body-utils",
  "hyper-util",
  "log",
  "macro_rules_attribute",
@@ -4918,7 +4887,7 @@ dependencies = [
  "http",
  "http-body-util",
  "hyper",
- "hyper-body-utils 0.1.6-beta.7",
+ "hyper-body-utils",
  "hyper-util",
  "log",
  "mimalloc",
