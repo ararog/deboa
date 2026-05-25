@@ -32,9 +32,12 @@ async fn test_only_patch_minimal() -> Result<(), Box<dyn Error>> {
 #[apply(test!)]
 async fn test_only_patch_minimal_headers() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
-    let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
-    let headers = vec![("Content-Type", "application/json")];
-    let response = patch!(data, "https://jsonplaceholder.typicode.com/posts/1", headers, &client);
+    let response = patch!(
+        data => Post { id: 1, title: "title".to_string(), body: "body".to_string() },
+        url => "https://jsonplaceholder.typicode.com/posts/1",
+        headers => vec![("Content-Type", "application/json")],
+        client => &client
+    );
     assert_eq!(response.status(), 200);
     Ok(())
 }
@@ -53,7 +56,12 @@ async fn test_patch_with_headers() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
-    let response = patch!(data, "https://jsonplaceholder.typicode.com/posts/1", headers, &client);
+    let response = patch!(
+        data => data,
+        url => "https://jsonplaceholder.typicode.com/posts/1",
+        headers => headers,
+        client => &client
+    );
     assert_eq!(response.status(), 200);
     Ok(())
 }

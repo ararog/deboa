@@ -34,10 +34,26 @@
 ///
 /// # Example
 ///
-/// ```compile_fail
-/// let mut client = Client::new();
-/// let response = get!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
-/// assert_eq!(response.len(), 100);
+/// ```rust, no_run
+/// use deboa_tokio::Client;
+/// use deboa_macros::get;
+/// use deboa_extras::http::serde::json::JsonBody;
+///
+/// #[derive(serde::Deserialize)]
+/// struct Post {
+///     id: u32,
+///     title: String,
+///     body: String,
+///     userId: u32,
+/// }
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let mut client = Client::default();
+///     let response = get!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
+///     assert_eq!(response.len(), 100);
+///     Ok(())
+/// }
 /// ```
 macro_rules! get {
     ($url:expr, &$client:ident) => {
@@ -116,23 +132,73 @@ macro_rules! get {
 ///
 /// ## Without response body deserialization
 ///
-/// ```compile_fail
-/// let client = Client::new();
-/// let response = post!(data,
-///     JsonBody,
-///     "https://jsonplaceholder.typicode.com/posts",
-///     vec!(("Content-Type", "application/json")),
-///     &client
-/// );
-/// assert_eq!(response.id, 1);
+/// ```rust, no_run
+/// use deboa_macros::post;
+/// use deboa_extras::http::serde::json::JsonBody;
+/// use deboa_tokio::Client;
+///
+/// #[derive(serde::Serialize)]
+/// struct Post {
+///     title: String,
+///     body: String,
+///     userId: u32,
+/// }
+///
+/// #[derive(serde::Deserialize)]
+/// struct CreatedPost {
+///     id: u32,
+/// }
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let client = Client::default();
+///     let data = Post {
+///         title: "foo".to_string(),
+///         body: "bar".to_string(),
+///         userId: 1,
+///     };
+///     let response = post!(
+///         data,
+///         JsonBody,
+///         "https://jsonplaceholder.typicode.com/posts",
+///         vec!(("Content-Type", "application/json")),
+///         &client
+///     );
+///     Ok(())
+/// }
 /// ```
 ///
 /// ## With response body deserialization
 ///
-/// ```compile_fail
-/// let client = Client::new();
-/// let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Post);
-/// assert_eq!(response.id, 1);
+/// ```rust, no_run
+/// use deboa_macros::post;
+/// use deboa_extras::http::serde::json::JsonBody;
+/// use deboa_tokio::Client;
+///
+/// #[derive(serde::Serialize)]
+/// struct Post {
+///     title: String,
+///     body: String,
+///     userId: u32,
+/// }
+///
+/// #[derive(serde::Deserialize)]
+/// struct CreatedPost {
+///     id: u32,
+/// }
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let client = Client::default();
+///     let data = Post {
+///         title: "foo".to_string(),
+///         body: "bar".to_string(),
+///         userId: 1,
+///     };
+///     let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &client, JsonBody, CreatedPost);
+///     assert_eq!(response.id, 1);
+///     Ok(())
+/// }
 /// ```
 macro_rules! post {
     ($input:ident, $url:literal, &$client:ident) => {
@@ -205,7 +271,8 @@ macro_rules! post {
                 .build()?,
         )
         .await?
-        .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+        .await?
     };
 
     ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
@@ -217,7 +284,8 @@ macro_rules! post {
                 .build()?,
         )
         .await?
-        .body_as::<$res_body_ty, $res_ty>($res_body_ty)?
+        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
+        .await?
     };
 }
 
@@ -243,10 +311,29 @@ macro_rules! post {
 ///
 /// # Example
 ///
-/// ```compile_fail
-/// let client = Client::new();
-/// let response = put!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", &client);
-/// assert_eq!(response.id, 1);
+/// ```rust, no_run
+/// use deboa_macros::put;
+/// use deboa_extras::http::serde::json::JsonBody;
+/// use deboa_tokio::Client;
+///
+/// #[derive(serde::Serialize)]
+/// struct Post {
+///     title: String,
+///     body: String,
+///     userId: u32,
+/// }
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let client = Client::default();
+///     let data = Post {
+///         title: "foo".to_string(),
+///         body: "bar".to_string(),
+///         userId: 1,
+///     };
+///     put!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", &client);
+///     Ok(())
+/// }
 /// ```
 macro_rules! put {
     ($input:ident, $url:literal, &$client:ident) => {
@@ -359,27 +446,35 @@ macro_rules! put {
 ///
 /// # Example
 ///
-/// ```compile_fail
-/// let client = Client::new();
-/// let response = patch!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", &client);
-/// assert_eq!(response.id, 1);
+/// ```rust, no_run
+/// use deboa_tokio::Client;
+/// use deboa_macros::patch;
+/// use deboa_extras::http::serde::json::JsonBody;
+///
+/// #[derive(serde::Serialize)]
+/// struct Post {
+///     title: String,
+///     body: String,
+///     userId: u32,
+/// }
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let client = Client::default();
+///     let data = Post {
+///         title: "foo".to_string(),
+///         body: "bar".to_string(),
+///         userId: 1,
+///     };
+///     patch!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", &client);
+///     Ok(())
+/// }
 /// ```
 macro_rules! patch {
     ($input:ident, $url:literal, &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::patch($url)?
-                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                .build()?,
-        )
-        .await?
-    };
-
-    ($input:ident, $url:expr, $headers:expr, &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::patch($url)?
-                .headers($headers)
                 .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
                 .build()?,
         )
@@ -423,6 +518,17 @@ macro_rules! patch {
             deboa::request::DeboaRequest::patch($url)?
                 .headers($headers)
                 .body_as($req_body_ty, $input)?
+                .build()?,
+        )
+        .await?
+    };
+
+    (data => $input:expr, url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
+        deboa::HttpClient::execute(
+            &$client,
+            deboa::request::DeboaRequest::patch($url)?
+                .headers($headers)
+                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
                 .build()?,
         )
         .await?
@@ -474,10 +580,21 @@ macro_rules! patch {
 ///
 /// # Example
 ///
-/// ```ignore
-/// let client = Client::new();
-/// let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
-/// assert_eq!(response.id, 1);
+/// ```rust, no_run
+/// use deboa_macros::delete;
+/// use deboa_tokio::Client;
+///
+/// #[derive(serde::Deserialize)]
+/// struct Post {
+///     id: u32,
+/// }
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let client = Client::default();
+///     let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
+///     Ok(())
+/// }
 /// ```
 macro_rules! delete {
     ($url:literal, &$client:ident) => {
@@ -527,10 +644,23 @@ macro_rules! delete {
 ///
 /// # Example
 ///
-/// ```ignore
-/// let client = Client::new();
-/// let response = fetch!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Post);
-/// assert_eq!(response.id, 1);
+/// ```rust, no_run
+/// use deboa_macros::fetch;
+/// use deboa_extras::http::serde::json::JsonBody;
+/// use deboa_tokio::Client;
+///
+/// #[derive(serde::Deserialize)]
+/// struct Post {
+///     id: u32,
+/// }
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let client = Client::default();
+///     let response = fetch!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Post);
+///     assert_eq!(response.id, 1);
+///     Ok(())
+/// }
 /// ```
 macro_rules! fetch {
     ($url:expr, &$client:ident) => {
@@ -601,10 +731,16 @@ macro_rules! fetch {
 ///
 /// # Example
 ///
-/// ```ignore
-/// let client = Client::new();
-/// let response = submit!("POST", "user=deboa", "https://jsonplaceholder.typicode.com/posts", &client);
-/// assert_eq!(response.id, 1);
+/// ```rust, no_run
+/// use deboa_macros::submit;
+/// use deboa_tokio::Client;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let client = Client::default();
+///     submit!(http::Method::POST, "user=deboa", "https://jsonplaceholder.typicode.com/posts", &client);
+///     Ok(())
+/// }
 /// ```
 macro_rules! submit {
     ($method:expr, $input:expr, $url:expr, &$client:ident) => {
@@ -649,10 +785,16 @@ macro_rules! submit {
 ///
 /// # Example
 ///
-/// ```compile_fail
-/// let client = Client::new();
-/// let response = stream!("https://jsonplaceholder.typicode.com/posts", &client);
-/// assert_eq!(response.id, 1);
+/// ```rust, no_run
+/// use deboa_macros::stream;
+/// use deboa_tokio::Client;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let client = Client::default();
+///     let response = stream!("https://jsonplaceholder.typicode.com/posts", &client);
+///     Ok(())
+/// }
 /// ```
 macro_rules! stream {
     ($url:expr, &$client:ident) => {

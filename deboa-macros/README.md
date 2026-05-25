@@ -32,6 +32,7 @@ deboa-macros = "0.0.8"
 use deboa::errors::DeboaError;
 use deboa_macros::{fetch, get, post, delete};
 use deboa_extras::http::serde::json::JsonBody;
+use deboa_tokio::Client;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -41,26 +42,30 @@ pub struct Post {
     pub body: String,
 }
 
-let client = Deboa::default();
+#[tokio::main]
+async fn main() -> Result<(), DeboaError> {
+    let client = Client::default();
 
-// fetch macro
-let response: Vec<Post> = fetch!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
+    // fetch macro
+    let response: Vec<Post> = fetch!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
 
-// get macro, returning posts serialized as json
-let response: Vec<Post> = get!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
+    // get macro, returning posts serialized as json
+    // let response: Vec<Post> = get!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
 
-//get macro, returning text
-let response: String = get!("https://rust-lang.org", &client);
+    // get macro, returning text
+    // let response: String = get!("https://rust-lang.org", &client);
 
-//get macro with headers
-let response: String = get!("https://rust-lang.org", vec![("User-Agent", "deboa")], &client);
+    // get macro with headers
+    // let response: String = get!("https://rust-lang.org", vec![("User-Agent", "deboa")], &client);
 
-// post macro
-let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &client);
+    // post macro
+    // let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &client);
 
-// delete macro
-let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
-
+    // delete macro
+    // let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
+    
+    Ok(())
+}
 ```
 
 ## License

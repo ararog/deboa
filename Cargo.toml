@@ -25,6 +25,7 @@ deboa = { path = "deboa" }
 deboa-extras = { path = "deboa-extras" }
 deboa-fory = { path = "deboa-fory" }
 deboa-macros = { path = "deboa-macros" }
+deboa-tokio = { path = "deboa-tokio" }
 vamo = { path = "vamo" }
 vamo-macros = { path = "vamo-macros" }
 

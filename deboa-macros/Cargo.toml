@@ -25,3 +25,7 @@ deboa = { workspace = true, default-features = false }
 deboa-extras = { workspace = true, default-features = false, optional = true }
 http = "1.4.0"
 serde = "1.0.228"
+
+[dev-dependencies]
+deboa-tokio = { workspace = true }
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
