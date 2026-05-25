@@ -34,3 +34,7 @@ quote = "1.0.41"
 http = "1.4.0"
 regex = "1.9.6"
 titlecase = "2.2.1"
+
+[dev-dependencies]
+deboa-tokio = { workspace = true }
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }

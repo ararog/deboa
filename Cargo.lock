@@ -4783,6 +4783,7 @@ version = "0.0.9-beta.1"
 dependencies = [
  "deboa",
  "deboa-extras",
+ "deboa-tokio",
  "http",
  "proc-macro2",
  "quote",
@@ -4790,6 +4791,7 @@ dependencies = [
  "serde",
  "syn 2.0.117",
  "titlecase",
+ "tokio",
  "vamo",
 ]
 

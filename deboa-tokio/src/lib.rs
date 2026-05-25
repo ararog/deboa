@@ -100,11 +100,12 @@ mod tests;
 /// # Examples
 ///
 /// ``` rust,no_run
-/// use deboa::{Client, Result};
+/// use deboa::{HttpClient, Result};
+/// use deboa_tokio::Client;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
-///     let client = Client::new();
+///     let client = Client::default();
 ///     let request = &client << "https://httpbin.org/get";
 ///     // do something with the request
 ///     Ok(())
@@ -174,7 +175,8 @@ pub type DeboaBuilder = ClientBuilder;
 /// # Examples
 ///
 /// ``` rust,no_run
-/// use deboa::{Client, Result, HttpVersion};
+/// use deboa::Result;
+/// use deboa_tokio::{Client, HttpVersion};
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -516,7 +518,8 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` rust,no_run
-    /// use deboa_tokio::{Client, Result};
+    /// use deboa::Result;
+    /// use deboa_tokio::Client;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
@@ -575,7 +578,8 @@ pub type Deboa = Client;
 /// ## Basic Usage
 ///
 /// ``` ignore
-/// use deboa_tokio::{Client, Result};
+/// use deboa::Result;
+/// use deboa_tokio::Client;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<()> {
@@ -683,11 +687,12 @@ impl Client {
     /// # Examples
     ///
     /// ``` rust,no_run
-    /// use deboa::{Client, Result};
+    /// use deboa::Result;
+    /// use deboa_tokio::Client;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
-    ///   let client = Client::new();
+    ///   let client = Client::default();
     ///   // client is ready to make requests
     ///   Ok(())
     /// }
@@ -856,11 +861,12 @@ impl HttpClient for Client {
     /// ## Simple GET Request
     ///
     /// ```rust,no_run
-    /// use deboa::{Client, Result};
+    /// use deboa::{HttpClient, Result};
+    /// use deboa_tokio::Client;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
-    ///   let mut client = Client::new();
+    ///   let mut client = Client::default();
     ///   let response = client.execute("https://httpbin.org/get").await?;
     ///   println!("Status: {}", response.status());
     ///   println!("Body: {}", response.text().await?);
@@ -871,16 +877,17 @@ impl HttpClient for Client {
     /// ## POST Request with JSON Body
     ///
     /// ```rust,no_run
-    /// use deboa::{Client, Result, request::post};
-    /// use serde_json::json;
+    /// use deboa::{HttpClient, Result, request::post};
+    /// use deboa_tokio::Client;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
-    ///   let mut client = Client::new();
+    ///   let mut client = Client::default();
     ///   let response = client
     ///     .execute(
-    ///         post("https://httpbin.org/post")
-    ///             .text("text")?
+    ///         post("https://httpbin.org/post")?
+    ///             .text("text")
+    ///             .build()?
     ///     )
     ///     .await?;
     ///   Ok(())
@@ -900,12 +907,13 @@ impl HttpClient for Client {
     /// By default, failed requests are not automatically retried. To enable retries:
     ///
     /// ```rust,no_run
-    /// use deboa::{Client, Result, request::get};
+    /// use deboa::{HttpClient, Result, request::get};
+    /// use deboa_tokio::Client;
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<()> {
-    ///   let mut client = Client::new();
-    ///   let request = get("https://example.com").retries(3); // Retry up to 3 times
+    ///   let mut client = Client::default();
+    ///   let request = get("https://example.com")?.retries(3).build()?; // Retry up to 3 times
     ///   let response = client.execute(request).await?;
     ///   Ok(())
     /// }

@@ -50,7 +50,7 @@ where
     ///
     /// # Examples
     ///
-    /// ``` rust, ignore
+    /// ```rust, ignore
     /// let mut vamo = Vamo::<deboa_tokio::Client>::new("https://api.example.com")?;
     /// let response = vamo.get("/path").send().await?;
     /// ```

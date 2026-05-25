@@ -22,7 +22,7 @@
 //! ```rust,no_run
 //! use serde::{Serialize, Deserialize};
 //! use vamo::resource::Resource;
-//! use deboa::{Result, client::serde::RequestBody};
+//! use deboa::{Result, serde::RequestBody};
 //! use deboa_extras::http::serde::json::JsonBody;
 //!
 //! #[derive(Debug, Serialize, Deserialize)]
@@ -62,7 +62,7 @@ use serde::Serialize;
 /// ```rust,no_run
 /// use serde::{Serialize, Deserialize};
 /// use vamo::resource::Resource;
-/// use deboa::{Result, client::serde::RequestBody};
+/// use deboa::{Result, serde::RequestBody};
 /// use deboa_extras::http::serde::json::JsonBody;
 ///
 /// #[derive(Debug, Serialize, Deserialize)]

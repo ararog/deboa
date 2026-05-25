@@ -29,7 +29,6 @@ deboa-tokio = { path = "deboa-tokio" }
 vamo = { path = "vamo" }
 vamo-macros = { path = "vamo-macros" }
 
-
 [profile.release]
 strip = true
 opt-level = "z" 

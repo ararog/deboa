@@ -122,10 +122,12 @@ pub type Result<T> = std::result::Result<T, DeboaError>;
 /// ``` rust,no_run
 /// use deboa::Result;
 /// use deboa_smol::Client;
+/// use macro_rules_attribute::apply;
+/// use smol_macros::main;
 ///
-/// #[tokio::main]
+/// #[apply(main!)]
 /// async fn main() -> Result<()> {
-///     let client = Client::new();
+///     let client = Client::default();
 ///     let request = &client << "https://httpbin.org/get";
 ///     // do something with the request
 ///     Ok(())
@@ -197,8 +199,10 @@ pub type DeboaBuilder = ClientBuilder;
 /// ``` rust,no_run
 /// use deboa::Result;
 /// use deboa_smol::{Client, HttpVersion};
+/// use macro_rules_attribute::apply;
+/// use smol_macros::main;
 ///
-/// #[tokio::main]
+/// #[apply(main!)]
 /// async fn main() -> Result<()> {
 ///   let client = Client::builder()
 ///     .connection_timeout(30)  // 30 seconds
@@ -294,10 +298,12 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` compile_fail
-    /// use deboa::{Client, Result, Identity};
+    /// use deboa::{Result, Identity};
+    /// use deboa_smol::Client;
+    /// use macro_rules_attribute::apply;
+    /// use smol_macros::main;
     ///
-    /// #[tokio::main]
-    ///
+    /// #[apply(main!)]
     /// async fn main() -> Result<()> {
     ///     let cert = Identity::from_pem_file("client.pem")?;
     ///     let builder = Client::builder()
@@ -324,10 +330,12 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` compile_fail
-    /// use deboa_smol::{Client, Identity, Result};
+    /// use deboa::{Identity, Result};
+    /// use deboa_smol::Client;
+    /// use macro_rules_attribute::apply;
+    /// use smol_macros::main;
     ///
-    /// #[tokio::main]
-    ///
+    /// #[apply(main!)]
     /// async fn main() -> Result<()> {
     ///     let cert = Identity::new("client.pem", Some("pw"))?;
     ///     let builder = Client::builder()
@@ -350,10 +358,12 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` compile_fail
-    /// use deboa_smol::{Client, Certificate, Result};
+    /// use deboa::{Certificate, Result};
+    /// use deboa_smol::Client;
+    /// use macro_rules_attribute::apply;
+    /// use smol_macros::main;
     ///
-    /// #[tokio::main]
-    ///
+    /// #[apply(main!)]
     /// async fn main() -> Result<()> {
     ///     let cert = Certificate::new("client.pem")?;
     ///     let builder = Client::builder()
@@ -382,7 +392,8 @@ impl ClientBuilder {
     /// ## Automatic Retries
     ///
     /// ```ignore
-    /// use deboa::{Client, Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
+    /// use deboa::{Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
+    /// use deboa_smol::Client;
     ///
     /// struct AddAuthorization;
     ///
@@ -399,7 +410,10 @@ impl ClientBuilder {
     ///     }
     /// }
     ///
-    /// #[tokio::main]
+    /// use macro_rules_attribute::apply;
+    /// use smol_macros::main;
+    ///
+    /// #[apply(main!)]
     /// async fn main() -> Result<()> {
     ///     let client = Client::builder()
     ///         .catch(AddAuthorization)
@@ -539,8 +553,10 @@ impl ClientBuilder {
     ///
     /// ``` rust,no_run
     /// use deboa_smol::{Client, Result};
+    /// use macro_rules_attribute::apply;
+    /// use smol_macros::main;
     ///
-    /// #[tokio::main]
+    /// #[apply(main!)]
     /// async fn main() -> Result<()> {
     ///   let client = Client::builder()
     ///     .connection_timeout(10)
@@ -598,8 +614,10 @@ pub type Deboa = Client;
 ///
 /// ``` ignore
 /// use deboa::{Client, Result};
+/// use macro_rules_attribute::apply;
+/// use smol_macros::main;
 ///
-/// #[tokio::main]
+/// #[apply(main!)]
 /// async fn main() -> Result<()> {
 ///   // Create a new client with default settings
 ///   let client = Client::new();
@@ -705,11 +723,14 @@ impl Client {
     /// # Examples
     ///
     /// ``` rust,no_run
-    /// use deboa::{Client, Result};
+    /// use deboa::Result;
+    /// use deboa_smol::Client;
+    /// use macro_rules_attribute::apply;
+    /// use smol_macros::main;
     ///
-    /// #[tokio::main]
+    /// #[apply(main!)]
     /// async fn main() -> Result<()> {
-    ///   let client = Client::new();
+    ///   let client = Client::default();
     ///   // client is ready to make requests
     ///   Ok(())
     /// }
@@ -878,11 +899,14 @@ impl HttpClient for Client {
     /// ## Simple GET Request
     ///
     /// ```rust,no_run
-    /// use deboa::{Client, Result};
+    /// use deboa::{HttpClient, Result};
+    /// use deboa_smol::Client;
+    /// use macro_rules_attribute::apply;
+    /// use smol_macros::main;
     ///
-    /// #[tokio::main]
+    /// #[apply(main!)]
     /// async fn main() -> Result<()> {
-    ///   let mut client = Client::new();
+    ///   let mut client = Client::default();
     ///   let response = client.execute("https://httpbin.org/get").await?;
     ///   println!("Status: {}", response.status());
     ///   println!("Body: {}", response.text().await?);
@@ -893,16 +917,19 @@ impl HttpClient for Client {
     /// ## POST Request with JSON Body
     ///
     /// ```rust,no_run
-    /// use deboa::{Client, Result, request::post};
-    /// use serde_json::json;
+    /// use deboa::{HttpClient, Result, request::post};
+    /// use deboa_smol::Client;
+    /// use macro_rules_attribute::apply;
+    /// use smol_macros::main;
     ///
-    /// #[tokio::main]
+    /// #[apply(main!)]    
     /// async fn main() -> Result<()> {
-    ///   let mut client = Client::new();
+    ///   let mut client = Client::default();
     ///   let response = client
     ///     .execute(
-    ///         post("https://httpbin.org/post")
-    ///             .text("text")?
+    ///         post("https://httpbin.org/post")?
+    ///             .text("text")
+    ///             .build()?
     ///     )
     ///     .await?;
     ///   Ok(())
@@ -922,12 +949,15 @@ impl HttpClient for Client {
     /// By default, failed requests are not automatically retried. To enable retries:
     ///
     /// ```rust,no_run
-    /// use deboa::{Client, Result, request::get};
+    /// use deboa::{HttpClient, Result, request::get};
+    /// use deboa_smol::Client;
+    /// use macro_rules_attribute::apply;
+    /// use smol_macros::main;
     ///
-    /// #[tokio::main]
+    /// #[apply(main!)]
     /// async fn main() -> Result<()> {
-    ///   let mut client = Client::new();
-    ///   let request = get("https://example.com").retries(3); // Retry up to 3 times
+    ///   let mut client = Client::default();
+    ///   let request = get("https://example.com")?.retries(3).build()?; // Retry up to 3 times
     ///   let response = client.execute(request).await?;
     ///   Ok(())
     /// }
