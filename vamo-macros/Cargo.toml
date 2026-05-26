@@ -1,16 +1,16 @@
 [package]
 name = "vamo-macros"
-edition = "2021"
-version = "0.0.9-beta.1"
-authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
+version = "0.0.9-beta.4"
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
 description = "Macros for quick client development using vamo"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/ararog/deboa"
+license.workspace = true
 readme = "README.md"
 keywords = ["compiler-plugin", "macros", "resources", "http", "rest"]
-exclude = [".travis.yml"]
 publish = true
-rust-version = "1.75.0"
+rust-version.workspace = true
 
 [features]
 default = ["json"]
@@ -26,7 +26,7 @@ proc-macro = true
 [dependencies]
 deboa = { workspace = true, default-features = false }
 deboa-extras = { workspace = true, default-features = false, optional = true }
-vamo = { path = "../vamo" }
+vamo = { workspace = true }
 proc-macro2 = "1.0.103"
 serde = "1.0.228"
 syn = { version = "2.0", features = ["full"] }

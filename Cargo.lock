@@ -976,10 +976,8 @@ checksum = "d7a1e2f27636f116493b8b860f5546edb47c8d8f8ea73e1d2a20be88e28d1fea"
 
 [[package]]
 name = "deboa"
-version = "0.1.0-beta.16"
+version = "0.1.0-beta.17"
 dependencies = [
- "async-executor",
- "async-std-resolver",
  "async-trait",
  "base64",
  "bytes",
@@ -998,15 +996,12 @@ dependencies = [
  "hyper-util",
  "indexmap",
  "log",
- "macro_rules_attribute",
  "mime",
  "minimime",
  "mockall",
  "multer",
- "quinn",
  "rand 0.9.4",
  "regex",
- "send_wrapper",
  "serde",
  "smol",
  "thiserror 2.0.18",
@@ -1014,12 +1009,11 @@ dependencies = [
  "tokio",
  "url",
  "urlencoding",
- "webpki-roots",
 ]
 
 [[package]]
 name = "deboa-extras"
-version = "0.0.9-beta.9"
+version = "0.0.9-beta.10"
 dependencies = [
  "base64",
  "brotli",
@@ -1053,7 +1047,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-fory"
-version = "0.1.5"
+version = "0.1.6-beta.1"
 dependencies = [
  "deboa",
  "fory",
@@ -1063,7 +1057,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-macros"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.3"
 dependencies = [
  "deboa",
  "deboa-extras",
@@ -1075,7 +1069,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-smol"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -1134,7 +1128,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-tokio"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -3818,12 +3812,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 
 [[package]]
-name = "send_wrapper"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd0b0ec5f1c1ca621c432a25813d8d60c88abe6d3e08a3eb9cf37d97a0fe3d73"
-
-[[package]]
 name = "serde"
 version = "1.0.228"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4767,7 +4755,7 @@ dependencies = [
 
 [[package]]
 name = "vamo"
-version = "0.0.9-beta.1"
+version = "0.0.9-beta.4"
 dependencies = [
  "base64",
  "deboa",
@@ -4779,7 +4767,7 @@ dependencies = [
 
 [[package]]
 name = "vamo-macros"
-version = "0.0.9-beta.1"
+version = "0.0.9-beta.4"
 dependencies = [
  "deboa",
  "deboa-extras",
@@ -4809,7 +4797,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vetis"
-version = "0.1.4-beta.5"
+version = "0.1.4-beta.7"
 dependencies = [
  "argon2",
  "async-lock",
@@ -4846,7 +4834,6 @@ dependencies = [
  "async-signal",
  "bytes",
  "clap",
- "deboa",
  "env_logger",
  "futures-lite",
  "futures-rustls",
@@ -4884,7 +4871,6 @@ dependencies = [
  "async-lock",
  "bytes",
  "clap",
- "deboa",
  "env_logger",
  "futures-rustls",
  "futures-util",

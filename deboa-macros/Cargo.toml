@@ -1,16 +1,16 @@
 [package]
 name = "deboa-macros"
-edition = "2021"
-version = "0.1.0-beta.1"
-authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
+version = "0.1.0-beta.3"
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
 description = "Request macros for the deboa HTTP client"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/ararog/deboa"
 readme = "README.md"
+license.workspace = true
 keywords = ["compiler-plugin", "macros"]
-exclude = [".travis.yml"]
 publish = true
-rust-version = "1.75.0"
+rust-version.workspace = true
 
 [features]
 default = [

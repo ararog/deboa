@@ -20,14 +20,23 @@ members = [
     "vamo-macros", 
 ]
 
+[workspace.package]
+edition = "2021"
+authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
+repository = "https://github.com/ararog/deboa"
+homepage = "https://github.com/ararog/deboa"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+rust-version = "1.75.0"
+
 [workspace.dependencies]
-deboa = { path = "deboa" }
-deboa-extras = { path = "deboa-extras" }
+deboa = { version = "0.1.0-beta.17", path = "deboa" }
+deboa-extras = { version = "0.0.9-beta.10", path = "deboa-extras" }
 deboa-fory = { path = "deboa-fory" }
-deboa-macros = { path = "deboa-macros" }
+deboa-macros = { version = "0.1.0-beta.2", path = "deboa-macros" }
 deboa-tokio = { path = "deboa-tokio" }
-vamo = { path = "vamo" }
-vamo-macros = { path = "vamo-macros" }
+vamo = { version = "0.0.9-beta.4", path = "vamo" }
+vamo-macros = { version = "0.0.9-beta.4", path = "vamo-macros" }
 
 [profile.release]
 strip = true

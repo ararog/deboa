@@ -1,15 +1,16 @@
 [package]
 name = "deboa-fory"
-version = "0.1.5"
-edition = "2021"
-authors = ["Rogerio Araújo <rogerio.araujo@gmail.com>"]
-repository = "https://github.com/ararog/deboa"
-homepage = "https://github.com/ararog/deboa"
+version = "0.1.6-beta.1"
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
 description = "Apache Fory serializer support for Deboa"
-readme = "README.md"
-license = "MIT OR Apache-2.0"
+readme.workspace = true
+license.workspace = true
 keywords = ["http", "networking", "rest", "serializer", "fory"]
-rust-version = "1.70.0"
+publish = true
+rust-version.workspace = true
 
 [features]
 default = []
