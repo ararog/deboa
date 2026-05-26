@@ -125,7 +125,7 @@ criterion = { version = "0.8.2", features = [
 deboa-extras = { workspace = true, default-features = false }
 deboa-fory = { workspace = true, default-features = false }
 deboa-macros = { workspace = true }
-easyhttpmock-vetis-smol = { path = "../../easyhttpmock/easyhttpmock-vetis-smol", features = [
+easyhttpmock-vetis-smol = { version = "0.1.0-beta.1", features = [
   "http2",
   "rust-tls",
 ], default-features = false }
