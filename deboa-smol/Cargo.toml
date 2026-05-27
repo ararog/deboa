@@ -110,7 +110,7 @@ smol = { version = "2.0.2", default-features = false }
 smol-hyper = { version = "0.1.0", default-features = false }
 smol-macros = { version = "0.1.1", default-features = false }
 thiserror = "2.0.17"
-time = "=0.2.27"
+time = "=0.3.41"
 trust-dns-resolver = { version = "0.23.2", default-features = false }
 url = "2.5.8"
 urlencoding = "2.1.3"
