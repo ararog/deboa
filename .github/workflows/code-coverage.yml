@@ -9,7 +9,7 @@ jobs:
   cover:
     runs-on: ubuntu-latest
     container:
-      image: xd009642/tarpaulin:develop-slim
+      image: xd009642/tarpaulin:develop
       options: --security-opt seccomp=unconfined --hostname localhost
     services:
       redis:
