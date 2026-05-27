@@ -18,7 +18,7 @@ pub struct Post {
 #[apply(test!)]
 async fn test_get_minimal() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
-    let response = get!("https://jsonplaceholder.typicode.com/posts", &client);
+    let response = get!(url => "https://jsonplaceholder.typicode.com/posts", client => &client);
     assert!(!response.is_empty());
     Ok(())
 }
@@ -27,9 +27,9 @@ async fn test_get_minimal() -> Result<(), Box<dyn Error>> {
 async fn test_get_minimal_headers() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
     let response = get!(
-        "https://jsonplaceholder.typicode.com/posts",
-        vec![("Content-Type", "application/json")],
-        &client
+        url => "https://jsonplaceholder.typicode.com/posts",
+        headers => vec![("Content-Type", "application/json")],
+        client => &client
     );
     assert!(!response.is_empty());
     Ok(())
@@ -38,7 +38,12 @@ async fn test_get_minimal_headers() -> Result<(), Box<dyn Error>> {
 #[apply(test!)]
 async fn test_get() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
-    let response = get!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
+    let response = get!(
+        url => "https://jsonplaceholder.typicode.com/posts",
+        client => &client,
+        res_body_ty => JsonBody,
+        res_ty => Vec<Post>
+    );
     assert_eq!(response.len(), 100);
     Ok(())
 }
@@ -47,11 +52,11 @@ async fn test_get() -> Result<(), Box<dyn Error>> {
 async fn test_get_with_headers() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
     let response = get!(
-        "https://jsonplaceholder.typicode.com/posts",
-        vec![("User-Agent", "deboa")],
-        &client,
-        JsonBody,
-        Vec<Post>
+        url => "https://jsonplaceholder.typicode.com/posts",
+        headers => vec![("User-Agent", "deboa")],
+        client => &client,
+        res_body_ty => JsonBody,
+        res_ty => Vec<Post>
     );
     assert_eq!(response.len(), 100);
     Ok(())

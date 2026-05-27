@@ -24,7 +24,11 @@ pub struct PostWithId {
 async fn test_only_patch_minimal() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
-    let response = patch!(data, "https://jsonplaceholder.typicode.com/posts/1", &client);
+    let response = patch!(
+        data => data,
+        url => "https://jsonplaceholder.typicode.com/posts/1",
+        client => &client
+    );
     assert_eq!(response.status(), 200);
     Ok(())
 }
@@ -46,7 +50,11 @@ async fn test_only_patch_minimal_headers() -> Result<(), Box<dyn Error>> {
 async fn test_patch() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
-    let response = patch!(data, "https://jsonplaceholder.typicode.com/posts/1", &client);
+    let response = patch!(
+        data => data,
+        url => "https://jsonplaceholder.typicode.com/posts/1",
+        client => &client
+    );
     assert_eq!(response.status(), 200);
     Ok(())
 }
@@ -71,8 +79,13 @@ async fn test_patch_with_json_body_request() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
-    let response =
-        patch!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", headers, &client);
+    let response = patch!(
+        data => data,
+        req_body_ty => JsonBody,
+        url => "https://jsonplaceholder.typicode.com/posts/1",
+        headers => headers,
+        client => &client
+    );
     assert_eq!(response.status(), 200);
     Ok(())
 }
@@ -82,12 +95,12 @@ async fn test_patch_with_json_body_no_headers() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = patch!(
-        data,
-        JsonBody,
-        "https://jsonplaceholder.typicode.com/posts/1",
-        &client,
-        JsonBody,
-        PostWithId
+        data => data,
+        req_body_ty => JsonBody,
+        url => "https://jsonplaceholder.typicode.com/posts/1",
+        client => &client,
+        res_body_ty => JsonBody,
+        res_ty => PostWithId
     );
     assert_eq!(response.id, 1);
     Ok(())
@@ -99,13 +112,13 @@ async fn test_patch_with_json_body_response() -> Result<(), Box<dyn Error>> {
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = patch!(
-        data,
-        JsonBody,
-        "https://jsonplaceholder.typicode.com/posts/1",
-        headers,
-        &client,
-        JsonBody,
-        Post
+        data => data,
+        req_body_ty => JsonBody,
+        url => "https://jsonplaceholder.typicode.com/posts/1",
+        headers => headers,
+        client => &client,
+        res_body_ty => JsonBody,
+        res_ty => Post
     );
     assert_eq!(response.id, 1);
     Ok(())

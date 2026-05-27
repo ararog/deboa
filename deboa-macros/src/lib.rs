@@ -13,15 +13,30 @@
 ///
 /// To help understand the macro arguments, here is an example:
 ///
-/// get!(url, headers, &mut client)
+/// get!(
+///     url => url,
+///     headers => headers,
+///     client => &client
+/// )
 ///
 /// or
 ///
-/// get!(url, &mut client, JsonBody, ty)
+/// get!(
+///     url => url,
+///     client => &client,
+///     res_body_ty => JsonBody,
+///     res_ty => ty
+/// )
 ///
 /// or
 ///
-/// get!(url, vec![("User-Agent", "deboa")], &mut client, JsonBody, ty)
+/// get!(
+///     url=> url,
+///     headers => vec![("User-Agent", "deboa")],
+///     client => &client,
+///     res_body_ty => JsonBody,
+///     res_ty => ty
+/// )
 ///
 /// # Arguments
 ///
@@ -50,20 +65,25 @@
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let mut client = Client::default();
-///     let response = get!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
+///     let response = get!(
+///         url => "https://jsonplaceholder.typicode.com/posts",
+///         client => &client,
+///         res_body_ty => JsonBody,
+///         res_ty => Vec<Post>
+///     );
 ///     assert_eq!(response.len(), 100);
 ///     Ok(())
 /// }
 /// ```
 macro_rules! get {
-    ($url:expr, &$client:ident) => {
+    (url => $url:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(&$client, $url)
             .await?
             .text()
             .await?
     };
 
-    ($url:expr, $headers:expr, &$client:ident) => {
+    (url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::get($url)?
@@ -75,14 +95,14 @@ macro_rules! get {
         .await?
     };
 
-    ($url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    (url => $url:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
         deboa::HttpClient::execute(&$client, $url)
             .await?
             .body_as::<$res_body_ty, $res_ty>($res_body_ty)
             .await?
     };
 
-    ($url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    (url => $url:expr, headers => $headers:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::get($url)?
@@ -158,11 +178,11 @@ macro_rules! get {
 ///         userId: 1,
 ///     };
 ///     let response = post!(
-///         data,
-///         JsonBody,
-///         "https://jsonplaceholder.typicode.com/posts",
-///         vec!(("Content-Type", "application/json")),
-///         &client
+///         data => data,
+///         req_body_ty => JsonBody,
+///         url => "https://jsonplaceholder.typicode.com/posts",
+///         headers => vec!(("Content-Type", "application/json")),
+///         client => &client
 ///     );
 ///     Ok(())
 /// }
@@ -195,13 +215,20 @@ macro_rules! get {
 ///         body: "bar".to_string(),
 ///         userId: 1,
 ///     };
-///     let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &client, JsonBody, CreatedPost);
+///     let response = post!(
+///         data => data,
+///         req_body_ty => JsonBody,
+///         url => "https://jsonplaceholder.typicode.com/posts",
+///         client => &client,
+///         res_body_ty => JsonBody,
+///         res_ty => CreatedPost
+///     );
 ///     assert_eq!(response.id, 1);
 ///     Ok(())
 /// }
 /// ```
 macro_rules! post {
-    ($input:ident, $url:literal, &$client:ident) => {
+    (data => $input:ident, url => $url:literal, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::post($url)?
@@ -211,7 +238,7 @@ macro_rules! post {
         .await?
     };
 
-    ($input:ident, $url:expr, &$client:ident) => {
+    (data => $input:ident, url => $url:expr, client =>&$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::post($url)?
@@ -221,7 +248,7 @@ macro_rules! post {
         .await?
     };
 
-    ($input:ident, $url:literal, $headers:expr, &$client:ident) => {
+    (data => $input:ident, url => $url:literal, headers => $headers:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::post($url)?
@@ -232,7 +259,7 @@ macro_rules! post {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:literal, &$client:ident) => {
+    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:literal, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::post($url)?
@@ -242,7 +269,7 @@ macro_rules! post {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident) => {
+    (data => $input:ident, req_body_ty=> $req_body_ty:ident, url => $url:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::post($url)?
@@ -252,7 +279,7 @@ macro_rules! post {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident) => {
+    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::post($url)?
@@ -263,7 +290,7 @@ macro_rules! post {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::post($url)?
@@ -275,7 +302,7 @@ macro_rules! post {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::post($url)?
@@ -331,12 +358,17 @@ macro_rules! post {
 ///         body: "bar".to_string(),
 ///         userId: 1,
 ///     };
-///     put!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", &client);
+///     put!(
+///         data => data,
+///         req_body_ty => JsonBody,
+///         url => "https://jsonplaceholder.typicode.com/posts/1",
+///         client => &client
+///     );
 ///     Ok(())
 /// }
 /// ```
 macro_rules! put {
-    ($input:ident, $url:literal, &$client:ident) => {
+    (data => $input:ident, url => $url:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::put($url)?
@@ -346,17 +378,7 @@ macro_rules! put {
         .await?
     };
 
-    ($input:ident, $url:expr, &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::put($url)?
-                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                .build()?,
-        )
-        .await?
-    };
-
-    ($input:ident, $url:literal, $headers:expr, &$client:ident) => {
+    (data => $input:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::put($url)?
@@ -367,7 +389,7 @@ macro_rules! put {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:literal, &$client:ident) => {
+    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::put($url)?
@@ -377,17 +399,7 @@ macro_rules! put {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::put($url)?
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
-    };
-
-    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident) => {
+    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::put($url)?
@@ -398,7 +410,7 @@ macro_rules! put {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::put($url)?
@@ -410,7 +422,7 @@ macro_rules! put {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::put($url)?
@@ -466,12 +478,17 @@ macro_rules! put {
 ///         body: "bar".to_string(),
 ///         userId: 1,
 ///     };
-///     patch!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts/1", &client);
+///     patch!(
+///         data => data,
+///         req_body_ty => JsonBody,
+///         url => "https://jsonplaceholder.typicode.com/posts/1",
+///         client => &client
+///     );
 ///     Ok(())
 /// }
 /// ```
 macro_rules! patch {
-    ($input:ident, $url:literal, &$client:ident) => {
+    (data => $input:ident, url => $url:literal, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::patch($url)?
@@ -481,7 +498,7 @@ macro_rules! patch {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:literal, &$client:ident) => {
+    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::patch($url)?
@@ -491,17 +508,7 @@ macro_rules! patch {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::patch($url)?
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
-    };
-
-    ($input:ident, $req_body_ty:ident, $url:literal, $headers:expr, &$client:ident) => {
+    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:literal, headers => $headers:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::patch($url)?
@@ -512,7 +519,7 @@ macro_rules! patch {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident) => {
+    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::patch($url)?
@@ -534,7 +541,7 @@ macro_rules! patch {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::patch($url)?
@@ -546,7 +553,7 @@ macro_rules! patch {
         .await?
     };
 
-    ($input:ident, $req_body_ty:ident, $url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::patch($url)?
@@ -592,22 +599,17 @@ macro_rules! patch {
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let client = Client::default();
-///     let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
+///     let response = delete!(url => "https://jsonplaceholder.typicode.com/posts/1", client => &client);
 ///     Ok(())
 /// }
 /// ```
 macro_rules! delete {
-    ($url:literal, &$client:ident) => {
+    (url => $url:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(&$client, deboa::request::DeboaRequest::delete($url)?.build()?)
             .await?
     };
 
-    ($url:expr, &$client:ident) => {
-        deboa::HttpClient::execute(&$client, deboa::request::DeboaRequest::delete($url)?.build()?)
-            .await?
-    };
-
-    ($url:expr, $headers:expr, &$client:ident) => {
+    (url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::delete($url)?
@@ -657,17 +659,17 @@ macro_rules! delete {
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let client = Client::default();
-///     let response = fetch!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Post);
+///     let response = fetch!(url => "https://jsonplaceholder.typicode.com/posts", client => &client, res_body_ty => JsonBody, res_ty => Post);
 ///     assert_eq!(response.id, 1);
 ///     Ok(())
 /// }
 /// ```
 macro_rules! fetch {
-    ($url:expr, &$client:ident) => {
+    (url => $url:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(&$client, $url).await?
     };
 
-    ($url:expr, $headers:expr, &$client:ident) => {
+    (url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::get($url)?
@@ -677,21 +679,14 @@ macro_rules! fetch {
         .await?
     };
 
-    ($url:literal, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    (url => $url:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
         deboa::HttpClient::execute(&$client, $url)
             .await?
             .body_as::<$res_body_ty, $res_ty>($res_body_ty)
             .await?
     };
 
-    ($url:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
-        deboa::HttpClient::execute(&$client, $url)
-            .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-            .await?
-    };
-
-    ($url:expr, $headers:expr, &$client:ident, $res_body_ty:ident, $res_ty:ty) => {
+    (url => $url:expr, headers => $headers:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::get($url)?
@@ -738,12 +733,12 @@ macro_rules! fetch {
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let client = Client::default();
-///     submit!(http::Method::POST, "user=deboa", "https://jsonplaceholder.typicode.com/posts", &client);
+///     submit!(method => http::Method::POST, data => "user=deboa", url => "https://jsonplaceholder.typicode.com/posts", client => &client);
 ///     Ok(())
 /// }
 /// ```
 macro_rules! submit {
-    ($method:expr, $input:expr, $url:expr, &$client:ident) => {
+    (method => $method:expr, data => $input:expr, url => $url:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::at($url, $method)?
@@ -753,7 +748,7 @@ macro_rules! submit {
         .await?
     };
 
-    ($method:expr, $input:expr, $url:expr, $headers:expr, &$client:ident) => {
+    (method => $method:expr, data => $input:expr, url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::at($url, $method)?
@@ -792,18 +787,18 @@ macro_rules! submit {
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let client = Client::default();
-///     let response = stream!("https://jsonplaceholder.typicode.com/posts", &client);
+///     let response = stream!(url => "https://jsonplaceholder.typicode.com/posts", client => &client);
 ///     Ok(())
 /// }
 /// ```
 macro_rules! stream {
-    ($url:expr, &$client:ident) => {
+    (url => $url:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(&$client, $url)
             .await?
             .stream()
     };
 
-    ($url:expr, $headers:expr, &$client:ident) => {
+    (url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
         deboa::HttpClient::execute(
             &$client,
             deboa::request::DeboaRequest::get($url)?

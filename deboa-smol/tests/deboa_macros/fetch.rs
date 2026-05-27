@@ -18,7 +18,10 @@ pub struct Post {
 #[apply(test!)]
 async fn test_fetch_str_minimal() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
-    let response = fetch!("https://jsonplaceholder.typicode.com/posts", &client);
+    let response = fetch!(
+        url => "https://jsonplaceholder.typicode.com/posts",
+        client => &client
+    );
     assert!(response
         .status()
         .is_success());
@@ -28,8 +31,11 @@ async fn test_fetch_str_minimal() -> Result<(), Box<dyn Error>> {
 #[apply(test!)]
 async fn test_fetch_str_minimal_headers() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
-    let headers = vec![("User-Agent", "deboa")];
-    let response = fetch!("https://jsonplaceholder.typicode.com/posts", headers, &client);
+    let response = fetch!(
+        url => "https://jsonplaceholder.typicode.com/posts",
+        headers => vec![("User-Agent", "deboa")],
+        client => &client
+    );
     assert!(response
         .status()
         .is_success());
@@ -39,8 +45,12 @@ async fn test_fetch_str_minimal_headers() -> Result<(), Box<dyn Error>> {
 #[apply(test!)]
 async fn test_fetch_str() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
-    let response =
-        fetch!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
+    let response = fetch!(
+        url => "https://jsonplaceholder.typicode.com/posts",
+        client => &client,
+        res_body_ty => JsonBody,
+        res_ty => Vec<Post>
+    );
     assert_eq!(response.len(), 100);
     Ok(())
 }
@@ -49,7 +59,12 @@ async fn test_fetch_str() -> Result<(), Box<dyn Error>> {
 async fn test_fetch_ident() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
     let url = "https://jsonplaceholder.typicode.com/posts";
-    let response = fetch!(url, &client, JsonBody, Vec<Post>);
+    let response = fetch!(
+        url => url,
+        client => &client,
+        res_body_ty => JsonBody,
+        res_ty => Vec<Post>
+    );
     assert_eq!(response.len(), 100);
     Ok(())
 }
@@ -58,8 +73,13 @@ async fn test_fetch_ident() -> Result<(), Box<dyn Error>> {
 async fn test_fetch_ident_with_headers() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
     let url = "https://jsonplaceholder.typicode.com/posts";
-    let headers = vec![("User-Agent", "deboa")];
-    let response = fetch!(url, headers, &client, JsonBody, Vec<Post>);
+    let response = fetch!(
+        url => url,
+        headers => vec![("User-Agent", "deboa")],
+        client => &client,
+        res_body_ty => JsonBody,
+        res_ty => Vec<Post>
+    );
     assert_eq!(response.len(), 100);
     Ok(())
 }

@@ -9,7 +9,10 @@ use smol_macros::test;
 #[apply(test!)]
 async fn delete() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
-    let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
+    let response = delete!(
+        url => "https://jsonplaceholder.typicode.com/posts/1",
+        client => &client
+    );
     assert!(response
         .status()
         .is_success());
@@ -19,8 +22,11 @@ async fn delete() -> Result<(), Box<dyn Error>> {
 #[apply(test!)]
 async fn delete_with_headers() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
-    let headers = vec![("User-Agent", "deboa")];
-    let response = delete!("https://jsonplaceholder.typicode.com/posts/1", headers, &client);
+    let response = delete!(
+        url => "https://jsonplaceholder.typicode.com/posts/1",
+        headers => vec![("User-Agent", "deboa")],
+        client => &client
+    );
     assert!(response
         .status()
         .is_success());

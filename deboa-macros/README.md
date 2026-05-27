@@ -47,22 +47,47 @@ async fn main() -> Result<(), DeboaError> {
     let client = Client::default();
 
     // fetch macro
-    let response: Vec<Post> = fetch!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
+    let response: Vec<Post> = fetch!(
+        url => "https://jsonplaceholder.typicode.com/posts", 
+        client => &client, 
+        res_body_ty => JsonBody, 
+        res_ty => Vec<Post>
+    );
 
     // get macro, returning posts serialized as json
-    // let response: Vec<Post> = get!("https://jsonplaceholder.typicode.com/posts", &client, JsonBody, Vec<Post>);
+    // let response: Vec<Post> = get!(
+    //     url => "https://jsonplaceholder.typicode.com/posts", 
+    //     client => &client, 
+    //     res_body_ty => JsonBody, 
+    //     res_ty => Vec<Post>
+    // );
 
     // get macro, returning text
-    // let response: String = get!("https://rust-lang.org", &client);
+    // let response: String = get!(
+    //     url => "https://rust-lang.org", 
+    //     client => &client
+    // );
 
     // get macro with headers
-    // let response: String = get!("https://rust-lang.org", vec![("User-Agent", "deboa")], &client);
+    // let response: String = get!(
+    //     url => "https://rust-lang.org", 
+    //     headers => vec![("User-Agent", "deboa")], 
+    //     client => &client
+    // );
 
     // post macro
-    // let response = post!(data, JsonBody, "https://jsonplaceholder.typicode.com/posts", &client);
+    // let response = post!(
+    //     data => data, 
+    //     res_body_ty => JsonBody, 
+    //     url => "https://jsonplaceholder.typicode.com/posts", 
+    //     client => &client
+    // );
 
     // delete macro
-    // let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
+    // let response = delete!(
+    //     url => "https://jsonplaceholder.typicode.com/posts/1", 
+    //     client => &client
+    // );
     
     Ok(())
 }
