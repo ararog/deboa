@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: xd009642/tarpaulin:develop-nightly
-      options: --security-opt seccomp=unconfined
+      options: --security-opt seccomp=unconfined --hostname localhost
     services:
       redis:
         image: redis:5.0.7
