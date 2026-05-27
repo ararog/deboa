@@ -9,7 +9,7 @@ jobs:
   cover:
     runs-on: ubuntu-latest
     container:
-      image: xd009642/tarpaulin:develop-nightly
+      image: xd009642/tarpaulin:develop-slim
       options: --security-opt seccomp=unconfined --hostname localhost
     services:
       redis:
@@ -29,7 +29,7 @@ jobs:
           redis-cli ping
       - name: Generate code coverage
         run: |
-          cargo +nightly tarpaulin --verbose --workspace --timeout 120 --out xml
+          cargo +nightly tarpaulin --verbose --workspace --timeout 120 --test-threads 8 --out xml
       - name: Upload To codecov.io
         uses: codecov/codecov-action@v6
         with:
