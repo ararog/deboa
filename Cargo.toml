@@ -38,6 +38,9 @@ deboa-tokio = { path = "deboa-tokio" }
 vamo = { version = "0.0.9-beta.4", path = "vamo" }
 vamo-macros = { version = "0.0.9-beta.4", path = "vamo-macros" }
 
+[profile.test]
+lto = false
+
 [profile.release]
 strip = true
 opt-level = "z" 
