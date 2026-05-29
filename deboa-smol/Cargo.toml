@@ -47,12 +47,10 @@ rustcrypto-rustl-provider = ["__rustls_rustcrypto"]
 default-rustls-provider = ["__rustls_aws_lc_rs"]
 __rustls_aws_lc_rs = [
   "futures-rustls/aws-lc-rs",
-  #"tokio-rustls/aws-lc-rs",
   "quinn/rustls-aws-lc-rs",
 ]
 __rustls_ring = [
   "futures-rustls/ring",
-  #"tokio-rustls/ring",
   "quinn/rustls-ring",
 ]
 __rustls_rustcrypto = ["dep:rustls-rustcrypto"]
