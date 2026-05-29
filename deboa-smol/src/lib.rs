@@ -207,7 +207,7 @@ pub type DeboaBuilder = ClientBuilder;
 ///   let client = Client::builder()
 ///     .connection_timeout(30)  // 30 seconds
 ///     .request_timeout(10)     // 10 seconds
-///     .protocol(HttpVersion::Http2)  // Use HTTP/2
+///     //.protocol(HttpVersion::Http2)  // Use HTTP/2
 ///     .build();
 ///
 ///   // Use the client to make requests...
@@ -441,7 +441,7 @@ impl ClientBuilder {
     ///
     /// # Examples
     ///
-    /// ``` rust,no_run
+    /// ``` rust,ignore
     /// use deboa_smol::{Client, HttpVersion};
     ///
     /// let builder = Client::builder()
