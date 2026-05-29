@@ -21,8 +21,11 @@ use crate::{
 /// * `Sender` - The sender to use.
 ///
 pub trait DeboaUdpConnection: private::DeboaUdpConnectionSealed {
+    /// The sender type.
     type Sender;
+    /// The request body type.
     type ReqBody: Body + Unpin;
+    /// The response body type.
     type ResBody: Body + Unpin;
 
     /// Create a new connection.
