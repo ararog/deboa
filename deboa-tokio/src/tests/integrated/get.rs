@@ -1,12 +1,10 @@
-#[cfg(any(feature = "http1", feature = "http2"))]
-use crate::HttpVersion;
 use crate::{
     cert::{ContentEncoding, Identity},
     tests::{
         helpers::{client_with_cert, start_mock_server, CA_CERT},
         TestResult,
     },
-    Client,
+    Client, HttpVersion,
 };
 
 #[cfg(feature = "rust-tls")]
