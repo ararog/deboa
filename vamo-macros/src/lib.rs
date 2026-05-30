@@ -42,8 +42,28 @@ use crate::resource::resource as resource_macro;
 /// ## Example
 ///
 /// ```compile_fail
+/// use deboa_tokio::Client;
+/// use serde::Deserialize;
+/// use vamo::Vamo;
+/// use vamo_macros::bora;
+///
 /// #[bora(api(get(name = "get_post", path = "/posts/<id:i32>")))]
 /// pub struct PostService;
+///
+/// #[derive(Deserialize)]
+/// struct Post {
+///     id: u32,
+///     title: String,
+/// }
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let client = Vamo::<deboa_tokio::Client>::new("https://jsonplaceholder.typicode.com")?;
+///     let mut post_service = PostService::new(client);
+///     let post = post_service.get_post(1).await?;
+///     println!("Post: {:?}", post);
+///     Ok(())
+/// }
 /// ```
 ///
 /// # post
@@ -61,8 +81,33 @@ use crate::resource::resource as resource_macro;
 /// ## Example
 ///
 /// ```compile_fail
-/// #[bora(api(post(name = "post_post", path = "/posts", req_body = "Post", res_body = "Post")))]
+/// use deboa_tokio::Client;
+/// use serde::Deserialize;
+/// use vamo::Vamo;
+/// use vamo_macros::bora;
+///
+/// #[bora(api(post(name = "create_post", path = "/posts", req_body = "Post", res_body = "Post")))]
 /// pub struct PostService;
+///
+/// #[derive(Deserialize)]
+/// struct Post {
+///     id: u32,
+///     title: String,
+/// }
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {  
+///     let post = Post {
+///         id: 1,
+///         title: "Post 1".to_string(),
+///     };
+///     
+///     let client = Vamo::<deboa_tokio::Client>::new("https://jsonplaceholder.typicode.com")?;
+///     let mut post_service = PostService::new(client);
+///     let created_post = post_service.create_post(post).await?;
+///     println!("Created post: {:?}", created_post);
+///     Ok(())
+/// }
 /// ```
 ///
 /// # delete
@@ -77,8 +122,21 @@ use crate::resource::resource as resource_macro;
 /// ## Example
 ///
 /// ```compile_fail
+/// use deboa_tokio::Client;
+/// use vamo::Vamo;
+/// use vamo_macros::bora;
+///
 /// #[bora(api(delete(name = "delete_post", path = "/posts/<id:i32>")))]
 /// pub struct PostService;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let client = Vamo::<Client>::new("https://jsonplaceholder.typicode.com")?;
+///     let mut post_service = PostService::new(client);
+///     post_service.delete_post(1).await?;
+///     println!("Post deleted");
+///     Ok(())
+/// }
 /// ```
 ///
 /// # put
@@ -96,8 +154,28 @@ use crate::resource::resource as resource_macro;
 /// ## Example
 ///
 /// ```compile_fail
+/// use deboa_tokio::Client;
+/// use serde::Deserialize;
+/// use vamo::Vamo;
+/// use vamo_macros::bora;
+///  
 /// #[bora(api(put(name = "put_post", path = "/posts/<id:i32>", req_body = "Post", res_body = "Post")))]
 /// pub struct PostService;
+///
+/// #[derive(Debug, Deserialize)]
+/// pub struct Post {
+///     pub id: u32,
+///     pub title: String,
+/// }
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let client = Vamo::<Client>::new("https://jsonplaceholder.typicode.com")?;
+///     let mut post_service = PostService::new(client);
+///     let post = post_service.put_post(1, Post { id: 1, title: "Post 1".to_string() }).await?;
+///     println!("Post updated: {:?}", post);
+///     Ok(())
+/// }
 /// ```
 ///
 /// # patch
@@ -115,8 +193,28 @@ use crate::resource::resource as resource_macro;
 /// ## Example
 ///
 /// ```compile_fail
+/// use deboa_tokio::Client;
+/// use serde::Deserialize;
+/// use vamo::Vamo;
+/// use vamo_macros::bora;
+///
 /// #[bora(api(patch(name = "patch_post", path = "/posts/<id:i32>", req_body = "Post", res_body = "Post")))]
 /// pub struct PostService;
+///
+/// #[derive(Debug, Deserialize)]
+/// pub struct Post {
+///     pub id: u32,
+///     pub title: String,
+/// }
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let client = Vamo::<deboa_tokio::Client>::new("https://jsonplaceholder.typicode.com")?;
+///     let mut post_service = PostService::new(client);
+///     let post = post_service.patch_post(1, Post { id: 1, title: "Post 1".to_string() }).await?;
+///     println!("Post updated: {:?}", post);
+///     Ok(())
+/// }
 /// ```
 pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
     bora_macro(attr, item)
@@ -131,10 +229,22 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// * `name` - The name of resource.
 /// * `body_type` - The body type of resource (impl RequestBody from deboa-extras).
 ///
+/// # Resource methods
+///
+/// The following methods are generated:
+///
+/// - `load`
+/// - `create`
+/// - `edit`
+/// - `remove`
+///
 /// # Example
 ///
 /// ```compile_fail
+/// use deboa_tokio::Client;
 /// use deboa_extras::http::serde::json::JsonBody;
+/// use vamo_macros::Resource;
+/// use vamo::{Vamo, ResourceMethod};
 ///
 /// #[derive(Resource)]
 /// #[name("posts")]
@@ -142,6 +252,19 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// struct MyResource {
 ///     #[rid("id")]
 ///     id: String,
+/// }
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let mut vamo = Vamo::<Client>::new("https://api.example.com")?;
+///
+///     // post
+///     let response = vamo
+///         .create(user)
+///         .await?
+///         .send()
+///         .await?;
+///     Ok(())
 /// }
 /// ```
 pub fn resource(input: TokenStream) -> TokenStream {

@@ -17,19 +17,26 @@ deboa = { version = "0.0.9", features = ["http1", "tokio-rt"] }
 
 ```rust
 use deboa::{Client, request::get, Result};
+use deboa_extras::http::serde::json::JsonBody;
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+struct Post {
+    id: u64,
+    title: String,
+    body: String,
+}
 
 #[tokio::main]
-async fn main() -> Result<(), Result> {
+async fn main() -> Result<()> {
     let client = Client::new();
     
-    // Make a GET request
-    let response = get("https://httpbin.org/get")
+    let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")
         .send_with(&client)
-        .await?;
-        
-    println!("Status: {}", response.status());
-    println!("Body: {}", response.text().await?);
+        .await?
+        .body_as(JsonBody, Post)?;
     
+    println!("First post: {}", posts[0].title);
     Ok(())
 }
 ```

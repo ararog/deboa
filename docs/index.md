@@ -89,6 +89,8 @@ async fn main() -> Result<()> {
 | Crate | Description | Documentation |
 |-------|-------------|---------------|
 | [deboa](./deboa) | Core HTTP client library | [![docs.rs](https://img.shields.io/docsrs/deboa/latest)](https://docs.rs/deboa) |
+| [deboa-smol](./deboa-smol) | Smol runtime support for Deboa | [![docs.rs](https://img.shields.io/docsrs/deboa-smol/latest)](https://docs.rs/deboa-smol) |
+| [deboa-tokio](./deboa-tokio) | Tokio runtime support for Deboa | [![docs.rs](https://img.shields.io/docsrs/deboa-tokio/latest)](https://docs.rs/deboa-tokio) |
 | [deboa-extras](./deboa-extras) | Additional functionality and middleware | [![docs.rs](https://img.shields.io/docsrs/deboa-extras/latest)](https://docs.rs/deboa-extras) |
 | [deboa-fory](./deboa-fory) | Apache Fory support for Deboa | [![docs.rs](https://img.shields.io/docsrs/deboa-fory/latest)](https://docs.rs/deboa-fory) |
 | [deboa-macros](./deboa-macros) | Procedural macros for Deboa | [![docs.rs](https://img.shields.io/docsrs/deboa-macros/latest)](https://docs.rs/deboa-macros) |

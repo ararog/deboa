@@ -15,10 +15,12 @@
 //!
 //! ```toml
 //! [dependencies]
+//! deboa = { path = "../deboa" }
+//! deboa-extras = { path = "../deboa-extras" }
+//! deboa-tokio = { path = "../deboa-tokio" }
+//! serde = { version = "1.0", features = ["derive"] }
 //! vamo-macros = { path = "../vamo-macros" }
 //! vamo = { path = "../vamo" }
-//! deboa-extras = { path = "../deboa-extras" }
-//! serde = { version = "1.0", features = ["derive"] }
 //! ```
 //!
 //! ## Examples
@@ -31,6 +33,7 @@
 //! use vamo_macros::Resource;
 //! use deboa::Result;
 //! use deboa_extras::http::serde::json::JsonBody;
+//! use deboa_tokio::Client;
 //!
 //! #[derive(Debug, Serialize, Deserialize, Resource)]
 //! #[name("posts")]
@@ -45,7 +48,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<()> {
-//!     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
+//!     let mut vamo = Vamo::<Client>::new("https://jsonplaceholder.typicode.com")?;
 //!
 //!     // Create a new post
 //!     let new_post = Post {

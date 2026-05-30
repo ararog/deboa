@@ -20,13 +20,16 @@ A macro for easy REST client generation on top of the Vamo REST client.
 
 ```toml
 [dependencies]
+deboa = { version = "0.0.5" }
+deboa-tokio = { version = "0.0.5" }
 vamo-macros = { version = "0.0.5", features = ["json"] }
 ```
 
 ## Basic Example
 
 ```rust
-use deboa::errors::DeboaError;
+use deboa::Result;
+use deboa_tokio::Client;
 use vamo::Vamo;
 use vamo_macros::bora;
 
@@ -50,7 +53,7 @@ pub struct PostService;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client = Vamo::new("https://jsonplaceholder.typicode.com")?;
+    let client = Vamo::<Client>::new("https://jsonplaceholder.typicode.com")?;
 
     let mut post_service = PostService::new(client);
 

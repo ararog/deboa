@@ -29,6 +29,8 @@ deboa-tokio = "0.1.0"
 ### Resource macro
 
 ```rust, compile_fail
+use deboa_extras::http::serde::json::JsonBody;
+use deboa_tokio::Client;
 use vamo_macros::Resource;
 use vamo::{Vamo, ResourceMethod};
 
@@ -41,7 +43,7 @@ pub struct User {
     name: String,
 }
 
-let mut vamo = Vamo::<deboa_tokio::Client>::new("https://api.example.com")?;
+let mut vamo = Vamo::<Client>::new("https://api.example.com")?;
 
 // post
 let response = vamo
@@ -70,7 +72,8 @@ vamo.remove(user)?
 ### bora macro
 
 ```rust, compile_fail
-use deboa::errors::DeboaError;
+use deboa::Result;
+use deboa_tokio::Client;
 use vamo::Vamo;
 use vamo_macros::bora;
 use serde::Deserialize;
@@ -93,7 +96,7 @@ pub struct PostService;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client = Vamo::<deboa_tokio::Client>::new("https://jsonplaceholder.typicode.com")?;
+    let client = Vamo::<Client>::new("https://jsonplaceholder.typicode.com")?;
     let mut post_service = PostService::new(client);
     let post = post_service.get_by_id(1).await?;
 

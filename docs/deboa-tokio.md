@@ -1,28 +1,12 @@
 ---
 layout: default
-title: Deboa - Core HTTP Client
-nav_order: 2
+title: Deboa Tokio - HTTP Client for Tokio
+nav_order: 3
 ---
 
-# Deboa Core
+# Deboa Tokio
 
-The core HTTP client library for Rust, providing a simple yet powerful interface for making HTTP requests.
-
-With Deboa, you can:
-
-- easily add, remove and update headers
-- helpers to add basic and bearer auth
-- set retries and timeout
-- pluggable catchers (interceptors)
-- pluggable compression (gzip, deflate, brotli)
-- pluggable serialization (json, xml, msgpack, yaml, fory and cbor)
-- cookies support
-- urlencoded and multipart forms
-- comprehensive error handling
-- response streaming
-- upgrade support (websocket, etc.)
-- runtime compatibility (tokio and smol)
-- http1/2/3 support
+The HTTP client library for Rust using Tokio, providing a simple yet powerful interface for making HTTP requests.
 
 ## Installation
 
@@ -30,7 +14,8 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-deboa = { version = "0.0.9", features = ["http1", "http2", "rust-tls"] }
+deboa = { version = "0.0.9" }
+deboa-tokio = { version = "0.0.9", features = ["http1", "http2", "rust-tls"] }
 ```
 
 ## Features
@@ -44,10 +29,11 @@ deboa = { version = "0.0.9", features = ["http1", "http2", "rust-tls"] }
 ## Basic Usage
 
 ```rust
-use deboa::{Client, request::get, Result};
+use deboa::{request::get, Result};
+use deboa_tokio::Client;
 
 #[tokio::main]
-async fn main() -> Result<(), Result> {
+async fn main() -> Result<()> {
     let client = Client::new();
     
     // Make a GET request
@@ -68,6 +54,9 @@ async fn main() -> Result<(), Result> {
 
 ```rust
 use deboa::request::get;
+use deboa_smol::Client;
+
+let client = Client::new();
 
 let response = get("https://api.example.com/data")
     .header("Accept", "application/json")
@@ -85,12 +74,14 @@ let response = "GET".from_url("https://api.example.com/data")
 ### POST Request with JSON
 
 ```rust
+use deboa::{request::post, Result};
 use deboa_extras::http::serde::json::JsonBody;
+use deboa_smol::Client;
 use serde_json::json;
 
 let data = json!({ "name": "John Doe", "age": 30 });
 
-let response = deboa::post("https://api.example.com/users")
+let response = post("https://api.example.com/users")
     .body_as(JsonBody, &data)?
     .send_with(&client)
     .await?;
@@ -99,6 +90,11 @@ let response = deboa::post("https://api.example.com/users")
 ### Handling Responses
 
 ```rust
+use deboa::{request::get, Result};
+use deboa_extras::http::serde::json::JsonBody;
+use deboa_smol::Client;
+use serde::Deserialize;
+
 #[derive(serde::Deserialize)]
 struct User {
     id: u64,
