@@ -6,8 +6,6 @@ description: "A straightforward, non-opinionated, developer-centric HTTP client 
 permalink: /
 ---
 <div align="center">
-<img src="https://raw.githubusercontent.com/ararog/deboa/refs/heads/develop/other_deboa_128.png" alt="deboa" width="128" height="128">
-
 <h1><b>Deboa</b></h1>
 </div>
 
@@ -55,33 +53,34 @@ Add to your `Cargo.toml`:
 ```toml
 [dependencies]
 deboa = { version = "0.0.9" }
+deboa-tokio = { version = "0.1.0-beta.2" }
 ```
 
 Basic usage:
 
 ```rust
-use deboa::{Client, request::get, Result};
-use deboa_extras::http::serde::json::JsonBody;
-use serde::Deserialize;
-
-#[derive(Deserialize)]
-struct Post {
-    id: u64,
-    title: String,
-    body: String,
-}
+use deboa::{
+    request::{DeboaRequest, FetchWith, get},
+    Result, 
+};
+use deboa_tokio::Client;
+use deboa_extras::http::{self, serde::json::JsonBody};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client = Client::new();
-    
-    let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")
-        .send_with(&client)
-        .await?
-        .body_as(JsonBody, Post)?;
-    
-    println!("First post: {}", posts[0].title);
-    Ok(())
+  // Create a new Client instance, set timeouts, catches and protocol.
+  let client = Client::new();
+
+  let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
+    .header(header::CONTENT_TYPE, "application/json")
+    .send_with(&client)
+    .await?
+    .body_as(JsonBody)
+    .await?;
+
+  println!("posts: {:#?}", posts);
+
+  Ok(())
 }
 ```
 
