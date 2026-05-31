@@ -64,7 +64,7 @@ use deboa::{
     errors::{DeboaError, RequestError},
     request::{DeboaRequest, IntoRequest},
     response::DeboaResponse,
-    HttpClient,
+    HttpClient, Result,
 };
 use smol::lock::RwLock;
 
@@ -95,24 +95,6 @@ pub mod rt;
 #[cfg(test)]
 mod tests;
 
-/// Type alias for Result<T, DeboaError>
-/// Convenience alias for handling Deboa errors throughout the library.
-///
-/// # Examples
-///
-/// ```
-/// use deboa::Result;
-///
-/// fn example() -> Result<String> {
-///     Ok("success".to_string())
-/// }
-/// ```
-///
-/// # See Also
-/// - [DeboaError](crate::errors::DeboaError)
-pub type Result<T> = std::result::Result<T, DeboaError>;
-
-///
 /// Extension trait for Client to enable the `<<` operator for URL construction.
 /// This allows for a more ergonomic way to create requests using the `<<` operator.
 /// The operator creates a GET request with the provided URL.

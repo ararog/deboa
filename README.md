@@ -1,10 +1,6 @@
-<div align="center">
-
 # Deboa
 
 [![crates.io](https://img.shields.io/crates/v/deboa?style=flat-square)](https://crates.io/crates/deboa) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) [![codecov](https://codecov.io/gh/ararog/deboa/graph/badge.svg?token=T0HSBAPVSI)](https://codecov.io/gh/ararog/deboa) [![Documentation](https://docs.rs/deboa/badge.svg)](https://docs.rs/deboa/latest/deboa)
-
-</div>
 
 ## Description
 
@@ -19,21 +15,13 @@ This release has a major api change. Please check the [migration guide](https://
 ## Install
 
 ```toml
-deboa = { version = "0.0.9", features = ["http1", "http2", "tokio-rt"] }
+deboa = { version = "0.0.9" }
 ```
 
 ## Runtimes
 
 - [tokio](https://github.com/tokio-rs/tokio)
 - [smol](https://github.com/smol-rs/smol)
-
-## Crate features
-
-- http1
-- http2 (default)
-- http3
-- rust-tls
-- native-tls
 
 ## Usage
 

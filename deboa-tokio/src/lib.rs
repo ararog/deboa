@@ -92,7 +92,6 @@ pub mod rt;
 #[cfg(test)]
 mod tests;
 
-///
 /// Extension trait for Client to enable the `<<` operator for URL construction.
 /// This allows for a more ergonomic way to create requests using the `<<` operator.
 /// The operator creates a GET request with the provided URL.
