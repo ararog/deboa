@@ -115,7 +115,14 @@ You can create a new project from the template using `cargo generate`:
 
 ## License
 
-This project is licensed under the [MIT License](./LICENSE.md).
+Licensed under either of
+
+- Apache License, Version 2.0
+  (LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0)
+- MIT license
+  (LICENSE-MIT or https://opensource.org/licenses/MIT)
+
+at your option.
 
 ## Author
 
