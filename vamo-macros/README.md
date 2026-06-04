@@ -28,7 +28,7 @@ deboa-tokio = "0.1.0"
 
 ### Resource macro
 
-```rust, compile_fail
+```rust
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tokio::Client;
 use vamo_macros::Resource;
@@ -71,7 +71,7 @@ vamo.remove(user)?
 
 ### bora macro
 
-```rust, compile_fail
+```rust
 use deboa::Result;
 use deboa_tokio::Client;
 use vamo::Vamo;
