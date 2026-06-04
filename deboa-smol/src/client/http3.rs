@@ -1,17 +1,3 @@
-use std::{marker::PhantomData, net::SocketAddr, sync::Arc};
-
-use deboa::{
-    errors::{ConnectionError, DeboaError, RequestError, ResponseError},
-    request::Http3Request,
-};
-use futures::future;
-use http::{version::Version, StatusCode};
-use http_body_util::BodyExt;
-use hyper::{Request, Response};
-use hyper_body_utils::HttpBody;
-use quinn::{crypto::rustls::QuicClientConfig, Endpoint};
-use trust_dns_resolver::error::ResolveErrorKind;
-
 use crate::{
     alpn,
     client::conn::{
@@ -19,11 +5,22 @@ use crate::{
     },
     Result,
 };
-
 use async_std_resolver::{
     config::{ResolverConfig, ResolverOpts},
     resolver,
 };
+use deboa::{
+    errors::{ConnectionError, DeboaError, RequestError, ResponseError},
+    request::Http3Request,
+};
+use futures::future;
+use hickory_resolver::error::ResolveErrorKind;
+use http::{version::Version, StatusCode};
+use http_body_util::BodyExt;
+use hyper::{Request, Response};
+use hyper_body_utils::HttpBody;
+use quinn::{crypto::rustls::QuicClientConfig, Endpoint};
+use std::{marker::PhantomData, net::SocketAddr, sync::Arc};
 
 async fn lookup_and_connect(
     host: &str,

@@ -9,14 +9,14 @@ use deboa::{
     errors::{ConnectionError, DeboaError},
     Result,
 };
-use rustls::pki_types::ServerName;
-use tokio::net::TcpStream;
-use tokio_rustls::TlsConnector;
-use trust_dns_resolver::{
+use hickory_resolver::{
     config::{ResolverConfig, ResolverOpts},
     error::ResolveErrorKind,
     TokioAsyncResolver,
 };
+use rustls::pki_types::ServerName;
+use tokio::net::TcpStream;
+use tokio_rustls::TlsConnector;
 
 async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
     let resolver = TokioAsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default());
