@@ -356,17 +356,17 @@ dependencies = [
 
 [[package]]
 name = "async-std-resolver"
-version = "0.23.2"
+version = "0.24.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0928198152da571a19145031360f34fc7569ef2dc387681565f330c811a5ba9b"
+checksum = "b766684a183c8a439f2ca24d6973cf8bfdc1353ae9c54b2b91e81d2630dd034e"
 dependencies = [
  "async-std",
  "async-trait",
  "futures-io",
  "futures-util",
+ "hickory-resolver",
  "pin-utils",
  "socket2 0.5.10",
- "trust-dns-resolver",
 ]
 
 [[package]]
@@ -1964,6 +1964,47 @@ name = "hermit-abi"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
+
+[[package]]
+name = "hickory-proto"
+version = "0.24.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "92652067c9ce6f66ce53cc38d1169daa36e6e7eb7dd3b63b5103bd9d97117248"
+dependencies = [
+ "async-trait",
+ "cfg-if",
+ "data-encoding",
+ "enum-as-inner",
+ "futures-channel",
+ "futures-io",
+ "futures-util",
+ "idna 1.1.0",
+ "ipnet",
+ "once_cell",
+ "rand 0.8.6",
+ "thiserror 1.0.69",
+ "tinyvec",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "hickory-resolver"
+version = "0.24.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cbb117a1ca520e111743ab2f6688eddee69db4e0ea242545a604dce8a66fd22e"
+dependencies = [
+ "cfg-if",
+ "futures-util",
+ "hickory-proto",
+ "lru-cache",
+ "once_cell",
+ "parking_lot",
+ "rand 0.8.6",
+ "smallvec 1.15.1",
+ "thiserror 1.0.69",
+ "tracing",
+]
 
 [[package]]
 name = "hkdf"
