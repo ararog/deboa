@@ -1050,7 +1050,7 @@ version = "0.1.6-beta.1"
 dependencies = [
  "deboa",
  "fory",
- "fory-core",
+ "fory-core 0.14.1",
  "http",
 ]
 
@@ -1084,7 +1084,7 @@ dependencies = [
  "deboa-macros",
  "easyhttpmock-vetis-smol",
  "fory",
- "fory-core",
+ "fory-core 0.14.1",
  "futures",
  "futures-rustls",
  "futures-util",
@@ -1142,7 +1142,7 @@ dependencies = [
  "deboa-macros",
  "easyhttpmock-vetis-tokio",
  "fory",
- "fory-core",
+ "fory-core 0.14.1",
  "futures",
  "futures-rustls",
  "futures-util",
@@ -1574,11 +1574,11 @@ dependencies = [
 
 [[package]]
 name = "fory"
-version = "0.14.1"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6df4148d220762d90fe0ffeb217e7adbee5e1754e565dd838edb9277c3109220"
+checksum = "a63772cbbdc335ec13e6f5765627d106cd5e926c68005611b04d0a962647d397"
 dependencies = [
- "fory-core",
+ "fory-core 1.1.0",
  "fory-derive",
 ]
 
@@ -1599,16 +1599,28 @@ dependencies = [
 ]
 
 [[package]]
-name = "fory-derive"
-version = "0.14.1"
+name = "fory-core"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14665f35361adaa6b17df48a35ec4ee45614831489a18ab4b163e14b445096a8"
+checksum = "4d8ef8bab25e95a3e186e7f945b31f55d54da6807f1c663985ea8e6031be3624"
 dependencies = [
- "fory-core",
+ "byteorder",
+ "num-bigint",
+ "num_enum",
+ "paste",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "fory-derive"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a6375f4395432507142555fea4cbcc891f6ae7212a18290165bd1c42818d86f"
+dependencies = [
+ "fory-core 1.1.0",
  "proc-macro2",
  "quote",
  "syn 2.0.117",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -2732,6 +2744,16 @@ name = "nohash-hasher"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2bf50223579dc7cdcfb3bfcacf7069ff68243f8c363f62ffa99cf000a6b9c451"
+
+[[package]]
+name = "num-bigint"
+version = "0.4.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5e44f723f1133c9deac646763579fdb3ac745e418f2a7af9cd0c431da1f20b9"
+dependencies = [
+ "num-integer",
+ "num-traits",
+]
 
 [[package]]
 name = "num-bigint-dig"
