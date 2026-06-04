@@ -40,7 +40,7 @@ indexmap = "2.11.4"
 log = "0.4.28"
 minimime = "1.0.0"
 mockall = "0.14.0"
-rand = "0.9.2"
+rand = "0.10.1"
 regex = "1.9.6"
 serde = { version = "1.0.217", features = ["derive"] }
 thiserror = "2.0.17"
