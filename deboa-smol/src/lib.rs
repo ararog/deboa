@@ -534,7 +534,8 @@ impl ClientBuilder {
     /// # Examples
     ///
     /// ``` rust,no_run
-    /// use deboa_smol::{Client, Result};
+    /// use deboa::Result;
+    /// use deboa_smol::Client;
     /// use macro_rules_attribute::apply;
     /// use smol_macros::main;
     ///

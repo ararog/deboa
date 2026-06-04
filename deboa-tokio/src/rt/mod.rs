@@ -3,11 +3,6 @@
 //! This module provides runtime-specific implementations for different async runtimes.
 //! It allows the library to work with multiple async runtimes through feature flags.
 //!
-//! ## Available Runtimes
-//!
-//! - `tokio-rt`: Enables support for the Tokio runtime
-//! - `smol-rt`: Enables support for the smol runtime
-//!
 //! ## Usage
 //!
 //! The appropriate runtime module will be automatically selected based on the enabled features.
@@ -20,8 +15,10 @@
 //! ```toml
 //! [dependencies.deboa]
 //! version = "0.0.8"
-//! features = ["tokio-rt"]  # or "smol-rt"
+//! features = ["http1", "rust-tls"]
 //! ```
+
+/// TLS module for runtime-specific TLS implementations.
 #[cfg(all(
     any(feature = "rust-tls", feature = "native-tls"),
     any(feature = "http1", feature = "http2")

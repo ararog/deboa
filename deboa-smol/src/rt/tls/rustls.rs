@@ -1,34 +1,23 @@
-#[cfg(any(feature = "http1", feature = "http2"))]
 use std::sync::Arc;
-
-#[cfg(any(feature = "http1", feature = "http2"))]
-use crate::rt::stream::SmolStream;
-#[cfg(any(feature = "http1", feature = "http2"))]
-use deboa::errors::{ConnectionError, DeboaError};
-#[cfg(any(feature = "http1", feature = "http2"))]
-use smol::net::TcpStream;
-
-#[cfg(any(feature = "http1", feature = "http2"))]
-use crate::client::conn::rustls::setup_rust_tls;
-#[cfg(any(feature = "http1", feature = "http2"))]
-use futures_rustls::TlsConnector;
-#[cfg(any(feature = "http1", feature = "http2"))]
-use rustls::pki_types::ServerName;
-#[cfg(any(feature = "http1", feature = "http2"))]
-use trust_dns_resolver::error::ResolveErrorKind;
-
-#[cfg(any(feature = "http1", feature = "http2"))]
-use crate::{
-    cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
-    Result,
-};
 
 use async_std_resolver::{
     config::{ResolverConfig, ResolverOpts},
     resolver,
 };
 
-#[cfg(any(feature = "http1", feature = "http2"))]
+use crate::{
+    cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
+    client::conn::rustls::setup_rust_tls,
+    rt::stream::SmolStream,
+    Result,
+};
+
+use deboa::errors::{ConnectionError, DeboaError};
+use futures_rustls::TlsConnector;
+use hickory_resolver::error::ResolveErrorKind;
+use rustls::pki_types::ServerName;
+use smol::net::TcpStream;
+
 async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
     let resolver = resolver(ResolverConfig::default(), ResolverOpts::default()).await;
 
@@ -76,13 +65,11 @@ async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
     Ok(tcp_stream)
 }
 
-#[cfg(any(feature = "http1", feature = "http2"))]
 pub(crate) async fn plain_connection(host: &str, port: u16) -> Result<SmolStream> {
     let stream = create_stream(host, port).await?;
     Ok(SmolStream::Plain(stream))
 }
 
-#[cfg(any(feature = "http1", feature = "http2"))]
 pub(crate) async fn tls_connection(
     host: &str,
     port: u16,

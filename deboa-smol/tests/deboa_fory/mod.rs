@@ -3,16 +3,19 @@ use std::error::Error;
 use deboa::request::post;
 use deboa_fory::{ForyRequestBuilder, ForyResponse};
 use easyhttpmock_vetis_smol::mock::{MethodExt, Mock, StatusCodeExt};
-use fory::{Fory, ForyObject};
+use fory::{Fory, ForyStruct};
 use http::StatusCode;
 use macro_rules_attribute::apply;
 use smol_macros::test;
 
 use crate::common::helpers::{client_with_cert, start_mock_server};
 
-const FORY_PERSON: [u8; 15] = [2, 255, 143, 2, 30, 255, 34, 74, 111, 104, 110, 32, 68, 111, 101];
+const FORY_PERSON: [u8; 33] = [
+    1, 255, 28, 0, 11, 160, 254, 175, 118, 89, 59, 92, 194, 1, 68, 9, 0, 196, 72, 21, 52, 12, 32,
+    30, 34, 74, 111, 104, 110, 32, 68, 111, 101,
+];
 
-#[derive(ForyObject)]
+#[derive(ForyStruct, Debug, PartialEq)]
 struct Person {
     name: String,
     age: u8,

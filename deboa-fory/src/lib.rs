@@ -21,14 +21,18 @@ pub trait ForyRequestBuilder {
 impl ForyRequestBuilder for DeboaRequestBuilder {
     fn body_as_fory<T: Serializer>(self, fory: &Fory, body: T) -> Result<DeboaRequestBuilder> {
         let result = fory.serialize(&body);
-        if let Err(error) = result {
+        let Ok(data) = result else {
             return Err(DeboaError::Content(ContentError::Serialization {
-                message: error.to_string(),
+                message: result
+                    .unwrap_err()
+                    .to_string(),
             }));
-        }
+        };
+
+        println!("data: {:?}", data);
 
         let builder = self
-            .bytes(&result.unwrap())
+            .bytes(&data)
             .header(header::CONTENT_TYPE, "application/fory");
 
         Ok(builder)
@@ -38,21 +42,26 @@ impl ForyRequestBuilder for DeboaRequestBuilder {
 /// Fory response extension
 pub trait ForyResponse {
     /// Get the response body as Fory
-    fn body_as_fory<T: Serializer + ForyDefault>(
+    fn body_as_fory<T: Serializer + std::fmt::Debug + ForyDefault>(
         self,
         fory: &Fory,
     ) -> impl std::future::Future<Output = Result<T>> + Send;
 }
 
 impl ForyResponse for DeboaResponse {
-    async fn body_as_fory<T: Serializer + ForyDefault>(self, fory: &Fory) -> Result<T> {
+    async fn body_as_fory<T: Serializer + std::fmt::Debug + ForyDefault>(
+        self,
+        fory: &Fory,
+    ) -> Result<T> {
         let result = fory.deserialize(&self.bytes().await);
-        if let Err(error) = result {
+        let Ok(data) = result else {
             return Err(DeboaError::Content(ContentError::Deserialization {
-                message: error.to_string(),
+                message: result
+                    .unwrap_err()
+                    .to_string(),
             }));
-        }
+        };
 
-        Ok(result.unwrap())
+        Ok(data)
     }
 }

@@ -134,7 +134,7 @@ easyhttpmock-vetis-tokio = { version = "0.1.0-beta.2", features = [
   "rust-tls",
 ], default-features = false }
 fory = "1.1.0"
-fory-core = "0.14.0"
+fory-core = "1.1.0"
 futures-util = "0.3.31"
 mime = { version = "0.3.17" }
 multer = "3.1.0"
