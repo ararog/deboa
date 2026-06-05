@@ -17,7 +17,7 @@ pub struct Post {
 
 #[bora(
   api(
-    post(name="create_post", path="/posts", req_body=Post, res_body=Post, format="json"),
+    post(name="create_post", path="/posts", req_body=Post, format="json"),
   )
 )]
 pub struct PostService;
