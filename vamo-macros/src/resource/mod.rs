@@ -27,13 +27,13 @@
 //!
 //! ### Basic Resource
 //!
-//! ```compile_fail
-//! use serde::{Deserialize, Serialize};
-//! use vamo::Vamo;
-//! use vamo_macros::Resource;
-//! use deboa::Result;
+//! ```rust, compile_fail
+//! use deboa::{Result, serde::RequestBody};
 //! use deboa_extras::http::serde::json::JsonBody;
 //! use deboa_tokio::Client;
+//! use serde::{Deserialize, Serialize};
+//! use vamo::{Vamo, resource::ResourceMethod};
+//! use vamo_macros::Resource;
 //!
 //! #[derive(Debug, Serialize, Deserialize, Resource)]
 //! #[name("posts")]
@@ -51,15 +51,15 @@
 //!     let mut vamo = Vamo::<Client>::new("https://jsonplaceholder.typicode.com")?;
 //!
 //!     // Create a new post
-//!     let new_post = Post {
+//!     let mut new_post = Post {
 //!         id: None,
 //!         title: "Hello World".into(),
 //!         body: "This is a test post".into(),
 //!         user_id: 1,
 //!     };
 //!
-//!     let created: Post = vamo.create(&new_post).await?;
-//!     println!("Created post with ID: {}", created.id.unwrap());
+//!     let created = vamo.create(&mut new_post)?.send().await?;
+//!     println!("Created post: {:#?}", created);
 //!
 //!     Ok(())
 //! }

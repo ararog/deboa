@@ -41,16 +41,16 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```compile_fail
+/// ```rust
 /// use deboa_tokio::Client;
-/// use serde::Deserialize;
+/// use serde::{Deserialize, Serialize};
 /// use vamo::Vamo;
 /// use vamo_macros::bora;
 ///
-/// #[bora(api(get(name = "get_post", path = "/posts/<id:i32>")))]
+/// #[bora(api(get(name = "get_post", path = "/posts/<id:i32>", res_body = Post, format = "json")))]
 /// pub struct PostService;
 ///
-/// #[derive(Deserialize)]
+/// #[derive(Debug, Deserialize, Serialize)]
 /// struct Post {
 ///     id: u32,
 ///     title: String,
@@ -58,8 +58,9 @@ use crate::resource::resource as resource_macro;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let client = Vamo::<deboa_tokio::Client>::new("https://jsonplaceholder.typicode.com")?;
-///     let mut post_service = PostService::new(client);
+///     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
+///     vamo.client(deboa_tokio::Client::default());
+///     let mut post_service = PostService::new(vamo);
 ///     let post = post_service.get_post(1).await?;
 ///     println!("Post: {:?}", post);
 ///     Ok(())
@@ -80,16 +81,15 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```compile_fail
-/// use deboa_tokio::Client;
-/// use serde::Deserialize;
+/// ```rust
+/// use serde::{Deserialize, Serialize};
 /// use vamo::Vamo;
 /// use vamo_macros::bora;
 ///
-/// #[bora(api(post(name = "create_post", path = "/posts", req_body = "Post", res_body = "Post")))]
+/// #[bora(api(post(name = "create_post", path = "/posts", req_body = Post, res_body = Post, format = "json")))]
 /// pub struct PostService;
 ///
-/// #[derive(Deserialize)]
+/// #[derive(Debug, Deserialize, Serialize)]
 /// struct Post {
 ///     id: u32,
 ///     title: String,
@@ -102,8 +102,9 @@ use crate::resource::resource as resource_macro;
 ///         title: "Post 1".to_string(),
 ///     };
 ///     
-///     let client = Vamo::<deboa_tokio::Client>::new("https://jsonplaceholder.typicode.com")?;
-///     let mut post_service = PostService::new(client);
+///     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
+///     vamo.client(deboa_tokio::Client::default());
+///     let mut post_service = PostService::new(vamo);
 ///     let created_post = post_service.create_post(post).await?;
 ///     println!("Created post: {:?}", created_post);
 ///     Ok(())
@@ -121,8 +122,7 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```compile_fail
-/// use deboa_tokio::Client;
+/// ```rust
 /// use vamo::Vamo;
 /// use vamo_macros::bora;
 ///
@@ -131,8 +131,9 @@ use crate::resource::resource as resource_macro;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let client = Vamo::<Client>::new("https://jsonplaceholder.typicode.com")?;
-///     let mut post_service = PostService::new(client);
+///     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
+///     vamo.client(deboa_tokio::Client::default());
+///     let mut post_service = PostService::new(vamo);
 ///     post_service.delete_post(1).await?;
 ///     println!("Post deleted");
 ///     Ok(())
@@ -153,16 +154,15 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```compile_fail
-/// use deboa_tokio::Client;
-/// use serde::Deserialize;
+/// ```rust
+/// use serde::{Deserialize, Serialize};
 /// use vamo::Vamo;
 /// use vamo_macros::bora;
 ///  
-/// #[bora(api(put(name = "put_post", path = "/posts/<id:i32>", req_body = "Post", res_body = "Post")))]
+/// #[bora(api(put(name = "put_post", path = "/posts/<id:i32>", req_body = Post, res_body = Post, format = "json")))]
 /// pub struct PostService;
 ///
-/// #[derive(Debug, Deserialize)]
+/// #[derive(Debug, Deserialize, Serialize)]
 /// pub struct Post {
 ///     pub id: u32,
 ///     pub title: String,
@@ -170,8 +170,9 @@ use crate::resource::resource as resource_macro;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let client = Vamo::<Client>::new("https://jsonplaceholder.typicode.com")?;
-///     let mut post_service = PostService::new(client);
+///     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
+///     vamo.client(deboa_tokio::Client::default());
+///     let mut post_service = PostService::new(vamo);
 ///     let post = post_service.put_post(1, Post { id: 1, title: "Post 1".to_string() }).await?;
 ///     println!("Post updated: {:?}", post);
 ///     Ok(())
@@ -192,16 +193,15 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```compile_fail
-/// use deboa_tokio::Client;
-/// use serde::Deserialize;
+/// ```rust
+/// use serde::{Deserialize, Serialize};
 /// use vamo::Vamo;
 /// use vamo_macros::bora;
 ///
-/// #[bora(api(patch(name = "patch_post", path = "/posts/<id:i32>", req_body = "Post", res_body = "Post")))]
+/// #[bora(api(patch(name = "patch_post", path = "/posts/<id:i32>", req_body = Post, res_body = Post, format = "json")))]
 /// pub struct PostService;
 ///
-/// #[derive(Debug, Deserialize)]
+/// #[derive(Debug, Deserialize, Serialize)]
 /// pub struct Post {
 ///     pub id: u32,
 ///     pub title: String,
@@ -209,8 +209,9 @@ use crate::resource::resource as resource_macro;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let client = Vamo::<deboa_tokio::Client>::new("https://jsonplaceholder.typicode.com")?;
-///     let mut post_service = PostService::new(client);
+///     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
+///     vamo.client(deboa_tokio::Client::default());
+///     let mut post_service = PostService::new(vamo);
 ///     let post = post_service.patch_post(1, Post { id: 1, title: "Post 1".to_string() }).await?;
 ///     println!("Post updated: {:?}", post);
 ///     Ok(())
@@ -240,28 +241,28 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// # Example
 ///
-/// ```compile_fail
-/// use deboa_tokio::Client;
+/// ```rust
+/// use deboa::serde::RequestBody;
 /// use deboa_extras::http::serde::json::JsonBody;
+/// use serde::{Deserialize, Serialize};
+/// use vamo::{Vamo, resource::ResourceMethod};
 /// use vamo_macros::Resource;
-/// use vamo::{Vamo, ResourceMethod};
 ///
-/// #[derive(Resource)]
-/// #[name("posts")]
+/// #[derive(Resource, Serialize)]
+/// #[name("users")]
 /// #[body_type(JsonBody)]
-/// struct MyResource {
+/// struct User {
 ///     #[rid("id")]
 ///     id: String,
 /// }
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let mut vamo = Vamo::<Client>::new("https://api.example.com")?;
-///
-///     // post
+///     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
+///     vamo.client(deboa_tokio::Client::default());
+///     let mut user = User { id: "1".to_string() };
 ///     let response = vamo
-///         .create(user)
-///         .await?
+///         .create(&mut user)?
 ///         .send()
 ///         .await?;
 ///     Ok(())

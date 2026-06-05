@@ -1,13 +1,4 @@
 extern crate proc_macro;
-
-use proc_macro::TokenStream;
-use proc_macro2::{Span, TokenStream as TS2};
-use quote::{format_ident, quote};
-use syn::{
-    parse_macro_input, parse_str, punctuated::Punctuated, token::Paren, Data, DeriveInput, Ident,
-    LitStr, Type, TypeTuple, Visibility,
-};
-
 use crate::bora::{
     parser::{
         api::{BoraApi, OperationEnum},
@@ -20,6 +11,13 @@ use crate::bora::{
         },
     },
     token::utils::extract_params_from_path,
+};
+use proc_macro::TokenStream;
+use proc_macro2::{Span, TokenStream as TS2};
+use quote::{format_ident, quote};
+use syn::{
+    parse_macro_input, parse_str, punctuated::Punctuated, token::Paren, Data, DeriveInput, Ident,
+    LitStr, Type, TypeTuple, Visibility,
 };
 use titlecase::titlecase;
 
@@ -49,11 +47,11 @@ fn impl_function(
             pub async fn #method_name(&mut self, #api_params body: #req_body_type) -> VamoResult<#res_body_type> {
                 self.api
                     .#deboa_method(format!(#api_path).as_ref())
-                    .set_body_as(#format_module, body)?
+                    .body_as(#format_module, body)?
                     .send()
                     .await?
                     .body_as(#format_module)
-                    .await?
+                    .await
             }
         }
     }
@@ -173,19 +171,17 @@ fn post_operation(post: &PostStruct, acc: &mut (&mut TS2, &mut TS2)) {
             });
     }
 
-    if res_body_type.eq(&unit_type) {
-        acc.1
-            .extend(impl_function(
-                &method,
-                &format_module,
-                &api_path,
-                &method_name,
-                &api_params,
-                &req_body_type,
-                res_body_type,
-                &unit_type,
-            ));
-    }
+    acc.1
+        .extend(impl_function(
+            &method,
+            &format_module,
+            &api_path,
+            &method_name,
+            &api_params,
+            &req_body_type,
+            res_body_type,
+            &unit_type,
+        ));
 }
 
 fn put_operation(put: &PutStruct, acc: &mut (&mut TS2, &mut TS2)) {

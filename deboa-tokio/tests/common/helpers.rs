@@ -1,5 +1,7 @@
-use std::net::IpAddr;
-
+use deboa_tokio::{
+    cert::{Certificate, ContentEncoding},
+    Client, HttpVersion,
+};
 use easyhttpmock_vetis_tokio::{
     config::EasyHttpMockConfig,
     mock::Mock,
@@ -7,11 +9,7 @@ use easyhttpmock_vetis_tokio::{
     vetis_adapter::{VetisAdapter, VetisAdapterConfig},
     EasyHttpMock, Protocol,
 };
-
-use deboa_tokio::{
-    cert::{Certificate, ContentEncoding},
-    Client, HttpVersion,
-};
+use std::net::IpAddr;
 
 pub(crate) const SKIP_CERT_VERIFICATION: bool = cfg!(feature = "native-tls");
 

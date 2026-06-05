@@ -1,12 +1,10 @@
-use std::error::Error;
-
+use crate::common::helpers::{client_with_cert, start_mock_server};
 use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 use vamo::Vamo;
 use vamo_macros::bora;
-
-use crate::common::helpers::{client_with_cert, start_mock_server};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Post {
@@ -19,7 +17,7 @@ pub struct Post {
 
 #[bora(
   api(
-    post(name="create_post", path="/posts", req_body=Post, format="json"),
+    post(name="create_post", path="/posts", req_body=Post, res_body=Post, format="json"),
   )
 )]
 pub struct PostService;

@@ -29,12 +29,14 @@ deboa-tokio = "0.1.0"
 ### Resource macro
 
 ```rust
+use deboa::{Result, serde::RequestBody};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tokio::Client;
+use serde::Serialize;
+use vamo::{Vamo, resource::ResourceMethod};
 use vamo_macros::Resource;
-use vamo::{Vamo, ResourceMethod};
 
-#[derive(Resource)]
+#[derive(Resource, Serialize)]
 #[name("posts")]
 #[body_type(JsonBody)]
 pub struct User {
@@ -43,30 +45,39 @@ pub struct User {
     name: String,
 }
 
-let mut vamo = Vamo::<Client>::new("https://api.example.com")?;
+#[tokio::main]
+async fn main() -> Result<()> {
+    let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
+    vamo.client(Client::new());
 
-// post
-let response = vamo
-    .create(user)
-    .await?
-    .send()
-    .await?;
+    let mut user = User {
+        id: 1,
+        name: "John Doe".to_string(),
+    };
 
-// put
-vamo.update(user)?
-    .send()
-    .await?;
+    // post
+    let response = vamo
+        .create(&mut user)?
+        .send()
+        .await?;
 
-// patch
-vamo.edit(user)?
-    .send()
-    .await?;
+    // put
+    vamo.update(&mut user)?
+        .send()
+        .await?;
 
-// delete
-vamo.remove(user)?
-    .send()
-    .await?;
+    // patch
+    vamo.edit(&mut user)?
+        .send()
+        .await?;
 
+    // delete
+    vamo.remove(&mut user)?
+        .send()
+        .await?;
+
+    Ok(())
+}
 ```
 
 ### bora macro
@@ -96,8 +107,9 @@ pub struct PostService;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client = Vamo::<Client>::new("https://jsonplaceholder.typicode.com")?;
-    let mut post_service = PostService::new(client);
+    let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
+    vamo.client(Client::new());
+    let mut post_service = PostService::new(vamo);
     let post = post_service.get_by_id(1).await?;
 
     println!("id...: {}", post.id);
