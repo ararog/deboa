@@ -19,7 +19,10 @@ async fn test_get_minimal() -> Result<(), Box<dyn Error>> {
         url => "https://jsonplaceholder.typicode.com/posts",
         client => &client
     );
-    assert!(!response.is_empty());
+    assert!(!response
+        .text()
+        .await?
+        .is_empty());
     Ok(())
 }
 
@@ -31,7 +34,10 @@ async fn test_get_minimal_headers() -> Result<(), Box<dyn Error>> {
         headers => vec![("Content-Type", "application/json")],
         client => &client
     );
-    assert!(!response.is_empty());
+    assert!(!response
+        .text()
+        .await?
+        .is_empty());
     Ok(())
 }
 

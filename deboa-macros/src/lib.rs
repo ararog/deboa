@@ -1,7 +1,14 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs)]
 
-#[macro_export]
+use proc_macro::TokenStream;
+use proc_macro2::{Span, TokenStream as TS2};
+use quote::quote;
+use syn::parse_macro_input;
+
+mod actions;
+
+#[proc_macro]
 /// Make a GET request to the specified URL.
 ///
 /// The `get!` macro is used to make a GET request to the specified URL.
@@ -75,47 +82,53 @@
 ///     Ok(())
 /// }
 /// ```
-macro_rules! get {
-    (url => $url:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(&$client, $url)
-            .await?
-            .text()
-            .await?
+pub fn get(item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(item as actions::get::GetArgs);
+
+    let url = match args.url {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'url'")
+                .to_compile_error()
+                .into()
+        }
+    };
+    let client = match args.client {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'client'")
+                .to_compile_error()
+                .into()
+        }
     };
 
-    (url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
+    let headers = match args.headers {
+        Some(headers) => quote! { .headers(#headers) },
+        None => TS2::new(),
+    };
+
+    let body = match (args.res_body_ty, args.res_ty) {
+        (Some(res_body_ty), Some(res_ty)) => {
+            quote! { .body_as::<#res_body_ty, #res_ty>(#res_body_ty).await? }
+        }
+        _ => TS2::new(),
+    };
+
+    let expanded = quote! {
         deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::get($url)?
-                .headers($headers)
+            #client,
+            deboa::request::DeboaRequest::get(#url)?
+                #headers
                 .build()?,
         )
         .await?
-        .text()
-        .await?
+        #body
     };
 
-    (url => $url:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
-        deboa::HttpClient::execute(&$client, $url)
-            .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-            .await?
-    };
-
-    (url => $url:expr, headers => $headers:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::get($url)?
-                .headers($headers)
-                .build()?,
-        )
-        .await?
-        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-        .await?
-    };
+    TokenStream::from(expanded)
 }
 
-#[macro_export]
+#[proc_macro]
 /// Make a POST request to the specified URL.
 ///
 /// The `post!` macro is used to make a POST request to the specified URL.
@@ -227,96 +240,60 @@ macro_rules! get {
 ///     Ok(())
 /// }
 /// ```
-macro_rules! post {
-    (data => $input:ident, url => $url:literal, client => &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::post($url)?
-                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                .build()?,
-        )
-        .await?
+pub fn post(item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(item as actions::post::PostArgs);
+
+    let url = match args.url {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'url'")
+                .to_compile_error()
+                .into()
+        }
+    };
+    let client = match args.client {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'client'")
+                .to_compile_error()
+                .into()
+        }
     };
 
-    (data => $input:ident, url => $url:expr, client =>&$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::post($url)?
-                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                .build()?,
-        )
-        .await?
+    let headers = match args.headers {
+        Some(headers) => quote! { .headers(#headers) },
+        None => TS2::new(),
     };
 
-    (data => $input:ident, url => $url:literal, headers => $headers:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::post($url)?
-                .headers($headers)
-                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                .build()?,
-        )
-        .await?
+    let req_body = match (args.req_body_ty, args.data) {
+        (Some(req_body_ty), Some(data)) => quote! { .body_as(#req_body_ty, #data)? },
+        _ => TS2::new(),
     };
 
-    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:literal, client => &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::post($url)?
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
+    let res_body = match (args.res_body_ty, args.res_ty) {
+        (Some(res_body_ty), Some(res_ty)) => {
+            quote! { .body_as::<#res_body_ty, #res_ty>(#res_body_ty).await? }
+        }
+        _ => TS2::new(),
     };
 
-    (data => $input:ident, req_body_ty=> $req_body_ty:ident, url => $url:expr, client => &$client:ident) => {
+    // Generate the final token stream
+    let expanded = quote! {
         deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::post($url)?
-                .body_as($req_body_ty, $input)?
+            #client,
+            deboa::request::DeboaRequest::post(#url)?
+                #headers
+                #req_body
                 .build()?,
         )
         .await?
+        #res_body
     };
 
-    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::post($url)?
-                .headers($headers)
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
-    };
-
-    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::post($url)?
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
-        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-        .await?
-    };
-
-    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::post($url)?
-                .headers($headers)
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
-        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-        .await?
-    };
+    TokenStream::from(expanded)
 }
 
-#[macro_export]
+#[proc_macro]
 /// Make a PUT request to the specified URL.
 ///
 /// The `put!` macro is used to make a PUT request to the specified URL
@@ -367,76 +344,60 @@ macro_rules! post {
 ///     Ok(())
 /// }
 /// ```
-macro_rules! put {
-    (data => $input:ident, url => $url:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::put($url)?
-                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                .build()?,
-        )
-        .await?
+pub fn put(item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(item as actions::put::PutArgs);
+
+    let url = match args.url {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'url'")
+                .to_compile_error()
+                .into()
+        }
+    };
+    let client = match args.client {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'client'")
+                .to_compile_error()
+                .into()
+        }
     };
 
-    (data => $input:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::put($url)?
-                .headers($headers)
-                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                .build()?,
-        )
-        .await?
+    let headers = match args.headers {
+        Some(headers) => quote! { .headers(#headers) },
+        None => TS2::new(),
     };
 
-    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::put($url)?
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
+    let req_body = match (args.req_body_ty, args.data) {
+        (Some(req_body_ty), Some(data)) => quote! { .body_as(#req_body_ty, #data)? },
+        _ => TS2::new(),
     };
 
-    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::put($url)?
-                .headers($headers)
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
+    let res_body = match (args.res_body_ty, args.res_ty) {
+        (Some(res_body_ty), Some(res_ty)) => {
+            quote! { .body_as::<#res_body_ty, #res_ty>(#res_body_ty).await? }
+        }
+        _ => TS2::new(),
     };
 
-    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
+    // Generate the final token stream
+    let expanded = quote! {
         deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::put($url)?
-                .body_as($req_body_ty, $input)?
+            #client,
+            deboa::request::DeboaRequest::put(#url)?
+                #headers
+                #req_body
                 .build()?,
         )
         .await?
-        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-        .await?
+        #res_body
     };
 
-    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::put($url)?
-                .headers($headers)
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
-        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-        .await?
-    };
+    TokenStream::from(expanded)
 }
 
-#[macro_export]
+#[proc_macro]
 /// Make a PATCH request to the specified URL.
 ///
 /// The `patch!` macro is used to make a PATCH request to the specified URL
@@ -487,87 +448,60 @@ macro_rules! put {
 ///     Ok(())
 /// }
 /// ```
-macro_rules! patch {
-    (data => $input:ident, url => $url:literal, client => &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::patch($url)?
-                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
-                .build()?,
-        )
-        .await?
+pub fn patch(item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(item as actions::patch::PatchArgs);
+
+    let url = match args.url {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'url'")
+                .to_compile_error()
+                .into()
+        }
+    };
+    let client = match args.client {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'client'")
+                .to_compile_error()
+                .into()
+        }
     };
 
-    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::patch($url)?
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
+    let headers = match args.headers {
+        Some(headers) => quote! { .headers(#headers) },
+        None => TS2::new(),
     };
 
-    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:literal, headers => $headers:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::patch($url)?
-                .headers($headers)
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
+    let req_body = match (args.req_body_ty, args.data) {
+        (Some(req_body_ty), Some(data)) => quote! { .body_as(#req_body_ty, #data)? },
+        _ => TS2::new(),
     };
 
-    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::patch($url)?
-                .headers($headers)
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
+    let res_body = match (args.res_body_ty, args.res_ty) {
+        (Some(res_body_ty), Some(res_ty)) => {
+            quote! { .body_as::<#res_body_ty, #res_ty>(#res_body_ty).await? }
+        }
+        _ => TS2::new(),
     };
 
-    (data => $input:expr, url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
+    // Generate the final token stream
+    let expanded = quote! {
         deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::patch($url)?
-                .headers($headers)
-                .body_as(deboa_extras::http::serde::json::JsonBody, $input)?
+            #client,
+            deboa::request::DeboaRequest::patch(#url)?
+                #headers
+                #req_body
                 .build()?,
         )
         .await?
+        #res_body
     };
 
-    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::patch($url)?
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
-        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-        .await?
-    };
-
-    (data => $input:ident, req_body_ty => $req_body_ty:ident, url => $url:expr, headers => $headers:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::patch($url)?
-                .headers($headers)
-                .body_as($req_body_ty, $input)?
-                .build()?,
-        )
-        .await?
-        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-        .await?
-    };
+    TokenStream::from(expanded)
 }
 
-#[macro_export]
+#[proc_macro]
 /// Make a DELETE request to the specified URL.
 ///
 /// The `delete!` macro is used to make a DELETE request to the specified URL
@@ -603,24 +537,47 @@ macro_rules! patch {
 ///     Ok(())
 /// }
 /// ```
-macro_rules! delete {
-    (url => $url:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(&$client, deboa::request::DeboaRequest::delete($url)?.build()?)
-            .await?
+pub fn delete(item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(item as actions::delete::DeleteArgs);
+
+    // Enforce required fields
+    let url = match args.url {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'url'")
+                .to_compile_error()
+                .into()
+        }
+    };
+    let client = match args.client {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'client'")
+                .to_compile_error()
+                .into()
+        }
     };
 
-    (url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
+    let headers = match args.headers {
+        Some(headers) => quote! { .headers(#headers) },
+        None => TS2::new(),
+    };
+
+    // Generate the final token stream
+    let expanded = quote! {
         deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::delete($url)?
-                .headers($headers)
+            #client,
+            deboa::request::DeboaRequest::delete(#url)?
+                #headers
                 .build()?,
         )
         .await?
     };
+
+    TokenStream::from(expanded)
 }
 
-#[macro_export]
+#[proc_macro]
 /// Make a GET request to the specified URL.
 ///
 /// The `fetch!` macro is a more generic version of the `get!` macro.
@@ -664,41 +621,55 @@ macro_rules! delete {
 ///     Ok(())
 /// }
 /// ```
-macro_rules! fetch {
-    (url => $url:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(&$client, $url).await?
+pub fn fetch(item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(item as actions::get::GetArgs);
+
+    // Enforce required fields
+    let url = match args.url {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'url'")
+                .to_compile_error()
+                .into()
+        }
+    };
+    let client = match args.client {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'client'")
+                .to_compile_error()
+                .into()
+        }
     };
 
-    (url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
+    let headers = match args.headers {
+        Some(headers) => quote! { .headers(#headers) },
+        None => TS2::new(),
+    };
+
+    let body = match (args.res_body_ty, args.res_ty) {
+        (Some(res_body_ty), Some(res_ty)) => {
+            quote! { .body_as::<#res_body_ty, #res_ty>(#res_body_ty).await? }
+        }
+        _ => TS2::new(),
+    };
+
+    // Generate the final token stream
+    let expanded = quote! {
         deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::get($url)?
-                .headers($headers)
+            #client,
+            deboa::request::DeboaRequest::get(#url)?
+                #headers
                 .build()?,
         )
         .await?
+        #body
     };
 
-    (url => $url:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
-        deboa::HttpClient::execute(&$client, $url)
-            .await?
-            .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-            .await?
-    };
-
-    (url => $url:expr, headers => $headers:expr, client => &$client:ident, res_body_ty => $res_body_ty:ident, res_ty => $res_ty:ty) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::get($url)?
-                .headers($headers)
-                .build()?,
-        )
-        .await?
-        .body_as::<$res_body_ty, $res_ty>($res_body_ty)
-        .await?
-    };
+    TokenStream::from(expanded)
 }
-#[macro_export]
+
+#[proc_macro]
 /// Submit a request to the specified URL.
 ///
 /// The `submit!` macro is a more generic version of the `get!` macro.
@@ -737,30 +708,61 @@ macro_rules! fetch {
 ///     Ok(())
 /// }
 /// ```
-macro_rules! submit {
-    (method => $method:expr, data => $input:expr, url => $url:expr, client => &$client:ident) => {
+pub fn submit(item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(item as actions::submit::SubmitArgs);
+
+    // Enforce required fields
+    let url = match args.url {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'url'")
+                .to_compile_error()
+                .into()
+        }
+    };
+    let client = match args.client {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'client'")
+                .to_compile_error()
+                .into()
+        }
+    };
+    let method = match args.method {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'method'")
+                .to_compile_error()
+                .into()
+        }
+    };
+
+    let headers = match args.headers {
+        Some(headers) => quote! { .headers(#headers) },
+        None => TS2::new(),
+    };
+
+    let data = match args.data {
+        Some(data) => quote! { .text(#data) },
+        None => TS2::new(),
+    };
+
+    // Generate the final token stream
+    let expanded = quote! {
         deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::at($url, $method)?
-                .text($input)
+            #client,
+            deboa::request::DeboaRequest::at(#url, #method)?
+                #headers
+                #data
                 .build()?,
         )
         .await?
     };
 
-    (method => $method:expr, data => $input:expr, url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::at($url, $method)?
-                .headers($headers)
-                .text($input)
-                .build()?,
-        )
-        .await?
-    };
+    TokenStream::from(expanded)
 }
 
-#[macro_export]
+#[proc_macro]
 /// Make a GET request to the specified URL, returning a stream.
 ///
 /// The `stream!` macro is used to make a GET request to the specified URL
@@ -791,21 +793,43 @@ macro_rules! submit {
 ///     Ok(())
 /// }
 /// ```
-macro_rules! stream {
-    (url => $url:expr, client => &$client:ident) => {
-        deboa::HttpClient::execute(&$client, $url)
-            .await?
-            .stream()
+pub fn stream(item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(item as actions::get::GetArgs);
+
+    // Enforce required fields
+    let url = match args.url {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'url'")
+                .to_compile_error()
+                .into()
+        }
+    };
+    let client = match args.client {
+        Some(e) => e,
+        None => {
+            return syn::Error::new(Span::call_site(), "Missing required field: 'client'")
+                .to_compile_error()
+                .into()
+        }
     };
 
-    (url => $url:expr, headers => $headers:expr, client => &$client:ident) => {
+    let headers = match args.headers {
+        Some(headers) => quote! { .headers(#headers) },
+        None => TS2::new(),
+    };
+
+    // Generate the final token stream
+    let expanded = quote! {
         deboa::HttpClient::execute(
-            &$client,
-            deboa::request::DeboaRequest::get($url)?
-                .headers($headers)?
+            #client,
+            deboa::request::DeboaRequest::get(#url)?
+                #headers
                 .build()?,
         )
         .await?
         .stream()
     };
+
+    TokenStream::from(expanded)
 }

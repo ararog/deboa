@@ -18,8 +18,14 @@ pub struct Post {
 #[apply(test!)]
 async fn test_get_minimal() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
-    let response = get!(url => "https://jsonplaceholder.typicode.com/posts", client => &client);
-    assert!(!response.is_empty());
+    let response = get!(
+      url => "https://jsonplaceholder.typicode.com/posts",
+      client => &client
+    );
+    assert!(!response
+        .text()
+        .await?
+        .is_empty());
     Ok(())
 }
 
@@ -31,7 +37,10 @@ async fn test_get_minimal_headers() -> Result<(), Box<dyn Error>> {
         headers => vec![("Content-Type", "application/json")],
         client => &client
     );
-    assert!(!response.is_empty());
+    assert!(!response
+        .text()
+        .await?
+        .is_empty());
     Ok(())
 }
 
@@ -53,8 +62,8 @@ async fn test_get_with_headers() -> Result<(), Box<dyn Error>> {
     let client = Client::default();
     let response = get!(
         url => "https://jsonplaceholder.typicode.com/posts",
-        headers => vec![("User-Agent", "deboa")],
         client => &client,
+        headers => vec![("User-Agent", "deboa")],
         res_body_ty => JsonBody,
         res_ty => Vec<Post>
     );

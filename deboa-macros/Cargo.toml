@@ -12,6 +12,9 @@ keywords = ["compiler-plugin", "macros"]
 publish = true
 rust-version.workspace = true
 
+[lib]
+proc-macro = true
+
 [features]
 default = [
   "json",
@@ -24,7 +27,10 @@ msgpack = ["deboa-extras/msgpack"]
 deboa = { workspace = true, default-features = false }
 deboa-extras = { workspace = true, default-features = false, optional = true }
 http = "1.4.0"
+proc-macro2 = "1.0.106"
+quote = "1.0.45"
 serde = "1.0.228"
+syn = "2.0.117"
 
 [dev-dependencies]
 deboa-tokio = { workspace = true }
