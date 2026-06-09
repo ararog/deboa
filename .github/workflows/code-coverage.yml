@@ -21,7 +21,7 @@ jobs:
           CARGO_INCREMENTAL=0 cargo +nightly tarpaulin --verbose --workspace --timeout 120 --engine llvm --out xml -- --test-threads 1
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           fail_ci_if_error: true
