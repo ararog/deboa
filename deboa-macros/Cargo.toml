@@ -26,7 +26,7 @@ msgpack = ["deboa-extras/msgpack"]
 [dependencies]
 deboa = { workspace = true, default-features = false }
 deboa-extras = { workspace = true, default-features = false, optional = true }
-http = "1.4.0"
+http = "1.4.2"
 proc-macro2 = "1.0.106"
 quote = "1.0.45"
 serde = "1.0.228"

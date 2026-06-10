@@ -23,7 +23,7 @@ json = ["deboa-extras/json"]
 base64 = "0.22.1"
 deboa = { workspace = true, default-features = false }
 deboa-extras = { workspace = true, default-features = false }
-http = "1.4.0"
+http = "1.4.2"
 serde = "1.0.228"
 url = "2.5.8"
 

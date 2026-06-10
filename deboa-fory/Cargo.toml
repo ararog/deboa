@@ -19,4 +19,4 @@ default = []
 deboa = { workspace = true, default-features = false }
 fory = "1.1.0"
 fory-core = "1.1.0"
-http = "1.4.0"
+http = "1.4.2"

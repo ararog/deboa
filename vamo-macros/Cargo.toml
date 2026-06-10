@@ -31,8 +31,8 @@ proc-macro2 = "1.0.103"
 serde = "1.0.228"
 syn = { version = "2.0", features = ["full"] }
 quote = "1.0.41"
-http = "1.4.0"
-regex = "1.9.6"
+http = "1.4.2"
+regex = "1.12.4"
 titlecase = "2.2.1"
 
 [dev-dependencies]
