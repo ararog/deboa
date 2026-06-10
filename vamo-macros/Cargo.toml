@@ -33,7 +33,7 @@ syn = { version = "2.0", features = ["full"] }
 quote = "1.0.41"
 http = "1.4.2"
 regex = "1.12.4"
-titlecase = "2.2.1"
+titlecase = "3.6.0"
 
 [dev-dependencies]
 deboa-tokio = { workspace = true }
