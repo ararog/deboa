@@ -94,14 +94,14 @@ hyper-util = { version = "0.1.20", features = [
   "tokio",
 ], default-features = false }
 indexmap = "2.11.4"
-log = "0.4.31"
+log = "0.4.32"
 minimime = "1.0.0"
 mockall = "0.14.0"
 quinn = { version = "0.11.7", optional = true, features = [
   "runtime-tokio",
 ], default-features = false }
 rand = "0.10.1"
-regex = "1.9.6"
+regex = "1.12.4"
 rustls = { version = "0.23.36", optional = true, default-features = false }
 rustls-native-certs = { version = "0.8.4", optional = true, default-features = false }
 rustls-pki-types = { version = "1.14.1", optional = true, default-features = false }
