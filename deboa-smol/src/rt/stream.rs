@@ -46,6 +46,7 @@ impl AsyncRead for SmolStream {
     ) -> Poll<io::Result<usize>> {
         match &mut *self {
             SmolStream::Plain(stream) => Pin::new(stream).poll_read(cx, buf),
+            #[cfg(any(feature = "native-tls", feature = "rust-tls"))]
             SmolStream::Tls(stream) => Pin::new(stream).poll_read(cx, buf),
         }
     }
@@ -69,6 +70,7 @@ impl AsyncWrite for SmolStream {
     ) -> Poll<io::Result<usize>> {
         match &mut *self {
             SmolStream::Plain(stream) => Pin::new(stream).poll_write(cx, buf),
+            #[cfg(any(feature = "native-tls", feature = "rust-tls"))]
             SmolStream::Tls(stream) => Pin::new(stream).poll_write(cx, buf),
         }
     }
@@ -76,6 +78,7 @@ impl AsyncWrite for SmolStream {
     fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
         match &mut *self {
             SmolStream::Plain(stream) => Pin::new(stream).poll_close(cx),
+            #[cfg(any(feature = "native-tls", feature = "rust-tls"))]
             SmolStream::Tls(stream) => Pin::new(stream).poll_close(cx),
         }
     }
@@ -83,6 +86,7 @@ impl AsyncWrite for SmolStream {
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
         match &mut *self {
             SmolStream::Plain(stream) => Pin::new(stream).poll_flush(cx),
+            #[cfg(any(feature = "native-tls", feature = "rust-tls"))]
             SmolStream::Tls(stream) => Pin::new(stream).poll_flush(cx),
         }
     }

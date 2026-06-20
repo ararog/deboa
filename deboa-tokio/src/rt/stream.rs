@@ -36,6 +36,7 @@ impl AsyncRead for TokioStream {
     ) -> std::task::Poll<std::result::Result<(), std::io::Error>> {
         match &mut *self {
             TokioStream::Plain(stream) => Pin::new(stream).poll_read(cx, buf),
+            #[cfg(any(feature = "native-tls", feature = "rust-tls"))]
             TokioStream::Tls(stream) => Pin::new(stream).poll_read(cx, buf),
         }
     }
@@ -49,6 +50,7 @@ impl AsyncWrite for TokioStream {
     ) -> Poll<io::Result<usize>> {
         match &mut *self {
             TokioStream::Plain(stream) => Pin::new(stream).poll_write(cx, buf),
+            #[cfg(any(feature = "native-tls", feature = "rust-tls"))]
             TokioStream::Tls(stream) => Pin::new(stream).poll_write(cx, buf),
         }
     }
@@ -59,6 +61,7 @@ impl AsyncWrite for TokioStream {
     ) -> Poll<Result<(), std::io::Error>> {
         match &mut *self {
             TokioStream::Plain(stream) => Pin::new(stream).poll_shutdown(cx),
+            #[cfg(any(feature = "native-tls", feature = "rust-tls"))]
             TokioStream::Tls(stream) => Pin::new(stream).poll_shutdown(cx),
         }
     }
@@ -66,6 +69,7 @@ impl AsyncWrite for TokioStream {
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
         match &mut *self {
             TokioStream::Plain(stream) => Pin::new(stream).poll_flush(cx),
+            #[cfg(any(feature = "native-tls", feature = "rust-tls"))]
             TokioStream::Tls(stream) => Pin::new(stream).poll_flush(cx),
         }
     }
