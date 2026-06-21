@@ -1,3 +1,4 @@
+use crate::rt::stream::TokioStream;
 use deboa::{
     errors::{ConnectionError, DeboaError},
     Result,
@@ -8,8 +9,6 @@ use hickory_resolver::{
     TokioAsyncResolver,
 };
 use tokio::net::TcpStream;
-
-use crate::rt::stream::TokioStream;
 
 pub(crate) async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
     let resolver = TokioAsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default());

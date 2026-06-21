@@ -17,9 +17,13 @@ all-features = true
 
 [features]
 default = [
-  "http1",
+  "http2",
+  "rust-tls",
+  "default-rustls-provider",
+  "default-rustls-verifier",
 ]
 
+# tls
 rust-tls = [
   "dep:rustls",
   "dep:rustls-native-certs",
@@ -127,7 +131,7 @@ deboa-extras = { workspace = true, default-features = false }
 deboa-fory = { workspace = true, default-features = false }
 deboa-macros = { workspace = true }
 easyhttpmock-vetis-tokio = { version = "0.1.0-beta.2", features = [
-  "http1",
+  "http2",
   "rust-tls",
 ], default-features = false }
 fory = "1.1.0"

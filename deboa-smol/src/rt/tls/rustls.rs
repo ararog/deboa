@@ -1,22 +1,13 @@
-use std::sync::Arc;
-
-use async_std_resolver::{
-    config::{ResolverConfig, ResolverOpts},
-    resolver,
-};
-
 use crate::{
     cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
     client::conn::rustls::setup_rust_tls,
-    rt::stream::SmolStream,
+    rt::{plain::create_stream, stream::SmolStream},
     Result,
 };
-
 use deboa::errors::{ConnectionError, DeboaError};
 use futures_rustls::TlsConnector;
-use hickory_resolver::error::ResolveErrorKind;
 use rustls::pki_types::ServerName;
-use smol::net::TcpStream;
+use std::sync::Arc;
 
 pub(crate) async fn tls_connection(
     host: &str,

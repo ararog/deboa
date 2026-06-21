@@ -10,13 +10,17 @@ readme = "README.md"
 license.workspace = true
 keywords = ["http", "networking", "client", "fetch", "rest-client"]
 publish = true
+rust-version.workspace = true
 
 [package.metadata.docs.rs]
 all-features = true
 
 [features]
 default = [
-  "http1",
+  "http2",
+  "rust-tls",
+  "default-rustls-provider",
+  "default-rustls-verifier",
 ]
 
 # tls
@@ -65,7 +69,7 @@ http3 = [
 
 [dependencies]
 async-executor = { version = "1.13.3", optional = true, default-features = false }
-async-native-tls = { version = "0.5.0",optional = true, default-features = false }
+async-native-tls = { version = "0.5.0", optional = true, default-features = false }
 async-std-resolver = { version = "=0.24.4", default-features = false }
 async-trait = "0.1.89"
 base64 = "0.22.1"
@@ -120,7 +124,8 @@ deboa-extras = { workspace = true, default-features = false }
 deboa-fory = { workspace = true, default-features = false }
 deboa-macros = { workspace = true }
 easyhttpmock-vetis-smol = { version = "0.1.0-beta.2", features = [
-  "http1",
+  "http2",
+  "rust-tls",
 ], default-features = false }
 fory = "1.1.0"
 fory-core = "1.1.0"

@@ -1,11 +1,8 @@
-use std::error::Error;
-
+use crate::common::helpers::{create_client, start_mock_server};
 use deboa_macros::submit;
-use deboa_tokio::Client;
 use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
 use http::{Method, StatusCode};
-
-use crate::common::helpers::start_mock_server;
+use std::error::Error;
 
 #[tokio::test]
 async fn test_submit_str_minimal() -> Result<(), Box<dyn Error>> {
@@ -21,7 +18,7 @@ async fn test_submit_str_minimal() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let response = submit!(
         method => Method::POST,
         data => "user=deboa",
@@ -51,7 +48,7 @@ async fn test_submit_str_method() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let headers = vec![("Content-Type", "application/x-www-form-urlencoded")];
     let response = submit!(
         method => Method::POST,

@@ -1,10 +1,10 @@
-use crate::rt::{
-    executor::SmolExecutor,
-    tls::{plain_connection, tls_connection},
-};
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+use crate::alpn;
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+use crate::rt::tls::tls_connection;
 use crate::{
-    alpn,
     client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
+    rt::{executor::SmolExecutor, plain::plain_connection},
     Result,
 };
 use deboa::request::Http2Request;

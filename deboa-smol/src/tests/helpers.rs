@@ -14,25 +14,25 @@ use crate::{
     Client, HttpVersion,
 };
 
-pub const CA_CERT: &[u8] = include_bytes!("../../../certs/ca.der");
-// pub const CA_CERT_PEM: &[u8] = include_bytes!("../../../certs/ca.crt");
+pub(crate) const CA_CERT: &[u8] = include_bytes!("../../../certs/ca.der");
+// pub(crate) const CA_CERT_PEM: &[u8] = include_bytes!("../../../certs/ca.crt");
 
-pub const SERVER_CERT: &[u8] = include_bytes!("../../../certs/server.der");
-pub const SERVER_KEY: &[u8] = include_bytes!("../../../certs/server.key.der");
+pub(crate) const SERVER_CERT: &[u8] = include_bytes!("../../../certs/server.der");
+pub(crate) const SERVER_KEY: &[u8] = include_bytes!("../../../certs/server.key.der");
 
-// pub const IP6_SERVER_CERT: &[u8] = include_bytes!("../../../certs/ip6-server.der");
-// pub const IP6_SERVER_KEY: &[u8] = include_bytes!("../../../certs/ip6-server.key.der");
+// pub(crate) const IP6_SERVER_CERT: &[u8] = include_bytes!("../../../certs/ip6-server.der");
+// pub(crate) const IP6_SERVER_KEY: &[u8] = include_bytes!("../../../certs/ip6-server.key.der");
 
-// pub const SERVER_CERT_PEM: &[u8] = include_bytes!("../../../certs/server.crt");
-// pub const SERVER_KEY_PEM: &[u8] = include_bytes!("../../../certs/server.key");
+// pub(crate) const SERVER_CERT_PEM: &[u8] = include_bytes!("../../../certs/server.crt");
+// pub(crate) const SERVER_KEY_PEM: &[u8] = include_bytes!("../../../certs/server.key");
 
-// pub const CLIENT_CERT: &[u8] = include_bytes!("../../../certs/client.der");
-// pub const CLIENT_KEY: &[u8] = include_bytes!("../../../certs/client.key.der");
+pub(crate) const CLIENT_CERT: &[u8] = include_bytes!("../../../certs/client.der");
+pub(crate) const CLIENT_KEY: &[u8] = include_bytes!("../../../certs/client.key.der");
 
-// pub const CLIENT_CERT_PEM: &[u8] = include_bytes!("../../../certs/client.crt");
-// pub const CLIENT_KEY_PEM: &[u8] = include_bytes!("../../../certs/client.key");
+pub(crate) const CLIENT_CERT_PEM: &[u8] = include_bytes!("../../../certs/client.crt");
+pub(crate) const CLIENT_KEY_PEM: &[u8] = include_bytes!("../../../certs/client.key");
 
-// pub const CLIENT_P12: &[u8] = include_bytes!("../../../certs/client.p12");
+pub(crate) const CLIENT_P12: &[u8] = include_bytes!("../../../certs/client.p12");
 
 pub(crate) const fn deboa_default_protocol() -> HttpVersion {
     #[cfg(feature = "http1")]
@@ -92,7 +92,7 @@ pub(crate) fn create_client() -> Client {
 }
 
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-pub async fn tls_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
+pub(crate) async fn tls_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
 
@@ -134,7 +134,7 @@ pub async fn tls_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
 }
 
 #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]
-pub async fn plain_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
+pub(crate) async fn plain_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
 
@@ -169,7 +169,7 @@ pub async fn plain_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
     server
 }
 
-pub async fn start_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
+pub(crate) async fn start_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
     #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
     return tls_mock_server(mock).await;
     #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]

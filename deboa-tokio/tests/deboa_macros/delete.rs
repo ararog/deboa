@@ -1,6 +1,5 @@
-use crate::common::helpers::start_mock_server;
+use crate::common::helpers::{create_client, start_mock_server};
 use deboa_macros::delete;
-use deboa_tokio::Client;
 use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
 use http::StatusCode;
 use std::error::Error;
@@ -19,7 +18,7 @@ async fn delete() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let response = delete!(
         url => server.url("/posts/1"),
         client => &client
@@ -47,7 +46,7 @@ async fn delete_with_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let headers = vec![("User-Agent", "deboa")];
     let response = delete!(
         url => server.url("/posts/1"),

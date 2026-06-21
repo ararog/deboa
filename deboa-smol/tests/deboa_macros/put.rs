@@ -1,18 +1,15 @@
-use std::error::Error;
-
+use crate::common::{
+    data::{Post, PostWithId},
+    helpers::{create_client, start_mock_server},
+};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_macros::put;
 use deboa_smol::Client;
 use easyhttpmock_vetis_smol::mock::{MethodExt, Mock, StatusCodeExt};
 use http::StatusCode;
-
 use macro_rules_attribute::apply;
 use smol_macros::test;
-
-use crate::common::{
-    data::{Post, PostWithId},
-    helpers::start_mock_server,
-};
+use std::error::Error;
 
 #[apply(test!)]
 async fn test_only_put_minimal() -> Result<(), Box<dyn Error>> {
@@ -28,7 +25,7 @@ async fn test_only_put_minimal() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = put!(
         data => data,
@@ -56,7 +53,7 @@ async fn test_only_put_minimal_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = put!(
@@ -86,7 +83,7 @@ async fn test_put() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = put!(
         data => data,
@@ -114,7 +111,7 @@ async fn test_put_with_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = put!(
@@ -144,7 +141,7 @@ async fn test_put_with_json_body_request() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = put!(
@@ -175,7 +172,7 @@ async fn test_put_with_json_body_no_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = put!(
         data => data,
@@ -206,7 +203,7 @@ async fn test_put_with_json_body_response() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = put!(

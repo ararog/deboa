@@ -1,14 +1,10 @@
-use std::error::Error;
-
+use crate::common::helpers::{create_client, start_mock_server};
 use deboa_macros::delete;
-use deboa_smol::Client;
-
 use easyhttpmock_vetis_smol::mock::{MethodExt, Mock, StatusCodeExt};
 use http::StatusCode;
 use macro_rules_attribute::apply;
 use smol_macros::test;
-
-use crate::common::helpers::start_mock_server;
+use std::error::Error;
 
 #[apply(test!)]
 async fn delete() -> Result<(), Box<dyn Error>> {
@@ -24,7 +20,7 @@ async fn delete() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let response = delete!(
         url => server.url("/posts/1"),
         client => &client
@@ -52,7 +48,7 @@ async fn delete_with_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let response = delete!(
         url => server.url("/posts/1"),
         headers => vec![("User-Agent", "deboa")],

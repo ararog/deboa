@@ -1,23 +1,21 @@
+use crate::cert::{ContentEncoding, Identity};
+#[cfg(feature = "rust-tls")]
+use crate::tests::helpers::{CLIENT_CERT, CLIENT_KEY};
+#[cfg(feature = "native-tls")]
+use crate::tests::helpers::{CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
 use crate::{
-    cert::{ContentEncoding, Identity},
     tests::{
         helpers::{create_client, start_mock_server, CA_CERT},
         TestResult,
     },
     Client, HttpVersion,
 };
-
-#[cfg(feature = "rust-tls")]
-use crate::tests::helpers::{CLIENT_CERT, CLIENT_KEY};
-#[cfg(feature = "native-tls")]
-use crate::tests::helpers::{CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
 use deboa::{
     errors::{ConnectionError, DeboaError, ResponseError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
     HttpClient,
 };
-
 use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
 use http::StatusCode;
 

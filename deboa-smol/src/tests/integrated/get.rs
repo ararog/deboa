@@ -1,6 +1,9 @@
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::{ConnectionConfig, Identity};
-
+use crate::cert::{ContentEncoding, Identity};
+#[cfg(feature = "rust-tls")]
+use crate::tests::helpers::{CA_CERT, CLIENT_CERT, CLIENT_KEY};
+#[cfg(feature = "native-tls")]
+use crate::tests::helpers::{CA_CERT, CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
 use crate::{
     tests::{
         helpers::{create_client, start_mock_server},
@@ -8,21 +11,14 @@ use crate::{
     },
     Client, HttpVersion,
 };
-
-#[cfg(feature = "rust-tls")]
-use crate::tests::helpers::{CA_CERT, CLIENT_CERT, CLIENT_KEY};
-#[cfg(feature = "native-tls")]
-use crate::tests::helpers::{CA_CERT, CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
 use deboa::{
     errors::{ConnectionError, DeboaError, ResponseError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
     HttpClient,
 };
-
 use easyhttpmock_vetis_smol::mock::{MethodExt, Mock, StatusCodeExt};
 use http::StatusCode;
-
 use macro_rules_attribute::apply;
 use smol_macros::test;
 

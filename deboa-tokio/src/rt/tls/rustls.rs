@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::{
     cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
     client::conn::rustls::setup_rust_tls,
@@ -10,6 +8,7 @@ use deboa::{
     Result,
 };
 use rustls::pki_types::ServerName;
+use std::sync::Arc;
 use tokio_rustls::TlsConnector;
 
 pub(crate) async fn tls_connection(

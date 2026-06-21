@@ -1,21 +1,18 @@
 #[cfg(feature = "native-tls")]
 use async_native_tls::TlsStream;
-
 #[cfg(feature = "rust-tls")]
 use futures_rustls::client::TlsStream;
-
+use smol::{
+    io::{self, AsyncRead, AsyncWrite},
+    net::TcpStream,
+};
 use std::{
     pin::Pin,
     task::{Context, Poll},
 };
 
-use smol::{
-    io::{self, AsyncRead, AsyncWrite},
-    net::TcpStream,
-};
-
 /// A stream that can be either plain TCP or TLS-secured.
-pub enum SmolStream {
+pub(crate) enum SmolStream {
     /// A plain TCP connection.
     Plain(TcpStream),
 

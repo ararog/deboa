@@ -1,4 +1,7 @@
-use crate::common::{data::Post, helpers::start_mock_server};
+use crate::common::{
+    data::Post,
+    helpers::{create_client, start_mock_server},
+};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_macros::get;
 use deboa_smol::Client;
@@ -22,7 +25,7 @@ async fn test_get_minimal() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let response = get!(
       url => server.url("/posts"),
       client => &client
@@ -51,7 +54,7 @@ async fn test_get_minimal_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let response = get!(
         url => server.url("/posts"),
         headers => vec![("Content-Type", "application/json")],
@@ -81,7 +84,7 @@ async fn test_get() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let response = get!(
         url => server.url("/posts"),
         client => &client,
@@ -109,7 +112,7 @@ async fn test_get_with_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let response = get!(
         url => server.url("/posts"),
         client => &client,

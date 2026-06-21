@@ -1,21 +1,18 @@
 #[cfg(feature = "native-tls")]
 use async_native_tls::TlsStream;
-
-#[cfg(feature = "rust-tls")]
-use tokio_rustls::client::TlsStream;
-
 use std::{
     pin::Pin,
     task::{Context, Poll},
 };
-
 use tokio::{
     io::{self, AsyncRead, AsyncWrite},
     net::TcpStream,
 };
+#[cfg(feature = "rust-tls")]
+use tokio_rustls::client::TlsStream;
 
 /// Stream enum for runtime-specific stream implementations.
-pub enum TokioStream {
+pub(crate) enum TokioStream {
     /// A plain TCP connection.
     Plain(TcpStream),
 

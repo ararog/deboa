@@ -1,10 +1,9 @@
 use crate::common::{
     data::{Post, PostWithId},
-    helpers::start_mock_server,
+    helpers::{create_client, start_mock_server},
 };
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_macros::patch;
-use deboa_tokio::Client;
 use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
 use http::StatusCode;
 use std::error::Error;
@@ -23,7 +22,7 @@ async fn test_only_patch_minimal() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: PostWithId = PostWithId { id: 1 };
     let response = patch!(
         data => data,
@@ -51,7 +50,7 @@ async fn test_only_patch_minimal_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let response = patch!(
         data => Post { id: 1, title: "title".to_string(), body: "body".to_string() },
         url => server.url("/posts/1"),
@@ -79,7 +78,7 @@ async fn test_patch() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = patch!(
         data => data,
@@ -107,7 +106,7 @@ async fn test_patch_with_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = patch!(
@@ -137,7 +136,7 @@ async fn test_patch_with_json_body_request() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = patch!(
@@ -168,7 +167,7 @@ async fn test_patch_with_json_body_no_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = patch!(
         data => data,
@@ -199,7 +198,7 @@ async fn test_patch_with_json_body_response() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = patch!(

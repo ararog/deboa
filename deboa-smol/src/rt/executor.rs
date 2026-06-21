@@ -3,7 +3,7 @@ use std::future::Future;
 
 #[non_exhaustive]
 #[derive(Default, Debug, Clone)]
-pub struct SmolExecutor {}
+pub(crate) struct SmolExecutor {}
 
 impl<Fut> Executor<Fut> for SmolExecutor
 where

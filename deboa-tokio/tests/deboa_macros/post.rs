@@ -1,8 +1,7 @@
-use crate::common::data::Post;
 use crate::common::helpers::start_mock_server;
+use crate::common::{data::Post, helpers::create_client};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_macros::post;
-use deboa_tokio::Client;
 use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
 use http::StatusCode;
 use std::error::Error;
@@ -21,7 +20,7 @@ async fn test_only_post_minimal() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = post!(
         data => data,
@@ -49,7 +48,7 @@ async fn test_only_post_minimal_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = post!(
@@ -79,7 +78,7 @@ async fn test_only_post() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = post!(
         data => data,
@@ -108,7 +107,7 @@ async fn test_post_with_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = post!(

@@ -78,6 +78,17 @@ impl Identity {
     }
 
     #[cfg(feature = "native-tls")]
+    /// Load a DER encoded PKCS#12 archive from a file
+    ///
+    /// # Arguments
+    ///
+    /// * `file` - The path to the DER encoded PKCS#12 archive.
+    /// * `password` - The password for the PKCS#12 archive.
+    ///
+    /// # Returns
+    ///
+    /// * `Identity` - The new Identity instance.
+    ///
     pub fn from_pkcs12_file(file: &str, password: Option<String>) -> std::io::Result<Self> {
         let data = std::fs::read(file)?;
         Ok(Identity { cert: data, key: None, password, encoding: None })

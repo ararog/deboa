@@ -28,4 +28,4 @@ pub(crate) mod plain;
 pub(crate) mod tls;
 
 /// Stream module for runtime-specific stream implementations.
-pub mod stream;
+pub(crate) mod stream;

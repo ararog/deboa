@@ -11,7 +11,7 @@ use smol::net::TcpStream;
 
 use crate::rt::stream::SmolStream;
 
-async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
+pub(crate) async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
     let resolver = resolver(ResolverConfig::default(), ResolverOpts::default()).await;
 
     let response = resolver

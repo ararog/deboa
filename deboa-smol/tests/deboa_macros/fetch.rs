@@ -1,7 +1,9 @@
-use crate::common::{data::Post, helpers::start_mock_server};
+use crate::common::{
+    data::Post,
+    helpers::{create_client, start_mock_server},
+};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_macros::fetch;
-use deboa_smol::Client;
 use easyhttpmock_vetis_smol::mock::{MethodExt, Mock, StatusCodeExt};
 use http::StatusCode;
 use macro_rules_attribute::apply;
@@ -22,7 +24,7 @@ async fn test_fetch_str_minimal() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let response = fetch!(
         url => server.url("/posts"),
         client => &client
@@ -50,7 +52,7 @@ async fn test_fetch_str_minimal_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let response = fetch!(
         url => server.url("/posts"),
         headers => vec![("User-Agent", "deboa")],
@@ -79,7 +81,7 @@ async fn test_fetch_str() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let response = fetch!(
         url => server.url("/posts"),
         client => &client,
@@ -107,7 +109,7 @@ async fn test_fetch_ident() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let url = server.url("/posts");
     let response = fetch!(
         url => url,
@@ -136,7 +138,7 @@ async fn test_fetch_ident_with_headers() -> Result<(), Box<dyn Error>> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = Client::default();
+    let client = create_client();
     let url = server.url("/posts");
     let response = fetch!(
         url => url,
