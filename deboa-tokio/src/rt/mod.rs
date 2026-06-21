@@ -18,6 +18,8 @@
 //! features = ["http1", "rust-tls"]
 //! ```
 
+pub(crate) mod plain;
+
 /// TLS module for runtime-specific TLS implementations.
 #[cfg(all(
     any(feature = "rust-tls", feature = "native-tls"),

@@ -6,7 +6,7 @@ use serde::Deserialize;
 use vamo::Vamo;
 use vamo_macros::bora;
 
-use crate::common::helpers::{client_with_cert, start_mock_server};
+use crate::common::helpers::{create_client, start_mock_server};
 
 #[derive(Deserialize, Debug)]
 pub struct Post {
@@ -38,7 +38,7 @@ async fn do_get_by_id() -> Result<(), Box<dyn Error>> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(server.base_url())?;
     vamo.client(client);
@@ -78,7 +78,7 @@ async fn do_get_all() -> Result<(), Box<dyn Error>> {
     );
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(server.base_url())?;
     vamo.client(client);
@@ -118,7 +118,7 @@ async fn do_query_by_id() -> Result<(), Box<dyn Error>> {
     );
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(server.base_url())?;
     vamo.client(client);
@@ -160,7 +160,7 @@ async fn do_query_by_title() -> Result<(), Box<dyn Error>> {
     );
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(server.base_url())?;
     vamo.client(client);

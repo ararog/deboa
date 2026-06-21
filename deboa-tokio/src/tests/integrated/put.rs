@@ -3,7 +3,7 @@ use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
 use http::{Method, StatusCode};
 
 use crate::tests::{
-    helpers::{client_with_cert, start_mock_server},
+    helpers::{create_client, start_mock_server},
     TestResult,
 };
 
@@ -25,7 +25,7 @@ async fn test_put() -> TestResult<()> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let request = DeboaRequest::put(server.url("/posts/1"))?
         .text("ping")

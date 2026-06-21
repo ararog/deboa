@@ -6,7 +6,7 @@ use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
 use fory::{Fory, ForyStruct};
 use http::StatusCode;
 
-use crate::common::helpers::{client_with_cert, start_mock_server};
+use crate::common::helpers::{create_client, start_mock_server};
 
 const FORY_PERSON: [u8; 33] = [
     1, 255, 28, 0, 11, 160, 254, 175, 118, 89, 59, 92, 194, 1, 68, 9, 0, 196, 72, 21, 52, 12, 32,
@@ -36,7 +36,7 @@ async fn do_fory_post_request() -> Result<(), Box<dyn Error>> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut fory = Fory::default();
     let result = fory.register::<Person>(1);

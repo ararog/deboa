@@ -28,7 +28,7 @@ deboa-tokio = "0.1.0"
 
 ### Resource macro
 
-```rust
+```rust, no_run
 use deboa::{Result, serde::RequestBody};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tokio::Client;
@@ -48,7 +48,7 @@ pub struct User {
 #[tokio::main]
 async fn main() -> Result<()> {
     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
-    vamo.client(Client::new());
+    vamo.client(Client::default());
 
     let mut user = User {
         id: 1,
@@ -82,7 +82,7 @@ async fn main() -> Result<()> {
 
 ### bora macro
 
-```rust
+```rust, no_run
 use deboa::Result;
 use deboa_tokio::Client;
 use vamo::Vamo;
@@ -108,14 +108,14 @@ pub struct PostService;
 #[tokio::main]
 async fn main() -> Result<()> {
     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
-    vamo.client(Client::new());
+    vamo.client(Client::default());
     let mut post_service = PostService::new(vamo);
     let post = post_service.get_by_id(1).await?;
 
     println!("id...: {}", post.id);
     println!("title: {}", post.title);
     assert_eq!(post.id, 1);
-    
+
     Ok(())
 }
 ```
@@ -129,9 +129,9 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 Licensed under either of
 
 - Apache License, Version 2.0
-  (LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0)
+  (LICENSE-APACHE or <https://www.apache.org/licenses/LICENSE-2.0>)
 - MIT license
-  (LICENSE-MIT or https://opensource.org/licenses/MIT)
+  (LICENSE-MIT or <https://opensource.org/licenses/MIT>)
 
 at your option.
 

@@ -7,7 +7,7 @@ use smol_macros::test;
 use vamo::Vamo;
 use vamo_macros::bora;
 
-use crate::common::helpers::{client_with_cert, start_mock_server};
+use crate::common::helpers::{create_client, start_mock_server};
 
 #[bora(api(delete(name = "delete_post", path = "/posts/<id:i32>")))]
 pub struct PostService;
@@ -27,7 +27,7 @@ async fn test_delete_by_id() -> Result<(), Box<dyn Error>> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(server.base_url())?;
     vamo.client(client);

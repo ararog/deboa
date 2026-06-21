@@ -1,18 +1,15 @@
-use std::marker::PhantomData;
-
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::rt::tls::{plain_connection, tls_connection};
-
-use crate::{
-    alpn,
-    client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
-};
-
+use crate::alpn;
+use crate::client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig};
+use crate::rt::plain::plain_connection;
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+use crate::rt::tls::tls_connection;
 use deboa::{request::Http1Request, Result};
 use http::version::Version;
 use hyper::{client::conn::http1::handshake, Request, Response};
 use hyper_body_utils::HttpBody;
 use hyper_util::rt::TokioIo;
+use std::marker::PhantomData;
 
 impl DeboaTcpConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody> {
     type Sender = Http1Request;
@@ -27,6 +24,7 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody>
     async fn connect<'a>(
         config: &ConnectionConfig<'a>,
     ) -> Result<BaseHttpConnection<Self::Sender, Self::ReqBody, Self::ResBody>> {
+        #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
         let stream = if config.is_secure() {
             tls_connection(
                 config.host(),
@@ -40,6 +38,9 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody>
         } else {
             plain_connection(config.host(), config.port()).await
         };
+
+        #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]
+        let stream = plain_connection(config.host(), config.port()).await;
 
         if let Err(e) = stream {
             return Err(e);

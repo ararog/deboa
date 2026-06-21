@@ -1,6 +1,6 @@
 use crate::{
     tests::{
-        helpers::{client_with_cert, start_mock_server},
+        helpers::{create_client, start_mock_server},
         TestResult,
     },
     Client,
@@ -35,7 +35,7 @@ async fn do_post() -> TestResult<()> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client: Client = client_with_cert();
+    let client: Client = create_client();
 
     let request = DeboaRequest::post(server.url("/posts"))?
         .text("{ \"title\": \"foo\", \"body\": \"bar\", \"userId\": 1 }")
@@ -83,7 +83,7 @@ async fn do_post_encoded_form() -> TestResult<()> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client: Client = client_with_cert();
+    let client: Client = create_client();
 
     let mut form = EncodedForm::builder();
     form.field("name", "deboa");
@@ -136,7 +136,7 @@ async fn do_post_multipart_form() -> TestResult<()> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client: Client = client_with_cert();
+    let client: Client = create_client();
 
     let request = DeboaRequest::post(server.url("/posts"))?
         .form(form.into())

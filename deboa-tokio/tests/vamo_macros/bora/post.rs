@@ -1,4 +1,4 @@
-use crate::common::helpers::{client_with_cert, start_mock_server};
+use crate::common::helpers::{create_client, start_mock_server};
 use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -36,7 +36,7 @@ async fn do_post_by_id() -> Result<(), Box<dyn Error>> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(server.base_url())?;
     vamo.client(client);

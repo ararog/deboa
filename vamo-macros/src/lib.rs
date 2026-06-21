@@ -41,7 +41,7 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```rust
+/// ```rust, no_run
 /// use deboa_tokio::Client;
 /// use serde::{Deserialize, Serialize};
 /// use vamo::Vamo;
@@ -81,7 +81,7 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```rust
+/// ```rust, no_run
 /// use serde::{Deserialize, Serialize};
 /// use vamo::Vamo;
 /// use vamo_macros::bora;
@@ -96,12 +96,12 @@ use crate::resource::resource as resource_macro;
 /// }
 ///
 /// #[tokio::main]
-/// async fn main() -> Result<(), Box<dyn std::error::Error>> {  
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let post = Post {
 ///         id: 1,
 ///         title: "Post 1".to_string(),
 ///     };
-///     
+///
 ///     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
 ///     vamo.client(deboa_tokio::Client::default());
 ///     let mut post_service = PostService::new(vamo);
@@ -122,7 +122,7 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```rust
+/// ```rust, no_run
 /// use vamo::Vamo;
 /// use vamo_macros::bora;
 ///
@@ -154,11 +154,11 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```rust
+/// ```rust, no_run
 /// use serde::{Deserialize, Serialize};
 /// use vamo::Vamo;
 /// use vamo_macros::bora;
-///  
+///
 /// #[bora(api(put(name = "put_post", path = "/posts/<id:i32>", req_body = Post, res_body = Post, format = "json")))]
 /// pub struct PostService;
 ///
@@ -193,7 +193,7 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```rust
+/// ```rust, no_run
 /// use serde::{Deserialize, Serialize};
 /// use vamo::Vamo;
 /// use vamo_macros::bora;
@@ -241,7 +241,7 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust, no_run
 /// use deboa::serde::RequestBody;
 /// use deboa_extras::http::serde::json::JsonBody;
 /// use serde::{Deserialize, Serialize};

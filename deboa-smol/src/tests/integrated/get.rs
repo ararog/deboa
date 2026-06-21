@@ -1,16 +1,18 @@
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+use crate::{ConnectionConfig, Identity};
+
 use crate::{
-    cert::{ContentEncoding, Identity},
     tests::{
-        helpers::{client_with_cert, start_mock_server, CA_CERT},
+        helpers::{create_client, start_mock_server},
         TestResult,
     },
     Client, HttpVersion,
 };
 
 #[cfg(feature = "rust-tls")]
-use crate::tests::helpers::{CLIENT_CERT, CLIENT_KEY};
+use crate::tests::helpers::{CA_CERT, CLIENT_CERT, CLIENT_KEY};
 #[cfg(feature = "native-tls")]
-use crate::tests::helpers::{CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
+use crate::tests::helpers::{CA_CERT, CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
 use deboa::{
     errors::{ConnectionError, DeboaError, ResponseError},
     request::{DeboaRequest, FetchWith, IntoRequest},
@@ -43,7 +45,7 @@ async fn test_get_http() -> TestResult<()> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
 
@@ -201,10 +203,14 @@ async fn do_get_http_mutual_authentication() -> TestResult<()> {
     #[cfg(feature = "native-tls")]
     let identity = Identity::from_pkcs8(CLIENT_CERT_PEM, CLIENT_KEY_PEM, ContentEncoding::PEM);
 
+    #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
     let client = Client::builder()
         .certificate(crate::cert::Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .identity(identity)
         .build();
+
+    #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]
+    let client = Client::default();
 
     let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
 
@@ -287,7 +293,7 @@ async fn test_get_not_found() -> TestResult<()> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let response: crate::Result<DeboaResponse> =
         DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
@@ -368,7 +374,7 @@ async fn test_get_by_query() -> TestResult<()> {
     );
 
     let mut server = start_mock_server(mock).await;
-    let client = client_with_cert();
+    let client = create_client();
 
     let response = DeboaRequest::get(server.url("/comments/1"))?
         .send_with(&client)
@@ -405,7 +411,7 @@ async fn do_get_by_query_with_retries() -> Result<()> {
     })
     .await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let response = DeboaRequest::get(server.url("/comments/1"))?
         .retries(2)
@@ -498,7 +504,7 @@ async fn test_try_into() -> TestResult<()> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
     let first_post = server.url("/posts/1");
     let response = client
         .execute(first_post.into_request()?)
@@ -527,7 +533,7 @@ async fn test_fetch_from_str() -> TestResult<()> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
     let first_post = server.url("/posts/1");
     let response = first_post
         .fetch_with(client)

@@ -26,13 +26,13 @@ pub const SERVER_KEY: &[u8] = include_bytes!("../../../certs/server.key.der");
 // pub const SERVER_CERT_PEM: &[u8] = include_bytes!("../../../certs/server.crt");
 // pub const SERVER_KEY_PEM: &[u8] = include_bytes!("../../../certs/server.key");
 
-pub const CLIENT_CERT: &[u8] = include_bytes!("../../../certs/client.der");
-pub const CLIENT_KEY: &[u8] = include_bytes!("../../../certs/client.key.der");
+// pub const CLIENT_CERT: &[u8] = include_bytes!("../../../certs/client.der");
+// pub const CLIENT_KEY: &[u8] = include_bytes!("../../../certs/client.key.der");
 
-pub const CLIENT_CERT_PEM: &[u8] = include_bytes!("../../../certs/client.crt");
-pub const CLIENT_KEY_PEM: &[u8] = include_bytes!("../../../certs/client.key");
+// pub const CLIENT_CERT_PEM: &[u8] = include_bytes!("../../../certs/client.crt");
+// pub const CLIENT_KEY_PEM: &[u8] = include_bytes!("../../../certs/client.key");
 
-pub const CLIENT_P12: &[u8] = include_bytes!("../../../certs/client.p12");
+// pub const CLIENT_P12: &[u8] = include_bytes!("../../../certs/client.p12");
 
 pub(crate) const fn deboa_default_protocol() -> HttpVersion {
     #[cfg(feature = "http1")]
@@ -52,7 +52,8 @@ pub(crate) const fn vetis_default_protocol() -> Protocol {
     return Protocol::Http3;
 }
 
-pub(crate) fn client_with_cert() -> Client {
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+pub(crate) fn ssl_client() -> Client {
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let addr = interface.parse::<IpAddr>();
     let addr = match addr {
@@ -68,7 +69,30 @@ pub(crate) fn client_with_cert() -> Client {
         .build()
 }
 
-pub async fn start_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
+#[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]
+pub(crate) fn plain_client() -> Client {
+    let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let addr = interface.parse::<IpAddr>();
+    let addr = match addr {
+        Ok(addr) => addr,
+        Err(e) => panic!("Could not parse IP address: {}", e),
+    };
+
+    Client::builder()
+        .bind_addr(addr)
+        .protocol(deboa_default_protocol())
+        .build()
+}
+
+pub(crate) fn create_client() -> Client {
+    #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+    return ssl_client();
+    #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]
+    return plain_client();
+}
+
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+pub async fn tls_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
 
@@ -107,4 +131,47 @@ pub async fn start_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
     });
 
     server
+}
+
+#[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]
+pub async fn plain_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
+    let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
+
+    let vetis_adapter_config = VetisAdapterConfig::builder()
+        .hostname(Some(hostname))
+        .interface(&interface)
+        .protocol(vetis_default_protocol())
+        .with_random_port()
+        .build();
+
+    let config = EasyHttpMockConfig::<VetisAdapter>::builder()
+        .server_config(vetis_adapter_config)
+        .build();
+
+    let server = EasyHttpMock::new(config);
+    let mut server = match server {
+        Ok(server) => server,
+        Err(err) => {
+            panic!("Failed to create mock server: {}", err);
+        }
+    };
+
+    #[allow(unused_must_use)]
+    server.register_mock(mock);
+
+    let result = server.start().await;
+
+    result.unwrap_or_else(|err| {
+        panic!("Failed to start mock server: {}", err);
+    });
+
+    server
+}
+
+pub async fn start_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
+    #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+    return tls_mock_server(mock).await;
+    #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]
+    return plain_mock_server(mock).await;
 }

@@ -1,6 +1,6 @@
 use crate::{
     tests::{
-        helpers::{client_with_cert, start_mock_server},
+        helpers::{create_client, start_mock_server},
         TestResult,
     },
     Client,
@@ -29,7 +29,7 @@ async fn test_patch() -> TestResult<()> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client: Client = client_with_cert();
+    let client: Client = create_client();
 
     let request = DeboaRequest::patch(server.url("/posts/1"))?
         .text("text")

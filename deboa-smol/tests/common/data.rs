@@ -51,6 +51,11 @@ pub struct Post {
     pub body: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PostWithId {
+    pub id: u32,
+}
+
 #[derive(Default, Serialize, Deserialize, Debug)]
 pub struct Comment {
     #[allow(unused)]

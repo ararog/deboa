@@ -8,7 +8,7 @@ use serde::Serialize;
 use vamo::{resource::ResourceMethod, Vamo};
 use vamo_macros::Resource;
 
-use crate::common::helpers::{client_with_cert, start_mock_server};
+use crate::common::helpers::{create_client, start_mock_server};
 
 #[derive(Resource, Serialize)]
 #[name("users")]
@@ -38,7 +38,7 @@ async fn do_post_resource() -> Result<(), Box<dyn Error>> {
     let mut url = server.base_url();
     url.push_str("/api");
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(url.to_string())?;
     vamo.client(client);

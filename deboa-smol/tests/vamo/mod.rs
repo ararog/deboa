@@ -14,7 +14,7 @@ use vamo::{
 
 use crate::common::{
     data::{JSON_PATCH, JSON_POST},
-    helpers::{client_with_cert, start_mock_server},
+    helpers::{create_client, start_mock_server},
 };
 
 #[derive(Serialize)]
@@ -56,7 +56,7 @@ async fn test_get() -> Result<(), Box<dyn Error>> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(
         server
@@ -100,7 +100,7 @@ async fn test_put() -> Result<(), Box<dyn Error>> {
 
     let server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(
         server
@@ -142,7 +142,7 @@ async fn test_post() -> Result<(), Box<dyn Error>> {
         user_id: Some(1),
     };
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(server.url("/api"))?;
     vamo.client(client);
@@ -176,7 +176,7 @@ async fn test_patch() -> Result<(), Box<dyn Error>> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(server.url("/api"))?;
     vamo.client(client);
@@ -209,7 +209,7 @@ async fn test_delete() -> Result<(), Box<dyn Error>> {
 
     let mut server = start_mock_server(mock).await;
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(server.url("/api"))?;
     vamo.client(client);
@@ -249,7 +249,7 @@ async fn test_post_resource() -> Result<(), Box<dyn Error>> {
         user_id: Some(1),
     };
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(server.url("/api"))?;
     vamo.client(client);
@@ -289,7 +289,7 @@ async fn test_put_resource() -> Result<(), Box<dyn Error>> {
         user_id: Some(1),
     };
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(server.url("/api"))?;
     vamo.client(client);
@@ -324,7 +324,7 @@ async fn test_patch_resource() -> Result<(), Box<dyn Error>> {
 
     let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(server.url("/api"))?;
     vamo.client(client);
@@ -359,7 +359,7 @@ async fn test_remove_resource() -> Result<(), Box<dyn Error>> {
 
     let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
 
-    let client = client_with_cert();
+    let client = create_client();
 
     let mut vamo = Vamo::new(server.url("/api"))?;
     vamo.client(client);

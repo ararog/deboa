@@ -1,6 +1,6 @@
 [package]
 name = "deboa-smol"
-version = "0.1.0-beta.2"
+version = "0.1.0-beta.3"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -16,10 +16,7 @@ all-features = true
 
 [features]
 default = [
-  "http2",
-  "rust-tls",
-  "default-rustls-provider",
-  "default-rustls-verifier",
+  "http1",
 ]
 
 # tls
@@ -123,8 +120,7 @@ deboa-extras = { workspace = true, default-features = false }
 deboa-fory = { workspace = true, default-features = false }
 deboa-macros = { workspace = true }
 easyhttpmock-vetis-smol = { version = "0.1.0-beta.2", features = [
-  "http2",
-  "rust-tls",
+  "http1",
 ], default-features = false }
 fory = "1.1.0"
 fory-core = "1.1.0"

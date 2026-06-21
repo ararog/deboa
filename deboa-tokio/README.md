@@ -64,7 +64,7 @@ http = "1.3.1"
 ```rust
 use deboa::{
     request::{DeboaRequest, FetchWith, get},
-    Result, 
+    Result,
 };
 use deboa_tokio::Client;
 use deboa_extras::http::{self, serde::json::JsonBody};
@@ -80,10 +80,9 @@ pub struct Post {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client = Client::new();
+    let client = Client::default();
 
     /*
-
     // You can also use the Fetch trait to issue requests
 
     let posts: Vec<Post> = "https://jsonplaceholder.typicode.com/posts"
@@ -101,7 +100,7 @@ async fn main() -> Result<()> {
       .await?;
 
     // shifleft? Yes sir! Defaults to GET, but you can change it, same for headers.
- 
+
     let request = &client << "https://jsonplaceholder.typicode.com/posts";
     let posts: Vec<Post> = client.execute(request)
       .await?
@@ -130,8 +129,6 @@ async fn main() -> Result<()> {
     let response = request.send_with(&mut client).await?;
     assert_eq!(response.status(), 201);
 
-    */
-
     let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
       .send_with(&client)
       .await?
@@ -139,6 +136,7 @@ async fn main() -> Result<()> {
       .await?;
 
     println!("posts: {:#?}", posts);
+    */
 
     Ok(())
 }
@@ -155,9 +153,9 @@ You can create a new project from the template using `cargo generate`:
 Licensed under either of
 
 - Apache License, Version 2.0
-  (LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0)
+  (LICENSE-APACHE or <https://www.apache.org/licenses/LICENSE-2.0>)
 - MIT license
-  (LICENSE-MIT or https://opensource.org/licenses/MIT)
+  (LICENSE-MIT or <https://opensource.org/licenses/MIT>)
 
 at your option.
 
