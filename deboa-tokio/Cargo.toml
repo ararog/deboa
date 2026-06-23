@@ -130,7 +130,7 @@ criterion = { version = "0.8.2", features = [
 deboa-extras = { workspace = true, default-features = false }
 deboa-fory = { workspace = true, default-features = false }
 deboa-macros = { workspace = true }
-easyhttpmock-vetis-tokio = { version = "0.1.0-beta.4", features = [
+easyhttpmock-vetis-tokio = { version = "0.1.0-beta.5", features = [
   "http2",
   "rust-tls",
 ], default-features = false }
