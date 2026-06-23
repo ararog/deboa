@@ -1,6 +1,6 @@
 [package]
 name = "deboa-macros"
-version = "0.1.0-beta.3"
+version = "0.1.0-beta.4"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -31,7 +31,3 @@ proc-macro2 = "1.0.106"
 quote = "1.0.45"
 serde = "1.0.228"
 syn = "2.0.117"
-
-[dev-dependencies]
-deboa-tokio = { workspace = true }
-tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }

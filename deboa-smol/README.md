@@ -67,7 +67,7 @@ use deboa::{
     Result,
 };
 use deboa_smol::Client;
-use deboa_extras::http::{self, serde::json::JsonBody};
+use deboa_extras::serde::json::JsonBody;
 use ::http::Method;
 use macro_rules_attribute::apply;
 use smol_macros::main;

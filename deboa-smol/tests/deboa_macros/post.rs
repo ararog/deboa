@@ -2,7 +2,7 @@ use crate::common::{
     data::Post,
     helpers::{create_client, create_server},
 };
-use deboa_extras::http::serde::json::JsonBody;
+use deboa_extras::serde::json::JsonBody;
 use deboa_macros::post;
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},

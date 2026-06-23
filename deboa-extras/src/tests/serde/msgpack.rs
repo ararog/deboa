@@ -1,15 +1,15 @@
-use crate::http::serde::flex::FlexBody;
+use crate::serde::msgpack::MsgPackBody;
 use deboa::{request::DeboaRequest, response::DeboaResponse, Result};
-use deboa_tests::{
-    data::{sample_post, Post, FLEX_POST},
-    utils::fake_url,
-};
+use deboa_tests::data::{sample_post, Post, MSGPACK_POST};
+use deboa_tests::utils::fake_url;
+use http::header;
+use http::StatusCode;
 use http_body_util::BodyExt;
 
 #[tokio::test]
-async fn test_set_flex() -> Result<()> {
+async fn test_set_msgpack() -> Result<()> {
     let request = DeboaRequest::post(fake_url())?
-        .body_as(FlexBody, sample_post())?
+        .body_as(MsgPackBody, sample_post())?
         .build()?;
 
     let bytes = request
@@ -19,25 +19,24 @@ async fn test_set_flex() -> Result<()> {
         .unwrap()
         .to_bytes();
 
-    assert_eq!(bytes, FLEX_POST[..]);
+    assert_eq!(bytes, MSGPACK_POST[..]);
 
     Ok(())
 }
 
 #[tokio::test]
-async fn test_response_flex() -> Result<()> {
+async fn test_msgpack_response() -> Result<()> {
     let data = sample_post();
 
     let response = DeboaResponse::builder(fake_url())
-        .status(http::StatusCode::OK)
-        .header(http::header::CONTENT_TYPE, "application/flex")
-        .body(&FLEX_POST[..])
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, "application/msgpack")
+        .body(&MSGPACK_POST[..])
         .build();
     let response: Post = response
-        .body_as(FlexBody)
+        .body_as(MsgPackBody)
         .await?;
 
     assert_eq!(response, data);
-
     Ok(())
 }

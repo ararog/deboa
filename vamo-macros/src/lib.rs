@@ -41,7 +41,7 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use deboa_tokio::Client;
 /// use serde::{Deserialize, Serialize};
 /// use vamo::Vamo;
@@ -81,7 +81,7 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use serde::{Deserialize, Serialize};
 /// use vamo::Vamo;
 /// use vamo_macros::bora;
@@ -122,7 +122,7 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use vamo::Vamo;
 /// use vamo_macros::bora;
 ///
@@ -154,7 +154,7 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use serde::{Deserialize, Serialize};
 /// use vamo::Vamo;
 /// use vamo_macros::bora;
@@ -193,7 +193,7 @@ use crate::resource::resource as resource_macro;
 ///
 /// ## Example
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use serde::{Deserialize, Serialize};
 /// use vamo::Vamo;
 /// use vamo_macros::bora;
@@ -241,9 +241,9 @@ pub fn bora(attr: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// # Example
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use deboa::serde::RequestBody;
-/// use deboa_extras::http::serde::json::JsonBody;
+/// use deboa_extras::serde::json::JsonBody;
 /// use serde::{Deserialize, Serialize};
 /// use vamo::{Vamo, resource::ResourceMethod};
 /// use vamo_macros::Resource;

@@ -28,10 +28,10 @@ deboa = { version = "0.0.9" }
 ```rust
 use deboa::{
     request::{DeboaRequest, FetchWith, get},
-    Result, 
+    Result,
 };
 use deboa_tokio::Client;
-use deboa_extras::http::{self, serde::json::JsonBody};
+use deboa_extras::serde::json::JsonBody;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -95,9 +95,9 @@ It is also the new home of bora macro.
 Licensed under either of
 
 - Apache License, Version 2.0
-  (LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0)
+  (LICENSE-APACHE or <https://www.apache.org/licenses/LICENSE-2.0>)
 - MIT license
-  (LICENSE-MIT or https://opensource.org/licenses/MIT)
+  (LICENSE-MIT or <https://opensource.org/licenses/MIT>)
 
 at your option.
 

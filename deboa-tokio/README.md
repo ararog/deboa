@@ -67,7 +67,7 @@ use deboa::{
     Result,
 };
 use deboa_tokio::Client;
-use deboa_extras::http::{self, serde::json::JsonBody};
+use deboa_extras::serde::json::JsonBody;
 
 use ::http::Method;
 

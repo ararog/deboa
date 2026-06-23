@@ -1,6 +1,6 @@
 [package]
 name = "vamo-macros"
-version = "0.0.9-beta.4"
+version = "0.0.9-beta.5"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -34,7 +34,3 @@ quote = "1.0.41"
 http = "1.4.2"
 regex = "1.12.4"
 titlecase = "3.6.0"
-
-[dev-dependencies]
-deboa-tokio = { workspace = true }
-tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }

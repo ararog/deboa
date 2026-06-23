@@ -56,10 +56,10 @@ mod actions;
 ///
 /// # Example
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use deboa_tokio::Client;
 /// use deboa_macros::get;
-/// use deboa_extras::http::serde::json::JsonBody;
+/// use deboa_extras::serde::json::JsonBody;
 ///
 /// #[derive(serde::Deserialize)]
 /// struct Post {
@@ -138,7 +138,7 @@ pub fn get(item: TokenStream) -> TokenStream {
 /// post!(input, req_body_ty, url, &client)
 ///
 /// or
-///   
+///
 /// post!(input, req_body_ty, url, headers, &client)
 ///
 /// or
@@ -165,9 +165,9 @@ pub fn get(item: TokenStream) -> TokenStream {
 ///
 /// ## Without response body deserialization
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use deboa_macros::post;
-/// use deboa_extras::http::serde::json::JsonBody;
+/// use deboa_extras::serde::json::JsonBody;
 /// use deboa_tokio::Client;
 ///
 /// #[derive(serde::Serialize)]
@@ -203,9 +203,9 @@ pub fn get(item: TokenStream) -> TokenStream {
 ///
 /// ## With response body deserialization
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use deboa_macros::post;
-/// use deboa_extras::http::serde::json::JsonBody;
+/// use deboa_extras::serde::json::JsonBody;
 /// use deboa_tokio::Client;
 ///
 /// #[derive(serde::Serialize)]
@@ -315,9 +315,9 @@ pub fn post(item: TokenStream) -> TokenStream {
 ///
 /// # Example
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use deboa_macros::put;
-/// use deboa_extras::http::serde::json::JsonBody;
+/// use deboa_extras::serde::json::JsonBody;
 /// use deboa_tokio::Client;
 ///
 /// #[derive(serde::Serialize)]
@@ -419,10 +419,10 @@ pub fn put(item: TokenStream) -> TokenStream {
 ///
 /// # Example
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use deboa_tokio::Client;
 /// use deboa_macros::patch;
-/// use deboa_extras::http::serde::json::JsonBody;
+/// use deboa_extras::serde::json::JsonBody;
 ///
 /// #[derive(serde::Serialize)]
 /// struct Post {
@@ -521,7 +521,7 @@ pub fn patch(item: TokenStream) -> TokenStream {
 ///
 /// # Example
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use deboa_macros::delete;
 /// use deboa_tokio::Client;
 ///
@@ -603,9 +603,9 @@ pub fn delete(item: TokenStream) -> TokenStream {
 ///
 /// # Example
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use deboa_macros::fetch;
-/// use deboa_extras::http::serde::json::JsonBody;
+/// use deboa_extras::serde::json::JsonBody;
 /// use deboa_tokio::Client;
 ///
 /// #[derive(serde::Deserialize)]
@@ -697,7 +697,7 @@ pub fn fetch(item: TokenStream) -> TokenStream {
 ///
 /// # Example
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use deboa_macros::submit;
 /// use deboa_tokio::Client;
 ///
@@ -782,7 +782,7 @@ pub fn submit(item: TokenStream) -> TokenStream {
 ///
 /// # Example
 ///
-/// ```rust, no_run
+/// ```rust, no_run, compile_fail
 /// use deboa_macros::stream;
 /// use deboa_tokio::Client;
 ///

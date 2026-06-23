@@ -17,7 +17,7 @@ members = [
     # "examples/simple",
     # "examples/simple-smol",
     "vamo",
-    "vamo-macros", 
+    "vamo-macros",
 ]
 
 [workspace.package]
@@ -31,19 +31,19 @@ rust-version = "1.75.0"
 
 [workspace.dependencies]
 deboa = { version = "0.1.0-beta.17", path = "deboa" }
-deboa-extras = { version = "0.0.9-beta.10", path = "deboa-extras" }
-deboa-fory = { path = "deboa-fory" }
-deboa-macros = { version = "0.1.0-beta.2", path = "deboa-macros" }
-deboa-tokio = { path = "deboa-tokio" }
-vamo = { version = "0.0.9-beta.4", path = "vamo" }
-vamo-macros = { version = "0.0.9-beta.4", path = "vamo-macros" }
+deboa-extras = { version = "0.0.9-beta.11", path = "deboa-extras" }
+deboa-fory = { version = "0.1.6-beta.1", path = "deboa-fory" }
+deboa-macros = { version = "0.1.0-beta.4", path = "deboa-macros" }
+deboa-tokio = { version = "0.1.0-beta.5", path = "deboa-tokio" }
+vamo = { version = "0.0.9-beta.5", path = "vamo" }
+vamo-macros = { version = "0.0.9-beta.5", path = "vamo-macros" }
 
 [profile.test]
 lto = false
 
 [profile.release]
 strip = true
-opt-level = "z" 
+opt-level = "z"
 lto = true
 codegen-units = 1
 panic = "abort"

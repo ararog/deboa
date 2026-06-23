@@ -5,7 +5,7 @@ use crate::{
     Vamo,
 };
 use deboa::{url::IntoUrl, HttpClient, Result};
-use deboa_extras::http::serde::json::JsonBody;
+use deboa_extras::serde::json::JsonBody;
 use http::{HeaderName, Method};
 use serde::Serialize;
 

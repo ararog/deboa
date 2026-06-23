@@ -1,6 +1,6 @@
 # Deboa Macros
 
-[![Crates.io downloads](https://img.shields.io/crates/d/deboa-macros)](https://crates.io/crates/deboa-macros) [![crates.io](https://img.shields.io/crates/v/deboa-macros?style=flat-square)](https://crates.io/crates/deboa-macros) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) ![Crates.io MSRV](https://img.shields.io/crates/msrv/deboa-macros) [![Documentation](https://docs.rs/deboa-macros/badge.svg)](https://docs.rs/deboa-macros/latest/deboa-macros) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ararog/deboa/blob/main/LICENSE.md)  ![Codecov](https://img.shields.io/codecov/c/github/ararog/deboa-macros) 
+[![Crates.io downloads](https://img.shields.io/crates/d/deboa-macros)](https://crates.io/crates/deboa-macros) [![crates.io](https://img.shields.io/crates/v/deboa-macros?style=flat-square)](https://crates.io/crates/deboa-macros) [![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) ![Crates.io MSRV](https://img.shields.io/crates/msrv/deboa-macros) [![Documentation](https://docs.rs/deboa-macros/badge.svg)](https://docs.rs/deboa-macros/latest/deboa-macros) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ararog/deboa/blob/main/LICENSE.md)  ![Codecov](https://img.shields.io/codecov/c/github/ararog/deboa-macros)
 
 **deboa-macros** is a collection of macros for deboa. It is close equivalent to
 apisauce for axios, where one macro does it all, from request to response.
@@ -28,10 +28,10 @@ deboa-macros = "0.0.8"
 
 ### other macros
 
-```rust,no_run
+```rust, no_run, compile_fail
 use deboa::errors::DeboaError;
 use deboa_macros::{fetch, get, post, delete};
-use deboa_extras::http::serde::json::JsonBody;
+use deboa_extras::serde::json::JsonBody;
 use deboa_tokio::Client;
 use serde::{Deserialize, Serialize};
 
@@ -48,47 +48,47 @@ async fn main() -> Result<(), DeboaError> {
 
     // fetch macro
     let response: Vec<Post> = fetch!(
-        url => "https://jsonplaceholder.typicode.com/posts", 
-        client => &client, 
-        res_body_ty => JsonBody, 
+        url => "https://jsonplaceholder.typicode.com/posts",
+        client => &client,
+        res_body_ty => JsonBody,
         res_ty => Vec<Post>
     );
 
     // get macro, returning posts serialized as json
     // let response: Vec<Post> = get!(
-    //     url => "https://jsonplaceholder.typicode.com/posts", 
-    //     client => &client, 
-    //     res_body_ty => JsonBody, 
+    //     url => "https://jsonplaceholder.typicode.com/posts",
+    //     client => &client,
+    //     res_body_ty => JsonBody,
     //     res_ty => Vec<Post>
     // );
 
     // get macro, returning text
     // let response: String = get!(
-    //     url => "https://rust-lang.org", 
+    //     url => "https://rust-lang.org",
     //     client => &client
     // );
 
     // get macro with headers
     // let response: String = get!(
-    //     url => "https://rust-lang.org", 
-    //     headers => vec![("User-Agent", "deboa")], 
+    //     url => "https://rust-lang.org",
+    //     headers => vec![("User-Agent", "deboa")],
     //     client => &client
     // );
 
     // post macro
     // let response = post!(
-    //     data => data, 
-    //     res_body_ty => JsonBody, 
-    //     url => "https://jsonplaceholder.typicode.com/posts", 
+    //     data => data,
+    //     res_body_ty => JsonBody,
+    //     url => "https://jsonplaceholder.typicode.com/posts",
     //     client => &client
     // );
 
     // delete macro
     // let response = delete!(
-    //     url => "https://jsonplaceholder.typicode.com/posts/1", 
+    //     url => "https://jsonplaceholder.typicode.com/posts/1",
     //     client => &client
     // );
-    
+
     Ok(())
 }
 ```
@@ -98,9 +98,9 @@ async fn main() -> Result<(), DeboaError> {
 Licensed under either of
 
 - Apache License, Version 2.0
-  (LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0)
+  (LICENSE-APACHE or <https://www.apache.org/licenses/LICENSE-2.0>)
 - MIT license
-  (LICENSE-MIT or https://opensource.org/licenses/MIT)
+  (LICENSE-MIT or <https://opensource.org/licenses/MIT>)
 
 at your option.
 

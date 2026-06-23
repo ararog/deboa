@@ -1,6 +1,6 @@
 [package]
 name = "vamo"
-version = "0.0.9-beta.4"
+version = "0.0.9-beta.5"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -26,4 +26,3 @@ deboa-extras = { workspace = true, default-features = false }
 http = "1.4.2"
 serde = "1.0.228"
 url = "2.5.8"
-

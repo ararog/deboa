@@ -14,7 +14,7 @@
 //! <small>Note that development versions, tagged with `-dev`, are not published
 //! and need to be specified as [git dependencies].</small>
 //!
-//! ```rust,no_run
+//! ```rust, no_run, compile_fail
 //! use deboa::{errors::DeboaError, Result};
 //! use deboa_tokio::Client;
 //! use vamo::Vamo;

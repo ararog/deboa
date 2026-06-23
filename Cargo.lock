@@ -1003,7 +1003,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-extras"
-version = "0.0.9-beta.10"
+version = "0.0.9-beta.11"
 dependencies = [
  "base64",
  "brotli",
@@ -1046,22 +1046,20 @@ dependencies = [
 
 [[package]]
 name = "deboa-macros"
-version = "0.1.0-beta.3"
+version = "0.1.0-beta.4"
 dependencies = [
  "deboa",
  "deboa-extras",
- "deboa-tokio",
  "http",
  "proc-macro2",
  "quote",
  "serde",
  "syn 2.0.118",
- "tokio",
 ]
 
 [[package]]
 name = "deboa-smol"
-version = "0.1.0-beta.4"
+version = "0.1.0-beta.5"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -1120,7 +1118,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-tokio"
-version = "0.1.0-beta.4"
+version = "0.1.0-beta.5"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -4763,7 +4761,7 @@ dependencies = [
 
 [[package]]
 name = "vamo"
-version = "0.0.9-beta.4"
+version = "0.0.9-beta.5"
 dependencies = [
  "base64",
  "deboa",
@@ -4775,11 +4773,10 @@ dependencies = [
 
 [[package]]
 name = "vamo-macros"
-version = "0.0.9-beta.4"
+version = "0.0.9-beta.5"
 dependencies = [
  "deboa",
  "deboa-extras",
- "deboa-tokio",
  "http",
  "proc-macro2",
  "quote",
@@ -4787,7 +4784,6 @@ dependencies = [
  "serde",
  "syn 2.0.118",
  "titlecase",
- "tokio",
  "vamo",
 ]
 

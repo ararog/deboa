@@ -99,7 +99,7 @@ fn get_operation(get: &GetStruct, acc: &mut (&mut TS2, &mut TS2)) {
     if acc.0.is_empty() {
         acc.0
             .extend(quote! {
-                use deboa_extras::http::serde::#format_name::{#format_module};
+                use deboa_extras::serde::#format_name::{#format_module};
             });
     }
 
@@ -167,7 +167,7 @@ fn post_operation(post: &PostStruct, acc: &mut (&mut TS2, &mut TS2)) {
     if acc.0.is_empty() {
         acc.0
             .extend(quote! {
-                use deboa_extras::http::serde::#format_name::{#format_module};
+                use deboa_extras::serde::#format_name::{#format_module};
             });
     }
 
@@ -237,7 +237,7 @@ fn put_operation(put: &PutStruct, acc: &mut (&mut TS2, &mut TS2)) {
     if acc.0.is_empty() {
         acc.0
             .extend(quote! {
-                use deboa_extras::http::serde::#format_name::{#format_module};
+                use deboa_extras::serde::#format_name::{#format_module};
             });
     }
 
@@ -308,7 +308,7 @@ fn patch_operation(patch: &PatchStruct, acc: &mut (&mut TS2, &mut TS2)) {
     if acc.0.is_empty() {
         acc.0
             .extend(quote! {
-                use deboa_extras::http::serde::#format_name::{#format_module};
+                use deboa_extras::serde::#format_name::{#format_module};
             });
     }
 

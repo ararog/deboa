@@ -1,6 +1,6 @@
 use crate::common::helpers::{create_client, create_server};
 use deboa::serde::RequestBody;
-use deboa_extras::http::serde::json::JsonBody;
+use deboa_extras::serde::json::JsonBody;
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},

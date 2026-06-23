@@ -23,7 +23,7 @@
 //! use serde::{Serialize, Deserialize};
 //! use vamo::resource::Resource;
 //! use deboa::{Result, serde::RequestBody};
-//! use deboa_extras::http::serde::json::JsonBody;
+//! use deboa_extras::serde::json::JsonBody;
 //!
 //! #[derive(Debug, Serialize, Deserialize)]
 //! struct User {
@@ -63,7 +63,7 @@ use serde::Serialize;
 /// use serde::{Serialize, Deserialize};
 /// use vamo::resource::Resource;
 /// use deboa::{Result, serde::RequestBody};
-/// use deboa_extras::http::serde::json::JsonBody;
+/// use deboa_extras::serde::json::JsonBody;
 ///
 /// #[derive(Debug, Serialize, Deserialize)]
 /// struct User {

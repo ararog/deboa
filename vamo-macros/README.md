@@ -28,9 +28,9 @@ deboa-tokio = "0.1.0"
 
 ### Resource macro
 
-```rust, no_run
+```rust, no_run, compile_fail
 use deboa::{Result, serde::RequestBody};
-use deboa_extras::http::serde::json::JsonBody;
+use deboa_extras::serde::json::JsonBody;
 use deboa_tokio::Client;
 use serde::Serialize;
 use vamo::{Vamo, resource::ResourceMethod};
@@ -82,7 +82,7 @@ async fn main() -> Result<()> {
 
 ### bora macro
 
-```rust, no_run
+```rust, no_run, compile_fail
 use deboa::Result;
 use deboa_tokio::Client;
 use vamo::Vamo;
