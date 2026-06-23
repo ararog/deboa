@@ -21,7 +21,7 @@ fn test_status() -> TestResult<()> {
 
 #[test]
 fn test_headers() -> TestResult<()> {
-    let response = DeboaResponse::builder(test_url().into())
+    let response = DeboaResponse::builder(test_url())
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .build();
@@ -33,7 +33,7 @@ fn test_headers() -> TestResult<()> {
 fn test_cookies() -> TestResult<()> {
     let mut headers = http::HeaderMap::new();
     headers.insert(header::SET_COOKIE, http::HeaderValue::from_static("test=test"));
-    let response = DeboaResponse::builder(test_url().into())
+    let response = DeboaResponse::builder(test_url())
         .status(http::StatusCode::OK)
         .headers(headers)
         .build();
@@ -43,7 +43,7 @@ fn test_cookies() -> TestResult<()> {
 
 #[test]
 fn test_header() -> TestResult<()> {
-    let response = DeboaResponse::builder(test_url().into())
+    let response = DeboaResponse::builder(test_url())
         .status(http::StatusCode::OK)
         .header(header::ACCEPT_LANGUAGE, "pt-BR")
         .build();
@@ -53,5 +53,40 @@ fn test_header() -> TestResult<()> {
             .get(header::ACCEPT_LANGUAGE),
         Some(&http::HeaderValue::from_static("pt-BR"))
     );
+    Ok(())
+}
+
+#[test]
+fn test_response_url() -> TestResult<()> {
+    let response = DeboaResponse::builder(test_url())
+        .status(http::StatusCode::OK)
+        .header(header::ACCEPT_LANGUAGE, "pt-BR")
+        .build();
+    assert_eq!(
+        response
+            .url()
+            .as_str(),
+        test_url().as_str()
+    );
+    Ok(())
+}
+
+#[test]
+fn test_content_type() -> TestResult<()> {
+    let response = DeboaResponse::builder(test_url())
+        .status(http::StatusCode::OK)
+        .header(header::CONTENT_TYPE, "text/html")
+        .build();
+    assert_eq!(response.content_type(), Ok("text/html".to_string()));
+    Ok(())
+}
+
+#[test]
+fn test_content_length() -> TestResult<()> {
+    let response = DeboaResponse::builder(test_url())
+        .status(http::StatusCode::OK)
+        .header(header::CONTENT_LENGTH, "9")
+        .build();
+    assert_eq!(response.content_length(), Ok(9));
     Ok(())
 }
