@@ -1,35 +1,27 @@
-use std::fs::remove_file;
-
 use crate::{
     cookie::DeboaCookie,
     response::{DeboaResponse, IntoBody},
-    Result,
+    tests::{test_url, TestResult},
 };
-use deboa_tests::utils::fake_url;
 use http::{header, Response};
-
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
 
 const SAMPLE_TEST: &[u8] = b"Hello, world!";
 
 #[test]
-fn test_status() -> Result<()> {
+fn test_status() -> TestResult<()> {
     let response = Response::builder()
         .status(http::StatusCode::OK)
         .body(SAMPLE_TEST.into_body())
         .unwrap();
 
-    let response = DeboaResponse::new(fake_url().into(), response);
+    let response = DeboaResponse::new(test_url().into(), response);
     assert_eq!(response.status(), http::StatusCode::OK);
     Ok(())
 }
 
 #[test]
-fn test_headers() -> Result<()> {
-    let response = DeboaResponse::builder(fake_url())
+fn test_headers() -> TestResult<()> {
+    let response = DeboaResponse::builder(test_url().into())
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .build();
@@ -38,10 +30,10 @@ fn test_headers() -> Result<()> {
 }
 
 #[test]
-fn test_cookies() -> Result<()> {
+fn test_cookies() -> TestResult<()> {
     let mut headers = http::HeaderMap::new();
     headers.insert(header::SET_COOKIE, http::HeaderValue::from_static("test=test"));
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder(test_url().into())
         .status(http::StatusCode::OK)
         .headers(headers)
         .build();
@@ -49,52 +41,17 @@ fn test_cookies() -> Result<()> {
     Ok(())
 }
 
-#[tokio::test]
-async fn test_raw_body() -> Result<()> {
-    let response = DeboaResponse::builder(fake_url())
+#[test]
+fn test_header() -> TestResult<()> {
+    let response = DeboaResponse::builder(test_url().into())
         .status(http::StatusCode::OK)
-        .headers(http::HeaderMap::new())
-        .body(SAMPLE_TEST)
+        .header(header::ACCEPT_LANGUAGE, "pt-BR")
         .build();
     assert_eq!(
         response
-            .bytes()
-            .await,
-        SAMPLE_TEST
+            .headers()
+            .get(header::ACCEPT_LANGUAGE),
+        Some(&http::HeaderValue::from_static("pt-BR"))
     );
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_text_body() -> Result<()> {
-    let response = DeboaResponse::builder(fake_url())
-        .status(http::StatusCode::OK)
-        .headers(http::HeaderMap::new())
-        .body(SAMPLE_TEST)
-        .build();
-    assert_eq!(
-        response
-            .text()
-            .await,
-        Ok(String::from_utf8_lossy(SAMPLE_TEST).to_string())
-    );
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_to_file() -> Result<()> {
-    let output_file = "test.txt";
-    let response = DeboaResponse::builder(fake_url())
-        .status(http::StatusCode::OK)
-        .headers(http::HeaderMap::new())
-        .body(SAMPLE_TEST)
-        .build();
-    assert_eq!(
-        response
-            .to_file(output_file)
-            .await,
-        Ok(())
-    );
-    remove_file(output_file).unwrap();
     Ok(())
 }

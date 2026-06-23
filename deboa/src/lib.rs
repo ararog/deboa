@@ -12,6 +12,8 @@ pub mod form;
 pub mod request;
 pub mod response;
 pub mod serde;
+#[cfg(test)]
+mod tests;
 /// URL module
 pub mod url;
 

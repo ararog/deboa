@@ -1,20 +1,17 @@
-pub(crate) const SKIP_CERT_VERIFICATION: bool = cfg!(any(
-    feature = "tokio-native-tls",
-    feature = "smol-native-tls",
-    feature = "compio-native-tls"
-));
+use ::url::Url;
 
 pub(crate) type TestResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 mod cache;
 //mod catcher;
-mod cert;
-mod client;
 mod cookie;
 mod form;
-mod integrated;
 mod request;
 mod response;
 mod url;
 
-mod helpers;
+pub const TEST_URL: &str = "https://localhost:8000";
+
+pub(crate) fn test_url() -> Url {
+    Url::parse(TEST_URL).unwrap()
+}

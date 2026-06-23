@@ -1,6 +1,7 @@
-use deboa_tests::utils::CA_CERT;
-
-use crate::cert::{Certificate, ContentEncoding};
+use crate::{
+    cert::{Certificate, ContentEncoding},
+    tests::helpers::CA_CERT,
+};
 
 #[test]
 fn test_cert_init() {

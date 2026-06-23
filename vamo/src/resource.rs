@@ -40,7 +40,7 @@
 //!     fn name(&self) -> &str {
 //!         "users"
 //!     }
-//!     
+//!
 //!     fn body_type(&self) -> impl RequestBody {
 //!         JsonBody
 //!     }
@@ -78,7 +78,7 @@ use serde::Serialize;
 ///     }
 ///
 ///     fn name(&self) -> &str { "users" }
-///     
+///
 ///     fn body_type(&self) -> impl RequestBody {
 ///         JsonBody
 ///     }
@@ -106,19 +106,6 @@ pub trait Resource {
     /// * `impl RequestBody` - The body type of resource.
     ///
     fn body_type(&self) -> impl RequestBody;
-    /// Adds a path to the url.
-    ///
-    /// # Arguments
-    ///
-    /// * `path` - The path to be added.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<Url>` - The url with the path added.
-    ///
-    fn add_path(&self, path: &str) -> String {
-        path.replace(":id", &self.id())
-    }
 }
 
 /// Trait which allow http methods on resources
