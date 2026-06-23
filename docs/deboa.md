@@ -4,7 +4,7 @@ title: Deboa - Core HTTP Client
 nav_order: 2
 ---
 
-# Deboa Core
+## Deboa Core
 
 The core HTTP client library for Rust, providing a simple yet powerful interface for making HTTP requests.
 
@@ -49,15 +49,15 @@ use deboa::{Client, request::get, Result};
 #[tokio::main]
 async fn main() -> Result<(), Result> {
     let client = Client::new();
-    
+
     // Make a GET request
     let response = get("https://httpbin.org/get")
         .send_with(&client)
         .await?;
-        
+
     println!("Status: {}", response.status());
     println!("Body: {}", response.text().await?);
-    
+
     Ok(())
 }
 ```

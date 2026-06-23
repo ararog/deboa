@@ -4,7 +4,7 @@ title: Deboa Tokio - HTTP Client for Tokio
 nav_order: 3
 ---
 
-# Deboa Tokio
+## Deboa Tokio
 
 The HTTP client library for Rust using Tokio, providing a simple yet powerful interface for making HTTP requests.
 
@@ -35,15 +35,15 @@ use deboa_tokio::Client;
 #[tokio::main]
 async fn main() -> Result<()> {
     let client = Client::new();
-    
+
     // Make a GET request
     let response = get("https://httpbin.org/get")
         .send_with(&client)
         .await?;
-        
+
     println!("Status: {}", response.status());
     println!("Body: {}", response.text().await?);
-    
+
     Ok(())
 }
 ```

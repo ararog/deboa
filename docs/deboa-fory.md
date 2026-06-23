@@ -4,7 +4,7 @@ title: Deboa Fory - Apache Fory serializer support for Deboa
 nav_order: 8
 ---
 
-# Deboa Fory
+## Deboa Fory
 
 Apache Fory serializer support for Deboa
 

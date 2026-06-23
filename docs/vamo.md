@@ -4,7 +4,7 @@ title: Vamo - DRY REST Client
 nav_order: 6
 ---
 
-# Vamo
+## Vamo
 
 A nice wrapper on top of deboa for creating DRY REST clients.
 
@@ -38,31 +38,31 @@ struct User {
 async fn main() -> Result<()> {
     // Create a client
     let client = Vamo::<deboa_tokio::Client>::new("https://api.example.com");
-    
+
     // Create a new user
     let mut user = User {
         id: None,
         name: "John Doe".to_string(),
         email: "john@example.com".to_string(),
     };
-    
+
     // Save the user
     user = user.create(&client).await?;
     println!("Created user: {:?}", user);
-    
+
     // Fetch all users
     let users = User::list(&client).await?;
     println!("Users: {:?}", users);
-    
+
     // Update the user
     user.name = "Jane Doe".to_string();
     user = user.update(&client).await?;
     println!("Updated user: {:?}", user);
-    
+
     // Delete the user
     user.delete(&client).await?;
     println!("User deleted");
-    
+
     Ok(())
 }
 ```

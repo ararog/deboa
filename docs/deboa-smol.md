@@ -4,7 +4,7 @@ title: Deboa Smol - HTTP Client for Smol
 nav_order: 4
 ---
 
-# Deboa Smol
+## Deboa Smol
 
 The HTTP client library for Rust using Smol, providing a simple yet powerful interface for making HTTP requests.
 
@@ -35,15 +35,15 @@ use deboa_smol::Client;
 #[tokio::main]
 async fn main() -> Result<()> {
     let client = Client::new();
-    
+
     // Make a GET request
     let response = get("https://httpbin.org/get")
         .send_with(&client)
         .await?;
-        
+
     println!("Status: {}", response.status());
     println!("Body: {}", response.text().await?);
-    
+
     Ok(())
 }
 ```

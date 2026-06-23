@@ -4,7 +4,7 @@ title: Deboa Macros - Procedural Macros
 nav_order: 5
 ---
 
-# Deboa Macros
+## Deboa Macros
 
 Collection of procedural macros for Deboa HTTP client. It is close equivalent to
 apisauce for axios, where one macro does it all, from request to response.
@@ -28,68 +28,68 @@ deboa-macros = "0.1.0"
 
 ## Usage
 
-### get!
+### get
 
 ```rust
 let client = Client::new();
 
 let response: Vec<Post> = get!(
-  "https://jsonplaceholder.typicode.com/posts", 
-  JsonBody, 
-  Vec<Post>, 
+  "https://jsonplaceholder.typicode.com/posts",
+  JsonBody,
+  Vec<Post>,
   &client
 );
 ```
 
-### post!
+### post
 
 ```rust
 let data = serde_json::json!({"title": "foo", "body": "bar", "userId": 1});
 let response = post!(
-    data, 
-    JsonBody, 
-    "https://jsonplaceholder.typicode.com/posts", 
+    data,
+    JsonBody,
+    "https://jsonplaceholder.typicode.com/posts",
     &client
 );
 ```
 
-### fetch!
+### fetch
 
 ```rust
 let response: Vec<Post> = fetch!(
-    "https://jsonplaceholder.typicode.com/posts", 
-    JsonBody, 
-    Vec<Post>, 
+    "https://jsonplaceholder.typicode.com/posts",
+    JsonBody,
+    Vec<Post>,
     &client
 );
 ```
 
-### delete!
+### delete
 
 ```rust
 let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
 ```
 
-### put!
+### put
 
 ```rust
 let data = serde_json::json!({"id": 1, "title": "foo", "body": "bar", "userId": 1});
 let response = put!(
-    data, 
-    JsonBody, 
-    "https://jsonplaceholder.typicode.com/posts/1", 
+    data,
+    JsonBody,
+    "https://jsonplaceholder.typicode.com/posts/1",
     &client
 );
 ```
 
-### patch!
+### patch
 
 ```rust
 let data = serde_json::json!({"title": "foo"});
 let response = patch!(
-    data, 
-    JsonBody, 
-    "https://jsonplaceholder.typicode.com/posts/1", 
+    data,
+    JsonBody,
+    "https://jsonplaceholder.typicode.com/posts/1",
     &client
 );
 ```

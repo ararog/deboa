@@ -4,7 +4,7 @@ title: Vamo Macros - bora amd resource macros
 nav_order: 7
 ---
 
-# Vamo Macros
+## Vamo Macros
 
 Procedural macros for the Vamo crate, enabling seamless integration with the Deboa HTTP client.
 

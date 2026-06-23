@@ -4,7 +4,7 @@ title: Examples - A complete set of ready to run examples for Deboa and related 
 nav_order: 2
 ---
 
-# Examples
+## Examples
 
 A complete set of ready to run examples for Deboa and related crates.
 
@@ -18,7 +18,7 @@ It also shows how to use DeboaCatcher trait to implement a simple middleware.
 
 ## [catcher](https://github.com/ararog/deboa/tree/develop/examples/catcher)
 
-This example focus on how to use DeboaCatcher trait to implement 
+This example focus on how to use DeboaCatcher trait to implement
 a simple middleware to log requests.
 
 ## [chat](https://github.com/ararog/deboa/tree/develop/examples/chat)

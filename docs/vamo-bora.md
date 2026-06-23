@@ -4,7 +4,7 @@ title: Vamo Bora - REST Client Generator
 nav_order: 4
 ---
 
-# Vamo Bora
+## Vamo Bora
 
 A macro for easy REST client generation on top of the Vamo REST client.
 
@@ -61,18 +61,17 @@ async fn main() -> Result<()> {
 
     println!("id...: {}", post.id);
     println!("title: {}", post.title);
-    
+
     assert_eq!(post.id, 1);
     Ok(())
 }
 ```
 
-## Features
+## Feature Flags
 
 - `json`: Enable JSON serialization/deserialization (requires `serde_json`)
 - `xml`: Enable XML serialization/deserialization (requires `serde_json`)
 - `msgpack`: Enable MessagePack serialization/deserialization (requires `serde_json`)
-
 
 ## API Reference
 
