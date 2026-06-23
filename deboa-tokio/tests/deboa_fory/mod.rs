@@ -1,12 +1,13 @@
-use std::error::Error;
-
+use crate::common::helpers::{create_client, create_server};
 use deboa::request::post;
 use deboa_fory::{ForyRequestBuilder, ForyResponse};
-use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
+use easyhttpmock_vetis_tokio::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use fory::{Fory, ForyStruct};
 use http::StatusCode;
-
-use crate::common::helpers::{create_client, start_mock_server};
+use std::error::Error;
 
 const FORY_PERSON: [u8; 33] = [
     1, 255, 28, 0, 11, 160, 254, 175, 118, 89, 59, 92, 194, 1, 68, 9, 0, 196, 72, 21, 52, 12, 32,
@@ -21,21 +22,18 @@ struct Person {
 
 #[tokio::test]
 async fn do_fory_post_request() -> Result<(), Box<dyn Error>> {
-    let path = "/posts";
-
     let mock = Mock::of(
-        "POST"
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(&FORY_PERSON),
-            ),
+        given(method("POST").and(path("/posts"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(&FORY_PERSON),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
 
     let mut fory = Fory::default();
@@ -43,9 +41,7 @@ async fn do_fory_post_request() -> Result<(), Box<dyn Error>> {
     assert!(result.is_ok());
 
     let person = Person { name: "John Doe".to_string(), age: 30 };
-
-    let request = post(server.url(path))?.body_as_fory(&fory, person)?;
-
+    let request = post(server.url("/posts"))?.body_as_fory(&fory, person)?;
     let response: Person = request
         .send_with(&client)
         .await?
@@ -56,7 +52,7 @@ async fn do_fory_post_request() -> Result<(), Box<dyn Error>> {
     assert_eq!(response.age, 30);
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())

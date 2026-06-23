@@ -1,112 +1,125 @@
 use crate::common::{
     data::{Post, PostWithId},
-    helpers::{create_client, start_mock_server},
+    helpers::{create_client, create_server},
 };
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_macros::patch;
-use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
+use easyhttpmock_vetis_tokio::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::StatusCode;
 use std::error::Error;
 
 #[tokio::test]
 async fn test_only_patch_minimal() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}"),
-            ),
+        given(method("PATCH").and(path("/posts"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: PostWithId = PostWithId { id: 1 };
     let response = patch!(
         data => data,
         url => server.url("/posts/1"),
         client => &client
     );
+
     assert_eq!(response.status(), 200);
     server
-        .assert()
+        .stop()
         .await?;
+
     Ok(())
 }
 
 #[tokio::test]
 async fn test_only_patch_minimal_headers() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}"),
-            ),
+        given(method("PATCH").and(path("/posts"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let response = patch!(
         data => Post { id: 1, title: "title".to_string(), body: "body".to_string() },
         url => server.url("/posts/1"),
         headers => vec![("Content-Type", "application/json")],
         client => &client
     );
+
     assert_eq!(response.status(), 200);
     server
-        .assert()
+        .stop()
         .await?;
+
     Ok(())
 }
 
 #[tokio::test]
 async fn test_patch() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}"),
-            ),
+        given(method("PATCH").and(path("/posts"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = patch!(
         data => data,
         url => server.url("/posts/1"),
         client => &client
     );
+
     assert_eq!(response.status(), 200);
     server
-        .assert()
+        .stop()
         .await?;
+
     Ok(())
 }
 
 #[tokio::test]
 async fn test_patch_with_headers() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}"),
-            ),
+        given(method("PATCH").and(path("/posts"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = patch!(
@@ -115,28 +128,31 @@ async fn test_patch_with_headers() -> Result<(), Box<dyn Error>> {
         headers => headers,
         client => &client
     );
+
     assert_eq!(response.status(), 200);
     server
-        .assert()
+        .stop()
         .await?;
+
     Ok(())
 }
 
 #[tokio::test]
 async fn test_patch_with_json_body_request() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}"),
-            ),
+        given(method("PATCH").and(path("/posts"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = patch!(
@@ -146,28 +162,31 @@ async fn test_patch_with_json_body_request() -> Result<(), Box<dyn Error>> {
         headers => headers,
         client => &client
     );
+
     assert_eq!(response.status(), 200);
     server
-        .assert()
+        .stop()
         .await?;
+
     Ok(())
 }
 
 #[tokio::test]
 async fn test_patch_with_json_body_no_headers() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"{\"id\": 1, \"title\": \"Teste\", \"body\": \"Teste\"}"),
-            ),
+        given(method("PATCH").and(path("/posts"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"{\"id\": 1, \"title\": \"Teste\", \"body\": \"Teste\"}"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = patch!(
         data => data,
@@ -177,28 +196,31 @@ async fn test_patch_with_json_body_no_headers() -> Result<(), Box<dyn Error>> {
         res_body_ty => JsonBody,
         res_ty => PostWithId
     );
+
     assert_eq!(response.id, 1);
     server
-        .assert()
+        .stop()
         .await?;
+
     Ok(())
 }
 
 #[tokio::test]
 async fn test_patch_with_json_body_response() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"{\"id\": 1, \"title\": \"Teste\", \"body\": \"Teste\"}"),
-            ),
+        given(method("PATCH").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"{\"id\": 1, \"title\": \"Teste\", \"body\": \"Teste\"}"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = patch!(
@@ -210,9 +232,11 @@ async fn test_patch_with_json_body_response() -> Result<(), Box<dyn Error>> {
         res_body_ty => JsonBody,
         res_ty => Post
     );
+
     assert_eq!(response.id, 1);
     server
-        .assert()
+        .stop()
         .await?;
+
     Ok(())
 }

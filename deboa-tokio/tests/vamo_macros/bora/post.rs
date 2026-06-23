@@ -1,5 +1,8 @@
-use crate::common::helpers::{create_client, start_mock_server};
-use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
+use crate::common::helpers::{create_client, create_server};
+use easyhttpmock_vetis_tokio::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -22,27 +25,26 @@ pub struct Post {
 )]
 pub struct PostService;
 
+#[tokio::test]
 async fn do_post_by_id() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "POST"
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("POST").and(path("/posts"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
 
     let mut vamo = Vamo::new(server.base_url())?;
     vamo.client(client);
 
     let mut post_service = PostService::new(vamo);
-
     post_service
         .create_post(Post {
             id: 1,
@@ -53,13 +55,8 @@ async fn do_post_by_id() -> Result<(), Box<dyn Error>> {
         .await?;
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())
-}
-
-#[tokio::test]
-async fn test_post_by_id() -> Result<(), Box<dyn Error>> {
-    do_post_by_id().await
 }

@@ -1,10 +1,13 @@
 use crate::common::{
     data::{Post, PostWithId},
-    helpers::{create_client, start_mock_server},
+    helpers::{create_client, create_server},
 };
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_macros::patch;
-use easyhttpmock_vetis_smol::mock::{MethodExt, Mock, StatusCodeExt};
+use easyhttpmock_vetis_smol::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::StatusCode;
 use macro_rules_attribute::apply;
 use smol_macros::test;
@@ -13,18 +16,19 @@ use std::error::Error;
 #[apply(test!)]
 async fn test_only_patch_minimal() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("PATCH").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = patch!(
         data => data,
@@ -33,7 +37,7 @@ async fn test_only_patch_minimal() -> Result<(), Box<dyn Error>> {
     );
     assert_eq!(response.status(), 200);
     server
-        .assert()
+        .stop()
         .await?;
     Ok(())
 }
@@ -41,18 +45,19 @@ async fn test_only_patch_minimal() -> Result<(), Box<dyn Error>> {
 #[apply(test!)]
 async fn test_only_patch_minimal_headers() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("PATCH").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let response = patch!(
         data => Post { id: 1, title: "title".to_string(), body: "body".to_string() },
         url => server.url("/posts/1"),
@@ -61,7 +66,7 @@ async fn test_only_patch_minimal_headers() -> Result<(), Box<dyn Error>> {
     );
     assert_eq!(response.status(), 200);
     server
-        .assert()
+        .stop()
         .await?;
     Ok(())
 }
@@ -69,18 +74,19 @@ async fn test_only_patch_minimal_headers() -> Result<(), Box<dyn Error>> {
 #[apply(test!)]
 async fn test_patch() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("PATCH").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = patch!(
         data => data,
@@ -89,7 +95,7 @@ async fn test_patch() -> Result<(), Box<dyn Error>> {
     );
     assert_eq!(response.status(), 200);
     server
-        .assert()
+        .stop()
         .await?;
     Ok(())
 }
@@ -97,18 +103,19 @@ async fn test_patch() -> Result<(), Box<dyn Error>> {
 #[apply(test!)]
 async fn test_patch_with_headers() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("PATCH").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = patch!(
@@ -119,7 +126,7 @@ async fn test_patch_with_headers() -> Result<(), Box<dyn Error>> {
     );
     assert_eq!(response.status(), 200);
     server
-        .assert()
+        .stop()
         .await?;
     Ok(())
 }
@@ -127,18 +134,19 @@ async fn test_patch_with_headers() -> Result<(), Box<dyn Error>> {
 #[apply(test!)]
 async fn test_patch_with_json_body_request() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("PATCH").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = patch!(
@@ -150,7 +158,7 @@ async fn test_patch_with_json_body_request() -> Result<(), Box<dyn Error>> {
     );
     assert_eq!(response.status(), 200);
     server
-        .assert()
+        .stop()
         .await?;
     Ok(())
 }
@@ -158,18 +166,19 @@ async fn test_patch_with_json_body_request() -> Result<(), Box<dyn Error>> {
 #[apply(test!)]
 async fn test_patch_with_json_body_no_headers() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"{\"id\": 1, \"title\": \"Teste\", \"body\": \"Teste\"}"),
-            ),
+        given(method("PATCH").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"{\"id\": 1, \"title\": \"Teste\", \"body\": \"Teste\"}"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = patch!(
         data => data,
@@ -181,7 +190,7 @@ async fn test_patch_with_json_body_no_headers() -> Result<(), Box<dyn Error>> {
     );
     assert_eq!(response.id, 1);
     server
-        .assert()
+        .stop()
         .await?;
     Ok(())
 }
@@ -189,18 +198,19 @@ async fn test_patch_with_json_body_no_headers() -> Result<(), Box<dyn Error>> {
 #[apply(test!)]
 async fn test_patch_with_json_body_response() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"{\"id\": 1, \"title\": \"Teste\", \"body\": \"Teste\"}"),
-            ),
+        given(method("PATCH").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"{\"id\": 1, \"title\": \"Teste\", \"body\": \"Teste\"}"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = patch!(
@@ -214,7 +224,7 @@ async fn test_patch_with_json_body_response() -> Result<(), Box<dyn Error>> {
     );
     assert_eq!(response.id, 1);
     server
-        .assert()
+        .stop()
         .await?;
     Ok(())
 }

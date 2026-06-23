@@ -1,54 +1,63 @@
-use crate::common::helpers::start_mock_server;
-use crate::common::{data::Post, helpers::create_client};
+use crate::common::{
+    data::Post,
+    helpers::{create_client, create_server},
+};
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_macros::post;
-use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
+use easyhttpmock_vetis_tokio::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::StatusCode;
 use std::error::Error;
 
 #[tokio::test]
 async fn test_only_post_minimal() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "POST"
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::CREATED
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("POST").and(path("/posts"))).will_return(
+            StatusCode::CREATED
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = post!(
         data => data,
         url => server.url("/posts"),
         client => &client
     );
+
     assert_eq!(response.status(), 201);
     server
-        .assert()
+        .stop()
         .await?;
+
     Ok(())
 }
 
 #[tokio::test]
 async fn test_only_post_minimal_headers() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "POST"
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::CREATED
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("POST").and(path("/posts"))).will_return(
+            StatusCode::CREATED
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = post!(
@@ -57,28 +66,31 @@ async fn test_only_post_minimal_headers() -> Result<(), Box<dyn Error>> {
         headers => headers,
         client => &client
     );
+
     assert_eq!(response.status(), 201);
     server
-        .assert()
+        .stop()
         .await?;
+
     Ok(())
 }
 
 #[tokio::test]
 async fn test_only_post() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "POST"
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::CREATED
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("POST").and(path("/posts"))).will_return(
+            StatusCode::CREATED
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let response = post!(
         data => data,
@@ -86,28 +98,31 @@ async fn test_only_post() -> Result<(), Box<dyn Error>> {
         url => server.url("/posts"),
         client => &client
     );
+
     assert_eq!(response.status(), 201);
     server
-        .assert()
+        .stop()
         .await?;
+
     Ok(())
 }
 
 #[tokio::test]
 async fn test_post_with_headers() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "POST"
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::CREATED
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("POST").and(path("/posts"))).will_return(
+            StatusCode::CREATED
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
     let headers = vec![("Content-Type", "application/json")];
     let response = post!(
@@ -119,7 +134,8 @@ async fn test_post_with_headers() -> Result<(), Box<dyn Error>> {
     );
     assert_eq!(response.status(), 201);
     server
-        .assert()
+        .stop()
         .await?;
+
     Ok(())
 }

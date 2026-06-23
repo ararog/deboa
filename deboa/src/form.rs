@@ -75,7 +75,7 @@ use indexmap::IndexMap;
 use rand::distr::{Alphanumeric, SampleString};
 use urlencoding::encode;
 
-const CRLF: &[u8] = b"\r\n";
+pub(crate) const CRLF: &[u8] = b"\r\n";
 
 /// A trait for building and encoding form data for HTTP requests.
 ///

@@ -1,19 +1,20 @@
-use std::error::Error;
-
+use crate::common::{
+    data::{JSON_PATCH, JSON_POST},
+    helpers::{create_client, create_server},
+};
 use deboa::serde::RequestBody;
 use deboa_extras::http::serde::json::JsonBody;
 use deboa_tokio::Client;
-use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
+use easyhttpmock_vetis_tokio::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::StatusCode;
 use serde::Serialize;
+use std::error::Error;
 use vamo::{
     resource::{Resource, ResourceMethod},
     Vamo,
-};
-
-use crate::common::{
-    data::{JSON_PATCH, JSON_POST},
-    helpers::{create_client, start_mock_server},
 };
 
 #[derive(Serialize)]
@@ -43,18 +44,17 @@ impl Resource for Post {
 #[tokio::test]
 async fn test_get() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "GET"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"pong"),
-            ),
+        given(method("GET").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"pong"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
 
     let mut vamo = Vamo::<Client>::new(
@@ -76,9 +76,7 @@ async fn test_get() -> Result<(), Box<dyn Error>> {
         "pong"
     );
 
-    let _ = server
-        .assert()
-        .await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -86,18 +84,17 @@ async fn test_get() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn test_put() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PUT"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"pong"),
-            ),
+        given(method("PUT").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"pong"),
+        ),
     );
 
-    let server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
 
     let mut vamo = Vamo::<Client>::new(
@@ -107,7 +104,7 @@ async fn test_put() -> Result<(), Box<dyn Error>> {
     )?;
     vamo.client(client);
     let response = vamo
-        .put("/posts")
+        .put("/posts/1")
         .send()
         .await?;
 
@@ -119,19 +116,20 @@ async fn test_put() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn test_post() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "POST"
-            .has()
-            .path("/api/posts/1")
-            .will_return(
-                StatusCode::CREATED
-                    .respond()
-                    .with_body(
-                        b"{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}",
-                    ),
-            ),
+        given(method("POST").and(path("/api/posts"))).will_return(
+            StatusCode::CREATED
+                .respond()
+                .with_body(
+                    b"{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}",
+                ),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
+    let client = create_client();
 
     let post = Post {
         id: 1,
@@ -139,8 +137,6 @@ async fn test_post() -> Result<(), Box<dyn Error>> {
         body: Some("Some body".to_string()),
         user_id: Some(1),
     };
-
-    let client = create_client();
 
     let mut vamo = Vamo::<Client>::new(server.url("/api"))?;
     vamo.client(client);
@@ -152,9 +148,7 @@ async fn test_post() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(response.status(), StatusCode::CREATED);
 
-    let _ = server
-        .assert()
-        .await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -162,18 +156,17 @@ async fn test_post() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn test_patch() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/api/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"pong"),
-            ),
+        given(method("PATCH").and(path("/api/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"pong"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
 
     let mut vamo = Vamo::<Client>::new(server.url("/api"))?;
@@ -185,9 +178,7 @@ async fn test_patch() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    let _ = server
-        .assert()
-        .await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -195,18 +186,17 @@ async fn test_patch() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn test_delete() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "DELETE"
-            .has()
-            .path("/api/posts/1")
-            .will_return(
-                StatusCode::NO_CONTENT
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("DELETE").and(path("/api/posts/1"))).will_return(
+            StatusCode::NO_CONTENT
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
 
     let mut vamo = Vamo::<Client>::new(server.url("/api"))?;
@@ -218,9 +208,7 @@ async fn test_delete() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(response.status(), StatusCode::NO_CONTENT);
 
-    let _ = server
-        .assert()
-        .await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -228,17 +216,18 @@ async fn test_delete() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn test_post_resource() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "POST"
-            .has()
-            .path("/api/posts")
-            .will_return(
-                StatusCode::CREATED
-                    .respond()
-                    .with_body(JSON_POST),
-            ),
+        given(method("POST").and(path("/api/posts"))).will_return(
+            StatusCode::CREATED
+                .respond()
+                .with_body(JSON_POST),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
+    let client = create_client();
 
     let mut post = Post {
         id: 1,
@@ -246,8 +235,6 @@ async fn test_post_resource() -> Result<(), Box<dyn Error>> {
         body: Some("Some body".to_string()),
         user_id: Some(1),
     };
-
-    let client = create_client();
 
     let mut vamo = Vamo::<Client>::new(server.url("/api"))?;
     vamo.client(client);
@@ -258,9 +245,7 @@ async fn test_post_resource() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(response.status(), StatusCode::CREATED);
 
-    let _ = server
-        .assert()
-        .await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -268,17 +253,18 @@ async fn test_post_resource() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn test_put_resource() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PUT"
-            .has()
-            .path("/api/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(JSON_PATCH),
-            ),
+        given(method("PUT").and(path("/api/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(JSON_PATCH),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
+    let client = create_client();
 
     let mut post = Post {
         id: 1,
@@ -286,8 +272,6 @@ async fn test_put_resource() -> Result<(), Box<dyn Error>> {
         body: Some("Some body".to_string()),
         user_id: Some(1),
     };
-
-    let client = create_client();
 
     let mut vamo = Vamo::<Client>::new(server.url("/api"))?;
     vamo.client(client);
@@ -298,9 +282,7 @@ async fn test_put_resource() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    let _ = server
-        .assert()
-        .await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -308,22 +290,20 @@ async fn test_put_resource() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn test_patch_resource() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/api/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(JSON_PATCH),
-            ),
+        given(method("PATCH").and(path("/api/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(JSON_PATCH),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
-    let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
 
+    let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
     let mut vamo = Vamo::<Client>::new(server.url("/api"))?;
     vamo.client(client);
     let response = vamo
@@ -333,9 +313,7 @@ async fn test_patch_resource() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    let _ = server
-        .assert()
-        .await;
+    let _ = server.stop().await;
 
     Ok(())
 }
@@ -343,22 +321,20 @@ async fn test_patch_resource() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn test_remove_resource() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "DELETE"
-            .has()
-            .path("/api/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("DELETE").and(path("/api/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
-    let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
 
+    let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
     let mut vamo = Vamo::<Client>::new(server.url("/api"))?;
     vamo.client(client);
     let response = vamo
@@ -368,9 +344,7 @@ async fn test_remove_resource() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    let _ = server
-        .assert()
-        .await;
+    let _ = server.stop().await;
 
     Ok(())
 }

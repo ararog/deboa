@@ -1,10 +1,12 @@
-use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
+use crate::common::helpers::{create_client, create_server};
+use easyhttpmock_vetis_tokio::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
 use vamo::Vamo;
 use vamo_macros::bora;
-
-use crate::common::helpers::{create_client, start_mock_server};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Post {
@@ -23,31 +25,29 @@ pub struct PostService;
 
 async fn do_put_by_id() -> Result<(), Box<dyn std::error::Error>> {
     let mock = Mock::of(
-        "PUT"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("PUT").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
 
     let mut vamo = Vamo::new(server.base_url())?;
     vamo.client(client);
 
     let mut post_service = PostService::new(vamo);
-
     post_service
         .update_post(1, Post { title: "title".to_string(), body: "body".to_string(), user_id: 1 })
         .await?;
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())

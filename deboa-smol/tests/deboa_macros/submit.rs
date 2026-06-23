@@ -1,7 +1,9 @@
-use crate::common::helpers::{create_client, start_mock_server};
+use crate::common::helpers::{create_client, create_server};
 use deboa_macros::submit;
-use deboa_smol::Client;
-use easyhttpmock_vetis_smol::mock::{MethodExt, Mock, StatusCodeExt};
+use easyhttpmock_vetis_smol::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::{Method, StatusCode};
 use macro_rules_attribute::apply;
 use smol_macros::test;
@@ -10,18 +12,19 @@ use std::error::Error;
 #[apply(test!)]
 async fn test_submit_str_minimal() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "POST"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("POST").and(path("/posts"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let response = submit!(
         method => Method::POST,
         data => "user=deboa",
@@ -32,7 +35,7 @@ async fn test_submit_str_minimal() -> Result<(), Box<dyn Error>> {
         .status()
         .is_success());
     server
-        .assert()
+        .stop()
         .await?;
     Ok(())
 }
@@ -40,18 +43,19 @@ async fn test_submit_str_minimal() -> Result<(), Box<dyn Error>> {
 #[apply(test!)]
 async fn test_submit_str_method() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "POST"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("POST").and(path("/posts"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let headers = vec![("Content-Type", "application/x-www-form-urlencoded")];
     let response = submit!(
         method => Method::POST,
@@ -64,7 +68,7 @@ async fn test_submit_str_method() -> Result<(), Box<dyn Error>> {
         .status()
         .is_success());
     server
-        .assert()
+        .stop()
         .await?;
     Ok(())
 }

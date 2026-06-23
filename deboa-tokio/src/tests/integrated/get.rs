@@ -5,7 +5,7 @@ use crate::tests::helpers::{CLIENT_CERT, CLIENT_KEY};
 use crate::tests::helpers::{CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
 use crate::{
     tests::{
-        helpers::{create_client, start_mock_server, CA_CERT},
+        helpers::{create_client, create_server, CA_CERT},
         TestResult,
     },
     Client, HttpVersion,
@@ -16,7 +16,10 @@ use deboa::{
     response::DeboaResponse,
     HttpClient,
 };
-use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
+use easyhttpmock_vetis_tokio::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::StatusCode;
 
 //
@@ -25,18 +28,19 @@ use http::StatusCode;
 #[tokio::test]
 async fn do_get_http() -> TestResult<()> {
     let mock = Mock::of(
-        "GET"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"Hello World!"),
-            ),
+        given(method("GET").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"Hello World!"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
     let response: DeboaResponse = client
         .execute(request)
@@ -53,7 +57,7 @@ async fn do_get_http() -> TestResult<()> {
     );
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())
@@ -61,17 +65,18 @@ async fn do_get_http() -> TestResult<()> {
 
 async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
     let mock = Mock::of(
-        "GET"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"Hello World!"),
-            ),
+        given(method("GET").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"Hello World!"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
+
     let client = Client::builder()
         .skip_cert_verification(skip)
         .build();
@@ -145,7 +150,7 @@ async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
     }
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())
@@ -172,17 +177,17 @@ async fn test_get_http_verify() -> TestResult<()> {
 #[tokio::test]
 async fn test_get_http_mutual_authentication() -> TestResult<()> {
     let mock = Mock::of(
-        "GET"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"Hello World!"),
-            ),
+        given(method("GET").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"Hello World!"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
 
     #[cfg(feature = "rust-tls")]
     let identity = Identity::from_pkcs8(CLIENT_CERT, CLIENT_KEY, ContentEncoding::DER);
@@ -208,7 +213,7 @@ async fn test_get_http_mutual_authentication() -> TestResult<()> {
     assert_eq!(response?.status(), StatusCode::OK);
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())
@@ -218,17 +223,16 @@ async fn test_get_http_mutual_authentication() -> TestResult<()> {
 #[tokio::test]
 async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
     let mock = Mock::of(
-        "GET"
-            .has()
-            .path("/post/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"Hello World!"),
-            ),
+        given(method("GET").and(path("/post/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"Hello World!"),
+        ),
     );
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let identity = Identity::from_pkcs12(CLIENT_P12, Some("test".to_string()));
 
     let client = Client::builder()
@@ -245,7 +249,7 @@ async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
     assert_eq!(response?.status(), StatusCode::OK);
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())
@@ -257,18 +261,19 @@ async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
 #[tokio::test]
 async fn test_get_not_found() -> TestResult<()> {
     let mock = Mock::of(
-        "GET"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::NOT_FOUND
-                    .respond()
-                    .with_body(b"Not found"),
-            ),
+        given(method("GET").and(path("/posts/1"))).will_return(
+            StatusCode::NOT_FOUND
+                .respond()
+                .with_body(b"Not found"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let response: crate::Result<DeboaResponse> =
         DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
             .send_with(&client)
@@ -283,7 +288,7 @@ async fn test_get_not_found() -> TestResult<()> {
     );
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())
@@ -332,18 +337,19 @@ async fn test_get_invalid_server() -> TestResult<()> {
 #[tokio::test]
 async fn test_get_by_query() -> TestResult<()> {
     let mock = Mock::of(
-        "GET"
-            .has()
-            .path("/comments/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"My comment"),
-            ),
+        given(method("GET").and(path("/comments/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"My comment"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let response = DeboaRequest::get(server.url("/comments/1"))?
         .send_with(&client)
         .await?;
@@ -366,7 +372,7 @@ async fn test_get_by_query() -> TestResult<()> {
     assert_eq!(comments.unwrap(), "My comment");
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())
@@ -460,19 +466,19 @@ async fn test_get_with_redirect() {
 #[tokio::test]
 async fn test_try_into() -> TestResult<()> {
     let mock = Mock::of(
-        "GET"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("GET").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let first_post = server.url("/posts/1");
     let response = client
         .execute(first_post.into_request()?)
@@ -480,7 +486,7 @@ async fn test_try_into() -> TestResult<()> {
     assert_eq!(response.status(), 200);
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())
@@ -489,18 +495,19 @@ async fn test_try_into() -> TestResult<()> {
 #[tokio::test]
 async fn test_fetch_from_str() -> TestResult<()> {
     let mock = Mock::of(
-        "GET"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("GET").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
+
     let first_post = server.url("/posts/1");
     let response = first_post
         .fetch_with(client)
@@ -508,7 +515,7 @@ async fn test_fetch_from_str() -> TestResult<()> {
     assert_eq!(response.status(), 200);
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())

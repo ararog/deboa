@@ -1,13 +1,16 @@
 use crate::{
     tests::{
-        helpers::{create_client, start_mock_server},
+        helpers::{create_client, create_server},
         TestResult,
     },
     Client,
 };
 
 use deboa::{request::DeboaRequest, HttpClient};
-use easyhttpmock_vetis_smol::mock::{MethodExt, Mock, StatusCodeExt};
+use easyhttpmock_vetis_smol::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::{Method, StatusCode};
 
 use macro_rules_attribute::apply;
@@ -19,18 +22,17 @@ use smol_macros::test;
 
 async fn do_patch() -> TestResult<()> {
     let mock = Mock::of(
-        Method::PATCH
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .with_body(b"done"),
-            ),
+        given(method(Method::PATCH).and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"done"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client: Client = create_client();
 
     let request = DeboaRequest::patch(server.url("/posts/1"))?
@@ -50,7 +52,7 @@ async fn do_patch() -> TestResult<()> {
     );
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())

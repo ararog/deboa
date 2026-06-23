@@ -1,17 +1,18 @@
+use crate::common::helpers::{create_server, CA_CERT, SKIP_CERT_VERIFICATION};
 use deboa_smol::{
     cert::{Certificate, ContentEncoding},
     Client as DeboaClient,
 };
-
-use easyhttpmock_vetis_smol::mock::{MethodExt, Mock, StatusCodeExt};
+use easyhttpmock_vetis_smol::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::StatusCode;
 use macro_rules_attribute::apply;
 use serde::{Deserialize, Serialize};
 use smol_macros::test;
 use vamo::Vamo;
 use vamo_macros::bora;
-
-use crate::common::helpers::{start_mock_server, CA_CERT, SKIP_CERT_VERIFICATION};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Post {
@@ -30,18 +31,17 @@ pub struct PostService;
 
 async fn do_put_by_id() -> Result<(), Box<dyn std::error::Error>> {
     let mock = Mock::of(
-        "PUT"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("PUT").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = DeboaClient::builder()
         .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
@@ -57,7 +57,7 @@ async fn do_put_by_id() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())

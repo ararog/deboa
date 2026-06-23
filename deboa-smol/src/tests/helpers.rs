@@ -1,18 +1,16 @@
-use std::net::IpAddr;
-
-use easyhttpmock_vetis_smol::{
-    config::EasyHttpMockConfig,
-    mock::Mock,
-    server::PortGenerator,
-    vetis_adapter::{VetisAdapter, VetisAdapterConfig},
-    EasyHttpMock, Protocol,
-};
-
 use crate::{
     cert::{Certificate, ContentEncoding},
     tests::SKIP_CERT_VERIFICATION,
     Client, HttpVersion,
 };
+use easyhttpmock_vetis_smol::{
+    config::EasyHttpMockConfig,
+    mock::MockState,
+    server::{PortGenerator, ServerAdapter},
+    vetis_adapter::{VetisAdapter, VetisAdapterConfig},
+    EasyHttpMock, Protocol,
+};
+use std::net::IpAddr;
 
 pub(crate) const CA_CERT: &[u8] = include_bytes!("../../../certs/ca.der");
 // pub(crate) const CA_CERT_PEM: &[u8] = include_bytes!("../../../certs/ca.crt");
@@ -92,7 +90,7 @@ pub(crate) fn create_client() -> Client {
 }
 
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-pub(crate) async fn tls_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
+pub(crate) async fn tls_mock_server() -> EasyHttpMock<VetisAdapter> {
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
 
@@ -100,13 +98,13 @@ pub(crate) async fn tls_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
     let server_key = SERVER_KEY;
 
     let vetis_adapter_config = VetisAdapterConfig::builder()
-        .hostname(Some(hostname))
+        .hostname(&hostname)
         .interface(&interface)
         .protocol(vetis_default_protocol())
         .with_random_port()
-        .cert(Some(server_cert.to_vec()))
-        .key(Some(server_key.to_vec()))
-        .ca(Some(CA_CERT.to_vec()))
+        .cert(server_cert.to_vec())
+        .key(server_key.to_vec())
+        .ca(CA_CERT.to_vec())
         .build();
 
     let config = EasyHttpMockConfig::<VetisAdapter>::builder()
@@ -114,32 +112,23 @@ pub(crate) async fn tls_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
         .build();
 
     let server = EasyHttpMock::new(config);
-    let mut server = match server {
+    let server = match server {
         Ok(server) => server,
         Err(err) => {
             panic!("Failed to create mock server: {}", err);
         }
     };
-
-    #[allow(unused_must_use)]
-    server.register_mock(mock);
-
-    let result = server.start().await;
-
-    result.unwrap_or_else(|err| {
-        panic!("Failed to start mock server: {}", err);
-    });
 
     server
 }
 
 #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]
-pub(crate) async fn plain_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
+pub(crate) async fn plain_mock_server() -> EasyHttpMock<VetisAdapter> {
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
 
     let vetis_adapter_config = VetisAdapterConfig::builder()
-        .hostname(Some(hostname))
+        .hostname(hostname)
         .interface(&interface)
         .protocol(vetis_default_protocol())
         .with_random_port()
@@ -150,18 +139,14 @@ pub(crate) async fn plain_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> 
         .build();
 
     let server = EasyHttpMock::new(config);
-    let mut server = match server {
+    let server = match server {
         Ok(server) => server,
         Err(err) => {
             panic!("Failed to create mock server: {}", err);
         }
     };
 
-    #[allow(unused_must_use)]
-    server.register_mock(mock);
-
     let result = server.start().await;
-
     result.unwrap_or_else(|err| {
         panic!("Failed to start mock server: {}", err);
     });
@@ -169,9 +154,9 @@ pub(crate) async fn plain_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> 
     server
 }
 
-pub(crate) async fn start_mock_server(mock: Mock) -> EasyHttpMock<VetisAdapter> {
+pub(crate) async fn create_server() -> EasyHttpMock<VetisAdapter> {
     #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-    return tls_mock_server(mock).await;
+    return tls_mock_server().await;
     #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]
-    return plain_mock_server(mock).await;
+    return plain_mock_server().await;
 }

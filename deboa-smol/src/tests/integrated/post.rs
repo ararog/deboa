@@ -1,19 +1,20 @@
 use crate::{
     tests::{
-        helpers::{create_client, start_mock_server},
+        helpers::{create_client, create_server},
         TestResult,
     },
     Client,
 };
-
 use deboa::{
     form::{DeboaForm, EncodedForm, MultiPartForm},
     request::DeboaRequest,
     HttpClient,
 };
-use easyhttpmock_vetis_smol::mock::{MethodExt, Mock, StatusCodeExt};
+use easyhttpmock_vetis_smol::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::{header::CONTENT_TYPE, Method, StatusCode};
-
 use macro_rules_attribute::apply;
 use smol_macros::test;
 
@@ -21,20 +22,20 @@ use smol_macros::test;
 // POST
 //
 
-async fn do_post() -> TestResult<()> {
+#[apply(test!)]
+async fn test_post() -> TestResult<()> {
     let mock = Mock::of(
-        Method::PUT
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::CREATED
-                    .respond()
-                    .with_body(b"{\n  \"id\": 101\n}"),
-            ),
+        given(method(Method::POST).and(path("/posts"))).will_return(
+            StatusCode::CREATED
+                .respond()
+                .with_body(b"{\n  \"id\": 101\n}"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client: Client = create_client();
 
     let request = DeboaRequest::post(server.url("/posts"))?
@@ -54,35 +55,30 @@ async fn do_post() -> TestResult<()> {
     );
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())
 }
 
 #[apply(test!)]
-async fn test_post() -> TestResult<()> {
-    do_post().await
-}
-
-async fn do_post_encoded_form() -> TestResult<()> {
+async fn test_post_encoded_form() -> TestResult<()> {
     let mock = Mock::of(
-        Method::POST
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::CREATED
-                    .respond()
-                    .with_header(
-                        CONTENT_TYPE.as_str(),
-                        mime::APPLICATION_WWW_FORM_URLENCODED.essence_str(),
-                    )
-                    .with_body(b"ping"),
-            ),
+        given(method(Method::POST).and(path("/posts"))).will_return(
+            StatusCode::CREATED
+                .respond()
+                .with_header(
+                    CONTENT_TYPE.as_str(),
+                    mime::APPLICATION_WWW_FORM_URLENCODED.essence_str(),
+                )
+                .with_body(b"ping"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client: Client = create_client();
 
     let mut form = EncodedForm::builder();
@@ -106,36 +102,31 @@ async fn do_post_encoded_form() -> TestResult<()> {
     );
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())
 }
 
 #[apply(test!)]
-async fn test_post_encoded_form() -> TestResult<()> {
-    do_post_encoded_form().await
-}
-
-async fn do_post_multipart_form() -> TestResult<()> {
+async fn test_post_multipart_form() -> TestResult<()> {
     let mut form = MultiPartForm::builder();
     form.field("name", "deboa");
     form.field("version", "0.0.1");
 
     let mock = Mock::of(
-        Method::POST
-            .has()
-            .path("/posts")
-            .will_return(
-                StatusCode::CREATED
-                    .respond()
-                    .with_header(CONTENT_TYPE.as_str(), mime::MULTIPART_FORM_DATA.essence_str())
-                    .with_body(b"ping"),
-            ),
+        given(method(Method::POST).and(path("/posts"))).will_return(
+            StatusCode::CREATED
+                .respond()
+                .with_header(CONTENT_TYPE.as_str(), mime::MULTIPART_FORM_DATA.essence_str())
+                .with_body(b"ping"),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client: Client = create_client();
 
     let request = DeboaRequest::post(server.url("/posts"))?
@@ -155,13 +146,8 @@ async fn do_post_multipart_form() -> TestResult<()> {
     );
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())
-}
-
-#[apply(test!)]
-async fn test_post_multipart_form() -> TestResult<()> {
-    do_post_multipart_form().await
 }

@@ -1,14 +1,15 @@
-use std::error::Error;
-
-use easyhttpmock_vetis_smol::mock::{MethodExt, Mock, StatusCodeExt};
+use crate::common::helpers::{create_client, create_server};
+use easyhttpmock_vetis_smol::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::StatusCode;
 use macro_rules_attribute::apply;
 use serde::{Deserialize, Serialize};
 use smol_macros::test;
+use std::error::Error;
 use vamo::Vamo;
 use vamo_macros::bora;
-
-use crate::common::helpers::{create_client, start_mock_server};
 
 #[derive(Serialize, Deserialize)]
 pub struct Post {
@@ -27,17 +28,17 @@ pub struct PostService;
 
 async fn do_patch_by_id() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "PATCH"
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("PATCH").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
-    let mut server = start_mock_server(mock).await;
 
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
 
     let mut vamo = Vamo::new(server.base_url())?;
@@ -50,7 +51,7 @@ async fn do_patch_by_id() -> Result<(), Box<dyn Error>> {
         .await?;
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())

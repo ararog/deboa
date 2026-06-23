@@ -1,10 +1,12 @@
 use crate::tests::{
-    helpers::{create_client, start_mock_server},
+    helpers::{create_client, create_server},
     TestResult,
 };
-
 use deboa::request::DeboaRequest;
-use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
+use easyhttpmock_vetis_tokio::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::{Method, StatusCode};
 
 //
@@ -13,18 +15,17 @@ use http::{Method, StatusCode};
 #[tokio::test]
 async fn test_delete() -> TestResult<()> {
     let mock = Mock::of(
-        Method::DELETE
-            .has()
-            .path("/posts/1")
-            .will_return(
-                StatusCode::OK
-                    .respond()
-                    .no_body(),
-            ),
+        given(method(Method::DELETE).and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let mut server = start_mock_server(mock).await;
-
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
     let client = create_client();
 
     let response = DeboaRequest::delete(server.url("/posts/1"))?
@@ -34,7 +35,7 @@ async fn test_delete() -> TestResult<()> {
     assert_eq!(response.status(), StatusCode::OK);
 
     server
-        .assert()
+        .stop()
         .await?;
 
     Ok(())

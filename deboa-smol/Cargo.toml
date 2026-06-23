@@ -1,6 +1,6 @@
 [package]
 name = "deboa-smol"
-version = "0.1.0-beta.3"
+version = "0.1.0-beta.4"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -123,7 +123,7 @@ criterion = { version = "0.8.2", features = [
 deboa-extras = { workspace = true, default-features = false }
 deboa-fory = { workspace = true, default-features = false }
 deboa-macros = { workspace = true }
-easyhttpmock-vetis-smol = { version = "0.1.0-beta.2", features = [
+easyhttpmock-vetis-smol = { version = "0.1.0-beta.4", features = [
   "http2",
   "rust-tls",
 ], default-features = false }

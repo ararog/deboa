@@ -1,14 +1,15 @@
-use std::error::Error;
-
+use crate::common::helpers::{create_client, create_server};
 use deboa::serde::RequestBody;
 use deboa_extras::http::serde::json::JsonBody;
-use easyhttpmock_vetis_tokio::mock::{MethodExt, Mock, StatusCodeExt};
+use easyhttpmock_vetis_tokio::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
 use http::StatusCode;
 use serde::Serialize;
+use std::error::Error;
 use vamo::{resource::ResourceMethod, Vamo};
 use vamo_macros::Resource;
-
-use crate::common::helpers::{create_client, start_mock_server};
 
 #[derive(Resource, Serialize)]
 #[name("users")]
@@ -19,27 +20,26 @@ pub struct User {
     name: String,
 }
 
+#[tokio::test]
 async fn do_post_resource() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
-        "POST"
-            .has()
-            .path("/api/users")
-            .will_return(
-                StatusCode::CREATED
-                    .respond()
-                    .no_body(),
-            ),
+        given(method("POST").and(path("/api/users"))).will_return(
+            StatusCode::CREATED
+                .respond()
+                .no_body(),
+        ),
     );
 
-    let server = start_mock_server(mock).await;
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
 
     let mut user = User { id: 32, name: "User 1".to_string() };
-
     let mut url = server.base_url();
     url.push_str("/api");
 
     let client = create_client();
-
     let mut vamo = Vamo::new(url.to_string())?;
     vamo.client(client);
     let response = vamo
@@ -49,10 +49,9 @@ async fn do_post_resource() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(response.status(), StatusCode::CREATED);
 
-    Ok(())
-}
+    server
+        .stop()
+        .await?;
 
-#[tokio::test]
-async fn test_post_resource() -> Result<(), Box<dyn Error>> {
-    do_post_resource().await
+    Ok(())
 }
