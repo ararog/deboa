@@ -4,7 +4,7 @@ title: Deboa Extras - serializers, compression, websockets and sse support for D
 nav_order: 3
 ---
 
-# Deboa Extras
+## Deboa Extras
 
 Additional functionality for the Deboa HTTP client, including serializers, compression, websockets and sse support.
 
@@ -35,7 +35,7 @@ deboa-extras = { version = "0.0.5", features = ["json", "websocket", "sse"] }
 ### JSON Serialization/Deserialization
 
 ```rust
-use deboa_extras::http::serde::json::JsonBody;
+use deboa_extras::serde::json::JsonBody;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
