@@ -26,7 +26,7 @@ async fn test_fetch_str_minimal() -> Result<(), Box<dyn Error>> {
     let mut server = create_server().await;
     server
         .register_mock(mock)
-        .await;
+        .await?;
     let client = create_client();
 
     let response = fetch!(
@@ -55,7 +55,7 @@ async fn test_fetch_str_minimal_headers() -> Result<(), Box<dyn Error>> {
     let mut server = create_server().await;
     server
         .register_mock(mock)
-        .await;
+        .await?;
     let client = create_client();
 
     let response = fetch!(
@@ -85,7 +85,7 @@ async fn test_fetch_str() -> Result<(), Box<dyn Error>> {
     let mut server = create_server().await;
     server
         .register_mock(mock)
-        .await;
+        .await?;
     let client = create_client();
 
     let response = fetch!(
@@ -114,7 +114,7 @@ async fn test_fetch_ident() -> Result<(), Box<dyn Error>> {
     let mut server = create_server().await;
     server
         .register_mock(mock)
-        .await;
+        .await?;
     let client = create_client();
 
     let url = server.url("/posts");
@@ -144,7 +144,7 @@ async fn test_fetch_ident_with_headers() -> Result<(), Box<dyn Error>> {
     let mut server = create_server().await;
     server
         .register_mock(mock)
-        .await;
+        .await?;
     let client = create_client();
 
     let url = server.url("/posts");

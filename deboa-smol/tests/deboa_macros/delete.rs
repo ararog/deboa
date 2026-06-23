@@ -22,7 +22,7 @@ async fn delete() -> Result<(), Box<dyn Error>> {
     let mut server = create_server().await;
     server
         .register_mock(mock)
-        .await;
+        .await?;
     let client = create_client();
     let response = delete!(
         url => server.url("/posts/1"),
@@ -50,7 +50,7 @@ async fn delete_with_headers() -> Result<(), Box<dyn Error>> {
     let mut server = create_server().await;
     server
         .register_mock(mock)
-        .await;
+        .await?;
     let client = create_client();
     let response = delete!(
         url => server.url("/posts/1"),

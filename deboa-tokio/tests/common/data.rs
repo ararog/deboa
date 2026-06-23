@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use serde::{Deserialize, Serialize};
 
 pub const MSGPACK_POST: [u8; 23] = [

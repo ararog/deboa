@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::{
     cert::{Certificate, ContentEncoding},
     tests::SKIP_CERT_VERIFICATION,
@@ -5,12 +6,12 @@ use crate::{
 };
 use easyhttpmock_vetis_smol::{
     config::EasyHttpMockConfig,
-    mock::MockState,
-    server::{PortGenerator, ServerAdapter},
+    server::PortGenerator,
     vetis_adapter::{VetisAdapter, VetisAdapterConfig},
     EasyHttpMock, Protocol,
 };
 use std::net::IpAddr;
+use url::Url;
 
 pub(crate) const CA_CERT: &[u8] = include_bytes!("../../../certs/ca.der");
 // pub(crate) const CA_CERT_PEM: &[u8] = include_bytes!("../../../certs/ca.crt");
@@ -31,6 +32,10 @@ pub(crate) const CLIENT_CERT_PEM: &[u8] = include_bytes!("../../../certs/client.
 pub(crate) const CLIENT_KEY_PEM: &[u8] = include_bytes!("../../../certs/client.key");
 
 pub(crate) const CLIENT_P12: &[u8] = include_bytes!("../../../certs/client.p12");
+
+pub(crate) fn fake_url() -> Url {
+    Url::parse("https://httpbin.org/get").unwrap()
+}
 
 pub(crate) const fn deboa_default_protocol() -> HttpVersion {
     #[cfg(feature = "http1")]

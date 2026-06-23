@@ -128,12 +128,13 @@ fn test_from_str_headers() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-async fn do_test_from_str_body() -> Result<(), Box<dyn Error>> {
+#[tokio::test]
+async fn test_from_str_body() -> Result<(), Box<dyn Error>> {
     let request = DeboaRequest::from_str(
         r##"
     GET https://localhost:8000
     Content-Type: application/json
-    
+
     {"title": "foo", "body": "bar", "userId": 1}
     "##,
     )?;
@@ -147,30 +148,6 @@ async fn do_test_from_str_body() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(bytes, b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}"[..]);
     Ok(())
-}
-
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_from_str_body() {
-    do_test_from_str_body()
-        .await
-        .unwrap();
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test)]
-async fn test_from_str_body() {
-    do_test_from_str_body()
-        .await
-        .unwrap();
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_from_str_body() {
-    do_test_from_str_body()
-        .await
-        .unwrap();
 }
 
 #[test]
@@ -275,7 +252,8 @@ fn test_add_header() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-async fn do_test_set_text_body() -> Result<(), Box<dyn Error>> {
+#[tokio::test]
+async fn test_set_text_body() -> Result<(), Box<dyn Error>> {
     let test_url = test_url(None);
     let request = DeboaRequest::post(&test_url)?
         .text("test")
@@ -293,25 +271,8 @@ async fn do_test_set_text_body() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_set_text_body() -> Result<(), Box<dyn Error>> {
-    do_test_set_text_body().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_set_text_body() -> Result<(), Box<dyn Error>> {
-    do_test_set_text_body().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_set_text_body() -> Result<(), Box<dyn Error>> {
-    do_test_set_text_body().await
-}
-
-async fn do_test_raw_body() -> Result<(), Box<dyn Error>> {
+async fn test_raw_body() -> Result<(), Box<dyn Error>> {
     let test_url = test_url(None);
     let request = DeboaRequest::post(&test_url)?
         .text("test")
@@ -327,22 +288,4 @@ async fn do_test_raw_body() -> Result<(), Box<dyn Error>> {
     assert_eq!(bytes, b"test"[..]);
 
     Ok(())
-}
-
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_raw_body() -> Result<(), Box<dyn Error>> {
-    do_test_raw_body().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_raw_body() -> Result<(), Box<dyn Error>> {
-    do_test_raw_body().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_raw_body() -> Result<(), Box<dyn Error>> {
-    do_test_raw_body().await
 }

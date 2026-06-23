@@ -1,7 +1,5 @@
 use std::net::IpAddr;
 
-#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use easyhttpmock_vetis_smol::mock::MockState;
 use easyhttpmock_vetis_smol::{
     config::EasyHttpMockConfig,
     server::PortGenerator,
@@ -116,7 +114,7 @@ pub async fn tls_mock_server() -> EasyHttpMock<VetisAdapter> {
         .build();
 
     let server = EasyHttpMock::new(config);
-    let mut server = match server {
+    let server = match server {
         Ok(server) => server,
         Err(err) => {
             panic!("Failed to create mock server: {}", err);
@@ -143,7 +141,7 @@ pub async fn plain_mock_server() -> EasyHttpMock<VetisAdapter> {
         .build();
 
     let server = EasyHttpMock::new(config);
-    let mut server = match server {
+    let server = match server {
         Ok(server) => server,
         Err(err) => {
             panic!("Failed to create mock server: {}", err);

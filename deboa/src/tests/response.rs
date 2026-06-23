@@ -49,7 +49,8 @@ fn test_cookies() -> Result<()> {
     Ok(())
 }
 
-async fn raw_body() -> Result<()> {
+#[tokio::test]
+async fn test_raw_body() -> Result<()> {
     let response = DeboaResponse::builder(fake_url())
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
@@ -64,25 +65,8 @@ async fn raw_body() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_raw_body() -> Result<()> {
-    raw_body().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_raw_body() -> Result<()> {
-    raw_body().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_raw_body() -> Result<()> {
-    raw_body().await
-}
-
-async fn text_body() -> Result<()> {
+async fn test_text_body() -> Result<()> {
     let response = DeboaResponse::builder(fake_url())
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
@@ -97,25 +81,8 @@ async fn text_body() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_text_body() -> Result<()> {
-    text_body().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_text_body() -> Result<()> {
-    text_body().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_text_body() -> Result<()> {
-    text_body().await
-}
-
-async fn to_file() -> Result<()> {
+async fn test_to_file() -> Result<()> {
     let output_file = "test.txt";
     let response = DeboaResponse::builder(fake_url())
         .status(http::StatusCode::OK)
@@ -130,22 +97,4 @@ async fn to_file() -> Result<()> {
     );
     remove_file(output_file).unwrap();
     Ok(())
-}
-
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_to_file() -> Result<()> {
-    to_file().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_to_file() -> Result<()> {
-    to_file().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_to_file() -> Result<()> {
-    to_file().await
 }

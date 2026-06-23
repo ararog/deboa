@@ -7,12 +7,15 @@ use easyhttpmock_vetis_tokio::{
     vetis_adapter::{VetisAdapter, VetisAdapterConfig},
     EasyHttpMock, Protocol,
 };
+use url::Url;
 
 use crate::{
     cert::{Certificate, ContentEncoding},
     tests::SKIP_CERT_VERIFICATION,
     Client, HttpVersion,
 };
+
+pub const SOME_URL: &str = "https://httpbin.org/get";
 
 pub const CA_CERT: &[u8] = include_bytes!("../../../certs/ca.der");
 // pub const CA_CERT_PEM: &[u8] = include_bytes!("../../../certs/ca.crt");
@@ -50,6 +53,10 @@ pub(crate) const fn vetis_default_protocol() -> Protocol {
     return Protocol::Http2;
     #[cfg(feature = "http3")]
     return Protocol::Http3;
+}
+
+pub(crate) fn fake_url() -> Url {
+    Url::parse("https://httpbin.org/get").unwrap()
 }
 
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]

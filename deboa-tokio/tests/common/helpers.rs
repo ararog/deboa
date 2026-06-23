@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use deboa_tokio::{
     cert::{Certificate, ContentEncoding},
     Client, HttpVersion,
@@ -112,7 +113,7 @@ pub async fn tls_mock_server() -> EasyHttpMock<VetisAdapter> {
         .build();
 
     let server = EasyHttpMock::new(config);
-    let mut server = match server {
+    let server = match server {
         Ok(server) => server,
         Err(err) => {
             panic!("Failed to create mock server: {}", err);
@@ -139,7 +140,7 @@ pub async fn plain_mock_server() -> EasyHttpMock<VetisAdapter> {
         .build();
 
     let server = EasyHttpMock::new(config);
-    let mut server = match server {
+    let server = match server {
         Ok(server) => server,
         Err(err) => {
             panic!("Failed to create mock server: {}", err);

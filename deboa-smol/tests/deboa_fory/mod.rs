@@ -35,7 +35,7 @@ async fn do_fory_post_request() -> Result<(), Box<dyn Error>> {
     let mut server = create_server().await;
     server
         .register_mock(mock)
-        .await;
+        .await?;
     let client = create_client();
 
     let mut fory = Fory::default();
