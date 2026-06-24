@@ -34,10 +34,10 @@ deboa-macros = "0.1.0"
 let client = Client::new();
 
 let response: Vec<Post> = get!(
-  "https://jsonplaceholder.typicode.com/posts",
-  JsonBody,
-  Vec<Post>,
-  &client
+  url => "https://jsonplaceholder.typicode.com/posts",
+  res_body_ty => JsonBody,
+  res_ty => Vec<Post>,
+  client => &client
 );
 ```
 
@@ -46,10 +46,10 @@ let response: Vec<Post> = get!(
 ```rust
 let data = serde_json::json!({"title": "foo", "body": "bar", "userId": 1});
 let response = post!(
-    data,
-    JsonBody,
-    "https://jsonplaceholder.typicode.com/posts",
-    &client
+    data => data,
+    res_body_ty => JsonBody,
+    url => "https://jsonplaceholder.typicode.com/posts",
+    client => &client
 );
 ```
 
@@ -57,17 +57,20 @@ let response = post!(
 
 ```rust
 let response: Vec<Post> = fetch!(
-    "https://jsonplaceholder.typicode.com/posts",
-    JsonBody,
-    Vec<Post>,
-    &client
+    url => "https://jsonplaceholder.typicode.com/posts",
+    res_body_ty => JsonBody,
+    res_ty => Vec<Post>,
+    client => &client
 );
 ```
 
 ### delete
 
 ```rust
-let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
+let response = delete!(
+    url => "https://jsonplaceholder.typicode.com/posts/1",
+    client => &client
+);
 ```
 
 ### put
@@ -75,10 +78,10 @@ let response = delete!("https://jsonplaceholder.typicode.com/posts/1", &client);
 ```rust
 let data = serde_json::json!({"id": 1, "title": "foo", "body": "bar", "userId": 1});
 let response = put!(
-    data,
-    JsonBody,
-    "https://jsonplaceholder.typicode.com/posts/1",
-    &client
+    data => data,
+    res_body_ty => JsonBody,
+    url => "https://jsonplaceholder.typicode.com/posts/1",
+    client => &client
 );
 ```
 
@@ -87,10 +90,10 @@ let response = put!(
 ```rust
 let data = serde_json::json!({"title": "foo"});
 let response = patch!(
-    data,
-    JsonBody,
-    "https://jsonplaceholder.typicode.com/posts/1",
-    &client
+    data => data,
+    res_body_ty => JsonBody,
+    url => "https://jsonplaceholder.typicode.com/posts/1",
+    client => &client
 );
 ```
 

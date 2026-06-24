@@ -75,7 +75,7 @@ let response = "GET".from_url("https://api.example.com/data")
 
 ```rust
 use deboa::{request::post, Result};
-use deboa_extras::http::serde::json::JsonBody;
+use deboa_extras::serde::json::JsonBody;
 use deboa_smol::Client;
 use serde_json::json;
 
@@ -91,7 +91,7 @@ let response = post("https://api.example.com/users")
 
 ```rust
 use deboa::{request::get, Result};
-use deboa_extras::http::serde::json::JsonBody;
+use deboa_extras::serde::json::JsonBody;
 use deboa_smol::Client;
 use serde::Deserialize;
 

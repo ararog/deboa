@@ -9,8 +9,8 @@ permalink: /
 <h1><b>Deboa</b></h1>
 </div>
 
-[![crates.io](https://img.shields.io/crates/v/deboa?style=flat-square)](https://crates.io/crates/deboa) 
-[![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml) 
+[![crates.io](https://img.shields.io/crates/v/deboa?style=flat-square)](https://crates.io/crates/deboa)
+[![Build Status](https://github.com/ararog/deboa/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/ararog/deboa/actions/workflows/rust.yml)
 [![Documentation](https://docs.rs/deboa/badge.svg)](https://docs.rs/deboa/latest/deboa)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -61,7 +61,7 @@ Basic usage:
 ```rust
 use deboa::{
     request::{DeboaRequest, FetchWith, get},
-    Result, 
+    Result,
 };
 use deboa_tokio::Client;
 use deboa_extras::http::{self, serde::json::JsonBody};
@@ -113,14 +113,19 @@ You can create a new project from the template using `cargo generate`:
 - [Migration Guide](./MIGRATION_GUIDE.md)
 - [Contributing Guide](./CONTRIBUTING.md)
 
+- [caramelo](https://crates.io/crates/caramelo) - Assertion based test framrwork
+- [easyhttpmock](https://crates.io/crates/easyhttpmock) - HTTP mock server
+- [sofie](https://crates.io/crates/sofie) - Fullstack web framework
+- [uget](https://crates.io/crates/uget) - CLI HTTP client
+
 ## License
 
 Licensed under either of
 
 - Apache License, Version 2.0
-  (LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0)
+  (LICENSE-APACHE or <https://www.apache.org/licenses/LICENSE-2.0>)
 - MIT license
-  (LICENSE-MIT or https://opensource.org/licenses/MIT)
+  (LICENSE-MIT or <https://opensource.org/licenses/MIT>)
 
 at your option.
 

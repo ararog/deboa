@@ -22,7 +22,7 @@ With Deboa, you can:
 - response streaming
 - upgrade support (websocket, etc.)
 - runtime compatibility (tokio and smol)
-- http1/2/3 support
+- http1/2/3 support (see deboa-smol and deboa-tokio crates)
 
 ## Installation
 
@@ -30,16 +30,8 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-deboa = { version = "0.0.9", features = ["http1", "http2", "rust-tls"] }
+deboa = { version = "0.0.9" }
 ```
-
-## Features
-
-- `http1`: HTTP/1 support
-- `http2`: HTTP/2 support (enabled by default)
-- `http3`: HTTP/3 support
-- `rust-tls`: rust-tls implementation (enabled by default)
-- `native-tls`: native-tls implementation
 
 ## Basic Usage
 
@@ -85,7 +77,7 @@ let response = "GET".from_url("https://api.example.com/data")
 ### POST Request with JSON
 
 ```rust
-use deboa_extras::http::serde::json::JsonBody;
+use deboa_extras::serde::json::JsonBody;
 use serde_json::json;
 
 let data = json!({ "name": "John Doe", "age": 30 });
