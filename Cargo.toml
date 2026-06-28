@@ -30,7 +30,7 @@ license = "MIT OR Apache-2.0"
 rust-version = "1.75.0"
 
 [workspace.dependencies]
-deboa = { version = "0.1.0-beta.17", path = "deboa" }
+deboa = { version = "0.1.0-beta.18", path = "deboa" }
 deboa-extras = { version = "0.0.9-beta.11", path = "deboa-extras" }
 deboa-fory = { version = "0.1.6-beta.1", path = "deboa-fory" }
 deboa-macros = { version = "0.1.0-beta.4", path = "deboa-macros" }
