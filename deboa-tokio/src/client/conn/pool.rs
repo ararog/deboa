@@ -1,9 +1,7 @@
+use crate::client::conn::{ConnectionConfig, ConnectionFactory, DeboaConnection};
+use deboa::Result;
 use std::{collections::HashMap, future::Future};
 use time::Duration;
-
-use crate::client::conn::{ConnectionConfig, ConnectionFactory, DeboaConnection};
-
-use deboa::Result;
 
 /// Struct that represents the HTTP connection pool.
 ///

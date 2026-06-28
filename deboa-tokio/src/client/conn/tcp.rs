@@ -1,17 +1,14 @@
-use std::future::Future;
-
+use crate::{
+    client::conn::{BaseHttpConnection, ConnectionConfig},
+    Result, MAX_ERROR_MESSAGE_SIZE,
+};
+use deboa::errors::{DeboaError, RequestError, ResponseError};
 use http::{Request, Response, StatusCode, Version};
 use http_body::Body;
 use http_body_util::BodyExt;
 use hyper::body::Incoming;
 use hyper_body_utils::HttpBody;
-
-use deboa::errors::{DeboaError, RequestError, ResponseError};
-
-use crate::{
-    client::conn::{BaseHttpConnection, ConnectionConfig},
-    Result, MAX_ERROR_MESSAGE_SIZE,
-};
+use std::future::Future;
 
 /// Trait that represents the HTTP connection.
 ///

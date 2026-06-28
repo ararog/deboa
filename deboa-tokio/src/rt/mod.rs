@@ -18,14 +18,5 @@
 //! features = ["http1", "rust-tls"]
 //! ```
 
-pub(crate) mod plain;
-
-/// TLS module for runtime-specific TLS implementations.
-#[cfg(all(
-    any(feature = "rust-tls", feature = "native-tls"),
-    any(feature = "http1", feature = "http2")
-))]
-pub(crate) mod tls;
-
 /// Stream module for runtime-specific stream implementations.
 pub(crate) mod stream;

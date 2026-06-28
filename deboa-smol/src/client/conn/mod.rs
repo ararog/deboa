@@ -16,14 +16,11 @@
 //! - Thread-safe connection handling
 //! ```
 
-use std::{marker::PhantomData, net::IpAddr, sync::Arc};
-
-use http::Request;
-
-use hyper_body_utils::HttpBody;
-use url::Url;
-
 use deboa::response::DeboaResponse;
+use http::Request;
+use hyper_body_utils::HttpBody;
+use std::{marker::PhantomData, net::IpAddr, sync::Arc};
+use url::Url;
 
 use crate::{
     cert::{Certificate, Identity},
@@ -39,34 +36,10 @@ use deboa::request::Http2Request;
 #[cfg(feature = "http3")]
 use deboa::request::Http3Request;
 
-/// TCP protocol implementations.
+/// DNS resolution for the Deboa HTTP client.
 ///
-/// This module contains the core HTTP protocol implementations, including:
-/// - HTTP/1.1 support
-/// - HTTP/2 support (when enabled)
-/// - Connection management
-/// - Request/response handling
-///
-/// # Features
-///
-/// - `http1`: Enables HTTP/1.1 support
-/// - `http2`: Enables HTTP/2 support (requires TLS)
-#[cfg(any(feature = "http1", feature = "http2"))]
-pub mod tcp;
-
-/// UDP protocol implementations.
-///
-/// This module contains the core HTTP protocol implementations, including:
-/// - HTTP/1.1 support
-/// - HTTP/2 support (when enabled)
-/// - Connection management
-/// - Request/response handling
-///
-/// # Features
-///
-/// - `http3`: Enables HTTP/3 support (requires TLS)
-#[cfg(feature = "http3")]
-pub mod udp;
+/// This module provides DNS resolution functionality for the Deboa HTTP client.
+pub mod dns;
 
 /// Connection pooling for efficient HTTP connections.
 ///
@@ -81,28 +54,39 @@ pub mod udp;
 /// - Configurable pool size (coming soon)
 pub mod pool;
 
-/// Internal stream handling utilities for connection establishment.
-/// Provides low-level connection creation functions for both secure and insecure connections.
-/// Used internally by the HTTP connection implementations.
+/// Stream module for runtime-specific stream implementations.
 ///
-/// # Modules
+/// This module provides stream implementations for different runtimes (Tokio, Smol, etc.).
+pub(crate) mod stream;
+
+/// TCP protocol implementations.
 ///
-/// - `plain_connection`: Creates plain (non-TLS) TCP connections
-/// - `tls_connection`: Creates TLS-encrypted connections with optional client certificates
+/// This module contains the core HTTP protocol implementations, including:
+/// - HTTP/1.1 support
+/// - HTTP/2 support (when enabled)
+/// - Connection management
+/// - Request/response handling
 ///
-/// # Examples
+/// # Features
 ///
-/// ```compile_fail, rust
-/// use deboa::client::conn::stream::{plain_connection, tls_connection};
+/// - `http1`: Enables HTTP/1.1 support
+/// - `http2`: Enables HTTP/2 support (requires TLS)
+#[cfg(any(feature = "http1", feature = "http2"))]
+pub(crate) mod tcp;
+
+/// UDP protocol implementations.
 ///
-/// // Create a plain TCP connection
-/// let stream = plain_connection("example.com:80").await?;
+/// This module contains the core HTTP protocol implementations, including:
+/// - HTTP/1.1 support
+/// - HTTP/2 support (when enabled)
+/// - Connection management
+/// - Request/response handling
 ///
-/// // Create a TLS connection
-/// let stream = tls_connection("example.com:443", None).await?;
-/// ```
-#[cfg(feature = "rust-tls")]
-pub(crate) mod rustls;
+/// # Features
+///
+/// - `http3`: Enables HTTP/3 support (requires TLS)
+#[cfg(feature = "http3")]
+pub(crate) mod udp;
 
 pub(crate) const fn default_protocol() -> HttpVersion {
     #[cfg(feature = "http1")]
@@ -194,6 +178,7 @@ pub struct BaseHttpConnection<T, ReqBody, ResBody> {
 /// Builder for connection configuration.
 pub struct ConnectionConfigBuilder<'a> {
     is_secure: bool,
+    ip: IpAddr,
     host: &'a str,
     port: u16,
     protocol: HttpVersion,
@@ -209,6 +194,9 @@ impl<'a> ConnectionConfigBuilder<'a> {
     pub fn new() -> Self {
         Self {
             is_secure: false,
+            ip: "127.0.0.1"
+                .parse::<IpAddr>()
+                .unwrap(),
             host: "",
             port: 80,
             protocol: default_protocol(),
@@ -224,6 +212,12 @@ impl<'a> ConnectionConfigBuilder<'a> {
     /// Set whether the connection is secure.
     pub fn is_secure(mut self, is_secure: bool) -> Self {
         self.is_secure = is_secure;
+        self
+    }
+
+    /// Set the IP address for the connection.
+    pub fn ip(mut self, ip: IpAddr) -> Self {
+        self.ip = ip;
         self
     }
 
@@ -273,6 +267,7 @@ impl<'a> ConnectionConfigBuilder<'a> {
     pub fn build(self) -> ConnectionConfig<'a> {
         ConnectionConfig {
             is_secure: self.is_secure,
+            ip: self.ip,
             host: self.host,
             port: self.port,
             protocol: self.protocol,
@@ -287,6 +282,7 @@ impl<'a> ConnectionConfigBuilder<'a> {
 /// Connection configuration.
 pub struct ConnectionConfig<'a> {
     is_secure: bool,
+    ip: IpAddr,
     host: &'a str,
     port: u16,
     protocol: HttpVersion,
@@ -305,6 +301,11 @@ impl<'a> ConnectionConfig<'a> {
     /// Get whether the connection is secure.
     pub fn is_secure(&self) -> bool {
         self.is_secure
+    }
+
+    /// Get the IP address for the connection.
+    pub fn ip(&self) -> &IpAddr {
+        &self.ip
     }
 
     /// Get the host for the connection.

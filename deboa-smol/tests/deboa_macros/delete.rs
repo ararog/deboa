@@ -1,3 +1,4 @@
+#![allow(unused_variables)]
 use crate::common::helpers::{create_client, create_server};
 use deboa_macros::delete;
 use easyhttpmock_vetis_smol::{

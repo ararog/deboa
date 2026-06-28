@@ -1,16 +1,53 @@
-use std::sync::Arc;
-
-use deboa::errors::{ConnectionError, DeboaError};
-
-use rustls::{
-    pki_types::{CertificateDer, PrivateKeyDer},
-    ClientConfig,
-};
-
 use crate::{
-    cert::{Certificate, Identity as DeboaIdentity},
+    cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
+    client::conn::stream::create_stream,
+    rt::stream::TokioStream,
+};
+use deboa::{
+    errors::{ConnectionError, DeboaError},
     Result,
 };
+use rustls::pki_types::ServerName;
+use rustls::pki_types::{CertificateDer, PrivateKeyDer};
+use rustls::ClientConfig;
+use std::{net::IpAddr, sync::Arc};
+use tokio_rustls::TlsConnector;
+
+pub(crate) async fn tls_connection(
+    ip: IpAddr,
+    host: &str,
+    port: u16,
+    identity: &Option<DeboaIdentity>,
+    certificate: &Option<DeboaCertificate>,
+    skip_server_verification: bool,
+    alpn: Vec<Vec<u8>>,
+) -> Result<TokioStream> {
+    let socket = create_stream(ip, host, port).await?;
+    let config = setup_rust_tls(host, identity, certificate, skip_server_verification, alpn)?;
+    let connector = TlsConnector::from(Arc::new(config));
+    let hostname = ServerName::try_from(host.to_string());
+
+    if let Err(e) = hostname {
+        return Err(DeboaError::Connection(ConnectionError::Tls {
+            host: host.to_string(),
+            message: e.to_string(),
+        }));
+    }
+
+    let stream = connector
+        .connect(hostname.unwrap(), socket)
+        .await;
+
+    if let Err(e) = stream {
+        return Err(DeboaError::Connection(ConnectionError::Tls {
+            host: host.to_string(),
+            message: format!("Could not connect to server: {}", e),
+        }));
+    }
+
+    let stream = stream.unwrap();
+    Ok(TokioStream::Tls(Box::new(stream)))
+}
 
 pub(crate) fn default_provider() -> Arc<rustls::crypto::CryptoProvider> {
     #[cfg(feature = "__rustls_aws_lc_rs")]
@@ -22,17 +59,17 @@ pub(crate) fn default_provider() -> Arc<rustls::crypto::CryptoProvider> {
     Arc::new(provider)
 }
 
-pub(crate) fn setup_rust_tls(
+pub fn setup_rust_tls(
     host: &str,
     identity: &Option<DeboaIdentity>,
-    certificate: &Option<Certificate>,
+    certificate: &Option<DeboaCertificate>,
     skip_server_verification: bool,
     alpn: Vec<Vec<u8>>,
 ) -> Result<ClientConfig> {
     let provider = default_provider();
 
     if skip_server_verification {
-        use crate::client::conn::rustls::verify::SkipServerVerification;
+        use verify::SkipServerVerification;
         let config = rustls::ClientConfig::builder_with_provider(provider)
             .with_protocol_versions(&[&rustls::version::TLS13])
             .expect("Failed to set TLS version")
@@ -113,9 +150,11 @@ pub(crate) fn setup_rust_tls(
 }
 
 pub(crate) mod verify {
+    use rustls::{
+        client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier},
+        pki_types::{CertificateDer, ServerName, UnixTime},
+    };
     use std::sync::Arc;
-
-    use rustls::pki_types::{CertificateDer, ServerName, UnixTime};
 
     #[derive(Debug)]
     pub(crate) struct SkipServerVerification(Arc<rustls::crypto::CryptoProvider>);
@@ -127,7 +166,7 @@ pub(crate) mod verify {
         }
     }
 
-    impl rustls::client::danger::ServerCertVerifier for SkipServerVerification {
+    impl ServerCertVerifier for SkipServerVerification {
         fn verify_server_cert(
             &self,
             _end_entity: &CertificateDer<'_>,
@@ -135,9 +174,8 @@ pub(crate) mod verify {
             _server_name: &ServerName<'_>,
             _ocsp: &[u8],
             _now: UnixTime,
-        ) -> std::result::Result<rustls::client::danger::ServerCertVerified, rustls::Error>
-        {
-            Ok(rustls::client::danger::ServerCertVerified::assertion())
+        ) -> std::result::Result<ServerCertVerified, rustls::Error> {
+            Ok(ServerCertVerified::assertion())
         }
 
         fn verify_tls12_signature(
@@ -145,8 +183,7 @@ pub(crate) mod verify {
             message: &[u8],
             cert: &CertificateDer<'_>,
             dss: &rustls::DigitallySignedStruct,
-        ) -> std::result::Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error>
-        {
+        ) -> std::result::Result<HandshakeSignatureValid, rustls::Error> {
             rustls::crypto::verify_tls12_signature(
                 message,
                 cert,
@@ -162,8 +199,7 @@ pub(crate) mod verify {
             message: &[u8],
             cert: &CertificateDer<'_>,
             dss: &rustls::DigitallySignedStruct,
-        ) -> std::result::Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error>
-        {
+        ) -> std::result::Result<HandshakeSignatureValid, rustls::Error> {
             rustls::crypto::verify_tls13_signature(
                 message,
                 cert,

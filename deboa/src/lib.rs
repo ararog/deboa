@@ -7,6 +7,10 @@ use crate::{errors::DeboaError, request::IntoRequest, response::DeboaResponse};
 pub mod cache;
 pub mod catcher;
 pub mod cookie;
+/// DNS resolution for the Deboa HTTP client.
+///
+/// This module provides DNS resolution functionality for the Deboa HTTP client.
+pub mod dns;
 pub mod errors;
 pub mod form;
 pub mod request;

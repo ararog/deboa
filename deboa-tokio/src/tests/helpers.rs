@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::net::IpAddr;
 
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]

@@ -116,7 +116,6 @@ You can create a new project from the template using `cargo generate`:
 ## Other Projects
 
 - [caramelo](https://crates.io/crates/caramelo) - Assertion based test framrwork
-- [deboa](https://crates.io/crates/deboa) - HTTP client
 - [easyhttpmock](https://crates.io/crates/easyhttpmock) - HTTP mock server
 - [sofie](https://crates.io/crates/sofie) - Fullstack web framework
 - [uget](https://crates.io/crates/uget) - CLI HTTP client

@@ -61,6 +61,7 @@ pub(crate) fn alpn() -> &'static [&'static str] {
 
 use deboa::{
     catcher::DeboaCatcher,
+    dns::DnsResolver,
     errors::{DeboaError, RequestError},
     request::{DeboaRequest, IntoRequest},
     response::DeboaResponse,
@@ -72,6 +73,7 @@ use std::{
     fmt::{Debug, Display},
     net::IpAddr,
     ops::Shl,
+    sync::Arc,
 };
 
 use http::{header, HeaderValue, Request};
@@ -80,6 +82,7 @@ use log::{error, info};
 use crate::{
     cert::{Certificate, Identity},
     client::conn::{
+        dns::DefaultDnsResolver,
         pool::{DeboaHttpConnectionPool, HttpConnectionPool},
         ConnectionConfig,
     },
@@ -213,6 +216,7 @@ pub struct ClientBuilder {
     protocol: HttpVersion,
     skip_cert_verification: bool,
     pool: RwLock<HttpConnectionPool>,
+    dns_resolver: Arc<dyn DnsResolver>,
     bind_addr: IpAddr,
 }
 
@@ -497,6 +501,35 @@ impl ClientBuilder {
         self
     }
 
+    /// Set the DNS resolver for the client.
+    ///
+    /// # Arguments
+    ///
+    /// * `dns_resolver` - The DNS resolver to use.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The builder.
+    ///
+    /// # Example
+    ///
+    /// ``` rust, no_run
+    /// use deboa_smol::Client;
+    /// use deboa_smol::client::conn::dns::DefaultDnsResolver;
+    ///
+    /// let client = Client::builder()
+    ///     .dns_resolver(DefaultDnsResolver)
+    ///     .build();
+    /// ```
+    #[inline]
+    pub fn dns_resolver<R>(mut self, dns_resolver: R) -> Self
+    where
+        R: DnsResolver + 'static,
+    {
+        self.dns_resolver = Arc::new(dns_resolver);
+        self
+    }
+
     /// Set a bind address.
     ///
     /// # Arguments
@@ -566,6 +599,7 @@ impl ClientBuilder {
             protocol: self.protocol,
             skip_cert_verification: self.skip_cert_verification,
             pool: self.pool,
+            dns_resolver: self.dns_resolver,
             bind_addr: self.bind_addr,
         }
     }
@@ -633,6 +667,7 @@ pub struct Client {
     protocol: HttpVersion,
     skip_cert_verification: bool,
     pool: RwLock<HttpConnectionPool>,
+    dns_resolver: Arc<dyn DnsResolver>,
     bind_addr: IpAddr,
 }
 
@@ -678,6 +713,7 @@ impl Default for Client {
             protocol: default_protocol(),
             skip_cert_verification: false,
             pool: RwLock::new(HttpConnectionPool::default()),
+            dns_resolver: Arc::new(DefaultDnsResolver),
             bind_addr: "0.0.0.0"
                 .parse()
                 .unwrap(),
@@ -738,6 +774,7 @@ impl Client {
             protocol: default_protocol(),
             skip_cert_verification: false,
             pool: RwLock::new(HttpConnectionPool::default()),
+            dns_resolver: Arc::new(DefaultDnsResolver),
             bind_addr: "0.0.0.0"
                 .parse()
                 .unwrap(),
@@ -761,6 +798,7 @@ impl Client {
             protocol: default_protocol(),
             skip_cert_verification: false,
             pool: RwLock::new(HttpConnectionPool::default()),
+            dns_resolver: Arc::new(DefaultDnsResolver),
             bind_addr: "0.0.0.0"
                 .parse()
                 .unwrap(),
@@ -808,6 +846,17 @@ impl Client {
     #[inline]
     pub async fn connection_pool(&self) -> &smol::lock::RwLock<HttpConnectionPool> {
         &self.pool
+    }
+
+    /// Allow get DNS resolver at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `Arc<dyn DnsResolver>` - The DNS resolver.
+    ///
+    #[inline]
+    pub fn dns_resolver(&self) -> &Arc<dyn DnsResolver> {
+        &self.dns_resolver
     }
 
     /// Get the bind address.
@@ -905,7 +954,7 @@ impl HttpClient for Client {
     /// use macro_rules_attribute::apply;
     /// use smol_macros::main;
     ///
-    /// #[apply(main!)]    
+    /// #[apply(main!)]
     /// async fn main() -> Result<()> {
     ///   let mut client = Client::default();
     ///   let response = client
@@ -1039,8 +1088,20 @@ impl HttpClient for Client {
             }
         };
 
+        let ips = self
+            .dns_resolver
+            .resolve(host.to_string(), port)
+            .await?;
+
+        let Some(ip) = ips.first() else {
+            return Err(DeboaError::Request(RequestError::Send {
+                message: format!("No IP addresses found for hostname: {}", host),
+            }));
+        };
+
         let config = ConnectionConfig::builder()
             .is_secure(is_secure)
+            .ip(*ip)
             .host(host)
             .port(port)
             .protocol(

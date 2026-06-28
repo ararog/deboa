@@ -1,14 +1,50 @@
-use std::sync::Arc;
-
-use rustls::pki_types::{CertificateDer, PrivateKeyDer};
-use rustls::ClientConfig;
-
-use crate::cert::{Certificate, Identity as DeboaIdentity};
-
-use deboa::{
-    errors::{ConnectionError, DeboaError},
+use crate::{
+    cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
+    client::conn::stream::plain::create_stream,
+    rt::stream::SmolStream,
     Result,
 };
+use deboa::errors::{ConnectionError, DeboaError};
+use futures_rustls::TlsConnector;
+use rustls::{pki_types::ServerName, ClientConfig};
+use rustls_pki_types::{CertificateDer, PrivateKeyDer};
+use std::{net::IpAddr, sync::Arc};
+
+pub(crate) async fn tls_connection(
+    ip: IpAddr,
+    host: &str,
+    port: u16,
+    identity: &Option<DeboaIdentity>,
+    certificate: &Option<DeboaCertificate>,
+    skip_server_verification: bool,
+    alpn: Vec<Vec<u8>>,
+) -> Result<SmolStream> {
+    let socket = create_stream(ip, host, port).await?;
+    let config = setup_rust_tls(host, identity, certificate, skip_server_verification, alpn)?;
+    let connector = TlsConnector::from(Arc::new(config));
+    let hostname = ServerName::try_from(host.to_string());
+
+    if let Err(e) = hostname {
+        return Err(DeboaError::Connection(ConnectionError::Tls {
+            host: host.to_string(),
+            message: e.to_string(),
+        }));
+    }
+
+    let stream = connector
+        .connect(hostname.unwrap(), socket)
+        .await;
+
+    if let Err(e) = stream {
+        return Err(DeboaError::Connection(ConnectionError::Tls {
+            host: host.to_string(),
+            message: format!("Could not connect to server: {}", e),
+        }));
+    }
+
+    let stream = stream.unwrap();
+    Ok(SmolStream::Tls(Box::new(stream)))
+}
 
 pub(crate) fn default_provider() -> Arc<rustls::crypto::CryptoProvider> {
     #[cfg(feature = "__rustls_aws_lc_rs")]
@@ -20,17 +56,17 @@ pub(crate) fn default_provider() -> Arc<rustls::crypto::CryptoProvider> {
     Arc::new(provider)
 }
 
-pub fn setup_rust_tls(
+pub(crate) fn setup_rust_tls(
     host: &str,
     identity: &Option<DeboaIdentity>,
-    certificate: &Option<Certificate>,
+    certificate: &Option<DeboaCertificate>,
     skip_server_verification: bool,
     alpn: Vec<Vec<u8>>,
 ) -> Result<ClientConfig> {
     let provider = default_provider();
 
     if skip_server_verification {
-        use crate::client::conn::rustls::verify::SkipServerVerification;
+        use verify::SkipServerVerification;
         let config = rustls::ClientConfig::builder_with_provider(provider)
             .with_protocol_versions(&[&rustls::version::TLS13])
             .expect("Failed to set TLS version")

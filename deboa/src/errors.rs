@@ -96,6 +96,10 @@ pub enum DeboaError {
     #[error("Connection error: {0}")]
     Connection(#[from] ConnectionError),
 
+    /// DNS resolve error
+    #[error("DNS resolve error: {0}")]
+    Dns(#[from] DnsError),
+
     /// Request error
     #[error("Request error: {0}")]
     Request(#[from] RequestError),
@@ -147,26 +151,6 @@ pub enum RequestError {
     /// Failed to parse method
     #[error("Failed to parse method: {message}")]
     MethodParse {
-        /// Error message
-        message: String,
-    },
-}
-
-/// Response error
-#[derive(Debug, Clone, Error, PartialEq)]
-pub enum ResponseError {
-    /// Failed to receive response
-    #[error("Failed to receive response: {status_code}: {message}")]
-    Receive {
-        /// Status code
-        status_code: StatusCode,
-        /// Error message
-        message: String,
-    },
-
-    /// Failed to process response
-    #[error("Failed to process response: {message}")]
-    Process {
         /// Error message
         message: String,
     },
@@ -244,6 +228,19 @@ pub enum ContentError {
     },
 }
 
+/// Connection error
+#[derive(Debug, Clone, Error, PartialEq)]
+pub enum DnsError {
+    /// Failed to resolve DNS
+    #[error("Failed to resolve DNS: {message}")]
+    Resolve {
+        /// Host
+        host: String,
+        /// Error message
+        message: String,
+    },
+}
+
 /// Io error
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum IoError {
@@ -285,6 +282,26 @@ pub enum IoError {
     /// Failed to read from stdin
     #[error("Failed to read from stdin: {message}")]
     Stdin {
+        /// Error message
+        message: String,
+    },
+}
+
+/// Response error
+#[derive(Debug, Clone, Error, PartialEq)]
+pub enum ResponseError {
+    /// Failed to receive response
+    #[error("Failed to receive response: {status_code}: {message}")]
+    Receive {
+        /// Status code
+        status_code: StatusCode,
+        /// Error message
+        message: String,
+    },
+
+    /// Failed to process response
+    #[error("Failed to process response: {message}")]
+    Process {
         /// Error message
         message: String,
     },

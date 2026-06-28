@@ -1,6 +1,7 @@
 use crate::{
     cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
-    rt::{plain::create_stream, stream::TokioStream},
+    client::conn::stream::create_stream,
+    rt::stream::TokioStream,
 };
 use async_native_tls::{Certificate, Identity, TlsConnector};
 use deboa::{

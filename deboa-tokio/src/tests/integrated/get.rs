@@ -11,7 +11,7 @@ use crate::{
     Client, HttpVersion,
 };
 use deboa::{
-    errors::{ConnectionError, DeboaError, ResponseError},
+    errors::{ConnectionError, DeboaError, DnsError, ResponseError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
     HttpClient,
@@ -309,19 +309,19 @@ async fn test_get_invalid_server() -> TestResult<()> {
 
     let error = match client.protocol() {
         #[cfg(feature = "http1")]
-        HttpVersion::Http1 => DeboaError::Connection(ConnectionError::Tcp {
+        HttpVersion::Http1 => DeboaError::Dns(DnsError::Resolve {
             host: "invalid-server.com".to_string(),
-            message: "Could not resolve host: invalid-server.com.".to_string(),
+            message: "failed to lookup address information: Name or service not known".to_string(),
         }),
         #[cfg(feature = "http2")]
-        HttpVersion::Http2 => DeboaError::Connection(ConnectionError::Tcp {
+        HttpVersion::Http2 => DeboaError::Dns(DnsError::Resolve {
             host: "invalid-server.com".to_string(),
-            message: "Could not resolve host: invalid-server.com.".to_string(),
+            message: "failed to lookup address information: Name or service not known".to_string(),
         }),
         #[cfg(feature = "http3")]
-        HttpVersion::Http3 => DeboaError::Connection(ConnectionError::Udp {
+        HttpVersion::Http3 => DeboaError::Dns(DnsError::Resolve {
             host: "invalid-server.com".to_string(),
-            message: "Could not resolve host: invalid-server.com.".to_string(),
+            message: "failed to lookup address information: Name or service not known".to_string(),
         }),
     };
 

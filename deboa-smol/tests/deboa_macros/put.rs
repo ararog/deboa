@@ -1,3 +1,4 @@
+#![allow(unused_variables)]
 use crate::common::{
     data::{Post, PostWithId},
     helpers::{create_client, create_server},

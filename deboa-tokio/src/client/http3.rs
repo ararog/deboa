@@ -3,11 +3,11 @@ use crate::{
     client::conn::{
         rustls::setup_rust_tls, udp::DeboaUdpConnection, BaseHttpConnection, ConnectionConfig,
     },
-    Result,
 };
 use deboa::{
     errors::{ConnectionError, DeboaError, RequestError, ResponseError},
     request::Http3Request,
+    Result,
 };
 use futures::future;
 use hickory_resolver::error::ResolveErrorKind;

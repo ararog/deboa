@@ -1,9 +1,9 @@
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::alpn;
-use crate::client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig};
-use crate::rt::plain::plain_connection;
-#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::rt::tls::tls_connection;
+use crate::{alpn, rt::tls::tls_connection};
+use crate::{
+    client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
+    rt::plain::plain_connection,
+};
 use deboa::{request::Http1Request, Result};
 use http::version::Version;
 use hyper::{client::conn::http1::handshake, Request, Response};
