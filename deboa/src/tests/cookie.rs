@@ -1,14 +1,17 @@
+use crate::cookie::DeboaCookie;
+use caramelo::{
+    expect,
+    matchers::{eq, truthy},
+};
 use cookie::Expiration;
 use time::OffsetDateTime;
-
-use crate::cookie::DeboaCookie;
 
 #[test]
 fn test_new_cookie() {
     let cookie = DeboaCookie::new("test", "test");
 
-    assert_eq!(cookie.name(), "test");
-    assert_eq!(cookie.value(), "test");
+    expect(cookie.name()).to_be(eq("test"));
+    expect(cookie.value()).to_be(eq("test"));
 }
 
 #[test]
@@ -18,13 +21,13 @@ fn test_set_expires() {
     let now = OffsetDateTime::now_utc();
     cookie.set_expires(Expiration::from(now));
 
-    assert_eq!(
+    expect(
         cookie
             .expires()
             .unwrap()
             .datetime(),
-        Some(now)
-    );
+    )
+    .to_be(eq(Some(now)));
 }
 
 #[test]
@@ -33,12 +36,12 @@ fn test_set_path() {
 
     cookie.set_path("/test");
 
-    assert_eq!(
+    expect(
         cookie
             .path()
             .unwrap(),
-        &"/test"
-    );
+    )
+    .to_be(eq("/test"));
 }
 
 #[test]
@@ -47,12 +50,12 @@ fn test_set_domain() {
 
     cookie.set_domain("test.com");
 
-    assert_eq!(
+    expect(
         cookie
             .domain()
             .unwrap(),
-        &"test.com"
-    );
+    )
+    .to_be(eq("test.com"));
 }
 
 #[test]
@@ -72,9 +75,12 @@ fn test_set_http_only() {
 
     cookie.set_http_only(true);
 
-    assert!(cookie
-        .http_only()
-        .unwrap());
+    expect(
+        cookie
+            .http_only()
+            .unwrap(),
+    )
+    .to_be(truthy());
 }
 
 #[test]
@@ -83,6 +89,6 @@ fn test_parse_from_header() {
 
     let cookie = cookie.unwrap();
 
-    assert_eq!(cookie.name(), "test");
-    assert_eq!(cookie.value(), "test");
+    expect(cookie.name()).to_be(eq("test"));
+    expect(cookie.value()).to_be(eq("test"));
 }

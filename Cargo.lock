@@ -482,9 +482,9 @@ checksum = "8ae3f5d315924270530207e2a68396c3cc547f6dca3fbdca317cfb1a51edb593"
 
 [[package]]
 name = "caramelo"
-version = "0.1.1-beta.2"
+version = "0.1.1-beta.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca695b9dc849871dd610e5afff319c75b07b9e3bd3d58f7c9b27b96830eb0972"
+checksum = "20f71133c2d4c25f6993ca1cb62bfe23dce94005ea5a94c2611c122e27185683"
 dependencies = [
  "http",
  "http-body",
@@ -924,6 +924,7 @@ dependencies = [
  "async-trait",
  "base64",
  "bytes",
+ "caramelo",
  "cfg-if",
  "cookie 0.15.2",
  "criterion",
