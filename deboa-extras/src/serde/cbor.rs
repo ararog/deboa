@@ -6,6 +6,8 @@ use deboa::{
     Result,
 };
 use serde::{Deserialize, Serialize};
+
+/// CBOR body serializer/deserializer
 pub struct CborBody;
 
 const APPLICATION_CBOR: &str = "application/cbor";

@@ -1,6 +1,7 @@
 use crate::errors::DeboaExtrasError;
 use bytes::Bytes;
 
+/// Server-Sent Event
 #[derive(Debug)]
 pub struct ServerEvent {
     id: Option<String>,
@@ -10,36 +11,44 @@ pub struct ServerEvent {
 }
 
 impl Default for ServerEvent {
+    /// Creates a new ServerEvent
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl ServerEvent {
+    /// Creates a new ServerEvent
     pub fn new() -> Self {
         Self { id: None, event: None, data: Vec::new(), retry: None }
     }
 
+    /// Returns the event ID
     pub fn id(&self) -> &Option<String> {
         &self.id
     }
 
+    /// Returns the event name
     pub fn event(&self) -> &Option<String> {
         &self.event
     }
 
+    /// Returns the event data
     pub fn data(&self) -> &Vec<String> {
         &self.data
     }
 
+    /// Adds data to the event
     pub fn add_data(&mut self, data: String) {
         self.data.push(data);
     }
 
+    /// Returns the retry value
     pub fn retry(&self) -> &Option<u64> {
         &self.retry
     }
 
+    /// Parses a ServerEvent from bytes
     pub fn parse(data: &Bytes) -> Result<ServerEvent, DeboaExtrasError> {
         let data = String::from_utf8_lossy(data.as_ref());
         let text_message = data;

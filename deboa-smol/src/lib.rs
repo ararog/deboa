@@ -81,19 +81,23 @@ use log::{error, info};
 
 use crate::{
     cert::{Certificate, Identity},
-    client::conn::{
+    client::{
         dns::DefaultDnsResolver,
-        pool::{DeboaHttpConnectionPool, HttpConnectionPool},
-        ConnectionConfig,
+        http::conn::{
+            pool::{DeboaHttpConnectionPool, HttpConnectionPool},
+            ConnectionConfig,
+        },
     },
 };
 
 pub use async_trait::async_trait;
 
+/// Certificate management module for handling SSL/TLS certificates.
 pub mod cert;
+/// Internal module for HTTP and Websockets clients implementations.
 pub mod client;
-/// Runtime module for smol
-pub mod rt;
+/// Internal runtime module for Smol-based HTTP client implementation.
+pub(crate) mod rt;
 
 #[cfg(test)]
 mod tests;
@@ -515,7 +519,7 @@ impl ClientBuilder {
     ///
     /// ``` rust, no_run
     /// use deboa_smol::Client;
-    /// use deboa_smol::client::conn::dns::DefaultDnsResolver;
+    /// use deboa_smol::client::dns::DefaultDnsResolver;
     ///
     /// let client = Client::builder()
     ///     .dns_resolver(DefaultDnsResolver)

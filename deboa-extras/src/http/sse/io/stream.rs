@@ -22,6 +22,7 @@ pin_project! {
 }
 
 impl ServerEventStream {
+    /// Creates a new ServerEventStream from a HttpBody
     pub fn new(stream: HttpBody) -> Self {
         Self { stream }
     }

@@ -1,16 +1,16 @@
-use std::net::IpAddr;
-
 use easyhttpmock_vetis_smol::{
     config::EasyHttpMockConfig,
     server::PortGenerator,
     vetis_adapter::{VetisAdapter, VetisAdapterConfig},
     EasyHttpMock, Protocol,
 };
+use std::net::IpAddr;
 
 use deboa_smol::{
     cert::{Certificate, ContentEncoding},
     Client, HttpVersion,
 };
+use url::Url;
 
 pub(crate) const SKIP_CERT_VERIFICATION: bool = cfg!(feature = "native-tls");
 
@@ -50,6 +50,10 @@ pub(crate) const fn vetis_default_protocol() -> Protocol {
     return Protocol::Http2;
     #[cfg(feature = "http3")]
     return Protocol::Http3;
+}
+
+pub(crate) fn fake_url() -> Url {
+    Url::parse("https://httpbin.org/get").unwrap()
 }
 
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]

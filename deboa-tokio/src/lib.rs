@@ -61,10 +61,12 @@ pub(crate) fn alpn() -> &'static [&'static str] {
 
 use crate::{
     cert::{Certificate, Identity},
-    client::conn::{
+    client::{
         dns::DefaultDnsResolver,
-        pool::{DeboaHttpConnectionPool, HttpConnectionPool},
-        ConnectionConfig,
+        http::conn::{
+            pool::{DeboaHttpConnectionPool, HttpConnectionPool},
+            ConnectionConfig,
+        },
     },
 };
 use deboa::{
@@ -87,9 +89,12 @@ use tokio::sync::RwLock;
 
 pub use async_trait::async_trait;
 
+/// Certificate management module for handling SSL/TLS certificates.
 pub mod cert;
+/// Internal module for HTTP and Websockets clients implementations.
 pub mod client;
-pub mod rt;
+/// Internal runtime module for Tokio-based HTTP client implementation.
+pub(crate) mod rt;
 
 #[cfg(test)]
 mod tests;
@@ -497,7 +502,7 @@ impl ClientBuilder {
     ///
     /// ``` rust, no_run
     /// use deboa_tokio::Client;
-    /// use deboa_tokio::client::conn::dns::DefaultDnsResolver;
+    /// use deboa_tokio::client::dns::DefaultDnsResolver;
     ///
     /// let client = Client::builder()
     ///     .dns_resolver(DefaultDnsResolver)

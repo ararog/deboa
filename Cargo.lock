@@ -93,6 +93,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
 
 [[package]]
+name = "annotate-snippets"
+version = "0.12.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74fc7650eedcb2fee505aad48491529e408f0e854c2d9f63eb86c1361b9b3f93"
+dependencies = [
+ "anstyle",
+ "memchr",
+ "unicode-width",
+]
+
+[[package]]
 name = "anstream"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -159,6 +170,12 @@ dependencies = [
  "cpufeatures 0.2.17",
  "password-hash",
 ]
+
+[[package]]
+name = "arraydeque"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d902e3d592a523def97af8f317b08ce16b7ab854c1985a0c671e6f15cebc236"
 
 [[package]]
 name = "async-channel"
@@ -1002,6 +1019,7 @@ dependencies = [
  "async-trait",
  "base64",
  "bytes",
+ "ciborium",
  "cookie 0.18.1",
  "criterion",
  "deboa",
@@ -1048,6 +1066,7 @@ dependencies = [
  "vamo",
  "vamo-macros",
  "webpki-roots",
+ "ws-framer",
 ]
 
 [[package]]
@@ -1059,6 +1078,7 @@ dependencies = [
  "async-trait",
  "base64",
  "bytes",
+ "ciborium",
  "cookie 0.18.1",
  "criterion",
  "deboa",
@@ -1105,6 +1125,7 @@ dependencies = [
  "vamo",
  "vamo-macros",
  "webpki-roots",
+ "ws-framer",
 ]
 
 [[package]]
@@ -1321,6 +1342,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75030f3c4f45dafd7586dd6780965a8c7e8e285a5ecb86713e63a79c5b2766f3"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "encoding_rs_io"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1cc3c5651fb62ab8aa3103998dade57efdd028544bd300516baa31840c252a83"
+dependencies = [
+ "encoding_rs",
 ]
 
 [[package]]
@@ -1738,6 +1768,16 @@ checksum = "f0d8a4362ccb29cb0b265253fb0a2728f592895ee6854fd9bc13f2ffda266ff1"
 dependencies = [
  "opaque-debug",
  "polyval",
+]
+
+[[package]]
+name = "granit-parser"
+version = "0.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14668345710c92cb04181d9268407067689327d4b055273e3c4179a0777ee6a1"
+dependencies = [
+ "arraydeque",
+ "smallvec",
 ]
 
 [[package]]
@@ -2558,6 +2598,12 @@ checksum = "77a5d83df9f36fe23f0c3648c6bbb8b0298bb5f1939c8f2704431371f4b84d43"
 dependencies = [
  "smallvec",
 ]
+
+[[package]]
+name = "nohash-hasher"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2bf50223579dc7cdcfb3bfcacf7069ff68243f8c363f62ffa99cf000a6b9c451"
 
 [[package]]
 name = "nom"
@@ -3770,8 +3816,17 @@ version = "0.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a15e3bc297370dc9c526bcf0986f29167a9286cfaad404f2f572b3074dabe5ec"
 dependencies = [
+ "ahash",
+ "annotate-snippets",
+ "base64",
+ "encoding_rs_io",
  "getrandom 0.3.4",
+ "granit-parser",
+ "nohash-hasher",
+ "num-traits",
  "serde_core",
+ "smallvec",
+ "zmij",
 ]
 
 [[package]]
@@ -4551,6 +4606,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
 
 [[package]]
+name = "unicode-width"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
+
+[[package]]
 name = "unicode-xid"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5181,6 +5242,29 @@ name = "writeable"
 version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e9df38ee2d2c3c5948ea468a8406ff0db0b29ae1ffde1bcf20ef305bcc95c51"
+
+[[package]]
+name = "ws-framer"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bacd6cff21323641597fe251e294f823e04292202a6e3c9721a1e8b82bea57bf"
+dependencies = [
+ "httparse",
+ "itoa",
+ "ws-framer-macros",
+]
+
+[[package]]
+name = "ws-framer-macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67fe343b024b086505b3c647de6eae0c26235934cb9138a180e3ac5f97a6aeda"
+dependencies = [
+ "itertools",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.118",
+]
 
 [[package]]
 name = "ws-mock"
