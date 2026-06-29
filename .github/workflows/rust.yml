@@ -20,13 +20,18 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout repository
+        uses: actions/checkout@v7
 
-      - uses: Swatinem/rust-cache@v2
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
 
       - name: Run all tests
         run: |
-          cargo test 
+          cargo nextest run
 
   test-deboa:
     strategy:
@@ -67,15 +72,15 @@ jobs:
 
           cd deboa-extras
           cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
-          cd ..        
+          cd ..
 
           cd deboa-macros
           cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
-          cd ..        
+          cd ..
 
           cd vamo
           cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
-          cd ..        
+          cd ..
 
           cd vamo-macros
           cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
