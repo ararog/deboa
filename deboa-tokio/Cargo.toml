@@ -13,7 +13,16 @@ publish = true
 rust-version.workspace = true
 
 [package.metadata.docs.rs]
-all-features = true
+features = [
+  "http1",
+  "http2",
+  "http3",
+  "rust-tls",
+  "native-tls",
+  "websockets",
+  "default-rustls-provider",
+  "default-rustls-verifier",
+]
 
 [features]
 default = [

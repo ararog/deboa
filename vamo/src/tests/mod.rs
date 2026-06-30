@@ -1,13 +1,16 @@
-use std::error::Error;
-
 use crate::{
     resource::{Resource, ResourceMethod},
     Vamo,
 };
+use caramelo::{
+    expect,
+    matchers::{eq, header_value},
+};
 use deboa::{url::IntoUrl, HttpClient, Result};
 use deboa_extras::serde::json::JsonBody;
-use http::{HeaderName, Method};
+use http::{header, HeaderName, Method};
 use serde::Serialize;
+use std::error::Error;
 
 struct SuperClient {
     url: String,
@@ -61,7 +64,7 @@ pub fn test_url(port: Option<u16>) -> String {
 #[test]
 fn test_create_vamo() -> Result<()> {
     let vamo = Vamo::<SuperClient>::new(test_url(None))?;
-    assert_eq!(vamo.base_url, test_url(None).into_url()?);
+    expect(vamo.base_url).to_be(eq(test_url(None).into_url()?));
     Ok(())
 }
 
@@ -70,7 +73,7 @@ fn test_load_resource() -> Result<()> {
     let mut vamo = Vamo::<SuperClient>::new(test_url(None))?;
     let mut user = User { id: 1, name: "John Doe".to_string() };
     vamo.load(&mut user)?;
-    assert_eq!(vamo.path, "/users/1");
+    expect(vamo.path).to_be(eq("/users/1"));
     Ok(())
 }
 
@@ -78,7 +81,7 @@ fn test_load_resource() -> Result<()> {
 fn test_get() -> Result<()> {
     let mut vamo = Vamo::<SuperClient>::new(test_url(None))?;
     vamo.get("/posts");
-    assert_eq!(vamo.method, Method::GET);
+    expect(vamo.method).to_be(eq(Method::GET));
     Ok(())
 }
 
@@ -86,7 +89,7 @@ fn test_get() -> Result<()> {
 fn test_post() -> Result<()> {
     let mut vamo = Vamo::<SuperClient>::new(test_url(None))?;
     vamo.post("/posts");
-    assert_eq!(vamo.method, Method::POST);
+    expect(vamo.method).to_be(eq(Method::POST));
     Ok(())
 }
 
@@ -94,7 +97,7 @@ fn test_post() -> Result<()> {
 fn test_put() -> Result<()> {
     let mut vamo = Vamo::<SuperClient>::new(test_url(None))?;
     vamo.put("/posts");
-    assert_eq!(vamo.method, Method::PUT);
+    expect(vamo.method).to_be(eq(Method::PUT));
     Ok(())
 }
 
@@ -102,7 +105,7 @@ fn test_put() -> Result<()> {
 fn test_patch() -> Result<()> {
     let mut vamo = Vamo::<SuperClient>::new(test_url(None))?;
     vamo.patch("/posts");
-    assert_eq!(vamo.method, Method::PATCH);
+    expect(vamo.method).to_be(eq(Method::PATCH));
     Ok(())
 }
 
@@ -110,7 +113,7 @@ fn test_patch() -> Result<()> {
 fn test_delete() -> Result<()> {
     let mut vamo = Vamo::<SuperClient>::new(test_url(None))?;
     vamo.delete("/posts");
-    assert_eq!(vamo.method, Method::DELETE);
+    expect(vamo.method).to_be(eq(Method::DELETE));
     Ok(())
 }
 
@@ -119,14 +122,7 @@ fn test_header() -> std::result::Result<(), Box<dyn Error>> {
     let mut vamo = Vamo::<SuperClient>::new(test_url(None))?;
     let header = "Content-Type".parse::<HeaderName>()?;
     vamo.header(header, "application/json");
-    assert_eq!(
-        vamo.headers
-            .get("Content-Type")
-            .unwrap()
-            .to_str()
-            .unwrap(),
-        "application/json"
-    );
+    expect(vamo.headers).to_have(header_value("Content-Type", r"application/json"));
     Ok(())
 }
 
@@ -134,14 +130,7 @@ fn test_header() -> std::result::Result<(), Box<dyn Error>> {
 fn test_basic_auth() -> Result<()> {
     let mut vamo = Vamo::<SuperClient>::new(test_url(None))?;
     vamo.basic_auth("username", "password");
-    assert_eq!(
-        vamo.headers
-            .get("Authorization")
-            .unwrap()
-            .to_str()
-            .unwrap(),
-        "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
-    );
+    expect(vamo.headers).to_have(header_value("Authorization", "Basic dXNlcm5hbWU6cGFzc3dvcmQ="));
     Ok(())
 }
 
@@ -149,13 +138,6 @@ fn test_basic_auth() -> Result<()> {
 fn test_jwt_auth() -> Result<()> {
     let mut vamo = Vamo::<SuperClient>::new(test_url(None))?;
     vamo.bearer_auth("token");
-    assert_eq!(
-        vamo.headers
-            .get("Authorization")
-            .unwrap()
-            .to_str()
-            .unwrap(),
-        "Bearer token"
-    );
+    expect(vamo.headers).to_have(header_value(header::AUTHORIZATION, "Bearer token"));
     Ok(())
 }

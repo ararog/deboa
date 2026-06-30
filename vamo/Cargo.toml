@@ -26,3 +26,6 @@ deboa-extras = { workspace = true, default-features = false }
 http = "1.4.2"
 serde = "1.0.228"
 url = "2.5.8"
+
+[dev-dependencies]
+caramelo = "0.1.1-beta.4"

@@ -13,7 +13,16 @@ publish = true
 rust-version.workspace = true
 
 [package.metadata.docs.rs]
-all-features = true
+features = [
+  "http1",
+  "http2",
+  "http3",
+  "rust-tls",
+  "native-tls",
+  "websockets",
+  "default-rustls-provider",
+  "default-rustls-verifier",
+]
 
 [features]
 default = [
@@ -45,14 +54,8 @@ ring-rustls-provider = ["__rustls_ring"]
 rustcrypto-rustl-provider = ["__rustls_rustcrypto"]
 
 default-rustls-provider = ["__rustls_aws_lc_rs"]
-__rustls_aws_lc_rs = [
-  "futures-rustls/aws-lc-rs",
-  "quinn/rustls-aws-lc-rs",
-]
-__rustls_ring = [
-  "futures-rustls/ring",
-  "quinn/rustls-ring",
-]
+__rustls_aws_lc_rs = ["futures-rustls/aws-lc-rs", "quinn/rustls-aws-lc-rs"]
+__rustls_ring = ["futures-rustls/ring", "quinn/rustls-ring"]
 __rustls_rustcrypto = ["dep:rustls-rustcrypto"]
 
 native-tls = ["async-native-tls/runtime-smol"]
@@ -122,7 +125,9 @@ criterion = { version = "0.8.2", features = [
   "async",
   "async_smol",
 ] }
-deboa-extras = { workspace = true, default-features = false, features = ["serialization_all"]}
+deboa-extras = { workspace = true, default-features = false, features = [
+  "serialization_all",
+] }
 deboa-fory = { workspace = true, default-features = false }
 deboa-macros = { workspace = true }
 easyhttpmock-vetis-smol = { version = "0.1.0-beta.5", features = [

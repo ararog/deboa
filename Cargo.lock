@@ -482,9 +482,9 @@ checksum = "8ae3f5d315924270530207e2a68396c3cc547f6dca3fbdca317cfb1a51edb593"
 
 [[package]]
 name = "caramelo"
-version = "0.1.1-beta.3"
+version = "0.1.1-beta.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20f71133c2d4c25f6993ca1cb62bfe23dce94005ea5a94c2611c122e27185683"
+checksum = "1ed5025efdb5f63d62c7c1268485accfa2aff9c4feb9146fb3bc58888ce646e2"
 dependencies = [
  "http",
  "http-body",
@@ -4704,6 +4704,7 @@ name = "vamo"
 version = "0.0.9-beta.5"
 dependencies = [
  "base64",
+ "caramelo",
  "deboa",
  "deboa-extras",
  "http",
