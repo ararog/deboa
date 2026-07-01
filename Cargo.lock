@@ -949,7 +949,7 @@ dependencies = [
  "serde",
  "smol",
  "thiserror 2.0.18",
- "time 0.2.27",
+ "time 0.3.51",
  "tokio",
  "url",
  "urlencoding",
