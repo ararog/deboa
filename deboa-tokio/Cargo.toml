@@ -105,7 +105,7 @@ hyper-util = { version = "0.1.20", features = [
 indexmap = "2.11.4"
 log = "0.4.32"
 minimime = "1.0.0"
-mockall = "0.14.0"
+mockall = "0.15.0"
 quinn = { version = "0.11.7", optional = true, features = [
   "runtime-tokio",
 ], default-features = false }
