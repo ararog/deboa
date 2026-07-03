@@ -61,10 +61,9 @@ The core create of http client.
 
 A crate with bora macro, for easy rest client generation. Bora macro is now part of vamo-macros.
 
-### [deboa-extras](https://github.com/ararog/deboa/tree/develop/deboa-extras)
+### deboa-extras (moved)
 
-Pluggable compression/decompression, serializers, sse, websockets and catchers.
-All of them are optional. This is the place to contribute with your own pluggable features.
+Deboa-extras has moved to <https://github.com/ararog/deboa-contrib>.
 
 ### [deboa-macros](https://github.com/ararog/deboa/tree/develop/deboa-macros)
 
@@ -80,15 +79,13 @@ Deboa implementation for smol runtime.
 
 Deboa implmentation for tokio runtime.
 
-### [vamo](https://github.com/ararog/deboa/tree/develop/vamo)
+### vamo (moved)
 
-Nice wrapper on top of deboa for dry rest client. Set base url once
-and use it for all requests.
+Vamo has moved to <https://github.com/ararog/vamo>.
 
-### [vamo-macros](https://github.com/ararog/deboa/tree/develop/vamo-macros)
+### vamo-macros (moved)
 
-Vamo macros is a collection of macros to make possible use structs as resources to be sent over vamo as client.
-It is also the new home of bora macro.
+Vamo-macros has moved to <https://github.com/ararog/vamo>.
 
 ## License
 

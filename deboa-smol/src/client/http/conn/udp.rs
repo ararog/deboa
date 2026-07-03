@@ -10,7 +10,7 @@ use http_body::Body;
 use hyper_body_utils::HttpBody;
 
 use crate::{
-    client::conn::{BaseHttpConnection, ConnectionConfig},
+    client::http::conn::{BaseHttpConnection, ConnectionConfig},
     Result, MAX_ERROR_MESSAGE_SIZE,
 };
 

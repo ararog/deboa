@@ -30,8 +30,8 @@ async fn test_patch() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client: Client = create_client();
 
+    let client: Client = create_client();
     let request = DeboaRequest::patch(server.url("/posts/1"))?
         .text("text")
         .build()?;

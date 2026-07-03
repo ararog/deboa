@@ -5,19 +5,9 @@ resolver = "3"
 members = [
     "deboa",
     #"deboa-compio",
-    "deboa-extras",
-    "deboa-fory",
     "deboa-macros",
     "deboa-smol",
     "deboa-tokio",
-    # "examples/blog",
-    # "examples/catcher",
-    # "examples/cbor",
-    # "examples/postman",
-    # "examples/simple",
-    # "examples/simple-smol",
-    "vamo",
-    "vamo-macros",
 ]
 
 [workspace.package]
@@ -30,13 +20,13 @@ license = "MIT OR Apache-2.0"
 rust-version = "1.75.0"
 
 [workspace.dependencies]
-deboa = { version = "0.1.0-beta.18", path = "deboa" }
-deboa-extras = { version = "0.0.9-beta.11", path = "deboa-extras" }
-deboa-fory = { version = "0.1.6-beta.1", path = "deboa-fory" }
+deboa = { version = "0.1.0-beta.18" }
+deboa-extras = { version = "0.0.9-beta.12" }
+deboa-fory = { version = "0.1.6-beta.2" }
 deboa-macros = { version = "0.1.0-beta.4", path = "deboa-macros" }
 deboa-tokio = { version = "0.1.0-beta.5", path = "deboa-tokio" }
-vamo = { version = "0.0.9-beta.5", path = "vamo" }
-vamo-macros = { version = "0.0.9-beta.5", path = "vamo-macros" }
+vamo = { version = "0.0.9-beta.5" }
+vamo-macros = { version = "0.0.9-beta.5" }
 
 [profile.test]
 lto = false

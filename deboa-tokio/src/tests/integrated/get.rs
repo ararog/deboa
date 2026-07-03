@@ -26,7 +26,7 @@ use http::StatusCode;
 // GET
 //
 #[tokio::test]
-async fn do_get_http() -> TestResult<()> {
+async fn test_get_http() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -223,7 +223,7 @@ async fn test_get_http_mutual_authentication() -> TestResult<()> {
 #[tokio::test]
 async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
     let mock = Mock::of(
-        given(method("GET").and(path("/post/1"))).will_return(
+        given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
                 .respond()
                 .with_body(b"Hello World!"),
@@ -233,8 +233,8 @@ async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let identity = Identity::from_pkcs12(CLIENT_P12, Some("test".to_string()));
 
+    let identity = Identity::from_pkcs12(CLIENT_P12, Some("test".to_string()));
     let client = Client::builder()
         .certificate(crate::cert::Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .identity(identity)
@@ -244,9 +244,15 @@ async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
 
     let response = client
         .execute(request)
-        .await;
+        .await?;
 
-    assert_eq!(response?.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response
+            .text()
+            .await?,
+        "Hello World!"
+    );
 
     server
         .stop()

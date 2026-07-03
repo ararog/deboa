@@ -27,11 +27,12 @@ async fn test_put() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client = create_client();
 
+    let client = create_client();
     let request = DeboaRequest::put(server.url("/posts/1"))?
         .text("ping")
         .build()?;
+
     let response = client
         .execute(request)
         .await?;

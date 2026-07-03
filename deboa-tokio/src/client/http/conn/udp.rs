@@ -1,5 +1,5 @@
 use crate::{
-    client::conn::{BaseHttpConnection, ConnectionConfig},
+    client::http::conn::{BaseHttpConnection, ConnectionConfig},
     Result, MAX_ERROR_MESSAGE_SIZE,
 };
 use bytes::{Buf, Bytes};

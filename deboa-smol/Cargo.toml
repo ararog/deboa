@@ -133,7 +133,7 @@ deboa-macros = { workspace = true }
 easyhttpmock-vetis-smol = { version = "0.1.0-beta.5", features = [
   "http2",
   "rust-tls",
-], default-features = false }
+], default-features = false, path = "../../easyhttpmock/easyhttpmock-vetis-smol" }
 fory = "1.1.0"
 fory-core = "1.1.0"
 futures-util = "0.3.31"

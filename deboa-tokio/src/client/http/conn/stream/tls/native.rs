@@ -1,6 +1,6 @@
 use crate::{
     cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
-    client::conn::stream::create_stream,
+    client::http::conn::stream::create_stream,
     rt::stream::TokioStream,
 };
 use async_native_tls::{Certificate, Identity, TlsConnector};
@@ -8,8 +8,10 @@ use deboa::{
     errors::{ConnectionError, DeboaError},
     Result,
 };
+use std::net::IpAddr;
 
 pub(crate) async fn tls_connection(
+    ip: IpAddr,
     host: &str,
     port: u16,
     identity: &Option<DeboaIdentity>,
@@ -17,7 +19,7 @@ pub(crate) async fn tls_connection(
     skip_server_verification: bool,
     alpn: &[&str],
 ) -> Result<TokioStream> {
-    let socket = create_stream(host, port).await?;
+    let socket = create_stream(ip, host, port).await?;
     let builder = TlsConnector::new();
 
     let builder = if skip_server_verification {

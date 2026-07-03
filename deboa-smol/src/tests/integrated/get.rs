@@ -252,9 +252,15 @@ async fn do_get_http_mutual_authentication_with_password() -> TestResult<()> {
 
     let response = client
         .execute(request)
-        .await;
+        .await?;
 
-    assert_eq!(response?.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response
+            .text()
+            .await?,
+        "Hello World!"
+    );
 
     server
         .stop()

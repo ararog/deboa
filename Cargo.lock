@@ -3,12 +3,6 @@
 version = 3
 
 [[package]]
-name = "adler2"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
-
-[[package]]
 name = "aead"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -64,12 +58,6 @@ checksum = "ddd31a130427c27518df266943a5308ed92d4b226cc639f5a8f1002816174301"
 dependencies = [
  "memchr",
 ]
-
-[[package]]
-name = "alloc-no-stdlib"
-version = "2.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc7bb162ec39d46ab1ca8c77bf72e890535becd1751bb45f64c597edb4c8c6b3"
 
 [[package]]
 name = "alloca"
@@ -445,25 +433,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "brotli"
-version = "8.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5cc91aac060a7a1e25823bdccbfb6af1875b88f17c6daac97894eed8207166b3"
-dependencies = [
- "alloc-no-stdlib",
- "brotli-decompressor",
-]
-
-[[package]]
-name = "brotli-decompressor"
-version = "5.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a32acac15fe1967bc3986b2a6347dffc965602354ea6f450ad07e8bfd253583"
-dependencies = [
- "alloc-no-stdlib",
-]
-
-[[package]]
 name = "bumpalo"
 version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -761,15 +730,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crc32fast"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
-dependencies = [
- "cfg-if",
-]
-
-[[package]]
 name = "criterion"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -913,12 +873,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "data-encoding"
-version = "2.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4ae5f15dda3c708c0ade84bfee31ccab44a3da4f88015ed22f63732abe300c8"
-
-[[package]]
 name = "deboa"
 version = "0.1.0-beta.18"
 dependencies = [
@@ -957,15 +911,47 @@ dependencies = [
 ]
 
 [[package]]
-name = "deboa-extras"
-version = "0.0.9-beta.11"
+name = "deboa"
+version = "0.1.0-beta.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "836d88faa3453c5f2624d20a93bd0e5634eb15b8917f5400bcc7c44d91e21390"
 dependencies = [
+ "async-trait",
  "base64",
- "brotli",
+ "bytes",
+ "cfg-if",
+ "cookie 0.15.2",
+ "futures",
+ "h3",
+ "h3-quinn",
+ "http",
+ "http-body",
+ "http-body-util",
+ "hyper",
+ "hyper-body-utils",
+ "hyper-util",
+ "indexmap",
+ "log",
+ "minimime",
+ "mockall",
+ "rand 0.10.1",
+ "regex",
+ "serde",
+ "thiserror 2.0.18",
+ "time 0.2.27",
+ "url",
+ "urlencoding",
+]
+
+[[package]]
+name = "deboa-extras"
+version = "0.0.9-beta.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7af1673dc504a757f61e7201428fce56a1d1265df23a9e0e2d05988aee347f2"
+dependencies = [
  "bytes",
  "ciborium",
- "deboa",
- "flate2",
+ "deboa 0.1.0-beta.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "flexbuffers",
  "futures",
  "futures-util",
@@ -973,27 +959,25 @@ dependencies = [
  "http-body-util",
  "hyper",
  "hyper-body-utils",
- "hyper-util",
  "mime",
  "mime_typed",
  "pin-project-lite",
- "rand 0.10.1",
  "rmp-serde",
  "serde",
  "serde-saphyr",
  "serde-xml-rust",
  "simd-json",
- "sonic-rs",
  "thiserror 2.0.18",
  "url",
- "ws-mock",
 ]
 
 [[package]]
 name = "deboa-fory"
-version = "0.1.6-beta.1"
+version = "0.1.6-beta.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0fba3ac8af93e0817b747eee8a9e72ce94d5a78a890e2df88606ac11c4ca7459"
 dependencies = [
- "deboa",
+ "deboa 0.1.0-beta.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "fory",
  "fory-core",
  "http",
@@ -1003,7 +987,7 @@ dependencies = [
 name = "deboa-macros"
 version = "0.1.0-beta.4"
 dependencies = [
- "deboa",
+ "deboa 0.1.0-beta.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
  "http",
  "proc-macro2",
@@ -1024,7 +1008,7 @@ dependencies = [
  "ciborium",
  "cookie 0.18.1",
  "criterion",
- "deboa",
+ "deboa 0.1.0-beta.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
  "deboa-fory",
  "deboa-macros",
@@ -1083,7 +1067,7 @@ dependencies = [
  "ciborium",
  "cookie 0.18.1",
  "criterion",
- "deboa",
+ "deboa 0.1.0-beta.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
  "deboa-fory",
  "deboa-macros",
@@ -1223,8 +1207,6 @@ checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 [[package]]
 name = "easyhttpmock"
 version = "0.1.3-beta.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4330b4e518c3bbf72404e66cbb21c0c0c83f4d9429afcb1b2155bc030286124f"
 dependencies = [
  "bytes",
  "caramelo",
@@ -1233,6 +1215,7 @@ dependencies = [
  "hyper",
  "hyper-util",
  "jsonpath-rust",
+ "once_cell",
  "rand 0.10.1",
  "regex",
  "serde",
@@ -1246,8 +1229,6 @@ dependencies = [
 [[package]]
 name = "easyhttpmock-vetis-smol"
 version = "0.1.0-beta.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "965cc5d7efd78ce67cbefa5263fb67077e360d25d25fd092318cf874c0854fda"
 dependencies = [
  "caramelo",
  "easyhttpmock",
@@ -1255,6 +1236,7 @@ dependencies = [
  "http-body-util",
  "macro_rules_attribute",
  "rand 0.10.1",
+ "smol",
  "smol-macros",
  "vetis-smol",
 ]
@@ -1262,8 +1244,6 @@ dependencies = [
 [[package]]
 name = "easyhttpmock-vetis-tokio"
 version = "0.1.0-beta.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2dd7001e7c55357fc30fd7b0e0d5a4365f131f0370865992e0a95b854fb046f6"
 dependencies = [
  "caramelo",
  "easyhttpmock",
@@ -1471,16 +1451,6 @@ name = "find-msvc-tools"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
-
-[[package]]
-name = "flate2"
-version = "1.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c"
-dependencies = [
- "crc32fast",
- "miniz_oxide",
-]
 
 [[package]]
 name = "flexbuffers"
@@ -2470,16 +2440,6 @@ name = "minimime"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9bcaa89828ea1e6ab547d9d61ae49f1f9336459b593f285ecc402af9152e16b2"
-
-[[package]]
-name = "miniz_oxide"
-version = "0.8.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
-dependencies = [
- "adler2",
- "simd-adler32",
-]
 
 [[package]]
 name = "mio"
@@ -3910,17 +3870,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sha1"
-version = "0.10.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3bf829a2d51ab4a5ddf1352d8470c140cadc8301b2ae1789db023f01cedd6ba"
-dependencies = [
- "cfg-if",
- "cpufeatures 0.2.17",
- "digest",
-]
-
-[[package]]
 name = "sha1_smol"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3972,12 +3921,6 @@ dependencies = [
  "digest",
  "rand_core 0.6.4",
 ]
-
-[[package]]
-name = "simd-adler32"
-version = "0.3.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "703d5c7ef118737c72f1af64ad2f6f8c5e1921f818cdcb97b8fe6fc69bf66214"
 
 [[package]]
 name = "simd-json"
@@ -4194,7 +4137,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "sha1 0.6.1",
+ "sha1",
  "syn 1.0.109",
 ]
 
@@ -4429,7 +4372,6 @@ dependencies = [
  "bytes",
  "libc",
  "mio",
- "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2",
@@ -4456,18 +4398,6 @@ checksum = "1729aa945f29d91ba541258c8df89027d5792d85a8841fb65e8bf0f4ede4ef61"
 dependencies = [
  "rustls",
  "tokio",
-]
-
-[[package]]
-name = "tokio-tungstenite"
-version = "0.29.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f72a05e828585856dacd553fba484c242c46e391fb0e58917c942ee9202915c"
-dependencies = [
- "futures-util",
- "log",
- "tokio",
- "tungstenite",
 ]
 
 [[package]]
@@ -4513,19 +4443,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "63e71662fa4b2a2c3a26f570f037eb95bb1f85397f3cd8076caed2f026a6d100"
 dependencies = [
  "pin-project-lite",
- "tracing-attributes",
  "tracing-core",
-]
-
-[[package]]
-name = "tracing-attributes"
-version = "0.1.31"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7490cfa5ec963746568740651ac6781f701c9c5ea257c58e057f3ba8cf69e8da"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.118",
 ]
 
 [[package]]
@@ -4542,22 +4460,6 @@ name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
-
-[[package]]
-name = "tungstenite"
-version = "0.29.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c01152af293afb9c7c2a57e4b559c5620b421f6d133261c60dd2d0cdb38e6b8"
-dependencies = [
- "bytes",
- "data-encoding",
- "http",
- "httparse",
- "log",
- "rand 0.9.4",
- "sha1 0.10.6",
- "thiserror 2.0.18",
-]
 
 [[package]]
 name = "typeid"
@@ -4703,10 +4605,11 @@ dependencies = [
 [[package]]
 name = "vamo"
 version = "0.0.9-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2471dd128dbd8a932bbbd75735863515adbb80b733cf79dcea04f318821e6a6"
 dependencies = [
  "base64",
- "caramelo",
- "deboa",
+ "deboa 0.1.0-beta.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
  "http",
  "serde",
@@ -4716,8 +4619,10 @@ dependencies = [
 [[package]]
 name = "vamo-macros"
 version = "0.0.9-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4654f681672aa60390d6ff2d0d3647fad7d8d5680d58831430514f58f7472841"
 dependencies = [
- "deboa",
+ "deboa 0.1.0-beta.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
  "http",
  "proc-macro2",
@@ -5269,19 +5174,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.118",
-]
-
-[[package]]
-name = "ws-mock"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ec756c6f96972b2185f6f0a140c3ffefb0114ad3e064c2155942a3e448f3f93"
-dependencies = [
- "futures-util",
- "serde_json",
- "tokio",
- "tokio-tungstenite",
- "tracing",
 ]
 
 [[package]]

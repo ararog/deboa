@@ -1,10 +1,12 @@
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 use crate::alpn;
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::rt::tls::tls_connection;
+use crate::client::http::conn::stream::tls::tls_connection;
 use crate::{
-    client::http::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
-    rt::plain::plain_connection,
+    client::http::conn::{
+        stream::plain::plain_connection, tcp::DeboaTcpConnection, BaseHttpConnection,
+        ConnectionConfig,
+    },
     Result,
 };
 use deboa::request::Http1Request;
@@ -30,6 +32,7 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody>
         #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
         let stream = if config.is_secure() {
             tls_connection(
+                *config.ip(),
                 config.host(),
                 config.port(),
                 config.identity(),
@@ -39,7 +42,7 @@ impl DeboaTcpConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody>
             )
             .await
         } else {
-            plain_connection(config.host(), config.port()).await
+            plain_connection(*config.ip(), config.host(), config.port()).await
         };
 
         #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]

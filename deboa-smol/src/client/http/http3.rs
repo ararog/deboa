@@ -1,65 +1,33 @@
 use crate::{
     alpn,
     client::http::conn::{
-        rustls::setup_rust_tls, udp::DeboaUdpConnection, BaseHttpConnection, ConnectionConfig,
+        stream::tls::setup_rust_tls, udp::DeboaUdpConnection, BaseHttpConnection, ConnectionConfig,
     },
     Result,
-};
-use async_std_resolver::{
-    config::{ResolverConfig, ResolverOpts},
-    resolver,
 };
 use deboa::{
     errors::{ConnectionError, DeboaError, RequestError, ResponseError},
     request::Http3Request,
 };
 use futures::future;
-use hickory_resolver::error::ResolveErrorKind;
 use http::{version::Version, StatusCode};
 use http_body_util::BodyExt;
 use hyper::{Request, Response};
 use hyper_body_utils::HttpBody;
 use quinn::{crypto::rustls::QuicClientConfig, Endpoint};
-use std::{marker::PhantomData, net::SocketAddr, sync::Arc};
+use std::{
+    marker::PhantomData,
+    net::{IpAddr, SocketAddr},
+    sync::Arc,
+};
 
 async fn lookup_and_connect(
+    ip: IpAddr,
     host: &str,
     port: u16,
     client_endpoint: &Endpoint,
 ) -> std::result::Result<h3_quinn::Connection, DeboaError> {
-    let resolver = resolver(ResolverConfig::default(), ResolverOpts::default()).await;
-
-    let response = resolver
-        .lookup_ip(host)
-        .await;
-
-    let addr = match response {
-        Ok(response) => response,
-        Err(e) => match e.kind() {
-            ResolveErrorKind::NoRecordsFound { query, .. } => {
-                let query_name = query
-                    .name()
-                    .to_string();
-                return Err(DeboaError::Connection(ConnectionError::Udp {
-                    host: host.to_string(),
-                    message: format!("Could not resolve host: {}", query_name),
-                }));
-            }
-            _ => {
-                return Err(DeboaError::Connection(ConnectionError::Udp {
-                    host: host.to_string(),
-                    message: format!("Could not resolve host: {}", e),
-                }));
-            }
-        },
-    };
-
-    let addr = addr
-        .iter()
-        .next()
-        .expect("no addresses returned!");
-
-    let conn = client_endpoint.connect(SocketAddr::new(addr, port), host);
+    let conn = client_endpoint.connect(SocketAddr::new(ip, port), host);
 
     let conn = match conn {
         Ok(conn) => conn,
@@ -145,7 +113,8 @@ impl DeboaUdpConnection for BaseHttpConnection<Http3Request, HttpBody, HttpBody>
         let client_config = quinn::ClientConfig::new(Arc::new(quic_config));
         client_endpoint.set_default_client_config(client_config);
 
-        let result = lookup_and_connect(config.host(), config.port(), &client_endpoint).await;
+        let result =
+            lookup_and_connect(*config.ip(), config.host(), config.port(), &client_endpoint).await;
 
         if let Err(e) = result {
             return Err(e);

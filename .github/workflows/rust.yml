@@ -43,9 +43,11 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout repository
+        uses: actions/checkout@v7
 
-      - uses: Swatinem/rust-cache@v2
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
 
       - name: Run deboa-${{ matrix.runtime }} tests on ${{ matrix.os }} with ${{ matrix.protocol }} using ${{ matrix.tls }}
         if: (matrix.os != 'windows-latest' && matrix.tls != 'native-tls') || (matrix.os != 'macos-latest' && matrix.tls != 'native-tls')
@@ -57,12 +59,14 @@ jobs:
     runs-on: ubuntu-latest
     container: instrumentisto/cargo-ndk
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout repository
+        uses: actions/checkout@v7
 
       - name: Install Rust toolchains
         run: rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
 
-      - uses: Swatinem/rust-cache@v2
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
 
       - name: Build for android archs with cargo-ndk
         run: |
@@ -70,18 +74,6 @@ jobs:
           cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
           cd ..
 
-          cd deboa-extras
-          cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
-          cd ..
-
           cd deboa-macros
-          cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
-          cd ..
-
-          cd vamo
-          cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
-          cd ..
-
-          cd vamo-macros
           cargo ndk --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android build
           cd ..

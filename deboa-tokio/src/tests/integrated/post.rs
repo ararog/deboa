@@ -34,8 +34,8 @@ async fn test_post() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client: Client = create_client();
 
+    let client: Client = create_client();
     let request = DeboaRequest::post(server.url("/posts"))?
         .text("{ \"title\": \"foo\", \"body\": \"bar\", \"userId\": 1 }")
         .build()?;
@@ -76,8 +76,8 @@ async fn do_post_encoded_form() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client: Client = create_client();
 
+    let client: Client = create_client();
     let mut form = EncodedForm::builder();
     form.field("name", "deboa");
     form.field("version", "0.0.1");
@@ -129,8 +129,8 @@ async fn test_post_multipart_form() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client: Client = create_client();
 
+    let client: Client = create_client();
     let request = DeboaRequest::post(server.url("/posts"))?
         .form(form.into())
         .build()?;

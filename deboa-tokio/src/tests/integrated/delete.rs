@@ -26,8 +26,8 @@ async fn test_delete() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client = create_client();
 
+    let client = create_client();
     let response = DeboaRequest::delete(server.url("/posts/1"))?
         .send_with(&client)
         .await?;
