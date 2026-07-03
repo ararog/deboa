@@ -27,9 +27,9 @@ features = [
 [features]
 default = [
   "http2",
-  "native-tls",
-  #"default-rustls-provider",
-  #"default-rustls-verifier",
+  "rust-tls",
+  "default-rustls-provider",
+  "default-rustls-verifier",
 ]
 
 # tls
@@ -141,10 +141,10 @@ criterion = { version = "0.8.2", features = [
 deboa-extras = { workspace = true, default-features = false, features = ["serialization_all"] }
 deboa-fory = { workspace = true, default-features = false }
 deboa-macros = { workspace = true }
-easyhttpmock-vetis-tokio = { version = "0.1.0-beta.5", features = [
+easyhttpmock-vetis-tokio = { version = "0.1.0-beta.6", features = [
   "http2",
   "rust-tls",
-], default-features = false, path = "../../easyhttpmock/easyhttpmock-vetis-tokio"  }
+], default-features = false }
 fory = "1.1.0"
 fory-core = "1.1.0"
 futures-util = "0.3.31"

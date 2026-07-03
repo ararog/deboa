@@ -130,10 +130,10 @@ deboa-extras = { workspace = true, default-features = false, features = [
 ] }
 deboa-fory = { workspace = true, default-features = false }
 deboa-macros = { workspace = true }
-easyhttpmock-vetis-smol = { version = "0.1.0-beta.5", features = [
+easyhttpmock-vetis-smol = { version = "0.1.0-beta.6", features = [
   "http2",
   "rust-tls",
-], default-features = false, path = "../../easyhttpmock/easyhttpmock-vetis-smol" }
+], default-features = false }
 fory = "1.1.0"
 fory-core = "1.1.0"
 futures-util = "0.3.31"
