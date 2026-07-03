@@ -31,7 +31,7 @@ jobs:
 
       - name: Run all tests
         run: |
-          cargo nextest run
+          cargo nextest run -j1 --no-fail-fast
 
   test-deboa:
     strategy:
