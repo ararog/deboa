@@ -1,8 +1,7 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs)]
-use std::future::Future;
-
 use crate::{errors::DeboaError, request::IntoRequest, response::DeboaResponse};
+use std::future::Future;
 
 pub mod cache;
 pub mod catcher;
