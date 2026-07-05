@@ -1,8 +1,9 @@
 # Security Policy
 
-Please report security vulnerabilities privately via email to **rogerio.araujo@gmail.com**, rather than through public issues. Include details like the issue type, affected files, and steps to reproduce.
+Please report security vulnerabilities privately via email to **<rogerio.araujo@gmail.com>**, rather than through public issues. Include details like the issue type, affected files, and steps to reproduce.
 
-### Disclosure Policy
+## Disclosure Policy
+
 * Acknowledgment within 24 hours.
 * Investigation and fix development.
 * Notification upon release, with credit if desired.
