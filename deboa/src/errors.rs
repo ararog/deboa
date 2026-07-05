@@ -115,6 +115,10 @@ pub enum DeboaError {
     /// Io error
     #[error("Io error: {0}")]
     Io(#[from] IoError),
+
+    /// Unsupported protocol
+    #[error("Unsupported protocol")]
+    UnsupportedProtocol,
 }
 
 /// Request error

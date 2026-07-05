@@ -1,5 +1,5 @@
 use crate::{
-    cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
+    cert::{DeboaCertificate, DeboaIdentity},
     client::http::conn::stream::plain::create_stream,
     rt::stream::SmolStream,
     Result,
@@ -10,12 +10,12 @@ use rustls::{pki_types::ServerName, ClientConfig};
 use rustls_pki_types::{CertificateDer, PrivateKeyDer};
 use std::{net::IpAddr, sync::Arc};
 
-pub(crate) async fn tls_connection(
+pub(crate) async fn tls_connection<'a>(
     ip: IpAddr,
     host: &str,
     port: u16,
-    identity: &Option<DeboaIdentity>,
-    certificate: &Option<DeboaCertificate>,
+    identity: &'a Option<DeboaIdentity>,
+    certificate: &'a Option<DeboaCertificate>,
     skip_server_verification: bool,
     alpn: Vec<Vec<u8>>,
 ) -> Result<SmolStream> {
@@ -56,10 +56,10 @@ pub(crate) fn default_provider() -> Arc<rustls::crypto::CryptoProvider> {
     Arc::new(provider)
 }
 
-pub(crate) fn setup_rust_tls(
+pub(crate) fn setup_rust_tls<'a>(
     host: &str,
-    identity: &Option<DeboaIdentity>,
-    certificate: &Option<DeboaCertificate>,
+    identity: &'a Option<DeboaIdentity>,
+    certificate: &'a Option<DeboaCertificate>,
     skip_server_verification: bool,
     alpn: Vec<Vec<u8>>,
 ) -> Result<ClientConfig> {
@@ -119,10 +119,7 @@ pub(crate) fn setup_rust_tls(
     };
 
     let mut config = if let Some(id) = identity {
-        let pair: std::result::Result<
-            (CertificateDer<'static>, PrivateKeyDer<'static>),
-            std::io::Error,
-        > = id.try_into();
+        let pair = id.try_into();
         if let Err(e) = pair {
             return Err(DeboaError::Connection(ConnectionError::Tls {
                 host: host.to_string(),
@@ -130,7 +127,7 @@ pub(crate) fn setup_rust_tls(
             }));
         }
 
-        let pair = pair.unwrap();
+        let pair: (CertificateDer<'static>, PrivateKeyDer<'static>) = pair.unwrap();
 
         config
             .with_client_auth_cert(vec![pair.0], pair.1)
@@ -147,9 +144,8 @@ pub(crate) fn setup_rust_tls(
 }
 
 pub(crate) mod verify {
-    use std::sync::Arc;
-
     use rustls::pki_types::{CertificateDer, ServerName, UnixTime};
+    use std::sync::Arc;
 
     #[derive(Debug)]
     pub(crate) struct SkipServerVerification(Arc<rustls::crypto::CryptoProvider>);

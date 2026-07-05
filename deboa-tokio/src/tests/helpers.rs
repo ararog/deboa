@@ -1,6 +1,8 @@
 #![allow(dead_code)]
-use std::net::IpAddr;
-
+use crate::{cert::Certificate, tests::SKIP_CERT_VERIFICATION, Client};
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+use deboa::cert::{Certificate as _, ContentEncoding};
+use deboa::HttpVersion;
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 use easyhttpmock_vetis_tokio::{
     config::EasyHttpMockConfig,
@@ -8,13 +10,8 @@ use easyhttpmock_vetis_tokio::{
     vetis_adapter::{VetisAdapter, VetisAdapterConfig},
     EasyHttpMock, Protocol,
 };
+use std::net::IpAddr;
 use url::Url;
-
-use crate::{
-    cert::{Certificate, ContentEncoding},
-    tests::SKIP_CERT_VERIFICATION,
-    Client, HttpVersion,
-};
 
 pub const SOME_URL: &str = "https://httpbin.org/get";
 

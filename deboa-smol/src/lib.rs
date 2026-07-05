@@ -59,36 +59,23 @@ pub(crate) fn alpn() -> &'static [&'static str] {
     ]
 }
 
+use crate::{
+    cert::{Certificate, Identity},
+    client::{dns::DefaultDnsResolver, http::conn::pool::HttpConnectionPool},
+};
 use deboa::{
     catcher::DeboaCatcher,
+    conn::{ConnectionConfig, HttpConnectionDispatcher, HttpConnectionPool as _},
     dns::DnsResolver,
     errors::{DeboaError, RequestError},
     request::{DeboaRequest, IntoRequest},
     response::DeboaResponse,
-    HttpClient, Result,
+    HttpClient, HttpVersion, Result,
 };
-use smol::lock::RwLock;
-
-use std::{
-    fmt::{Debug, Display},
-    net::IpAddr,
-    ops::Shl,
-    sync::Arc,
-};
-
 use http::{header, HeaderValue, Request};
 use log::{error, info};
-
-use crate::{
-    cert::{Certificate, Identity},
-    client::{
-        dns::DefaultDnsResolver,
-        http::conn::{
-            pool::{DeboaHttpConnectionPool, HttpConnectionPool},
-            ConnectionConfig,
-        },
-    },
-};
+use smol::lock::RwLock;
+use std::{fmt::Debug, net::IpAddr, ops::Shl, sync::Arc};
 
 pub use async_trait::async_trait;
 
@@ -135,39 +122,6 @@ impl Shl<&str> for &Client {
             .expect("Invalid URL!")
             .build()
             .expect("Invalid request!")
-    }
-}
-
-#[derive(PartialEq, Debug, Clone)]
-/// Enum that represents the HTTP version.
-///
-/// # Variants
-///
-/// * `Http1` - The HTTP/1.1 version.
-/// * `Http2` - The HTTP/2 version.
-/// * `Http3` - The HTTP/3 version.
-pub enum HttpVersion {
-    /// HTTP/1.1 version
-    #[cfg(feature = "http1")]
-    Http1,
-    /// HTTP/2 version
-    #[cfg(feature = "http2")]
-    Http2,
-    /// HTTP/3 version
-    #[cfg(feature = "http3")]
-    Http3,
-}
-
-impl Display for HttpVersion {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            #[cfg(feature = "http1")]
-            HttpVersion::Http1 => write!(f, "HTTP/1.1"),
-            #[cfg(feature = "http2")]
-            HttpVersion::Http2 => write!(f, "HTTP/2"),
-            #[cfg(feature = "http3")]
-            HttpVersion::Http3 => write!(f, "HTTP/3"),
-        }
     }
 }
 

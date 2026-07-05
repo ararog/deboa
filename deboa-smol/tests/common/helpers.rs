@@ -1,3 +1,4 @@
+use deboa::HttpVersion;
 use easyhttpmock_vetis_smol::{
     config::EasyHttpMockConfig,
     server::PortGenerator,
@@ -6,10 +7,7 @@ use easyhttpmock_vetis_smol::{
 };
 use std::net::IpAddr;
 
-use deboa_smol::{
-    cert::{Certificate, ContentEncoding},
-    Client, HttpVersion,
-};
+use deboa_smol::Client;
 use url::Url;
 
 pub(crate) const SKIP_CERT_VERIFICATION: bool = cfg!(feature = "native-tls");
@@ -58,6 +56,9 @@ pub(crate) fn fake_url() -> Url {
 
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 pub(crate) fn ssl_client() -> Client {
+    use deboa::cert::{Certificate, ContentEncoding};
+    use deboa_smol::cert::DeboaCertificate;
+
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let addr = interface.parse::<IpAddr>();
     let addr = match addr {
@@ -66,7 +67,7 @@ pub(crate) fn ssl_client() -> Client {
     };
 
     Client::builder()
-        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
+        .certificate(DeboaCertificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .bind_addr(addr)
         .protocol(deboa_default_protocol())

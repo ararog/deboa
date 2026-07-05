@@ -1,21 +1,28 @@
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::cert::{ContentEncoding, Identity};
-#[cfg(feature = "rust-tls")]
-use crate::tests::helpers::{CA_CERT, CLIENT_CERT, CLIENT_KEY};
+use crate::cert::DeboaCertificate;
 #[cfg(feature = "native-tls")]
 use crate::tests::helpers::{CA_CERT, CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
+#[cfg(feature = "rust-tls")]
+use crate::{
+    cert::DeboaIdentity,
+    tests::helpers::{CA_CERT, CLIENT_CERT, CLIENT_KEY},
+};
 use crate::{
     tests::{
         helpers::{create_client, create_server},
         TestResult,
     },
-    Client, HttpVersion,
+    Client,
 };
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+use deboa::cert::Certificate;
+#[cfg(feature = "rust-tls")]
+use deboa::cert::{ContentEncoding, Identity};
 use deboa::{
     errors::{ConnectionError, DeboaError, DnsError, ResponseError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
-    HttpClient,
+    HttpClient, HttpVersion,
 };
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
@@ -109,6 +116,7 @@ async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
                 });
                 assert_eq!(response.unwrap_err(), error);
             }
+            _ => unreachable!(),
         }
     } else {
         #[cfg(feature = "rust-tls")]
@@ -139,6 +147,7 @@ async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
                         message: "Could not connect to server: the cryptographic handshake failed: error 48: invalid peer certificate: UnknownIssuer".to_string(),
                     })
                 }
+                _ => unreachable!()
             };
             assert_eq!(response.unwrap_err(), error);
         }
@@ -193,14 +202,14 @@ async fn do_get_http_mutual_authentication() -> TestResult<()> {
         .await?;
 
     #[cfg(feature = "rust-tls")]
-    let identity = Identity::from_pkcs8(CLIENT_CERT, CLIENT_KEY, ContentEncoding::DER);
+    let identity = DeboaIdentity::from_pkcs8(CLIENT_CERT, CLIENT_KEY, ContentEncoding::DER);
 
     #[cfg(feature = "native-tls")]
     let identity = Identity::from_pkcs8(CLIENT_CERT_PEM, CLIENT_KEY_PEM, ContentEncoding::PEM);
 
     #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
     let client = Client::builder()
-        .certificate(crate::cert::Certificate::from_slice(CA_CERT, ContentEncoding::DER))
+        .certificate(DeboaCertificate::from_slice(CA_CERT, ContentEncoding::DER))
         .identity(identity)
         .build();
 
@@ -348,6 +357,7 @@ async fn test_get_invalid_server() -> TestResult<()> {
             host: "invalid-server.com".to_string(),
             message: "failed to lookup address information: Name or service not known".to_string(),
         }),
+        _ => unreachable!(),
     };
 
     assert!(response.is_err());

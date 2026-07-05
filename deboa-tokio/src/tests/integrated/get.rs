@@ -1,4 +1,7 @@
-use crate::cert::{ContentEncoding, Identity};
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+use crate::cert::Certificate;
+#[cfg(feature = "rust-tls")]
+use crate::cert::DeboaIdentity;
 #[cfg(feature = "rust-tls")]
 use crate::tests::helpers::{CLIENT_CERT, CLIENT_KEY};
 #[cfg(feature = "native-tls")]
@@ -8,8 +11,18 @@ use crate::{
         helpers::{create_client, create_server, CA_CERT},
         TestResult,
     },
-    Client, HttpVersion,
+    Client,
 };
+#[cfg(feature="http3")]
+use deboa::HttpVersion;
+#[cfg(feature="http1")]
+use deboa::HttpVersion;
+#[cfg(feature = "rust-tls")]
+use deboa::cert::Identity as _;
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+use deboa::cert::{Certificate as _, ContentEncoding};
+#[cfg(feature = "http2")]
+use deboa::HttpVersion;
 use deboa::{
     errors::{ConnectionError, DeboaError, DnsError, ResponseError},
     request::{DeboaRequest, FetchWith, IntoRequest},
@@ -105,6 +118,7 @@ async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
                 });
                 assert_eq!(response.unwrap_err(), error);
             }
+            _ => unreachable!(),
         }
     } else {
         #[cfg(feature = "rust-tls")]
@@ -135,6 +149,7 @@ async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
                         message: "Could not connect to server: the cryptographic handshake failed: error 48: invalid peer certificate: UnknownIssuer".to_string(),
                     })
                 }
+                _ => unreachable!()
             };
             assert_eq!(response.unwrap_err(), error);
         }
@@ -190,14 +205,14 @@ async fn test_get_http_mutual_authentication() -> TestResult<()> {
         .await?;
 
     #[cfg(feature = "rust-tls")]
-    let identity = Identity::from_pkcs8(CLIENT_CERT, CLIENT_KEY, ContentEncoding::DER);
+    let identity = DeboaIdentity::from_pkcs8(CLIENT_CERT, CLIENT_KEY, ContentEncoding::DER);
 
     #[cfg(feature = "native-tls")]
     let identity = Identity::from_pkcs8(CLIENT_CERT_PEM, CLIENT_KEY_PEM, ContentEncoding::PEM);
 
     #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
     let client = Client::builder()
-        .certificate(crate::cert::Certificate::from_slice(CA_CERT, ContentEncoding::DER))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .identity(identity)
         .build();
 
@@ -329,6 +344,7 @@ async fn test_get_invalid_server() -> TestResult<()> {
             host: "invalid-server.com".to_string(),
             message: "failed to lookup address information: Name or service not known".to_string(),
         }),
+        _ => unreachable!(),
     };
 
     assert!(response.is_err());

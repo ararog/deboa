@@ -1,8 +1,6 @@
 #![allow(dead_code)]
-use deboa_tokio::{
-    cert::{Certificate, ContentEncoding},
-    Client, HttpVersion,
-};
+use deboa::HttpVersion;
+use deboa_tokio::{cert::Certificate, Client};
 use easyhttpmock_vetis_tokio::{
     config::EasyHttpMockConfig,
     server::PortGenerator,
@@ -58,6 +56,8 @@ pub(crate) fn fake_url() -> Url {
 
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 pub(crate) fn ssl_client() -> Client {
+    use deboa::cert::{Certificate as _, ContentEncoding};
+
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let addr = interface.parse::<IpAddr>();
     let addr = match addr {

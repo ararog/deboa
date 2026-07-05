@@ -1,9 +1,5 @@
 #![allow(dead_code)]
-use crate::{
-    cert::{Certificate, ContentEncoding},
-    tests::SKIP_CERT_VERIFICATION,
-    Client, HttpVersion,
-};
+use crate::{cert::Certificate, tests::SKIP_CERT_VERIFICATION, Client, HttpVersion};
 use easyhttpmock_vetis_smol::{
     config::EasyHttpMockConfig,
     server::PortGenerator,
@@ -57,6 +53,8 @@ pub(crate) const fn vetis_default_protocol() -> Protocol {
 
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 pub(crate) fn ssl_client() -> Client {
+    use deboa::cert::{Certificate, ContentEncoding};
+
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let addr = interface.parse::<IpAddr>();
     let addr = match addr {
