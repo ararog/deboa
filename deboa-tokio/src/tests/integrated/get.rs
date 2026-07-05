@@ -13,14 +13,14 @@ use crate::{
     },
     Client,
 };
-#[cfg(feature="http3")]
-use deboa::HttpVersion;
-#[cfg(feature="http1")]
-use deboa::HttpVersion;
 #[cfg(feature = "rust-tls")]
 use deboa::cert::Identity as _;
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 use deboa::cert::{Certificate as _, ContentEncoding};
+#[cfg(feature = "http3")]
+use deboa::HttpVersion;
+#[cfg(feature = "http1")]
+use deboa::HttpVersion;
 #[cfg(feature = "http2")]
 use deboa::HttpVersion;
 use deboa::{

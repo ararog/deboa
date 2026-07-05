@@ -2,6 +2,7 @@ use deboa::{
     dns::{DnsResolver, DnsResolverFuture},
     errors::{DeboaError::Dns, DnsError},
 };
+use rand::seq::SliceRandom;
 use smol::net::resolve;
 use std::net::IpAddr;
 
@@ -13,21 +14,17 @@ impl DnsResolver for DefaultDnsResolver {
         let future = async move {
             let hostname = format!("{}:{}", host, port);
             let addrs = resolve(hostname).await;
-            if let Ok(addrs) = addrs {
-                let ips: Vec<IpAddr> = addrs
-                    .into_iter()
-                    .map(|addr| addr.ip())
-                    .collect();
-                Ok(ips)
-            } else {
-                Err(Dns(DnsError::Resolve {
-                    host,
-                    message: addrs
-                        .err()
-                        .unwrap()
-                        .to_string(),
-                }))
-            }
+            if let Err(e) = addrs {
+                return Err(Dns(DnsError::Resolve { host, message: e.to_string() }));
+            };
+
+            let mut ips: Vec<IpAddr> = addrs
+                .unwrap()
+                .into_iter()
+                .map(|addr| addr.ip())
+                .collect();
+            ips.shuffle(&mut rand::rng());
+            Ok(ips)
         };
         Box::pin(future)
     }

@@ -917,9 +917,9 @@ dependencies = [
 
 [[package]]
 name = "deboa-extras"
-version = "0.0.9-beta.12"
+version = "0.0.9-beta.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7af1673dc504a757f61e7201428fce56a1d1265df23a9e0e2d05988aee347f2"
+checksum = "b603ec82ce178e451c497e78bbda40cb532e378cfe54f36a6af0151cf530e166"
 dependencies = [
  "bytes",
  "ciborium",
@@ -945,9 +945,9 @@ dependencies = [
 
 [[package]]
 name = "deboa-fory"
-version = "0.1.6-beta.2"
+version = "0.1.6-beta.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fba3ac8af93e0817b747eee8a9e72ce94d5a78a890e2df88606ac11c4ca7459"
+checksum = "8544822653acbcde8cd15fd1d892124a5b57e75075ff998b728dcf9321fa78ca"
 dependencies = [
  "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "fory",
@@ -958,21 +958,6 @@ dependencies = [
 [[package]]
 name = "deboa-macros"
 version = "0.1.0-beta.4"
-dependencies = [
- "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
- "deboa-extras",
- "http",
- "proc-macro2",
- "quote",
- "serde",
- "syn 2.0.118",
-]
-
-[[package]]
-name = "deboa-macros"
-version = "0.1.0-beta.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1d51736874d6b175976f4d2bf6648ab27c97b9e4c71ce3e9fd0cd1d47f73bc7"
 dependencies = [
  "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
@@ -998,7 +983,7 @@ dependencies = [
  "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
  "deboa-fory",
- "deboa-macros 0.1.0-beta.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa-macros",
  "easyhttpmock-vetis-smol",
  "fory",
  "fory-core",
@@ -1057,7 +1042,7 @@ dependencies = [
  "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
  "deboa-fory",
- "deboa-macros 0.1.0-beta.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa-macros",
  "easyhttpmock-vetis-tokio",
  "fory",
  "fory-core",
@@ -4380,9 +4365,9 @@ dependencies = [
 
 [[package]]
 name = "vamo"
-version = "0.0.9-beta.5"
+version = "0.0.9-beta.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2471dd128dbd8a932bbbd75735863515adbb80b733cf79dcea04f318821e6a6"
+checksum = "6201a30b4976b5733136386c5591073c32d460ab092783c8f1116d2a653f8f79"
 dependencies = [
  "base64",
  "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -4394,9 +4379,9 @@ dependencies = [
 
 [[package]]
 name = "vamo-macros"
-version = "0.0.9-beta.5"
+version = "0.0.9-beta.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4654f681672aa60390d6ff2d0d3647fad7d8d5680d58831430514f58f7472841"
+checksum = "c658f5ea18d9c7c0d0c33594d19feaac55cdf3d83e54124203c50e18331caf64"
 dependencies = [
  "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",

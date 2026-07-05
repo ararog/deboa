@@ -20,14 +20,14 @@ license = "MIT OR Apache-2.0"
 rust-version = "1.75.0"
 
 [workspace.dependencies]
-deboa = { version = "0.1.0-beta.19" }
-deboa-extras = { version = "0.0.9-beta.12" }
-deboa-fory = { version = "0.1.6-beta.2" }
-deboa-macros = { version = "0.1.0-beta.4" }
-deboa-smol = { version = "0.1.0-beta.7" }
-deboa-tokio = { version = "0.1.0-beta.7" }
-vamo = { version = "0.0.9-beta.5" }
-vamo-macros = { version = "0.0.9-beta.5" }
+deboa = { version = ">=0.1.0-beta.18" }
+deboa-extras = { version = ">=0.0.9-beta.12" }
+deboa-fory = { version = ">=0.1.6-beta.3" }
+deboa-macros = { path = "deboa-macros" }
+deboa-smol = { version = ">=0.1.0-beta.6", path = "deboa-smol" }
+deboa-tokio = {version = ">=0.1.0-beta.6", path = "deboa-tokio" }
+vamo = { version = ">=0.0.9-beta.5" }
+vamo-macros = { version = ">=0.0.9-beta.5" }
 
 [profile.test]
 lto = false

@@ -1051,7 +1051,20 @@ impl HttpClient for Client {
             .resolve(host.to_string(), port)
             .await?;
 
-        let Some(ip) = ips.first() else {
+        let ipś = if self
+            .bind_addr
+            .is_ipv4()
+        {
+            ips.into_iter()
+                .filter(|ip| ip.is_ipv4())
+                .collect::<Vec<_>>()
+        } else {
+            ips.into_iter()
+                .filter(|ip| ip.is_ipv6())
+                .collect::<Vec<_>>()
+        };
+
+        let Some(ip) = ipś.first() else {
             return Err(DeboaError::Request(RequestError::Send {
                 message: format!("No IP addresses found for hostname: {}", host),
             }));

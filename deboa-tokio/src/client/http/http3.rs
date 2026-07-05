@@ -1,5 +1,8 @@
 use crate::{
-    MAX_ERROR_MESSAGE_SIZE, alpn, cert::{DeboaCertificate, DeboaIdentity}, client::http::conn::{BaseHttpConnection, stream::tls::setup_rust_tls},
+    alpn,
+    cert::{DeboaCertificate, DeboaIdentity},
+    client::http::conn::{stream::tls::setup_rust_tls, BaseHttpConnection},
+    MAX_ERROR_MESSAGE_SIZE,
 };
 use bytes::{Buf, Bytes};
 use deboa::{
@@ -11,13 +14,15 @@ use deboa::{
 use futures::future;
 use h3::client::RequestStream;
 use h3_quinn::RecvStream;
-use http::{StatusCode, response::Parts, version::Version};
+use http::{response::Parts, version::Version, StatusCode};
 use http_body_util::BodyExt;
 use hyper::{Request, Response};
 use hyper_body_utils::HttpBody;
 use quinn::{crypto::rustls::QuicClientConfig, Endpoint};
 use std::{
-    future::Future, net::{IpAddr, SocketAddr}, sync::Arc,
+    future::Future,
+    net::{IpAddr, SocketAddr},
+    sync::Arc,
 };
 
 async fn lookup_and_connect(
