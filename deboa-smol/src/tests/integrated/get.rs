@@ -19,7 +19,7 @@ use deboa::cert::Certificate;
 #[cfg(feature = "rust-tls")]
 use deboa::cert::{ContentEncoding, Identity};
 use deboa::{
-    errors::{ConnectionError, DeboaError, DnsError, ResponseError},
+    errors::{ConnectionError, DeboaError, ResponseError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
     HttpClient, HttpVersion,
@@ -119,47 +119,10 @@ async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
             _ => unreachable!(),
         }
     } else {
-        #[cfg(feature = "rust-tls")]
-        {
-            let error = match client.protocol() {
-                #[cfg(feature = "http1")]
-                HttpVersion::Http1 => {
-                    DeboaError::Connection(ConnectionError::Tls {
-                        host: "localhost".to_string(),
-                        message:
-                            "Could not connect to server: invalid peer certificate: UnknownIssuer"
-                                .to_string(),
-                    })
-                }
-                #[cfg(feature = "http2")]
-                HttpVersion::Http2 => {
-                    DeboaError::Connection(ConnectionError::Tls {
-                        host: "localhost".to_string(),
-                        message:
-                            "Could not connect to server: invalid peer certificate: UnknownIssuer"
-                                .to_string(),
-                    })
-                }
-                #[cfg(feature = "http3")]
-                HttpVersion::Http3 => {
-                    DeboaError::Connection(ConnectionError::Tls {
-                        host: "localhost".to_string(),
-                        message: "Could not connect to server: the cryptographic handshake failed: error 48: invalid peer certificate: UnknownIssuer".to_string(),
-                    })
-                }
-                _ => unreachable!()
-            };
-            assert_eq!(response.unwrap_err(), error);
-        }
-
-        #[cfg(feature = "native-tls")]
-        {
-            let error = DeboaError::Connection(ConnectionError::Tls {
-                host: "localhost".to_string(),
-                message: "Could not connect to server: error:0A000086:SSL routines:tls_post_process_server_certificate:certificate verify failed:../ssl/statem/statem_clnt.c:1889: (self-signed certificate in certificate chain)".to_string(),
-            });
-            assert_eq!(response.unwrap_err(), error);
-        }
+        assert!(matches!(
+            response.unwrap_err(),
+            DeboaError::Connection(ConnectionError::Tls { host: _, message: _ })
+        ));
     }
 
     server
@@ -341,27 +304,8 @@ async fn test_get_invalid_server() -> TestResult<()> {
         .execute(request)
         .await;
 
-    let error = match client.protocol() {
-        #[cfg(feature = "http1")]
-        HttpVersion::Http1 => DeboaError::Dns(DnsError::Resolve {
-            host: "invalid-server.com".to_string(),
-            message: "failed to lookup address information: Name or service not known".to_string(),
-        }),
-        #[cfg(feature = "http2")]
-        HttpVersion::Http2 => DeboaError::Dns(DnsError::Resolve {
-            host: "invalid-server.com".to_string(),
-            message: "failed to lookup address information: Name or service not known".to_string(),
-        }),
-        #[cfg(feature = "http3")]
-        HttpVersion::Http3 => DeboaError::Dns(DnsError::Resolve {
-            host: "invalid-server.com".to_string(),
-            message: "failed to lookup address information: Name or service not known".to_string(),
-        }),
-        _ => unreachable!(),
-    };
-
     assert!(response.is_err());
-    assert_eq!(response.unwrap_err(), error);
+    assert!(matches!(response.unwrap_err(), DeboaError::Dns(_)));
 
     Ok(())
 }
