@@ -2,6 +2,7 @@ use crate::{
     request::{DeboaRequest, IntoRequest, MethodExt},
     tests::{test_url, TEST_URL},
 };
+use caramelo::{expect, matchers::eq};
 use http::{header, HeaderValue, Method};
 use std::{error::Error, str::FromStr, sync::Arc};
 use url::Url;
@@ -11,8 +12,8 @@ fn test_method_ext_from_url() -> Result<(), Box<dyn Error>> {
     let request = Method::GET
         .from_url(TEST_URL)?
         .build()?;
-    assert_eq!(request.method(), &Method::GET);
-    assert_eq!(*request.url(), test_url());
+    expect(request.method()).to_be(eq(&Method::GET));
+    expect(request.url()).to_be(eq(test_url().into()));
     Ok(())
 }
 
@@ -21,8 +22,8 @@ fn test_method_ext_to_url() -> Result<(), Box<dyn Error>> {
     let request = Method::POST
         .to_url(TEST_URL)?
         .build()?;
-    assert_eq!(request.method(), &Method::POST);
-    assert_eq!(*request.url(), test_url());
+    expect(request.method()).to_be(eq(&Method::POST));
+    expect(request.url()).to_be(eq(test_url().into()));
     Ok(())
 }
 
@@ -31,8 +32,8 @@ fn test_str_method_ext_from_url() -> Result<(), Box<dyn Error>> {
     let request = "GET"
         .from_url(TEST_URL)?
         .build()?;
-    assert_eq!(request.method(), &Method::GET);
-    assert_eq!(*request.url(), test_url());
+    expect(request.method()).to_be(eq(&Method::GET));
+    expect(request.url()).to_be(eq(test_url().into()));
     Ok(())
 }
 
@@ -49,8 +50,8 @@ fn test_str_method_ext_to_url() -> Result<(), Box<dyn Error>> {
 #[test]
 fn test_into_url() -> Result<(), Box<dyn Error>> {
     let url = test_url();
-    let request = DeboaRequest::get(url)?.build()?;
-    assert_eq!(*request.url(), test_url());
+    let request = DeboaRequest::get(url.clone())?.build()?;
+    expect(request.url()).to_be(eq(url.into()));
     Ok(())
 }
 
@@ -60,7 +61,7 @@ fn test_into_request_from_str() -> Result<(), Box<dyn Error>> {
     let request = url
         .clone()
         .into_request()?;
-    assert_eq!(*request.url(), url);
+    expect(request.url()).to_be(eq(url.into()));
     Ok(())
 }
 
@@ -71,7 +72,9 @@ fn test_into_request_from_string() -> Result<(), Box<dyn Error>> {
     let request = post_url
         .clone()
         .into_request()?;
-    assert_eq!(*request.url(), url.join("/posts/1")?);
+    expect(request.url()).to_be(eq(url
+        .join("/posts/1")?
+        .into()));
     Ok(())
 }
 
@@ -79,7 +82,7 @@ fn test_into_request_from_string() -> Result<(), Box<dyn Error>> {
 fn test_into_str() -> Result<(), Box<dyn Error>> {
     let url = test_url();
     let request = DeboaRequest::get(url.clone())?.build()?;
-    assert_eq!(*request.url(), url);
+    expect(request.url()).to_be(eq(url.into()));
     Ok(())
 }
 
@@ -87,7 +90,7 @@ fn test_into_str() -> Result<(), Box<dyn Error>> {
 fn test_into_string() -> Result<(), Box<dyn Error>> {
     let url = test_url();
     let request = DeboaRequest::get(url.clone())?.build()?;
-    assert_eq!(*request.url(), url);
+    expect(request.url()).to_be(eq(url.into()));
     Ok(())
 }
 
@@ -98,8 +101,8 @@ fn test_from_str_method_and_url() -> Result<(), Box<dyn Error>> {
     GET https://localhost:8000
     "##,
     )?;
-    assert_eq!(request.method(), Method::GET);
-    assert_eq!(request.url(), Arc::new(Url::parse("https://localhost:8000").unwrap()));
+    expect(request.method()).to_be(eq(&Method::GET));
+    expect(request.url()).to_be(eq(Arc::new(Url::parse("https://localhost:8000").unwrap())));
     Ok(())
 }
 
@@ -111,12 +114,12 @@ fn test_from_str_headers() -> Result<(), Box<dyn Error>> {
     Content-Type: application/json
     "##,
     )?;
-    assert_eq!(
+    expect(
         request
             .headers()
             .get(header::CONTENT_TYPE),
-        Some(&HeaderValue::from_str("application/json").unwrap())
-    );
+    )
+    .to_be(eq(Some(&HeaderValue::from_str("application/json").unwrap())));
     Ok(())
 }
 
@@ -145,12 +148,12 @@ fn test_set_headers() -> Result<(), Box<dyn Error>> {
         .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
         .build()?;
 
-    assert_eq!(
+    expect(
         request
             .headers()
             .get(&header::CONTENT_TYPE),
-        Some(&HeaderValue::from_str(mime::APPLICATION_JSON.as_ref()).unwrap())
-    );
+    )
+    .to_be(eq(Some(&HeaderValue::from_str(mime::APPLICATION_JSON.as_ref()).unwrap())));
 
     Ok(())
 }
@@ -162,12 +165,12 @@ fn test_set_headers_as_tuple() -> Result<(), Box<dyn Error>> {
         .headers(headers)
         .build()?;
 
-    assert_eq!(
+    expect(
         request
             .headers()
             .get(&header::CONTENT_TYPE),
-        Some(&HeaderValue::from_str(mime::APPLICATION_JSON.as_ref()).unwrap())
-    );
+    )
+    .to_be(eq(Some(&HeaderValue::from_str(mime::APPLICATION_JSON.as_ref()).unwrap())));
 
     Ok(())
 }
@@ -179,12 +182,12 @@ fn test_set_basic_auth() -> Result<(), Box<dyn Error>> {
         .basic_auth("username", "password")
         .build()?;
 
-    assert_eq!(
+    expect(
         request
             .headers()
             .get(&header::AUTHORIZATION),
-        Some(&HeaderValue::from_str("Basic dXNlcm5hbWU6cGFzc3dvcmQ=").unwrap())
-    );
+    )
+    .to_be(eq(Some(&HeaderValue::from_str("Basic dXNlcm5hbWU6cGFzc3dvcmQ=").unwrap())));
 
     Ok(())
 }
@@ -196,12 +199,12 @@ fn test_set_bearer_auth() -> Result<(), Box<dyn Error>> {
         .bearer_auth("token")
         .build()?;
 
-    assert_eq!(
+    expect(
         request
             .headers()
             .get(&header::AUTHORIZATION),
-        Some(&HeaderValue::from_str("Bearer token").unwrap())
-    );
+    )
+    .to_be(eq(Some(&HeaderValue::from_str("Bearer token").unwrap())));
 
     Ok(())
 }
@@ -213,12 +216,12 @@ fn test_add_header() -> Result<(), Box<dyn Error>> {
         .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
         .build()?;
 
-    assert_eq!(
+    expect(
         request
             .headers()
             .get(&header::CONTENT_TYPE),
-        Some(&HeaderValue::from_str(mime::APPLICATION_JSON.as_ref()).unwrap())
-    );
+    )
+    .to_be(eq(Some(&HeaderValue::from_str(mime::APPLICATION_JSON.as_ref()).unwrap())));
 
     Ok(())
 }
