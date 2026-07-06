@@ -23,7 +23,7 @@ use smol_macros::test;
 //
 
 #[apply(test!)]
-async fn test_post() -> TestResult<()> {
+async fn test_post() -> Result<(), Box<dyn std::error::Error>> {
     let mock = Mock::of(
         given(method(Method::POST).and(path("/posts"))).will_return(
             StatusCode::CREATED
@@ -62,7 +62,7 @@ async fn test_post() -> TestResult<()> {
 }
 
 #[apply(test!)]
-async fn test_post_encoded_form() -> TestResult<()> {
+async fn test_post_encoded_form() -> Result<(), Box<dyn std::error::Error>> {
     let mock = Mock::of(
         given(method(Method::POST).and(path("/posts"))).will_return(
             StatusCode::CREATED
@@ -109,7 +109,7 @@ async fn test_post_encoded_form() -> TestResult<()> {
 }
 
 #[apply(test!)]
-async fn test_post_multipart_form() -> TestResult<()> {
+async fn test_post_multipart_form() -> Result<(), Box<dyn std::error::Error>> {
     let mut form = MultiPartForm::builder();
     form.field("name", "deboa");
     form.field("version", "0.0.1");

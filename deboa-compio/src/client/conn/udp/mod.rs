@@ -1,5 +1,8 @@
-use std::future::Future;
-
+use crate::{
+    client::conn::{BaseHttpConnection, ConnectionConfig},
+    errors::{DeboaError, ResponseError},
+    Result, MAX_ERROR_MESSAGE_SIZE,
+};
 use bytes::{Buf, Bytes};
 use h3::client::RequestStream;
 use h3_quinn::RecvStream;
@@ -7,12 +10,7 @@ use http::response::Parts;
 use http::{Request, Response, StatusCode, Version};
 use http_body::Body;
 use hyper_body_utils::HttpBody;
-
-use crate::{
-    client::conn::{BaseHttpConnection, ConnectionConfig},
-    errors::{DeboaError, ResponseError},
-    Result, MAX_ERROR_MESSAGE_SIZE,
-};
+use std::future::Future;
 
 /// Trait that represents the HTTP connection.
 ///

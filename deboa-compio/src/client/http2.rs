@@ -1,22 +1,19 @@
-use std::marker::PhantomData;
-use std::result;
-
-use deboa::request::Http2Request;
-use http::version::Version;
-use hyper::{client::conn::http2::handshake, Request, Response};
-
-use hyper_body_utils::HttpBody;
-
-use crate::rt::executor::CompioExecutor;
-use crate::rt::tls::{plain_connection, tls_connection};
-use crate::rt::CompioIo;
-
-
 use crate::{
     alpn,
     client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
+    rt::{
+        executor::CompioExecutor,
+        tls::{plain_connection, tls_connection},
+        CompioIo,
+    },
     Result,
 };
+use deboa::request::Http2Request;
+use http::version::Version;
+use hyper::{client::conn::http2::handshake, Request, Response};
+use hyper_body_utils::HttpBody;
+use std::marker::PhantomData;
+use std::result;
 
 impl DeboaTcpConnection for BaseHttpConnection<Http2Request, HttpBody, HttpBody> {
     type Sender = Http2Request;

@@ -1,22 +1,12 @@
-use crate::{
+use deboa::{
     request::DeboaRequest,
-    tests::{helpers::client_with_cert, TestResult},
-    Client,
 };
-
-use deboa_tests::{mock_response, utils::start_mock_server};
 use http::{header::HOST, StatusCode};
-
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
-
 //
 // PATCH
 //
 
-async fn do_patch() -> TestResult<()> {
+async fn do_patch() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "PATCH" && req.uri().path() == "/posts/1" {
             assert!(req
@@ -54,20 +44,7 @@ async fn do_patch() -> TestResult<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_patch() -> TestResult<()> {
-    do_patch().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_patch() -> TestResult<()> {
-    do_patch().await
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
-async fn test_patch() -> TestResult<()> {
+async fn test_patch() -> Result<(), Box<dyn std::error::Error>> {
     do_patch().await
 }

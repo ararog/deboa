@@ -1,15 +1,3 @@
-use std::{marker::PhantomData, net::SocketAddr, sync::Arc};
-
-use hyper_body_utils::HttpBody;
-use rt_gate::spawn_worker;
-
-use futures::future;
-use http::{version::Version, StatusCode};
-use http_body_util::BodyExt;
-use hyper::{Request, Response};
-use quinn::{crypto::rustls::QuicClientConfig, Endpoint};
-use trust_dns_resolver::error::ResolveErrorKind;
-
 use crate::{
     alpn,
     client::conn::{
@@ -19,6 +7,14 @@ use crate::{
     request::Http3Request,
     Result,
 };
+use futures::future;
+use http::{version::Version, StatusCode};
+use http_body_util::BodyExt;
+use hyper::{Request, Response};
+use hyper_body_utils::HttpBody;
+use quinn::{crypto::rustls::QuicClientConfig, Endpoint};
+use std::{marker::PhantomData, net::SocketAddr, sync::Arc};
+use trust_dns_resolver::error::ResolveErrorKind;
 
 #[cfg(feature = "smol-rt")]
 use async_std_resolver::{

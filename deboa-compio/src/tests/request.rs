@@ -1,12 +1,7 @@
-use crate::request::{DeboaRequest, IntoRequest, MethodExt};
-use deboa_tests::utils::{test_url, url_from_string};
+use deboa::request::{DeboaRequest, IntoRequest, MethodExt};
 use http::{header, HeaderValue, Method};
 use http_body_util::BodyExt;
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
-use std::{error::Error, str::FromStr, sync::Arc};
+use std::{error::Error, sync::Arc};
 use url::Url;
 
 #[test]
@@ -133,7 +128,7 @@ async fn do_test_from_str_body() -> Result<(), Box<dyn Error>> {
         r##"
     GET https://localhost:8000
     Content-Type: application/json
-    
+
     {"title": "foo", "body": "bar", "userId": 1}
     "##,
     )?;
@@ -149,23 +144,6 @@ async fn do_test_from_str_body() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_from_str_body() {
-    do_test_from_str_body()
-        .await
-        .unwrap();
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test)]
-async fn test_from_str_body() {
-    do_test_from_str_body()
-        .await
-        .unwrap();
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
 async fn test_from_str_body() {
     do_test_from_str_body()
@@ -293,19 +271,6 @@ async fn do_test_set_text_body() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_set_text_body() -> Result<(), Box<dyn Error>> {
-    do_test_set_text_body().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_set_text_body() -> Result<(), Box<dyn Error>> {
-    do_test_set_text_body().await
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
 async fn test_set_text_body() -> Result<(), Box<dyn Error>> {
     do_test_set_text_body().await
@@ -329,19 +294,6 @@ async fn do_test_raw_body() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_raw_body() -> Result<(), Box<dyn Error>> {
-    do_test_raw_body().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_raw_body() -> Result<(), Box<dyn Error>> {
-    do_test_raw_body().await
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
 async fn test_raw_body() -> Result<(), Box<dyn Error>> {
     do_test_raw_body().await

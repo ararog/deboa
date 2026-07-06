@@ -1,20 +1,11 @@
-use std::convert::Infallible;
-use std::fs::{read, remove_file, write as write_file};
-use std::path::Path;
-
-use bytes::Bytes;
-use futures_util::stream::once;
-use futures_util::stream::Stream;
-
-use crate::{
+use deboa::{
     form::{DeboaForm, EncodedForm, MultiPartForm},
     Result,
 };
-
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
+use bytes::Bytes;
+use futures_util::stream::once;
+use futures_util::stream::Stream;
+use std::{convert::Infallible, fs::{read, remove_file, write as write_file}, path::Path};
 
 #[test]
 fn test_encoded_form() -> Result<()> {

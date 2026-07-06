@@ -1,33 +1,18 @@
-use crate::{
-    cert::{ContentEncoding, Identity},
+use crate::Client;
+use deboa::{
+    cert::ContentEncoding,
     errors::{ConnectionError, DeboaError, ResponseError},
-    request::{DeboaRequest, FetchWith, IntoRequest},
+    request::DeboaRequest,
     response::DeboaResponse,
-    tests::{helpers::client_with_cert, TestResult},
-    Client,
 };
-
-#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
-use deboa_tests::utils::{CLIENT_CERT, CLIENT_KEY};
-#[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
-use deboa_tests::utils::{CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
-use deboa_tests::{
-    mock_response,
-    utils::{start_mock_server, CA_CERT},
-};
-
 use http::StatusCode;
-
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
 
 //
 // GET
 //
 
-async fn do_get_http() -> TestResult<()> {
+#[compio::test]
+async fn test_get_http() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, "Hello World!"))
@@ -62,25 +47,7 @@ async fn do_get_http() -> TestResult<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_get_http() -> TestResult<()> {
-    do_get_http().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_get_http() -> TestResult<()> {
-    do_get_http().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_get_http() -> TestResult<()> {
-    do_get_http().await
-}
-
-async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
+async fn skip_cert_verification_helper(skip: bool) -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, "Hello World!"))
@@ -146,53 +113,27 @@ async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
     Ok(())
 }
 
-async fn do_get_http_skip_verification() -> TestResult<()> {
+async fn do_get_http_skip_verification() -> Result<(), Box<dyn std::error::Error>> {
     skip_cert_verification_helper(true).await
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_get_http_skip_verification() -> TestResult<()> {
-    do_get_http_skip_verification().await?;
-    Ok(())
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_get_http_skip_verification() -> TestResult<()> {
-    do_get_http_skip_verification().await
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
-async fn test_get_http_skip_verification() -> TestResult<()> {
+async fn test_get_http_skip_verification() -> Result<(), Box<dyn std::error::Error>> {
     do_get_http_skip_verification().await?;
     Ok(())
 }
 
-async fn do_get_http_verify() -> TestResult<()> {
+async fn do_get_http_verify() -> Result<(), Box<dyn std::error::Error>> {
     skip_cert_verification_helper(false).await
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_get_http_verify() -> TestResult<()> {
-    do_get_http_verify().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_get_http_verify() -> TestResult<()> {
-    do_get_http_verify().await
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
-async fn test_get_http_verify() -> TestResult<()> {
+async fn test_get_http_verify() -> Result<(), Box<dyn std::error::Error>> {
     do_get_http_verify().await
 }
 
-async fn do_get_http_mutual_authentication() -> TestResult<()> {
+#[compio::test]
+async fn test_get_http_mutual_authentication() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, "Hello World!"))
@@ -228,26 +169,10 @@ async fn do_get_http_mutual_authentication() -> TestResult<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_get_http_mutual_authentication() -> TestResult<()> {
-    do_get_http_mutual_authentication().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_get_http_mutual_authentication() -> TestResult<()> {
-    do_get_http_mutual_authentication().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_get_http_mutual_authentication() -> TestResult<()> {
-    do_get_http_mutual_authentication().await
-}
-
 #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
-async fn do_get_http_mutual_authentication_with_password() -> TestResult<()> {
+#[compio::test]
+async fn test_get_http_mutual_authentication_with_password(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, "Hello World!"))
@@ -279,29 +204,12 @@ async fn do_get_http_mutual_authentication_with_password() -> TestResult<()> {
     Ok(())
 }
 
-#[cfg(all(feature = "tokio-rt", any(feature = "tokio-native-tls", feature = "smol-native-tls")))]
-#[tokio::test]
-async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
-    do_get_http_mutual_authentication_with_password().await
-}
-
-#[cfg(all(feature = "smol-rt", any(feature = "tokio-native-tls", feature = "smol-native-tls")))]
-#[apply(test!)]
-async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
-    do_get_http_mutual_authentication_with_password().await
-}
-
-#[cfg(all(feature = "compio-rt", any(feature = "tokio-native-tls", feature = "smol-native-tls")))]
-#[compio::test]
-async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
-    do_get_http_mutual_authentication_with_password().await
-}
-
 //
 // GET NOT FOUND
 //
 
-async fn do_get_not_found() -> TestResult<()> {
+#[compio::test]
+async fn test_get_not_found() -> Result<(), Box<dyn std::error::Error>> {
     let mut server =
         start_mock_server(|_| async move { Ok(mock_response(StatusCode::NOT_FOUND, "Not found")) })
             .await;
@@ -329,29 +237,12 @@ async fn do_get_not_found() -> TestResult<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_get_not_found() -> TestResult<()> {
-    do_get_not_found().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_get_not_found() -> TestResult<()> {
-    do_get_not_found().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_get_not_found() -> TestResult<()> {
-    do_get_not_found().await
-}
-
 //
 // GET INVALID SERVER
 //
 
-async fn do_get_invalid_server() -> TestResult<()> {
+#[compio::test]
+async fn test_get_invalid_server() -> Result<(), Box<dyn std::error::Error>> {
     let api = Client::default();
 
     let request = DeboaRequest::get("https://invalid-server.com/posts")?
@@ -373,29 +264,12 @@ async fn do_get_invalid_server() -> TestResult<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_get_invalid_server() -> TestResult<()> {
-    do_get_invalid_server().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_get_invalid_server() -> TestResult<()> {
-    do_get_invalid_server().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_get_invalid_server() -> TestResult<()> {
-    do_get_invalid_server().await
-}
-
 //
 // GET BY QUERY
 //
 
-async fn do_get_by_query() -> TestResult<()> {
+#[compio::test]
+async fn test_get_by_query() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/comments/1" {
             Ok(mock_response(StatusCode::OK, "My comment"))
@@ -435,24 +309,6 @@ async fn do_get_by_query() -> TestResult<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_get_by_query() -> TestResult<()> {
-    do_get_by_query().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_get_by_query() -> TestResult<()> {
-    do_get_by_query().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_get_by_query() -> TestResult<()> {
-    do_get_by_query().await
-}
-
 /*
 async fn do_get_by_query_with_retries() -> Result<()> {
     let mut server = start_mock_server(|_req| async move {
@@ -484,7 +340,7 @@ async fn do_get_by_query_with_retries() -> Result<()> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_by_query_with_retries() -> TestResult<()> {
+async fn test_get_by_query_with_retries() -> Result<(), Box<dyn std::error::Error>> {
     do_get_by_query_with_retries().await
 }
 
@@ -527,7 +383,7 @@ async fn do_get_with_redirect() -> Result<()> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_with_redirect() -> TestResult<()> {
+async fn test_get_with_redirect() -> Result<(), Box<dyn std::error::Error>> {
     do_get_with_redirect().await
 }
 
@@ -538,7 +394,8 @@ async fn test_get_with_redirect() {
 }
 */
 
-async fn try_intro() -> TestResult<()> {
+#[compio::test]
+async fn test_try_into() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, ""))
@@ -562,25 +419,8 @@ async fn try_intro() -> TestResult<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_try_into() -> TestResult<()> {
-    try_intro().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_try_into() -> TestResult<()> {
-    try_intro().await
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
-async fn test_try_into() -> TestResult<()> {
-    try_intro().await
-}
-
-async fn fetch_from_str() -> TestResult<()> {
+async fn test_fetch_from_str() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "GET" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, ""))
@@ -602,22 +442,4 @@ async fn fetch_from_str() -> TestResult<()> {
         .await?;
 
     Ok(())
-}
-
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_fetch_from_str() -> TestResult<()> {
-    fetch_from_str().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_fetch_from_str() -> TestResult<()> {
-    fetch_from_str().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_fetch_from_str() -> TestResult<()> {
-    fetch_from_str().await
 }

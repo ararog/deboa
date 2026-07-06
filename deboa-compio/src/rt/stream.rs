@@ -1,11 +1,9 @@
-use compio_tls::TlsStream;
-
-use std::pin::Pin;
-
 use compio::{
     io::{AsyncRead, AsyncWrite},
     net::TcpStream,
 };
+use compio_tls::TlsStream;
+use std::pin::Pin;
 
 pub enum CompioStream {
     /// A plain TCP connection.

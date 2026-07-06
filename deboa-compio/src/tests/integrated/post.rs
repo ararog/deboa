@@ -1,23 +1,15 @@
-use crate::{
+use deboa::{
     form::{DeboaForm, EncodedForm, MultiPartForm},
     request::DeboaRequest,
-    tests::{helpers::client_with_cert, TestResult},
-    Client,
 };
-
-use deboa_tests::{mock_response, utils::start_mock_server};
 use http::{header::CONTENT_TYPE, StatusCode};
-
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
 
 //
 // POST
 //
 
-async fn do_post() -> TestResult<()> {
+#[compio::test]
+async fn test_post() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "POST" && req.uri().path() == "/posts" {
             Ok(mock_response(StatusCode::CREATED, "{\n  \"id\": 101\n}"))
@@ -52,25 +44,8 @@ async fn do_post() -> TestResult<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_post() -> TestResult<()> {
-    do_post().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_post() -> TestResult<()> {
-    do_post().await
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
-async fn test_post() -> TestResult<()> {
-    do_post().await
-}
-
-async fn do_post_encoded_form() -> TestResult<()> {
+async fn test_post_encoded_form() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "POST" && req.uri().path() == "/posts" {
             if req
@@ -126,25 +101,8 @@ async fn do_post_encoded_form() -> TestResult<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_post_encoded_form() -> TestResult<()> {
-    do_post_encoded_form().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_post_encoded_form() -> TestResult<()> {
-    do_post_encoded_form().await
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
-async fn test_post_encoded_form() -> TestResult<()> {
-    do_post_encoded_form().await
-}
-
-async fn do_post_multipart_form() -> TestResult<()> {
+async fn test_post_multipart_form() -> Result<(), Box<dyn std::error::Error>> {
     let mut form = MultiPartForm::builder();
     form.field("name", "deboa");
     form.field("version", "0.0.1");
@@ -197,22 +155,4 @@ async fn do_post_multipart_form() -> TestResult<()> {
         .await?;
 
     Ok(())
-}
-
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_post_multipart_form() -> TestResult<()> {
-    do_post_multipart_form().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_post_multipart_form() -> TestResult<()> {
-    do_post_multipart_form().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_post_multipart_form() -> TestResult<()> {
-    do_post_multipart_form().await
 }

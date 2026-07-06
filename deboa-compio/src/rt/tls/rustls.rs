@@ -1,22 +1,19 @@
-use crate::rt::stream::CompioStream;
-use compio::net::TcpStream;
-use std::sync::Arc;
-
 use crate::client::conn::rustls::setup_rust_tls;
-use compio_tls::TlsConnector;
-use rustls::pki_types::ServerName;
-use trust_dns_resolver::error::ResolveErrorKind;
-
+use crate::rt::stream::CompioStream;
 use crate::{
     cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
     errors::{ConnectionError, DeboaError},
     Result,
 };
-
 use async_std_resolver::{
     config::{ResolverConfig, ResolverOpts},
     resolver,
 };
+use compio::net::TcpStream;
+use compio_tls::TlsConnector;
+use rustls::pki_types::ServerName;
+use std::sync::Arc;
+use trust_dns_resolver::error::ResolveErrorKind;
 
 async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
     let resolver = resolver(ResolverConfig::default(), ResolverOpts::default()).await;

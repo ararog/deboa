@@ -1,37 +1,15 @@
-use std::marker::PhantomData;
-
-use http::version::Version;
-use hyper::{client::conn::http1::handshake, Request, Response};
-
-use rt_gate::spawn_worker;
-
-#[cfg(all(feature = "smol-rt", any(feature = "smol-rust-tls", feature = "smol-native-tls")))]
-use crate::rt::smol::tls::{plain_connection, tls_connection};
-#[cfg(feature = "smol-rt")]
-use smol_hyper::rt::FuturesIo;
-
-#[cfg(all(
-    feature = "tokio-rt",
-    any(feature = "tokio-rust-tls", feature = "tokio-native-tls")
-))]
 use crate::rt::tokio::tls::{plain_connection, tls_connection};
-#[cfg(feature = "tokio-rt")]
-use hyper_util::rt::TokioIo;
-
-use hyper_body_utils::HttpBody;
-
 use crate::{
     alpn,
     client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
     request::Http1Request,
     Result,
 };
-
-#[cfg(feature = "smol-rt")]
-type DeboaIo<T> = FuturesIo<T>;
-
-#[cfg(feature = "tokio-rt")]
-type DeboaIo<T> = TokioIo<T>;
+use http::version::Version;
+use hyper::{client::conn::http1::handshake, Request, Response};
+use hyper_body_utils::HttpBody;
+use hyper_util::rt::TokioIo;
+use std::marker::PhantomData;
 
 impl DeboaTcpConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody> {
     type Sender = Http1Request;

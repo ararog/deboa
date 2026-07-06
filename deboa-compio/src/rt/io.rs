@@ -1,11 +1,10 @@
+use compio::io::{compat::AsyncStream, AsyncRead, AsyncWrite};
+use send_wrapper::SendWrapper;
 use std::{
     ops::DerefMut,
     pin::Pin,
     task::{ready, Context, Poll},
 };
-
-use compio::io::{compat::AsyncStream, AsyncRead, AsyncWrite};
-use send_wrapper::SendWrapper;
 
 /// A stream wrapper for hyper.
 pub struct CompioIo<S>(SendWrapper<AsyncStream<S>>);

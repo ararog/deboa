@@ -1,4 +1,4 @@
-use crate::url::IntoUrl;
+use deboa::url::IntoUrl;
 
 #[test]
 fn test_url() {

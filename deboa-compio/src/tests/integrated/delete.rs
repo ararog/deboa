@@ -1,19 +1,11 @@
-use crate::request::DeboaRequest;
-use crate::tests::{helpers::client_with_cert, TestResult};
-
-use deboa_tests::{mock_response, utils::start_mock_server};
+use deboa::request::DeboaRequest;
 use http::StatusCode;
-
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
 
 //
 // DELETE
 //
-
-async fn do_delete() -> TestResult<()> {
+#[compio::test]
+async fn test_delete() -> Result<(), Box<dyn std::error::Error>> {
     let mut server = start_mock_server(|req| async move {
         if req.method() == "DELETE" && req.uri().path() == "/posts/1" {
             Ok(mock_response(StatusCode::OK, ""))
@@ -35,25 +27,5 @@ async fn do_delete() -> TestResult<()> {
         .stop()
         .await?;
 
-    Ok(())
-}
-
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_delete() -> TestResult<()> {
-    do_delete().await?;
-    Ok(())
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_delete() -> TestResult<()> {
-    do_delete().await
-}
-
-#[cfg(feature = "compio-rt")]
-#[compio::test]
-async fn test_delete() -> TestResult<()> {
-    do_delete().await?;
     Ok(())
 }

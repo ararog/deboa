@@ -1,20 +1,16 @@
 use crate::rt::stream::CompioStream;
-use compio::net::TcpStream;
-
-use async_native_tls::{Certificate, Identity, TlsConnector};
-
-use trust_dns_resolver::error::ResolveErrorKind;
-
 use crate::{
     cert::{Certificate as DeboaCertificate, Identity as DeboaIdentity},
     errors::{ConnectionError, DeboaError},
     Result,
 };
-
+use async_native_tls::{Certificate, Identity, TlsConnector};
 use async_std_resolver::{
     config::{ResolverConfig, ResolverOpts},
     resolver,
 };
+use compio::net::TcpStream;
+use trust_dns_resolver::error::ResolveErrorKind;
 
 async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
     let resolver = resolver(ResolverConfig::default(), ResolverOpts::default()).await;

@@ -1,66 +1,3 @@
-//! # Deboa - Core API Documentation
-//!
-//! Hello, and welcome to the core Deboa API documentation!
-//!
-//! This API documentation is highly technical and is purely a reference.
-//!
-//! Depend on `deboa` in `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies]
-//! deboa = "0.1.0"
-//! ```
-//!
-//! <small>Note that development versions, tagged with `-dev`, are not published
-//! and need to be specified as [git dependencies].</small>
-//!
-//! ``` rust,no_run
-//! use deboa::{Client, Result, errors::DeboaError, request::DeboaRequest};
-//!
-//! #[tokio::main]
-//! async fn main() -> Result<()> {
-//!     let mut client = Client::builder()
-//!         .build();
-//!
-//!     let response = DeboaRequest::get("https://httpbin.org/get")?
-//!         .send_with(&mut client)
-//!         .await?;
-//!
-//!     println!("Response: {:#?}", response);
-//!
-//!     Ok(())
-//! }
-//! ```
-//!
-//! ## Features
-//!
-//! To avoid compiling unused dependencies, Deboa feature-gates optional
-//! functionality, some enabled by default:
-//!
-//! | Feature      | Default? | Description                                      |
-//! |--------------|----------|--------------------------------------------------|
-//! | `http1`      | No       | Support for HTTP/1.                              |
-//! | `http2`      | Yes      | Support for HTTP/2 (enabled by default).         |
-//! | `http3`      | No       | Support for HTTP/3.                              |
-//! | `http3-smol` | No       | Support for HTTP/3 on Smol.                      |
-//! | `rust-tls`   | No       | Support for rust-tls.                            |
-//! | `native-tls` | No       | Support for native-tls.                          |
-//!
-//! Disabled features can be selectively enabled in `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies]
-//! deboa = { version = "0.1.0", features = ["tokio_rt", "http2", "tokio-rust-tls", "default-rustls-provider", "default-rustls-verifier"] }
-//! ```
-//!
-//! Conversely, HTTP/2 can be disabled:
-//!
-//! ```toml
-//! [dependencies]
-//! deboa = { version = "0.1.0", default-features = false }
-//! ```
-//!
-
 #[cfg(all(
     feature = "rust-tls",
     not(feature = "native-tls"),
@@ -120,26 +57,23 @@ pub(crate) fn alpn() -> &'static [&'static str] {
     ]
 }
 
-use cfg_if::cfg_if;
-
-use deboa::catcher::DeboaCatcher;
-use deboa::errors::{DeboaError, RequestError};
-use deboa::request::{DeboaRequest, IntoRequest};
-use deboa::response::DeboaResponse;
-use std::sync::Mutex;
-
-use std::fmt::{Debug, Display};
-use std::net::IpAddr;
-use std::ops::Shl;
-
+use crate::{
+    cert::{Certificate, Identity},
+    client::conn::{
+        pool::{DeboaHttpConnectionPool, HttpConnectionPool},
+        ConnectionConfig,
+    },
+};
+use deboa::{
+    catcher::DeboaCatcher,
+    errors::{DeboaError, RequestError},
+    request::{DeboaRequest, IntoRequest},
+    response::DeboaResponse,
+    HttpVersion,
+};
 use http::{header, HeaderValue, Request};
 use log::{error, info};
-
-use crate::cert::{Certificate, Identity};
-
-use crate::client::conn::ConnectionConfig;
-
-use crate::client::conn::pool::{DeboaHttpConnectionPool, HttpConnectionPool};
+use std::{fmt::Debug, net::IpAddr, ops::Shl, sync::Mutex};
 
 pub use async_trait::async_trait;
 
@@ -198,35 +132,6 @@ impl Shl<&str> for &Client {
             .expect("Invalid URL!")
             .build()
             .expect("Invalid request!")
-    }
-}
-
-#[derive(PartialEq, Debug, Clone)]
-/// Enum that represents the HTTP version.
-///
-/// # Variants
-///
-/// * `Http1` - The HTTP/1.1 version.
-/// * `Http2` - The HTTP/2 version.
-pub enum HttpVersion {
-    #[cfg(feature = "http1")]
-    Http1,
-    #[cfg(feature = "http2")]
-    Http2,
-    #[cfg(feature = "http3")]
-    Http3,
-}
-
-impl Display for HttpVersion {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            #[cfg(feature = "http1")]
-            HttpVersion::Http1 => write!(f, "HTTP/1.1"),
-            #[cfg(feature = "http2")]
-            HttpVersion::Http2 => write!(f, "HTTP/2"),
-            #[cfg(feature = "http3")]
-            HttpVersion::Http3 => write!(f, "HTTP/3"),
-        }
     }
 }
 
@@ -682,15 +587,12 @@ impl Debug for Client {
 }
 
 pub(crate) const fn default_protocol() -> HttpVersion {
-    cfg_if! {
-        if #[cfg(feature = "http1")] {
-            HttpVersion::Http1
-        } else if #[cfg(feature = "http2")] {
-            HttpVersion::Http2
-        } else {
-            HttpVersion::Http3
-        }
-    }
+    #[cfg(feature = "http1")]
+    return HttpVersion::Http1;
+    #[cfg(feature = "http2")]
+    return HttpVersion::Http2;
+    #[cfg(feature = "http3")]
+    return HttpVersion::Http3;
 }
 
 impl Default for Client {
@@ -1024,9 +926,7 @@ impl Client {
 
         if let Err(err) = request {
             error!("Failed to send request: {}", err);
-            return Err(DeboaError::Request(RequestError::Send {
-                message: err.to_string(),
-            }));
+            return Err(DeboaError::Request(RequestError::Send { message: err.to_string() }));
         }
 
         let request = request.unwrap();

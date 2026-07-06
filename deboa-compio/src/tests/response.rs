@@ -1,17 +1,10 @@
-use std::fs::remove_file;
-
-use crate::{
+use deboa::{
     cookie::DeboaCookie,
     response::{DeboaResponse, IntoBody},
     Result,
 };
-use deboa_tests::utils::fake_url;
 use http::{header, Response};
-
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
+use std::fs::remove_file;
 
 const SAMPLE_TEST: &[u8] = b"Hello, world!";
 
@@ -64,19 +57,6 @@ async fn raw_body() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_raw_body() -> Result<()> {
-    raw_body().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_raw_body() -> Result<()> {
-    raw_body().await
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
 async fn test_raw_body() -> Result<()> {
     raw_body().await
@@ -97,19 +77,6 @@ async fn text_body() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_text_body() -> Result<()> {
-    text_body().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_text_body() -> Result<()> {
-    text_body().await
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
 async fn test_text_body() -> Result<()> {
     text_body().await
@@ -132,19 +99,6 @@ async fn to_file() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_to_file() -> Result<()> {
-    to_file().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_to_file() -> Result<()> {
-    to_file().await
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
 async fn test_to_file() -> Result<()> {
     to_file().await

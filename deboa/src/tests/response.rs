@@ -8,7 +8,7 @@ use http::{header, Response};
 const SAMPLE_TEST: &[u8] = b"Hello, world!";
 
 #[test]
-fn test_status() -> TestResult<()> {
+fn test_status() -> Result<(), Box<dyn std::error::Error>> {
     let response = Response::builder()
         .status(http::StatusCode::OK)
         .body(SAMPLE_TEST.into_body())
@@ -20,7 +20,7 @@ fn test_status() -> TestResult<()> {
 }
 
 #[test]
-fn test_headers() -> TestResult<()> {
+fn test_headers() -> Result<(), Box<dyn std::error::Error>> {
     let response = DeboaResponse::builder(test_url())
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
@@ -30,7 +30,7 @@ fn test_headers() -> TestResult<()> {
 }
 
 #[test]
-fn test_cookies() -> TestResult<()> {
+fn test_cookies() -> Result<(), Box<dyn std::error::Error>> {
     let mut headers = http::HeaderMap::new();
     headers.insert(header::SET_COOKIE, http::HeaderValue::from_static("test=test"));
     let response = DeboaResponse::builder(test_url())
@@ -42,7 +42,7 @@ fn test_cookies() -> TestResult<()> {
 }
 
 #[test]
-fn test_header() -> TestResult<()> {
+fn test_header() -> Result<(), Box<dyn std::error::Error>> {
     let response = DeboaResponse::builder(test_url())
         .status(http::StatusCode::OK)
         .header(header::ACCEPT_LANGUAGE, "pt-BR")
@@ -57,7 +57,7 @@ fn test_header() -> TestResult<()> {
 }
 
 #[test]
-fn test_response_url() -> TestResult<()> {
+fn test_response_url() -> Result<(), Box<dyn std::error::Error>> {
     let response = DeboaResponse::builder(test_url())
         .status(http::StatusCode::OK)
         .header(header::ACCEPT_LANGUAGE, "pt-BR")
@@ -72,7 +72,7 @@ fn test_response_url() -> TestResult<()> {
 }
 
 #[test]
-fn test_content_type() -> TestResult<()> {
+fn test_content_type() -> Result<(), Box<dyn std::error::Error>> {
     let response = DeboaResponse::builder(test_url())
         .status(http::StatusCode::OK)
         .header(header::CONTENT_TYPE, "text/html")
@@ -82,7 +82,7 @@ fn test_content_type() -> TestResult<()> {
 }
 
 #[test]
-fn test_content_length() -> TestResult<()> {
+fn test_content_length() -> Result<(), Box<dyn std::error::Error>> {
     let response = DeboaResponse::builder(test_url())
         .status(http::StatusCode::OK)
         .header(header::CONTENT_LENGTH, "9")
