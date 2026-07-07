@@ -1,6 +1,3 @@
-pub mod executor;
-mod io;
-pub mod stream;
-pub mod tls;
-
-pub use io::CompioIo;
+pub(crate) mod io;
+pub(crate) mod stream;
+pub(crate) mod tls;

@@ -59,7 +59,7 @@ pub(crate) fn alpn() -> &'static [&'static str] {
 
 use crate::{
     cert::{Certificate, Identity},
-    client::conn::{
+    client::http::conn::{
         pool::{DeboaHttpConnectionPool, HttpConnectionPool},
         ConnectionConfig,
     },

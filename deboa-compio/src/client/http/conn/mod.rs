@@ -23,20 +23,20 @@ use http::Request;
 use hyper_body_utils::HttpBody;
 use url::Url;
 
-use crate::{
+use deboa::{
     cert::{Certificate, Identity},
     response::DeboaResponse,
     HttpVersion, Result,
 };
 
 #[cfg(feature = "http1")]
-use crate::request::Http1Request;
+use deboa::request::Http1Request;
 
 #[cfg(feature = "http2")]
-use crate::request::Http2Request;
+use deboa::request::Http2Request;
 
 #[cfg(feature = "http3")]
-use crate::request::Http3Request;
+use deboa::request::Http3Request;
 
 /// TCP protocol implementations.
 ///
@@ -66,42 +66,6 @@ pub mod tcp;
 /// - `http3`: Enables HTTP/3 support (requires TLS)
 #[cfg(feature = "http3")]
 pub mod udp;
-
-/// Connection pooling for efficient HTTP connections.
-///
-/// This module provides connection pooling functionality to reuse connections
-/// across multiple requests, reducing latency and resource usage.
-///
-/// # Features
-///
-/// - Automatic connection reuse
-/// - Connection lifecycle management
-/// - Thread-safe operation
-/// - Configurable pool size (coming soon)
-pub mod pool;
-
-/// Internal stream handling utilities for connection establishment.
-/// Provides low-level connection creation functions for both secure and insecure connections.
-/// Used internally by the HTTP connection implementations.
-///
-/// # Modules
-///
-/// - `plain_connection`: Creates plain (non-TLS) TCP connections
-/// - `tls_connection`: Creates TLS-encrypted connections with optional client certificates
-///
-/// # Examples
-///
-/// ```compile_fail, rust
-/// use deboa::client::conn::stream::{plain_connection, tls_connection};
-///
-/// // Create a plain TCP connection
-/// let stream = plain_connection("example.com:80").await?;
-///
-/// // Create a TLS connection
-/// let stream = tls_connection("example.com:443", None).await?;
-/// ```
-#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls"))]
-pub(crate) mod rustls;
 
 /// Enum that represents the connection type.
 ///
@@ -186,17 +150,6 @@ impl<'a> ConnectionConfigBuilder<'a> {
             is_secure: false,
             host: "",
             port: 80,
-            #[cfg(all(feature = "http1", not(feature = "http2"), not(feature = "http3")))]
-            protocol: HttpVersion::Http1,
-            #[cfg(all(feature = "http1", feature = "http2", not(feature = "http3")))]
-            protocol: HttpVersion::Http1,
-            #[cfg(all(feature = "http1", feature = "http3", not(feature = "http2")))]
-            protocol: HttpVersion::Http1,
-            #[cfg(all(feature = "http2", not(feature = "http1"), not(feature = "http3")))]
-            protocol: HttpVersion::Http2,
-            #[cfg(all(feature = "http2", feature = "http3", not(feature = "http1")))]
-            protocol: HttpVersion::Http2,
-            #[cfg(all(feature = "http3", not(feature = "http1"), not(feature = "http2")))]
             protocol: HttpVersion::Http3,
             identity: None,
             certificate: None,

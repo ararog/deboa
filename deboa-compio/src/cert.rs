@@ -5,13 +5,9 @@
 //!
 //! It also provides the `Certificate` struct for working with CA certificates.
 
-#[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
+#[cfg(any(feature = "native-tls"))]
 use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdentity};
-#[cfg(any(
-    feature = "tokio-rust-tls",
-    feature = "smol-rust-tls",
-    feature = "compio-rust-tls"
-))]
+#[cfg(any(feature = "rust-tls",))]
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
 #[derive(Debug, Clone)]
@@ -62,7 +58,7 @@ pub struct Identity {
 pub type ClientCert = Identity;
 
 impl Identity {
-    #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
+    #[cfg(any(feature = "native-tls"))]
     /// Load a DER encoded PKCS#12 archive from a slice of bytes
     ///
     /// # Arguments
@@ -78,7 +74,7 @@ impl Identity {
         Identity { cert: bundle.to_vec(), key: None, password, encoding: None }
     }
 
-    #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
+    #[cfg(any(feature = "native-tls"))]
     pub fn from_pkcs12_file(file: &str, password: Option<String>) -> std::io::Result<Self> {
         let data = std::fs::read(file)?;
         Ok(Identity { cert: data, key: None, password, encoding: None })
@@ -115,7 +111,7 @@ impl Identity {
     }
 }
 
-#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls"))]
+#[cfg(any(feature = "rust-tls"))]
 impl TryFrom<&Identity> for (CertificateDer<'static>, PrivateKeyDer<'static>) {
     type Error = std::io::Error;
 
@@ -172,11 +168,7 @@ impl TryFrom<&Identity> for (CertificateDer<'static>, PrivateKeyDer<'static>) {
     }
 }
 
-#[cfg(any(
-    feature = "tokio-native-tls",
-    feature = "smol-native-tls",
-    feature = "compio-native-tls"
-))]
+#[cfg(any(feature = "native-tls",))]
 impl TryFrom<&Identity> for NativeIdentity {
     type Error = std::io::Error;
 
@@ -272,7 +264,7 @@ impl Certificate {
     }
 }
 
-#[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls", feature = "compio-rust-tls"))]
+#[cfg(any(feature = "rust-tls"))]
 impl TryFrom<&Certificate> for CertificateDer<'static> {
     type Error = std::io::Error;
 
@@ -301,11 +293,7 @@ impl TryFrom<&Certificate> for CertificateDer<'static> {
     }
 }
 
-#[cfg(any(
-    feature = "tokio-native-tls",
-    feature = "smol-native-tls",
-    feature = "compio-native-tls"
-))]
+#[cfg(any(feature = "native-tls",))]
 impl TryFrom<&Certificate> for NativeCertificate {
     type Error = std::io::Error;
 

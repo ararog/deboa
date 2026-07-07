@@ -1,33 +1,44 @@
 use crate::{
     alpn,
-    client::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
+    client::http::conn::{tcp::DeboaTcpConnection, BaseHttpConnection, ConnectionConfig},
     rt::{
-        executor::CompioExecutor,
+        io::CompioIo,
         tls::{plain_connection, tls_connection},
-        CompioIo,
     },
     Result,
 };
-use deboa::request::Http2Request;
+use cyper_core::CompioExecutor;
+use deboa::{
+    conn::{HttpConnection, ProtoConnection},
+    request::Http2Request,
+};
 use http::version::Version;
 use hyper::{client::conn::http2::handshake, Request, Response};
 use hyper_body_utils::HttpBody;
-use std::marker::PhantomData;
-use std::result;
 
-impl DeboaTcpConnection for BaseHttpConnection<Http2Request, HttpBody, HttpBody> {
+impl HttpConnection for BaseHttpConnection<Http2Request, HttpBody, HttpBody> {
     type Sender = Http2Request;
     type ReqBody = HttpBody;
     type ResBody = HttpBody;
+
+    fn sender(&mut self) -> &mut Self::Sender {
+        &mut self.sender
+    }
+}
+
+impl ProtoConnection for BaseHttpConnection<Http2Request, HttpBody, HttpBody> {
+    type ReqBody = HttpBody;
+    type ResBody = HttpBody;
+    type Connection = BaseHttpConnection<Http2Request, HttpBody, HttpBody>;
+    type Identity = DeboaIdentity;
+    type Certificate = DeboaCertificate;
 
     #[inline]
     fn protocol(&self) -> Version {
         Version::HTTP_2
     }
 
-    async fn connect<'a>(
-        config: &ConnectionConfig<'a>,
-    ) -> Result<BaseHttpConnection<Self::Sender, Self::ReqBody, Self::ResBody>> {
+    async fn connect<'a>(config: &ConnectionConfig<'a>) -> Result<Self::Connection> {
         let stream = if config.is_secure() {
             tls_connection(
                 config.host(),
@@ -46,22 +57,18 @@ impl DeboaTcpConnection for BaseHttpConnection<Http2Request, HttpBody, HttpBody>
             return Err(e);
         }
 
-        let result = handshake(DeboaExecutor::new(), DeboaIo::new(stream.unwrap())).await;
+        let result = handshake(CompioExecutor::default(), CompioIo::new(stream.unwrap())).await;
 
         let (sender, conn) = result.unwrap();
 
-        spawn_worker(async move {
+        compio::runtime::spawn(async move {
             match conn.await {
                 Ok(_) => (),
                 Err(_err) => {}
             };
         });
 
-        Ok(BaseHttpConnection::<Self::Sender, Self::ReqBody, Self::ResBody> {
-            sender,
-            req_body: PhantomData,
-            res_body: PhantomData,
-        })
+        Ok(BaseHttpConnection::new(sender))
     }
 
     async fn send_request(
@@ -80,9 +87,4 @@ impl DeboaTcpConnection for BaseHttpConnection<Http2Request, HttpBody, HttpBody>
         self.process_response(&method, result)
             .await
     }
-}
-
-impl crate::client::conn::tcp::private::DeboaTcpConnectionSealed
-    for BaseHttpConnection<Http2Request, HttpBody, HttpBody>
-{
 }
