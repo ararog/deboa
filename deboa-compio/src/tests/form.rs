@@ -80,19 +80,6 @@ async fn multipart_validate_form() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_multipart_validate_form() -> Result<()> {
-    multipart_validate_form().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_multipart_validate_form() -> Result<()> {
-    multipart_validate_form().await
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
 async fn test_multipart_validate_form() -> Result<()> {
     multipart_validate_form().await
@@ -152,19 +139,6 @@ async fn multipart_validate_form_file() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_multipart_validate_form_file() -> Result<()> {
-    multipart_validate_form_file().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_multipart_validate_form_file() -> Result<()> {
-    multipart_validate_form_file().await
-}
-
-#[cfg(feature = "compio-rt")]
 #[compio::test]
 async fn test_multipart_validate_form_file() -> Result<()> {
     multipart_validate_form_file().await

@@ -1,11 +1,11 @@
-use std::{collections::HashMap, future::Future};
-use time::Duration;
-
 use crate::{
-    client::conn::{ConnectionConfig, ConnectionFactory, DeboaConnection},
-    errors::DeboaError,
+    cert::{DeboaCertificate, DeboaIdentity},
+    client::http::conn::{ConnectionFactory, DeboaConnection},
     Result,
 };
+use deboa::conn::ConnectionConfig;
+use std::collections::HashMap;
+use time::Duration;
 
 /// Struct that represents the HTTP connection pool.
 ///
@@ -34,50 +34,6 @@ impl Default for HttpConnectionPool {
     }
 }
 
-/// Trait that represents the HTTP connection pool.
-pub trait DeboaHttpConnectionPool: private::DeboaHttpConnectionPoolSealed {
-    /// Allow create a new connection pool.
-    ///
-    /// # Returns
-    ///
-    /// * `HttpConnectionPool` - The new connection pool.
-    ///
-    fn new(max_idle_connections: u32, keep_alive_duration: Duration) -> Self;
-
-    /// Allow get connections.
-    ///
-    /// # Returns
-    ///
-    /// * `&HashMap<String, DeboaConnection>` - The connections.
-    ///
-    fn connections(&self) -> &HashMap<String, DeboaConnection>;
-
-    /// Returns the number of connections.
-    ///
-    /// # Returns
-    ///
-    /// * `u32` - The number of connections.
-    ///
-    fn connection_count(&self) -> u32;
-
-    /// Allow create a new connection.
-    ///
-    /// # Arguments
-    ///
-    /// * `url` - The url to connect.
-    /// * `protocol` - The protocol to use.
-    /// * `retries` - The number of retries.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<&mut DeboaConnection>` - The connection or error.
-    ///
-    fn create_connection<'a>(
-        &'a mut self,
-        config: &ConnectionConfig<'a>,
-    ) -> impl Future<Output = Result<&'a mut DeboaConnection>>;
-}
-
 impl HttpConnectionPool {
     /// Allow set max idle connections
     ///
@@ -100,7 +56,11 @@ impl HttpConnectionPool {
     }
 }
 
-impl DeboaHttpConnectionPool for HttpConnectionPool {
+impl deboa::conn::HttpConnectionPool for HttpConnectionPool {
+    type Identity = DeboaIdentity;
+    type Certificate = DeboaCertificate;
+    type ConnectionDispather = DeboaConnection;
+
     fn new(max_idle_connections: u32, keep_alive_duration: Duration) -> Self {
         Self { max_idle_connections, keep_alive_duration, connections: HashMap::new() }
     }
@@ -118,7 +78,7 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
 
     async fn create_connection<'a>(
         &'a mut self,
-        config: &ConnectionConfig<'a>,
+        config: &ConnectionConfig<'a, Self::Identity, Self::Certificate>,
     ) -> Result<&'a mut DeboaConnection> {
         if self.max_idle_connections == 0 {
             self.connections
@@ -138,7 +98,7 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
         }
 
         log::debug!("Creating new connection for {}", host);
-        let connection = ConnectionFactory::create_connection(&config.protocol, config).await?;
+        let connection = ConnectionFactory::create_connection(config.protocol(), config).await?;
 
         self.connections
             .insert(host.to_string(), connection);
@@ -148,9 +108,3 @@ impl DeboaHttpConnectionPool for HttpConnectionPool {
             .unwrap())
     }
 }
-
-mod private {
-    pub trait DeboaHttpConnectionPoolSealed {}
-}
-
-impl private::DeboaHttpConnectionPoolSealed for HttpConnectionPool {}

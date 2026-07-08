@@ -8,16 +8,10 @@
 #[cfg(feature = "native-tls")]
 use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdentity};
 #[cfg(feature = "rust-tls")]
+use deboa::cert::Certificate;
+use deboa::cert::ContentEncoding;
+#[cfg(feature = "rust-tls")]
 use rustls::pki_types::{pem::PemObject, CertificateDer, PrivateKeyDer};
-
-#[derive(Debug, Clone)]
-/// Supported encodings for client certificates.
-pub enum ContentEncoding {
-    /// PEM encoding.
-    PEM,
-    /// DER encoding.
-    DER,
-}
 
 /// Represents a client certificate and its associated data for mutual TLS authentication.
 ///
@@ -45,7 +39,7 @@ pub enum ContentEncoding {
 ///
 /// ```
 #[derive(Debug, Clone)]
-pub struct Identity {
+pub struct DeboaIdentity {
     cert: Vec<u8>,
     key: Option<Vec<u8>>,
     #[allow(unused)]
@@ -57,7 +51,9 @@ pub struct Identity {
 #[deprecated(note = "Use `Identity` instead")]
 pub type ClientCert = Identity;
 
-impl Identity {
+pub type Identity = DeboaIdentity;
+
+impl DeboaIdentity {
     #[cfg(feature = "native-tls")]
     /// Load a DER encoded PKCS#12 archive from a slice of bytes
     ///
@@ -70,16 +66,18 @@ impl Identity {
     ///
     /// * `Identity` - The new Identity instance.
     ///
-    pub fn from_pkcs12(bundle: &[u8], password: Option<String>) -> Self {
+    fn from_pkcs12(bundle: &[u8], password: Option<String>) -> Self {
         Identity { cert: bundle.to_vec(), key: None, password, encoding: None }
     }
 
     #[cfg(feature = "native-tls")]
-    pub fn from_pkcs12_file(file: &str, password: Option<String>) -> std::io::Result<Self> {
+    fn from_pkcs12_file(file: &str, password: Option<String>) -> std::io::Result<Self> {
         let data = std::fs::read(file)?;
         Ok(Identity { cert: data, key: None, password, encoding: None })
     }
+}
 
+impl deboa::cert::Identity for DeboaIdentity {
     /// Load DER encoded certificate and key from a slice of bytes
     ///
     /// # Arguments
@@ -91,8 +89,8 @@ impl Identity {
     /// # Returns
     ///
     /// * `Identity` - The new Identity instance.
-    pub fn from_pkcs8(cert: &[u8], key: &[u8], encoding: ContentEncoding) -> Self {
-        Identity {
+    fn from_pkcs8(cert: &[u8], key: &[u8], encoding: ContentEncoding) -> Self {
+        DeboaIdentity {
             cert: cert.to_vec(),
             key: Some(key.to_vec()),
             password: None,
@@ -100,14 +98,10 @@ impl Identity {
         }
     }
 
-    pub fn from_pkcs8_file(
-        cert: &str,
-        key: &str,
-        encoding: ContentEncoding,
-    ) -> std::io::Result<Self> {
+    fn from_pkcs8_file(cert: &str, key: &str, encoding: ContentEncoding) -> std::io::Result<Self> {
         let cert = std::fs::read(cert)?;
         let key = std::fs::read(key)?;
-        Ok(Identity { cert, key: Some(key), password: None, encoding: Some(encoding) })
+        Ok(DeboaIdentity { cert, key: Some(key), password: None, encoding: Some(encoding) })
     }
 }
 
@@ -137,8 +131,6 @@ impl TryFrom<&Identity> for (CertificateDer<'static>, PrivateKeyDer<'static>) {
                 (cert, key.unwrap())
             }
             Some(ContentEncoding::PEM) => {
-                use rustls_pki_types::pem::PemObject;
-
                 let cert = CertificateDer::from_pem_slice(&cert);
                 if let Err(e) = cert {
                     return Err(std::io::Error::new(
@@ -217,12 +209,12 @@ impl TryFrom<&Identity> for NativeIdentity {
 ///
 /// ```
 #[derive(Debug, Clone)]
-pub struct Certificate {
+pub struct DeboaCertificate {
     data: Vec<u8>,
     encoding: ContentEncoding,
 }
 
-impl Certificate {
+impl deboa::cert::Certificate for DeboaCertificate {
     /// Create certificate from slice of DER encoded bytes.
     ///
     /// # Arguments
@@ -233,8 +225,8 @@ impl Certificate {
     ///
     /// * `Certificate` - The new Certificate instance.
     ///
-    pub fn from_slice(data: &[u8], encoding: ContentEncoding) -> Self {
-        Certificate { data: data.to_vec(), encoding }
+    fn from_slice(data: &[u8], encoding: ContentEncoding) -> Self {
+        DeboaCertificate { data: data.to_vec(), encoding }
     }
 
     /// Create certificate from file of DER encoded file.
@@ -247,9 +239,9 @@ impl Certificate {
     ///
     /// * `Result<Certificate, std::io::Error>` - The new Certificate instance.
     ///
-    pub fn from_file(file: &str, encoding: ContentEncoding) -> std::io::Result<Self> {
+    fn from_file(file: &str, encoding: ContentEncoding) -> std::io::Result<Self> {
         let data = std::fs::read(file)?;
-        Ok(Certificate { data, encoding })
+        Ok(DeboaCertificate { data, encoding })
     }
 
     /// Allow get the client certificate path.
@@ -259,16 +251,16 @@ impl Certificate {
     /// * `&str` - The client certificate path.
     ///
     #[inline]
-    pub fn as_bytes(&self) -> &Vec<u8> {
+    fn as_bytes(&self) -> &Vec<u8> {
         &self.data
     }
 }
 
 #[cfg(feature = "rust-tls")]
-impl TryFrom<&Certificate> for CertificateDer<'static> {
+impl TryFrom<&DeboaCertificate> for CertificateDer<'static> {
     type Error = std::io::Error;
 
-    fn try_from(value: &Certificate) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: &DeboaCertificate) -> std::result::Result<Self, Self::Error> {
         let cert = match value.encoding {
             ContentEncoding::DER => CertificateDer::from(
                 value
@@ -292,10 +284,10 @@ impl TryFrom<&Certificate> for CertificateDer<'static> {
 }
 
 #[cfg(feature = "native-tls")]
-impl TryFrom<&Certificate> for NativeCertificate {
+impl TryFrom<&DeboaCertificate> for NativeCertificate {
     type Error = std::io::Error;
 
-    fn try_from(value: &Certificate) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: &DeboaCertificate) -> std::result::Result<Self, Self::Error> {
         let cert = match value.encoding {
             ContentEncoding::DER => NativeCertificate::from_der(value.as_bytes()),
             ContentEncoding::PEM => NativeCertificate::from_pem(value.as_bytes()),

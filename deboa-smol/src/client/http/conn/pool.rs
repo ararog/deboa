@@ -97,7 +97,7 @@ impl deboa::conn::HttpConnectionPool for HttpConnectionPool {
         }
 
         log::debug!("Creating new connection for {}", host);
-        let connection = ConnectionFactory::create_connection(&config.protocol(), config).await?;
+        let connection = ConnectionFactory::create_connection(config.protocol(), config).await?;
 
         self.connections
             .insert(host.to_string(), connection);

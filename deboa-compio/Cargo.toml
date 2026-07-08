@@ -62,10 +62,7 @@ async-executor = { version = "1.13.3", optional = true, default-features = false
 async-trait = "0.1.89"
 base64 = "0.22.1"
 bytes = { version = "1.11" }
-compio = { version = "0.19.1", features = ["io", "net", "runtime", "macros"], default-features = false }
-compio-fs = { version = "0.12.0", default-features = false }
-compio-io = { version = "0.10.1", default-features = false }
-compio-macros = "0.2.0"
+compio = { version = "0.19.1", features = ["io", "net", "runtime", "io-uring", "macros"], default-features = false }
 compio-runtime = { version = "0.12.3", default-features = false }
 compio-tls = { version = "0.10.0", default-features = false }
 cookie = "0.18.1"
@@ -86,10 +83,12 @@ hyper-util = { version = "0.1.20", features = [
   "client-legacy",
 ], default-features = false }
 indexmap = "2.11.4"
+io-uring = "0.7.13"
 log = "0.4.28"
 macro_rules_attribute = { version = "0.2.2", optional = true, default-features = false }
 minimime = "1.0.0"
 mockall = "0.14.0"
+pin-project-lite = "0.2.17"
 quinn = { version = "0.11.7", optional = true, default-features = false }
 rand = "0.10.2"
 regex = "1.9.6"
@@ -117,7 +116,3 @@ criterion = { version = "0.8.2", features = [
 futures-util = "0.3.31"
 mime = { version = "0.3.17" }
 multer = "3.1.0"
-
-[[bench]]
-name = "benchmark"
-harness = false

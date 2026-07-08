@@ -1,76 +1,31 @@
-use std::sync::Arc;
-
-use rustls::pki_types::{CertificateDer, PrivateKeyDer};
-use rustls::ClientConfig;
-
-use crate::cert::Certificate;
 use crate::{
-    cert::Identity as DeboaIdentity,
+    cert::{DeboaCertificate, DeboaIdentity},
+    client::http::conn::stream::create_stream,
+};
+use compio::net::TcpStream;
+use compio_tls::TlsConnector;
+use cyper_core::HyperStream;
+use deboa::{
     errors::{ConnectionError, DeboaError},
     Result,
 };
-
-async fn create_stream(host: &str, port: u16) -> Result<TcpStream> {
-    let resolver = resolver(ResolverConfig::default(), ResolverOpts::default()).await;
-
-    let response = resolver
-        .lookup_ip(host)
-        .await;
-
-    let addr = match response {
-        Ok(response) => response,
-        Err(e) => match e.kind() {
-            ResolveErrorKind::NoRecordsFound { query, .. } => {
-                let query_name = query
-                    .name()
-                    .to_string();
-                return Err(DeboaError::Connection(ConnectionError::Tcp {
-                    host: host.to_string(),
-                    message: format!("Could not resolve host: {}", query_name),
-                }));
-            }
-            _ => {
-                return Err(DeboaError::Connection(ConnectionError::Tcp {
-                    host: host.to_string(),
-                    message: format!("Could not resolve host: {}", e),
-                }));
-            }
-        },
-    };
-
-    let addr = addr
-        .iter()
-        .next()
-        .expect("no addresses returned!");
-
-    let tcp_stream = TcpStream::connect((addr, port)).await;
-    let tcp_stream = match tcp_stream {
-        Ok(tcp_stream) => tcp_stream,
-        Err(e) => {
-            return Err(DeboaError::Connection(ConnectionError::Tcp {
-                host: host.to_string(),
-                message: format!("Could not connect to server: {}", e),
-            }));
-        }
-    };
-
-    Ok(tcp_stream)
-}
-
-pub(crate) async fn plain_connection(host: &str, port: u16) -> Result<CompioStream> {
-    let stream = create_stream(host, port).await?;
-    Ok(CompioStream::Plain(stream))
-}
+use rustls::{
+    pki_types::{CertificateDer, PrivateKeyDer, ServerName},
+    ClientConfig,
+};
+use std::net::IpAddr;
+use std::sync::Arc;
 
 pub(crate) async fn tls_connection(
+    ip: IpAddr,
     host: &str,
     port: u16,
     identity: &Option<DeboaIdentity>,
     certificate: &Option<DeboaCertificate>,
     skip_server_verification: bool,
     alpn: Vec<Vec<u8>>,
-) -> Result<CompioStream> {
-    let socket = create_stream(host, port).await?;
+) -> Result<HyperStream<TcpStream>> {
+    let socket = create_stream(ip, host, port).await?;
     let config = setup_rust_tls(host, identity, certificate, skip_server_verification, alpn)?;
     let connector = TlsConnector::from(Arc::new(config));
     let hostname = ServerName::try_from(host.to_string());
@@ -81,10 +36,9 @@ pub(crate) async fn tls_connection(
             message: e.to_string(),
         }));
     }
-    let hostname = hostname.unwrap();
 
     let stream = connector
-        .connect(&hostname.to_str(), socket)
+        .connect(host, socket)
         .await;
 
     if let Err(e) = stream {
@@ -95,7 +49,7 @@ pub(crate) async fn tls_connection(
     }
 
     let stream = stream.unwrap();
-    Ok(CompioStream::Tls(stream))
+    Ok(HyperStream::new_tls(stream))
 }
 
 pub(crate) fn default_provider() -> Arc<rustls::crypto::CryptoProvider> {
@@ -111,14 +65,14 @@ pub(crate) fn default_provider() -> Arc<rustls::crypto::CryptoProvider> {
 pub fn setup_rust_tls(
     host: &str,
     identity: &Option<DeboaIdentity>,
-    certificate: &Option<Certificate>,
+    certificate: &Option<DeboaCertificate>,
     skip_server_verification: bool,
     alpn: Vec<Vec<u8>>,
 ) -> Result<ClientConfig> {
     let provider = default_provider();
 
     if skip_server_verification {
-        use crate::client::conn::rustls::verify::SkipServerVerification;
+        use crate::client::http::conn::stream::tls::rustls::verify::SkipServerVerification;
         let config = rustls::ClientConfig::builder_with_provider(provider)
             .with_protocol_versions(&[&rustls::version::TLS13])
             .expect("Failed to set TLS version")
@@ -199,9 +153,8 @@ pub fn setup_rust_tls(
 }
 
 pub(crate) mod verify {
-    use std::sync::Arc;
-
     use rustls::pki_types::{CertificateDer, ServerName, UnixTime};
+    use std::sync::Arc;
 
     #[derive(Debug)]
     pub(crate) struct SkipServerVerification(Arc<rustls::crypto::CryptoProvider>);

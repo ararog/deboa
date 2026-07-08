@@ -16,42 +16,42 @@
 //! - Thread-safe connection handling
 //! ```
 
-use std::{marker::PhantomData, net::IpAddr, sync::Arc};
-
-use http::Request;
-
-use hyper_body_utils::HttpBody;
-use url::Url;
-
+#[cfg(feature = "http1")]
+use deboa::request::Http1Request;
+#[cfg(feature = "http2")]
+use deboa::request::Http2Request;
+#[cfg(feature = "http3")]
+use deboa::request::Http3Request;
 use deboa::{
-    cert::{Certificate, Identity},
+    conn::{ConnectionConfig, HttpConnectionDispatcher, ProtoConnection},
+    errors::DeboaError,
     response::DeboaResponse,
     HttpVersion, Result,
 };
+use http::Request;
+use hyper_body_utils::HttpBody;
+use std::{marker::PhantomData, sync::Arc};
+use url::Url;
 
-#[cfg(feature = "http1")]
-use deboa::request::Http1Request;
+use crate::cert::{DeboaCertificate, DeboaIdentity};
 
-#[cfg(feature = "http2")]
-use deboa::request::Http2Request;
-
-#[cfg(feature = "http3")]
-use deboa::request::Http3Request;
-
-/// TCP protocol implementations.
+/// Connection pooling for efficient HTTP connections.
 ///
-/// This module contains the core HTTP protocol implementations, including:
-/// - HTTP/1.1 support
-/// - HTTP/2 support (when enabled)
-/// - Connection management
-/// - Request/response handling
+/// This module provides connection pooling functionality to reuse connections
+/// across multiple requests, reducing latency and resource usage.
 ///
 /// # Features
 ///
-/// - `http1`: Enables HTTP/1.1 support
-/// - `http2`: Enables HTTP/2 support (requires TLS)
-#[cfg(any(feature = "http1", feature = "http2"))]
-pub mod tcp;
+/// - Automatic connection reuse
+/// - Connection lifecycle management
+/// - Thread-safe operation
+/// - Configurable pool size (coming soon)
+pub mod pool;
+
+/// Stream module for runtime-specific stream implementations.
+///
+/// This module provides stream implementations for different runtimes (Tokio, Smol, etc.).
+pub(crate) mod stream;
 
 /// UDP protocol implementations.
 ///
@@ -83,8 +83,8 @@ pub enum DeboaConnection {
     Http3(Box<BaseHttpConnection<Http3Request, HttpBody, HttpBody>>),
 }
 
-impl DeboaConnection {
-    pub async fn send_request(
+impl HttpConnectionDispatcher for DeboaConnection {
+    async fn send_request(
         &mut self,
         url: Arc<Url>,
         request: Request<HttpBody>,
@@ -101,7 +101,6 @@ impl DeboaConnection {
             }
             #[cfg(feature = "http2")]
             DeboaConnection::Http2(ref mut conn) => {
-                use crate::client::conn::tcp::DeboaTcpConnection;
                 let response = conn
                     .send_request(request)
                     .await?;
@@ -115,6 +114,10 @@ impl DeboaConnection {
                     .await?;
                 DeboaResponse::new(url, response)
             }
+            #[allow(unreachable_patterns)]
+            _ => {
+                return Err(DeboaError::UnsupportedProtocol);
+            }
         };
 
         Ok(response)
@@ -126,140 +129,15 @@ impl DeboaConnection {
 /// # Fields
 ///
 /// * `sender` - The sender to use.
-pub struct BaseHttpConnection<T, ReqBody, ResBody> {
-    pub(crate) sender: T,
+pub struct BaseHttpConnection<Sender, ReqBody, ResBody> {
+    pub(crate) sender: Sender,
     pub(crate) req_body: PhantomData<ReqBody>,
     pub(crate) res_body: PhantomData<ResBody>,
 }
 
-pub struct ConnectionConfigBuilder<'a> {
-    is_secure: bool,
-    host: &'a str,
-    port: u16,
-    protocol: HttpVersion,
-    identity: Option<Identity>,
-    certificate: Option<Certificate>,
-    skip_cert_verification: bool,
-    client_bind_addr: IpAddr,
-}
-
-impl<'a> ConnectionConfigBuilder<'a> {
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        Self {
-            is_secure: false,
-            host: "",
-            port: 80,
-            protocol: HttpVersion::Http3,
-            identity: None,
-            certificate: None,
-            skip_cert_verification: false,
-            client_bind_addr: "0.0.0.0"
-                .parse()
-                .unwrap(),
-        }
-    }
-
-    pub fn is_secure(mut self, is_secure: bool) -> Self {
-        self.is_secure = is_secure;
-        self
-    }
-
-    pub fn host(mut self, host: &'a str) -> Self {
-        self.host = host;
-        self
-    }
-
-    pub fn port(mut self, port: u16) -> Self {
-        self.port = port;
-        self
-    }
-
-    pub fn protocol(mut self, protocol: HttpVersion) -> Self {
-        self.protocol = protocol;
-        self
-    }
-
-    pub fn identity(mut self, identity: Option<Identity>) -> Self {
-        self.identity = identity;
-        self
-    }
-
-    pub fn certificate(mut self, certificate: Option<Certificate>) -> Self {
-        self.certificate = certificate;
-        self
-    }
-
-    pub fn skip_cert_verification(mut self, skip_cert_verification: bool) -> Self {
-        self.skip_cert_verification = skip_cert_verification;
-        self
-    }
-
-    pub fn client_bind_addr(mut self, client_bind_addr: IpAddr) -> Self {
-        self.client_bind_addr = client_bind_addr;
-        self
-    }
-
-    pub fn build(self) -> ConnectionConfig<'a> {
-        ConnectionConfig {
-            is_secure: self.is_secure,
-            host: self.host,
-            port: self.port,
-            protocol: self.protocol,
-            identity: self.identity,
-            certificate: self.certificate,
-            skip_cert_verification: self.skip_cert_verification,
-            client_bind_addr: self.client_bind_addr,
-        }
-    }
-}
-
-pub struct ConnectionConfig<'a> {
-    is_secure: bool,
-    host: &'a str,
-    port: u16,
-    protocol: HttpVersion,
-    identity: Option<Identity>,
-    certificate: Option<Certificate>,
-    skip_cert_verification: bool,
-    client_bind_addr: IpAddr,
-}
-
-impl<'a> ConnectionConfig<'a> {
-    pub fn builder() -> ConnectionConfigBuilder<'a> {
-        ConnectionConfigBuilder::new()
-    }
-
-    pub fn is_secure(&self) -> bool {
-        self.is_secure
-    }
-
-    pub fn host(&self) -> &str {
-        self.host
-    }
-
-    pub fn port(&self) -> u16 {
-        self.port
-    }
-
-    pub fn protocol(&self) -> &HttpVersion {
-        &self.protocol
-    }
-
-    pub fn identity(&self) -> &Option<Identity> {
-        &self.identity
-    }
-
-    pub fn certificate(&self) -> &Option<Certificate> {
-        &self.certificate
-    }
-
-    pub fn skip_cert_verification(&self) -> bool {
-        self.skip_cert_verification
-    }
-
-    pub fn client_bind_addr(&self) -> &IpAddr {
-        &self.client_bind_addr
+impl<Sender, ReqBody, ResBody> BaseHttpConnection<Sender, ReqBody, ResBody> {
+    pub(crate) fn new(sender: Sender) -> Self {
+        Self { sender, req_body: PhantomData, res_body: PhantomData }
     }
 }
 
@@ -268,29 +146,29 @@ pub struct ConnectionFactory {}
 impl ConnectionFactory {
     pub async fn create_connection<'a>(
         protocol: &HttpVersion,
-        config: &'a ConnectionConfig<'a>,
+        config: &'a ConnectionConfig<'a, DeboaIdentity, DeboaCertificate>,
     ) -> Result<DeboaConnection> {
         let conn = match protocol {
             #[cfg(feature = "http1")]
             HttpVersion::Http1 => {
-                use crate::client::conn::tcp::DeboaTcpConnection;
                 let conn =
                     BaseHttpConnection::<Http1Request, HttpBody, HttpBody>::connect(config).await?;
                 DeboaConnection::Http1(Box::new(conn))
             }
             #[cfg(feature = "http2")]
             HttpVersion::Http2 => {
-                use crate::client::conn::tcp::DeboaTcpConnection;
                 let conn =
                     BaseHttpConnection::<Http2Request, HttpBody, HttpBody>::connect(config).await?;
                 DeboaConnection::Http2(Box::new(conn))
             }
             #[cfg(feature = "http3")]
             HttpVersion::Http3 => {
-                use crate::client::conn::udp::DeboaUdpConnection;
                 let conn = BaseHttpConnection::<Http3Request, HttpBody, HttpBody>::connect(&config)
                     .await?;
                 DeboaConnection::Http3(Box::new(conn))
+            }
+            _ => {
+                return Err(DeboaError::UnsupportedProtocol);
             }
         };
 

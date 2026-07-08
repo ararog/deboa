@@ -15,10 +15,6 @@ use deboa_tests::{
     utils::{make_response, test_url, tls_server_config, url_from_string, CA_CERT},
 };
 
-#[cfg(feature = "smol-rt")]
-use macro_rules_attribute::apply;
-#[cfg(feature = "smol-rt")]
-use smol_macros::test;
 
 async fn catcher_request() -> Result<()> {
     let mut mock = MockDeboaCatcher::new();

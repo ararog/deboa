@@ -58,14 +58,13 @@ pub(crate) fn alpn() -> &'static [&'static str] {
 }
 
 use crate::{
-    cert::{Certificate, Identity},
-    client::http::conn::{
-        pool::{DeboaHttpConnectionPool, HttpConnectionPool},
-        ConnectionConfig,
-    },
+    cert::{DeboaCertificate, DeboaIdentity},
+    client::{dns::DefaultDnsResolver, http::conn::pool::HttpConnectionPool},
 };
 use deboa::{
     catcher::DeboaCatcher,
+    conn::{ConnectionConfig, HttpConnectionDispatcher, HttpConnectionPool as _},
+    dns::DnsResolver,
     errors::{DeboaError, RequestError},
     request::{DeboaRequest, IntoRequest},
     response::DeboaResponse,
@@ -73,13 +72,17 @@ use deboa::{
 };
 use http::{header, HeaderValue, Request};
 use log::{error, info};
-use std::{fmt::Debug, net::IpAddr, ops::Shl, sync::Mutex};
+use std::{
+    fmt::Debug,
+    net::IpAddr,
+    ops::Shl,
+    sync::{Arc, Mutex},
+};
 
 pub use async_trait::async_trait;
 
 pub mod cert;
 pub mod client;
-pub mod rt;
 
 #[cfg(test)]
 mod tests;
@@ -172,12 +175,13 @@ pub type DeboaBuilder = ClientBuilder;
 pub struct ClientBuilder {
     connection_timeout: u64,
     request_timeout: u64,
-    identity: Option<Identity>,
-    certificate: Option<Certificate>,
+    identity: Option<DeboaIdentity>,
+    certificate: Option<DeboaCertificate>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     skip_cert_verification: bool,
     pool: Mutex<HttpConnectionPool>,
+    dns_resolver: Arc<dyn DnsResolver>,
     bind_addr: IpAddr,
 }
 
@@ -257,7 +261,7 @@ impl ClientBuilder {
     /// }
     /// ```
     #[inline]
-    pub fn client_cert(mut self, client_cert: Identity) -> Self {
+    pub fn client_cert(mut self, client_cert: DeboaIdentity) -> Self {
         self.identity = Some(client_cert);
         self
     }
@@ -287,7 +291,7 @@ impl ClientBuilder {
     /// }
     /// ```
     #[inline]
-    pub fn identity(mut self, identity: Identity) -> Self {
+    pub fn identity(mut self, identity: DeboaIdentity) -> Self {
         self.identity = Some(identity);
         self
     }
@@ -313,7 +317,7 @@ impl ClientBuilder {
     /// }
     /// ```
     #[inline]
-    pub fn certificate(mut self, certificate: Certificate) -> Self {
+    pub fn certificate(mut self, certificate: DeboaCertificate) -> Self {
         self.certificate = Some(certificate);
         self
     }
@@ -452,6 +456,54 @@ impl ClientBuilder {
         self
     }
 
+    /// Set the DNS resolver for the client.
+    ///
+    /// # Arguments
+    ///
+    /// * `dns_resolver` - The DNS resolver to use.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The builder.
+    ///
+    /// # Example
+    ///
+    /// ``` rust, no_run
+    /// use deboa_smol::Client;
+    /// use deboa_smol::client::dns::DefaultDnsResolver;
+    ///
+    /// let client = Client::builder()
+    ///     .dns_resolver(DefaultDnsResolver)
+    ///     .build();
+    /// ```
+    #[inline]
+    pub fn dns_resolver<R>(mut self, dns_resolver: R) -> Self
+    where
+        R: DnsResolver + 'static,
+    {
+        self.dns_resolver = Arc::new(dns_resolver);
+        self
+    }
+
+    /// Set a bind address.
+    ///
+    /// # Arguments
+    ///
+    /// * `bind_addr` - The bind address to use.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The builder.
+    ///
+    /// # Example
+    ///
+    /// ``` rust,no_run
+    /// use deboa_smol::Client;
+    ///
+    /// let client = Client::builder()
+    ///     .bind_addr("0.0.0.0".parse().unwrap())
+    ///     .build();
+    /// ```
     #[inline]
     pub fn bind_addr(mut self, bind_addr: IpAddr) -> Self {
         self.bind_addr = bind_addr;
@@ -499,6 +551,7 @@ impl ClientBuilder {
             protocol: self.protocol,
             skip_cert_verification: self.skip_cert_verification,
             pool: self.pool,
+            dns_resolver: self.dns_resolver,
             bind_addr: self.bind_addr,
         }
     }
@@ -555,12 +608,13 @@ pub type Deboa = Client;
 pub struct Client {
     connection_timeout: u64,
     request_timeout: u64,
-    identity: Option<Identity>,
-    certificate: Option<Certificate>,
+    identity: Option<DeboaIdentity>,
+    certificate: Option<DeboaCertificate>,
     catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     skip_cert_verification: bool,
     pool: Mutex<HttpConnectionPool>,
+    dns_resolver: Arc<dyn DnsResolver>,
     bind_addr: IpAddr,
 }
 
@@ -606,6 +660,7 @@ impl Default for Client {
             protocol: default_protocol(),
             skip_cert_verification: false,
             pool: Mutex::new(HttpConnectionPool::default()),
+            dns_resolver: Arc::new(DefaultDnsResolver),
             bind_addr: "0.0.0.0"
                 .parse()
                 .unwrap(),
@@ -663,6 +718,7 @@ impl Client {
             protocol: default_protocol(),
             skip_cert_verification: false,
             pool: Mutex::new(HttpConnectionPool::default()),
+            dns_resolver: Arc::new(DefaultDnsResolver),
             bind_addr: "0.0.0.0"
                 .parse()
                 .unwrap(),
@@ -686,6 +742,7 @@ impl Client {
             protocol: default_protocol(),
             skip_cert_verification: false,
             pool: Mutex::new(HttpConnectionPool::default()),
+            dns_resolver: Arc::new(DefaultDnsResolver),
             bind_addr: "0.0.0.0"
                 .parse()
                 .unwrap(),
@@ -759,7 +816,7 @@ impl Client {
     ///
     #[inline]
     #[deprecated(note = "Use identity instead", since = "0.0.8")]
-    pub fn client_cert(&self) -> Option<&Identity> {
+    pub fn client_cert(&self) -> Option<&DeboaIdentity> {
         self.identity
             .as_ref()
     }
@@ -771,7 +828,7 @@ impl Client {
     /// * `Option<Identity>` - The identity.
     ///
     #[inline]
-    pub fn identity(&self) -> Option<&Identity> {
+    pub fn identity(&self) -> Option<&DeboaIdentity> {
         self.identity
             .as_ref()
     }
@@ -949,8 +1006,33 @@ impl HttpClient for Client {
             }
         };
 
+        let ips = self
+            .dns_resolver
+            .resolve(host.to_string(), port)
+            .await?;
+
+        let ipś = if self
+            .bind_addr
+            .is_ipv4()
+        {
+            ips.into_iter()
+                .filter(|ip| ip.is_ipv4())
+                .collect::<Vec<_>>()
+        } else {
+            ips.into_iter()
+                .filter(|ip| ip.is_ipv6())
+                .collect::<Vec<_>>()
+        };
+
+        let Some(ip) = ipś.first() else {
+            return Err(DeboaError::Request(RequestError::Send {
+                message: format!("No IP addresses found for hostname: {}", host),
+            }));
+        };
+
         let config = ConnectionConfig::builder()
             .is_secure(is_secure)
+            .ip(*ip)
             .host(host)
             .port(port)
             .protocol(
