@@ -4,7 +4,7 @@ resolver = "3"
 # Include both parts of the library in the workspace
 members = [
     "deboa",
-    #"deboa-compio",
+    "deboa-compio",
     "deboa-macros",
     "deboa-smol",
     "deboa-tokio",

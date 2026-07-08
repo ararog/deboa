@@ -5,10 +5,10 @@
 //!
 //! It also provides the `Certificate` struct for working with CA certificates.
 
-#[cfg(any(feature = "native-tls"))]
+#[cfg(feature = "native-tls")]
 use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdentity};
-#[cfg(any(feature = "rust-tls",))]
-use rustls::pki_types::{CertificateDer, PrivateKeyDer};
+#[cfg(feature = "rust-tls")]
+use rustls::pki_types::{pem::PemObject, CertificateDer, PrivateKeyDer};
 
 #[derive(Debug, Clone)]
 /// Supported encodings for client certificates.
@@ -58,7 +58,7 @@ pub struct Identity {
 pub type ClientCert = Identity;
 
 impl Identity {
-    #[cfg(any(feature = "native-tls"))]
+    #[cfg(feature = "native-tls")]
     /// Load a DER encoded PKCS#12 archive from a slice of bytes
     ///
     /// # Arguments
@@ -74,7 +74,7 @@ impl Identity {
         Identity { cert: bundle.to_vec(), key: None, password, encoding: None }
     }
 
-    #[cfg(any(feature = "native-tls"))]
+    #[cfg(feature = "native-tls")]
     pub fn from_pkcs12_file(file: &str, password: Option<String>) -> std::io::Result<Self> {
         let data = std::fs::read(file)?;
         Ok(Identity { cert: data, key: None, password, encoding: None })
@@ -111,7 +111,7 @@ impl Identity {
     }
 }
 
-#[cfg(any(feature = "rust-tls"))]
+#[cfg(feature = "rust-tls")]
 impl TryFrom<&Identity> for (CertificateDer<'static>, PrivateKeyDer<'static>) {
     type Error = std::io::Error;
 
@@ -168,7 +168,7 @@ impl TryFrom<&Identity> for (CertificateDer<'static>, PrivateKeyDer<'static>) {
     }
 }
 
-#[cfg(any(feature = "native-tls",))]
+#[cfg(feature = "native-tls")]
 impl TryFrom<&Identity> for NativeIdentity {
     type Error = std::io::Error;
 
@@ -264,7 +264,7 @@ impl Certificate {
     }
 }
 
-#[cfg(any(feature = "rust-tls"))]
+#[cfg(feature = "rust-tls")]
 impl TryFrom<&Certificate> for CertificateDer<'static> {
     type Error = std::io::Error;
 
@@ -276,8 +276,6 @@ impl TryFrom<&Certificate> for CertificateDer<'static> {
                     .to_vec(),
             ),
             ContentEncoding::PEM => {
-                use rustls_pki_types::pem::PemObject;
-
                 let result = CertificateDer::from_pem_slice(value.as_bytes());
                 if let Err(e) = result {
                     return Err(std::io::Error::new(
@@ -293,7 +291,7 @@ impl TryFrom<&Certificate> for CertificateDer<'static> {
     }
 }
 
-#[cfg(any(feature = "native-tls",))]
+#[cfg(feature = "native-tls")]
 impl TryFrom<&Certificate> for NativeCertificate {
     type Error = std::io::Error;
 

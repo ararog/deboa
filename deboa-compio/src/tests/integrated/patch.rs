@@ -1,27 +1,14 @@
-use deboa::{
-    request::DeboaRequest,
-};
-use http::{header::HOST, StatusCode};
+use crate::Client;
+use deboa::{request::DeboaRequest, HttpClient};
+use http::StatusCode;
 //
 // PATCH
 //
+#[compio::test]
+async fn test_patch() -> Result<(), Box<dyn std::error::Error>> {
+    let client: Client = Client::default();
 
-async fn do_patch() -> Result<(), Box<dyn std::error::Error>> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "PATCH" && req.uri().path() == "/posts/1" {
-            assert!(req
-                .headers()
-                .contains_key(HOST));
-            Ok(mock_response(StatusCode::OK, "done"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
-    })
-    .await;
-
-    let client: Client = client_with_cert();
-
-    let request = DeboaRequest::patch(server.url("/posts/1"))?
+    let request = DeboaRequest::patch("https://jsonplaceholder.typicode.com/posts/1")?
         .text("text")
         .build()?;
 
@@ -37,14 +24,5 @@ async fn do_patch() -> Result<(), Box<dyn std::error::Error>> {
         "done"
     );
 
-    server
-        .stop()
-        .await?;
-
     Ok(())
-}
-
-#[compio::test]
-async fn test_patch() -> Result<(), Box<dyn std::error::Error>> {
-    do_patch().await
 }

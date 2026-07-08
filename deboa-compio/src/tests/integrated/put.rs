@@ -1,24 +1,15 @@
-use deboa::{
-    request::DeboaRequest,
-};
+use deboa::{request::DeboaRequest, HttpClient};
 use http::StatusCode;
+
+use crate::Client;
 //
 // PUT
 //
 #[compio::test]
 async fn test_put() -> Result<(), Box<dyn std::error::Error>> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "PUT" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, ""))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
-    })
-    .await;
+    let client = Client::default();
 
-    let client = client_with_cert();
-
-    let request = DeboaRequest::put(server.url("/posts/1"))?
+    let request = DeboaRequest::put("https://jsonplaceholder.typicode.com/posts/1")?
         .text("ping")
         .build()?;
 
@@ -27,10 +18,6 @@ async fn test_put() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     assert_eq!(response.status(), StatusCode::OK);
-
-    server
-        .stop()
-        .await?;
 
     Ok(())
 }

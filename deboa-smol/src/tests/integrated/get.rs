@@ -8,10 +8,7 @@ use crate::{
     tests::helpers::{CA_CERT, CLIENT_CERT, CLIENT_KEY},
 };
 use crate::{
-    tests::{
-        helpers::{create_client, create_server},
-        TestResult,
-    },
+    tests::helpers::{create_client, create_server},
     Client,
 };
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]

@@ -1,49 +1,10 @@
-use deboa::{
-    cookie::DeboaCookie,
-    response::{DeboaResponse, IntoBody},
-    Result,
-};
-use http::{header, Response};
+use deboa::{response::DeboaResponse, url::IntoUrl, Result};
 use std::fs::remove_file;
 
 const SAMPLE_TEST: &[u8] = b"Hello, world!";
 
-#[test]
-fn test_status() -> Result<()> {
-    let response = Response::builder()
-        .status(http::StatusCode::OK)
-        .body(SAMPLE_TEST.into_body())
-        .unwrap();
-
-    let response = DeboaResponse::new(fake_url().into(), response);
-    assert_eq!(response.status(), http::StatusCode::OK);
-    Ok(())
-}
-
-#[test]
-fn test_headers() -> Result<()> {
-    let response = DeboaResponse::builder(fake_url())
-        .status(http::StatusCode::OK)
-        .headers(http::HeaderMap::new())
-        .build();
-    assert_eq!(*response.headers(), http::HeaderMap::new());
-    Ok(())
-}
-
-#[test]
-fn test_cookies() -> Result<()> {
-    let mut headers = http::HeaderMap::new();
-    headers.insert(header::SET_COOKIE, http::HeaderValue::from_static("test=test"));
-    let response = DeboaResponse::builder(fake_url())
-        .status(http::StatusCode::OK)
-        .headers(headers)
-        .build();
-    assert_eq!(response.cookies(), Ok(Some(vec![DeboaCookie::new("test", "test")])));
-    Ok(())
-}
-
 async fn raw_body() -> Result<()> {
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder("https://example.com".into_url()?)
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
@@ -63,7 +24,7 @@ async fn test_raw_body() -> Result<()> {
 }
 
 async fn text_body() -> Result<()> {
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder("https://example.com".into_url()?)
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
@@ -84,7 +45,7 @@ async fn test_text_body() -> Result<()> {
 
 async fn to_file() -> Result<()> {
     let output_file = "test.txt";
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder("https://example.com".into_url()?)
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)

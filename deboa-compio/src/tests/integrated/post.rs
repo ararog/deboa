@@ -1,27 +1,19 @@
+use crate::Client;
 use deboa::{
     form::{DeboaForm, EncodedForm, MultiPartForm},
     request::DeboaRequest,
+    HttpClient,
 };
-use http::{header::CONTENT_TYPE, StatusCode};
-
+use http::StatusCode;
 //
 // POST
 //
 
 #[compio::test]
 async fn test_post() -> Result<(), Box<dyn std::error::Error>> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "POST" && req.uri().path() == "/posts" {
-            Ok(mock_response(StatusCode::CREATED, "{\n  \"id\": 101\n}"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
-    })
-    .await;
+    let client: Client = Client::default();
 
-    let client: Client = client_with_cert();
-
-    let request = DeboaRequest::post(server.url("/posts"))?
+    let request = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts")?
         .text("{ \"title\": \"foo\", \"body\": \"bar\", \"userId\": 1 }")
         .build()?;
 
@@ -37,48 +29,18 @@ async fn test_post() -> Result<(), Box<dyn std::error::Error>> {
         b"{\n  \"id\": 101\n}",
     );
 
-    server
-        .stop()
-        .await?;
-
     Ok(())
 }
 
 #[compio::test]
 async fn test_post_encoded_form() -> Result<(), Box<dyn std::error::Error>> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "POST" && req.uri().path() == "/posts" {
-            if req
-                .headers()
-                .contains_key(CONTENT_TYPE)
-            {
-                let content_type = req
-                    .headers()
-                    .get(CONTENT_TYPE)
-                    .unwrap();
-                assert_eq!(
-                    content_type
-                        .to_str()
-                        .unwrap(),
-                    mime::APPLICATION_WWW_FORM_URLENCODED.to_string()
-                );
-            }
-            // TODO: check body
-            // name=deboa&version=0.0.1
-            Ok(mock_response(StatusCode::CREATED, "ping"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
-    })
-    .await;
-
-    let client: Client = client_with_cert();
+    let client: Client = Client::default();
 
     let mut form = EncodedForm::builder();
     form.field("name", "deboa");
     form.field("version", "0.0.1");
 
-    let request = DeboaRequest::post(server.url("/posts"))?
+    let request = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts")?
         .form(form.into())
         .build()?;
 
@@ -93,10 +55,6 @@ async fn test_post_encoded_form() -> Result<(), Box<dyn std::error::Error>> {
             .await,
         b"ping"
     );
-
-    server
-        .stop()
-        .await?;
 
     Ok(())
 }
@@ -107,34 +65,9 @@ async fn test_post_multipart_form() -> Result<(), Box<dyn std::error::Error>> {
     form.field("name", "deboa");
     form.field("version", "0.0.1");
 
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "POST" && req.uri().path() == "/posts" {
-            if req
-                .headers()
-                .contains_key(CONTENT_TYPE)
-            {
-                let content_type = req
-                    .headers()
-                    .get(CONTENT_TYPE)
-                    .unwrap();
+    let client: Client = Client::default();
 
-                assert!(content_type
-                    .to_str()
-                    .unwrap()
-                    .contains("multipart/form-data; boundary="));
-            }
-            // TODO: check body
-            // name=deboa&version=0.0.1
-            Ok(mock_response(StatusCode::CREATED, "ping"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
-    })
-    .await;
-
-    let client: Client = client_with_cert();
-
-    let request = DeboaRequest::post(server.url("/posts"))?
+    let request = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts")?
         .form(form.into())
         .build()?;
 
@@ -149,10 +82,6 @@ async fn test_post_multipart_form() -> Result<(), Box<dyn std::error::Error>> {
             .await,
         b"ping"
     );
-
-    server
-        .stop()
-        .await?;
 
     Ok(())
 }

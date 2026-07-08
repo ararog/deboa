@@ -9,4 +9,3 @@ pub(crate) use rustls::*;
 
 #[cfg(feature = "native-tls")]
 pub(crate) use native::*;
-

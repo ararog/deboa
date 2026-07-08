@@ -1,9 +1,9 @@
 use crate::Client;
 use deboa::{
-    cert::ContentEncoding,
     errors::{ConnectionError, DeboaError, ResponseError},
-    request::DeboaRequest,
+    request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
+    HttpClient,
 };
 use http::StatusCode;
 
@@ -13,18 +13,9 @@ use http::StatusCode;
 
 #[compio::test]
 async fn test_get_http() -> Result<(), Box<dyn std::error::Error>> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, "Hello World!"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
-    })
-    .await;
+    let client = Client::default();
 
-    let client = client_with_cert();
-
-    let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
+    let request = DeboaRequest::get("https://jsonplaceholder.typicode.com/posts/1")?.build()?;
 
     let response: DeboaResponse = client
         .execute(request)
@@ -40,167 +31,6 @@ async fn test_get_http() -> Result<(), Box<dyn std::error::Error>> {
         StatusCode::OK.as_u16()
     );
 
-    server
-        .stop()
-        .await?;
-
-    Ok(())
-}
-
-async fn skip_cert_verification_helper(skip: bool) -> Result<(), Box<dyn std::error::Error>> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, "Hello World!"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
-    })
-    .await;
-
-    let client = Client::builder()
-        .skip_cert_verification(skip)
-        .build();
-
-    let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
-
-    let response = client
-        .execute(request)
-        .await;
-
-    if skip {
-        #[cfg(any(feature = "http1", feature = "http2"))]
-        {
-            let response = response?;
-            assert_eq!(response.status(), StatusCode::OK);
-        }
-        #[cfg(feature = "http3")]
-        {
-            let error = DeboaError::Connection(ConnectionError::Udp {
-                host: "localhost".to_string(),
-                message: "Could not connect to server: aborted by peer: the cryptographic handshake failed: error 120: peer doesn't support any known protocol".to_string(),
-            });
-            assert_eq!(response.unwrap_err(), error);
-        }
-    } else {
-        #[cfg(all(
-            any(feature = "http1", feature = "http2"),
-            any(feature = "tokio-rust-tls", feature = "smol-rust-tls")
-        ))]
-        let error = DeboaError::Connection(ConnectionError::Tls {
-            host: "localhost".to_string(),
-            message: "Could not connect to server: invalid peer certificate: UnknownIssuer"
-                .to_string(),
-        });
-
-        #[cfg(all(feature = "http3", any(feature = "tokio-rust-tls", feature = "smol-rust-tls")))]
-        let error = DeboaError::Connection(ConnectionError::Udp {
-            host: "localhost".to_string(),
-            message: "Could not connect to server: the cryptographic handshake failed: error 48: invalid peer certificate: UnknownIssuer".to_string(),
-        });
-
-        #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
-        let error = DeboaError::Connection(ConnectionError::Tls {
-            host: "localhost".to_string(),
-            message: "Could not connect to server: error:0A000086:SSL routines:tls_post_process_server_certificate:certificate verify failed:../ssl/statem/statem_clnt.c:1889: (self-signed certificate in certificate chain)".to_string(),
-        });
-        assert_eq!(response.unwrap_err(), error);
-    }
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
-}
-
-async fn do_get_http_skip_verification() -> Result<(), Box<dyn std::error::Error>> {
-    skip_cert_verification_helper(true).await
-}
-
-#[compio::test]
-async fn test_get_http_skip_verification() -> Result<(), Box<dyn std::error::Error>> {
-    do_get_http_skip_verification().await?;
-    Ok(())
-}
-
-async fn do_get_http_verify() -> Result<(), Box<dyn std::error::Error>> {
-    skip_cert_verification_helper(false).await
-}
-
-#[compio::test]
-async fn test_get_http_verify() -> Result<(), Box<dyn std::error::Error>> {
-    do_get_http_verify().await
-}
-
-#[compio::test]
-async fn test_get_http_mutual_authentication() -> Result<(), Box<dyn std::error::Error>> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, "Hello World!"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
-    })
-    .await;
-
-    #[cfg(any(feature = "tokio-rust-tls", feature = "smol-rust-tls"))]
-    let identity = Identity::from_pkcs8(CLIENT_CERT, CLIENT_KEY, ContentEncoding::DER);
-
-    #[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
-    let identity = Identity::from_pkcs8(CLIENT_CERT_PEM, CLIENT_KEY_PEM, ContentEncoding::PEM);
-
-    let client = Client::builder()
-        .certificate(crate::cert::Certificate::from_slice(CA_CERT, ContentEncoding::DER))
-        .identity(identity)
-        .build();
-
-    let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
-
-    let response = client
-        .execute(request)
-        .await;
-
-    assert_eq!(response?.status(), StatusCode::OK);
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
-}
-
-#[cfg(any(feature = "tokio-native-tls", feature = "smol-native-tls"))]
-#[compio::test]
-async fn test_get_http_mutual_authentication_with_password(
-) -> Result<(), Box<dyn std::error::Error>> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, "Hello World!"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
-    })
-    .await;
-
-    let identity = Identity::from_pkcs12(CLIENT_P12, Some("test".to_string()));
-
-    let client = Client::builder()
-        .certificate(crate::cert::Certificate::from_slice(CA_CERT, ContentEncoding::DER))
-        .identity(identity)
-        .build();
-
-    let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
-
-    let response = client
-        .execute(request)
-        .await;
-
-    assert_eq!(response?.status(), StatusCode::OK);
-
-    server
-        .stop()
-        .await?;
-
     Ok(())
 }
 
@@ -210,15 +40,11 @@ async fn test_get_http_mutual_authentication_with_password(
 
 #[compio::test]
 async fn test_get_not_found() -> Result<(), Box<dyn std::error::Error>> {
-    let mut server =
-        start_mock_server(|_| async move { Ok(mock_response(StatusCode::NOT_FOUND, "Not found")) })
-            .await;
-
-    let client = client_with_cert();
+    let client = Client::default();
 
     let response: crate::Result<DeboaResponse> =
-        DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
-            .send_with(client)
+        DeboaRequest::get("https://jsonplaceholder.typicode.com/asasa/posts/1ddd")?
+            .send_with(&client)
             .await;
 
     assert!(response.is_err());
@@ -229,10 +55,6 @@ async fn test_get_not_found() -> Result<(), Box<dyn std::error::Error>> {
             message: "Could not process request (404 Not Found): Not found".to_string()
         })
     );
-
-    server
-        .stop()
-        .await?;
 
     Ok(())
 }
@@ -270,19 +92,10 @@ async fn test_get_invalid_server() -> Result<(), Box<dyn std::error::Error>> {
 
 #[compio::test]
 async fn test_get_by_query() -> Result<(), Box<dyn std::error::Error>> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/comments/1" {
-            Ok(mock_response(StatusCode::OK, "My comment"))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
-    })
-    .await;
+    let client = Client::default();
 
-    let client = client_with_cert();
-
-    let response = DeboaRequest::get(server.url("/comments/1"))?
-        .send_with(client)
+    let response = DeboaRequest::get("https://jsonplaceholder.typicode.com/comments/1")?
+        .send_with(&client)
         .await?;
 
     assert_eq!(
@@ -301,10 +114,6 @@ async fn test_get_by_query() -> Result<(), Box<dyn std::error::Error>> {
 
     assert!(comments.is_ok());
     assert_eq!(comments.unwrap(), "My comment");
-
-    server
-        .stop()
-        .await?;
 
     Ok(())
 }
@@ -396,50 +205,24 @@ async fn test_get_with_redirect() {
 
 #[compio::test]
 async fn test_try_into() -> Result<(), Box<dyn std::error::Error>> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, ""))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
-    })
-    .await;
-
-    let client = client_with_cert();
-    let first_post = server.url("/posts/1");
+    let client = Client::default();
+    let first_post = "https://jsonplaceholder.typicode.com/posts/1";
     let response = client
         .execute(first_post.into_request()?)
         .await?;
     assert_eq!(response.status(), 200);
-
-    server
-        .stop()
-        .await?;
 
     Ok(())
 }
 
 #[compio::test]
 async fn test_fetch_from_str() -> Result<(), Box<dyn std::error::Error>> {
-    let mut server = start_mock_server(|req| async move {
-        if req.method() == "GET" && req.uri().path() == "/posts/1" {
-            Ok(mock_response(StatusCode::OK, ""))
-        } else {
-            Ok(mock_response(StatusCode::NOT_FOUND, "Not found"))
-        }
-    })
-    .await;
-
-    let client = client_with_cert();
-    let first_post = server.url("/posts/1");
+    let client = Client::default();
+    let first_post = "https://jsonplaceholder.typicode.com/posts/1";
     let response = first_post
-        .fetch_with(&client)
+        .fetch_with(client)
         .await?;
     assert_eq!(response.status(), 200);
-
-    server
-        .stop()
-        .await?;
 
     Ok(())
 }

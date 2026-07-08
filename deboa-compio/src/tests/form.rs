@@ -1,11 +1,15 @@
+use bytes::Bytes;
 use deboa::{
     form::{DeboaForm, EncodedForm, MultiPartForm},
     Result,
 };
-use bytes::Bytes;
 use futures_util::stream::once;
 use futures_util::stream::Stream;
-use std::{convert::Infallible, fs::{read, remove_file, write as write_file}, path::Path};
+use std::{
+    convert::Infallible,
+    fs::{read, remove_file, write as write_file},
+    path::Path,
+};
 
 #[test]
 fn test_encoded_form() -> Result<()> {
