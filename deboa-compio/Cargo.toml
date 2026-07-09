@@ -62,7 +62,6 @@ async-executor = { version = "1.13.3", optional = true, default-features = false
 async-trait = "0.1.89"
 base64 = "0.22.1"
 bytes = { version = "1.11" }
-compio = { version = "0.19.1", features = ["io", "net", "runtime", "io-uring", "macros"], default-features = false }
 compio-runtime = { version = "0.12.3", default-features = false }
 compio-tls = { version = "0.10.0", default-features = false }
 cookie = "0.18.1"
@@ -104,6 +103,12 @@ time = "0.3.53"
 url = "2.5.8"
 urlencoding = "2.1.3"
 webpki-roots = { version = "1.0.6", optional = true, default-features = false }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+compio = { version = "0.19.1", features = ["io", "net", "runtime", "io-uring", "macros"], default-features = false }
+
+[target.'cfg(all(unix, not(target_os = "linux")))'.dependencies]
+compio = { version = "0.19.1", features = ["io", "net", "runtime", "polling", "macros"], default-features = false }
 
 [dev-dependencies]
 compio = { version = "0.19.1", default-features = false }

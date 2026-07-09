@@ -1,6 +1,6 @@
 use crate::Client;
 use deboa::{
-    errors::{ConnectionError, DeboaError, ResponseError},
+    errors::{ConnectionError, DeboaError, DnsError, ResponseError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
     HttpClient,
@@ -75,9 +75,9 @@ async fn test_get_invalid_server() -> Result<(), Box<dyn std::error::Error>> {
         .execute(request)
         .await;
 
-    let error = DeboaError::Connection(ConnectionError::Tcp {
+    let error = DeboaError::Dns(DnsError::Resolve {
         host: "invalid-server.com".to_string(),
-        message: "Could not resolve host: invalid-server.com.".to_string(),
+        message: "failed to lookup address information: Name or service not known".to_string(),
     });
 
     assert!(response.is_err());
@@ -113,7 +113,7 @@ async fn test_get_by_query() -> Result<(), Box<dyn std::error::Error>> {
         .await;
 
     assert!(comments.is_ok());
-    assert_eq!(comments.unwrap(), "My comment");
+    assert_eq!(comments.unwrap(), "{\n  \"postId\": 1,\n  \"id\": 1,\n  \"name\": \"id labore ex et quam laborum\",\n  \"email\": \"Eliseo@gardner.biz\",\n  \"body\": \"laudantium enim quasi est quidem magnam voluptate ipsam eos\\ntempora quo necessitatibus\\ndolor quam autem quasi\\nreiciendis et nam sapiente accusantium\"\n}");
 
     Ok(())
 }

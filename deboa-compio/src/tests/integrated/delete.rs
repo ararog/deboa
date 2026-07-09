@@ -10,7 +10,7 @@ use crate::Client;
 async fn test_delete() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::default();
 
-    let response = DeboaRequest::delete("https://httpbin.org/delete")?
+    let response = DeboaRequest::delete("https://jsonplaceholder.typicode.com/posts/1")?
         .send_with(&client)
         .await?;
 

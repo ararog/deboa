@@ -1,10 +1,10 @@
-name: "🐛 Bug Report"
+name: "Bug Report"
 description: "Create a new ticket for a bug."
-title: "🐛 [DEBOA|BORA|VAMO] [BUG] - <title>"
+title: "[Tokio|Smol|Compio] [BUG] - <title>"
 labels: [
   "bug"
 ]
-assignees: 
+assignees:
   - ararog
 body:
   - type: markdown

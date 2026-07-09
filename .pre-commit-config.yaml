@@ -21,6 +21,68 @@ repos:
         types: ["rust"]
         pass_filenames: false
 
+      - id: cargo-nextest-deboa-compio-default
+        name: "test default"
+        # Remove exports below if you don't have these tools installed
+        entry: bash -c "
+          export RUSTC_WRAPPER=kache &&
+          export RUSTC_LINKER=clang &&
+          export CARGO_BUILD_RUSTFLAGS="-C link-arg=-fuse-ld=mold" &&
+          cargo test --doc &&
+          cargo nextest run -j1 --package deboa-compio
+          "
+        language: "system"
+        types: ["rust"]
+        pass_filenames: false
+
+      - id: cargo-nextest-deboa-compio-http1-native-tls
+        name: "test deboa-compio with http1 and native-tls"
+        entry: bash -c "
+          export RUSTC_WRAPPER=kache &&
+          export RUSTC_LINKER=clang &&
+          export CARGO_BUILD_RUSTFLAGS="-C link-arg=-fuse-ld=mold" &&
+          cargo nextest run --package deboa-compio --features "http1 native-tls" --no-default-features
+          "
+        language: "system"
+        types: ["rust"]
+        pass_filenames: false
+
+      - id: cargo-nextest-deboa-compio-http2-native-tls
+        name: "test deboa-compio with http2' and native-tls"
+        entry: bash -c "
+          export RUSTC_WRAPPER=kache &&
+          export RUSTC_LINKER=clang &&
+          export CARGO_BUILD_RUSTFLAGS="-C link-arg=-fuse-ld=mold" &&
+          cargo nextest run --package deboa-compio --features "http2 native-tls" --no-default-features
+          "
+        language: "system"
+        types: ["rust"]
+        pass_filenames: false
+
+      - id: cargo-nextest-deboa-compio-http1-rust-tls
+        name: "test deboa-compio with http1 and rust-tls"
+        entry: bash -c "
+          export RUSTC_WRAPPER=kache &&
+          export RUSTC_LINKER=clang &&
+          export CARGO_BUILD_RUSTFLAGS="-C link-arg=-fuse-ld=mold" &&
+          cargo nextest run --package deboa-compio --features "http1 rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+          "
+        language: "system"
+        types: ["rust"]
+        pass_filenames: false
+
+      - id: cargo-nextest-deboa-compio-http3-rust-tls
+        name: "test deboa-compio with http3 and rust-tls"
+        entry: bash -c "
+          export RUSTC_WRAPPER=kache &&
+          export RUSTC_LINKER=clang &&
+          export CARGO_BUILD_RUSTFLAGS="-C link-arg=-fuse-ld=mold" &&
+          cargo nextest run --package deboa-compio --features "http3 rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+          "
+        language: "system"
+        types: ["rust"]
+        pass_filenames: false
+
       - id: cargo-nextest-deboa-smol-default
         name: "test default"
         # Remove exports below if you don't have these tools installed
