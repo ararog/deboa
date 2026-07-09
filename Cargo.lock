@@ -1160,6 +1160,8 @@ dependencies = [
  "criterion",
  "cyper-core",
  "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa-extras",
+ "deboa-macros",
  "futures",
  "futures-rustls",
  "futures-util",
@@ -1194,6 +1196,8 @@ dependencies = [
  "time",
  "url",
  "urlencoding",
+ "vamo",
+ "vamo-macros",
  "webpki-roots",
 ]
 
