@@ -53,20 +53,6 @@ pub mod pool;
 /// This module provides stream implementations for different runtimes (Tokio, Smol, etc.).
 pub(crate) mod stream;
 
-/// UDP protocol implementations.
-///
-/// This module contains the core HTTP protocol implementations, including:
-/// - HTTP/1.1 support
-/// - HTTP/2 support (when enabled)
-/// - Connection management
-/// - Request/response handling
-///
-/// # Features
-///
-/// - `http3`: Enables HTTP/3 support (requires TLS)
-#[cfg(feature = "http3")]
-pub mod udp;
-
 /// Enum that represents the connection type.
 ///
 /// # Variants
@@ -93,7 +79,6 @@ impl HttpConnectionDispatcher for DeboaConnection {
         let response = match self {
             #[cfg(feature = "http1")]
             DeboaConnection::Http1(ref mut conn) => {
-                use crate::client::conn::tcp::DeboaTcpConnection;
                 let response = conn
                     .send_request(request)
                     .await?;
@@ -108,7 +93,6 @@ impl HttpConnectionDispatcher for DeboaConnection {
             }
             #[cfg(feature = "http3")]
             DeboaConnection::Http3(ref mut conn) => {
-                use crate::client::conn::udp::DeboaUdpConnection;
                 let response = conn
                     .send_request(request)
                     .await?;

@@ -62,7 +62,7 @@ pub(crate) fn default_provider() -> Arc<rustls::crypto::CryptoProvider> {
     Arc::new(provider)
 }
 
-pub fn setup_rust_tls(
+pub(crate) fn setup_rust_tls(
     host: &str,
     identity: &Option<DeboaIdentity>,
     certificate: &Option<DeboaCertificate>,

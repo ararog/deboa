@@ -125,7 +125,7 @@ impl ProtoConnection for BaseHttpConnection<Http2Request, HttpBody, HttpBody> {
             return Err(e);
         }
 
-        let result = handshake(CompioExecutor::default(), stream.unwrap()).await;
+        let result = handshake(CompioExecutor, stream.unwrap()).await;
 
         let (sender, conn) = result.unwrap();
 
