@@ -4,7 +4,7 @@ use crate::alpn;
 use crate::client::http::conn::stream::tls::tls_connection;
 use crate::{
     cert::{DeboaCertificate, DeboaIdentity},
-    client::http::conn::{stream::plain::plain_connection, BaseHttpConnection},
+    client::http::conn::{stream::plain::plain_connection, BaseHttpConnection, Http1Connection},
     Result,
 };
 use deboa::{
@@ -17,7 +17,7 @@ use hyper_body_utils::HttpBody;
 use smol_hyper::rt::FuturesIo;
 
 impl HttpConnection for Http1Connection {
-    type Sender = Http1Request;
+    type Sender = SendRequest<Http1Request, HttpBody>;
     fn sender(&mut self) -> &mut Self::Sender {
         &mut self.sender
     }

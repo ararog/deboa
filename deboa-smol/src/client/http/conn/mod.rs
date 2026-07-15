@@ -61,8 +61,7 @@ pub(crate) type Http1Connection =
 pub(crate) type Http2Connection =
     BaseHttpConnection<SendRequest<Http2Request, HttpBody>, HttpBody, HttpBody>;
 #[cfg(feature = "http3")]
-pub(crate) type Http3Connection =
-    BaseHttpConnection<SendRequest<Http3Request, HttpBody>, HttpBody, HttpBody>;
+pub(crate) type Http3Connection = BaseHttpConnection<Http3Request, HttpBody, HttpBody>;
 
 /// Struct that represents the connection.
 ///
@@ -91,30 +90,28 @@ impl<Sender, ReqBody, ResBody> BaseHttpConnection<Sender, ReqBody, ResBody> {
 pub enum DeboaConnection {
     /// HTTP/1.1 connection
     #[cfg(feature = "http1")]
-    Http1(Box<BaseHttpConnection<Http1Request, HttpBody, HttpBody>>),
+    Http1(Box<Http1Connection>),
     /// HTTP/2 connection
     #[cfg(feature = "http2")]
-    Http2(Box<BaseHttpConnection<SendRequest<Http2Request, HttpBody>, HttpBody, HttpBody>>),
+    Http2(Box<Http2Connection>),
     /// HTTP/3 connection
     #[cfg(feature = "http3")]
-    Http3(Box<BaseHttpConnection<Http3Request, HttpBody, HttpBody>>),
+    Http3(Box<Http3Connection>),
 }
 
 impl DeboaConnection {
     #[cfg(feature = "http1")]
-    pub fn http1(conn: BaseHttpConnection<Http1Request, HttpBody, HttpBody>) -> Self {
+    pub fn http1(conn: Http1Connection) -> Self {
         DeboaConnection::Http1(Box::new(conn))
     }
 
     #[cfg(feature = "http2")]
-    pub fn http2(
-        conn: BaseHttpConnection<SendRequest<Http2Request, HttpBody>, HttpBody, HttpBody>,
-    ) -> Self {
+    pub fn http2(conn: Http2Connection) -> Self {
         DeboaConnection::Http2(Box::new(conn))
     }
 
     #[cfg(feature = "http3")]
-    pub fn http3(conn: BaseHttpConnection<Http3Request, HttpBody, HttpBody>) -> Self {
+    pub fn http3(conn: Http3Connection) -> Self {
         DeboaConnection::Http3(Box::new(conn))
     }
 }

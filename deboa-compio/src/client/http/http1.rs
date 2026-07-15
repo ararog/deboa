@@ -3,20 +3,20 @@ use crate::{
     cert::{DeboaCertificate, DeboaIdentity},
     client::http::conn::{
         stream::{plain_connection, tls_connection},
-        BaseHttpConnection,
+        BaseHttpConnection, Http1Connection,
     },
     Result,
 };
 use deboa::{
-    conn::{ConnectionConfig, HttpConnection, ProtoConnection},
-    request::{Http1Request, SendRequest},
+    conn::{ConnectionConfig, HttpConnection, ProtoConnection, SendRequest},
+    request::Http1Request,
 };
 use http::version::Version;
-use hyper::{body::Incoming, client::conn::http1::handshake};
+use hyper::client::conn::http1::handshake;
 use hyper_body_utils::HttpBody;
 
 impl HttpConnection for Http1Connection {
-    type Sender = SendRequest<Http1Request>;
+    type Sender = SendRequest<Http1Request, HttpBody>;
     fn sender(&mut self) -> &mut Self::Sender {
         &mut self.sender
     }

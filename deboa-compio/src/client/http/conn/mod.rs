@@ -58,8 +58,7 @@ pub(crate) type Http1Connection =
 pub(crate) type Http2Connection =
     BaseHttpConnection<SendRequest<Http2Request, HttpBody>, HttpBody, HttpBody>;
 #[cfg(feature = "http3")]
-pub(crate) type Http3Connection =
-    BaseHttpConnection<SendRequest<Http3Request, HttpBody>, HttpBody, HttpBody>;
+pub(crate) type Http3Connection = BaseHttpConnection<Http3Request, HttpBody, HttpBody>;
 
 /// Enum that represents the connection type.
 ///

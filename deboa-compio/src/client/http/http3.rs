@@ -1,7 +1,7 @@
 use crate::{
     alpn,
     cert::{DeboaCertificate, DeboaIdentity},
-    client::http::conn::{stream::setup_rust_tls, BaseHttpConnection},
+    client::http::conn::{stream::setup_rust_tls, BaseHttpConnection, Http3Connection},
     Result,
 };
 use compio_quic::{crypto::rustls::QuicClientConfig, ClientConfig, Endpoint};
@@ -53,7 +53,7 @@ async fn lookup_and_connect(
 }
 
 impl HttpConnection for Http3Connection {
-    type Sender = SendRequest<Http3Request>;
+    type Sender = Http3Request;
     fn sender(&mut self) -> &mut Self::Sender {
         &mut self.sender
     }
