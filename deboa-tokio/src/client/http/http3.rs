@@ -61,17 +61,17 @@ async fn lookup_and_connect(
     Ok(quinn_conn)
 }
 
-impl HttpConnection for BaseHttpConnection<Http3Request, HttpBody, HttpBody> {
+impl HttpConnection for Http3Connection {
     type Sender = Http3Request;
     fn sender(&mut self) -> &mut Self::Sender {
         &mut self.sender
     }
 }
 
-impl ProtoConnection for BaseHttpConnection<Http3Request, HttpBody, HttpBody> {
+impl ProtoConnection for Http3Connection {
     type ReqBody = HttpBody;
     type ResBody = HttpBody;
-    type Connection = BaseHttpConnection<Http3Request, HttpBody, HttpBody>;
+    type Connection = Http3Connection;
     type Identity = DeboaIdentity;
     type Certificate = DeboaCertificate;
 

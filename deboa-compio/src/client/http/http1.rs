@@ -9,23 +9,23 @@ use crate::{
 };
 use deboa::{
     conn::{ConnectionConfig, HttpConnection, ProtoConnection},
-    request::Http1Request,
+    request::{Http1Request, SendRequest},
 };
 use http::version::Version;
 use hyper::{body::Incoming, client::conn::http1::handshake};
 use hyper_body_utils::HttpBody;
 
-impl HttpConnection for BaseHttpConnection<Http1Request, HttpBody, Incoming> {
-    type Sender = Http1Request;
+impl HttpConnection for Http1Connection {
+    type Sender = SendRequest<Http1Request>;
     fn sender(&mut self) -> &mut Self::Sender {
         &mut self.sender
     }
 }
 
-impl ProtoConnection for BaseHttpConnection<Http1Request, HttpBody, Incoming> {
+impl ProtoConnection for Http1Connection {
     type ReqBody = HttpBody;
-    type ResBody = Incoming;
-    type Connection = BaseHttpConnection<Http1Request, HttpBody, Incoming>;
+    type ResBody = HttpBody;
+    type Connection = Http1Connection;
     type Identity = DeboaIdentity;
     type Certificate = DeboaCertificate;
 
@@ -71,6 +71,6 @@ impl ProtoConnection for BaseHttpConnection<Http1Request, HttpBody, Incoming> {
         })
         .detach();
 
-        Ok(BaseHttpConnection::new(sender))
+        Ok(BaseHttpConnection::new(SendRequest::new(sender)))
     }
 }

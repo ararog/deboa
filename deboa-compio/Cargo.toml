@@ -1,6 +1,6 @@
 [package]
 name = "deboa-compio"
-version = "0.1.1-beta.4"
+version = "0.1.1-beta.5"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true

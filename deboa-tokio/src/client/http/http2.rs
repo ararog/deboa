@@ -2,10 +2,10 @@
 use crate::{alpn, client::http::conn::stream::tls::tls_connection};
 use crate::{
     cert::{DeboaCertificate, DeboaIdentity},
-    client::http::conn::{stream::plain_connection, BaseHttpConnection},
+    client::http::conn::{stream::plain_connection, BaseHttpConnection, Http2Connection},
 };
 use deboa::{
-    conn::{ConnectionConfig, HttpConnection, ProtoConnection},
+    conn::{ConnectionConfig, HttpConnection, ProtoConnection, SendRequest},
     request::Http2Request,
     Result,
 };
@@ -14,17 +14,17 @@ use hyper::client::conn::http2::handshake;
 use hyper_body_utils::HttpBody;
 use hyper_util::rt::{TokioExecutor, TokioIo};
 
-impl HttpConnection for BaseHttpConnection<Http2Request, HttpBody, HttpBody> {
-    type Sender = Http2Request;
+impl HttpConnection for Http2Connection {
+    type Sender = SendRequest<Http2Request, HttpBody>;
     fn sender(&mut self) -> &mut Self::Sender {
         &mut self.sender
     }
 }
 
-impl ProtoConnection for BaseHttpConnection<Http2Request, HttpBody, HttpBody> {
+impl ProtoConnection for Http2Connection {
     type ReqBody = HttpBody;
     type ResBody = HttpBody;
-    type Connection = BaseHttpConnection<Http2Request, HttpBody, HttpBody>;
+    type Connection = Http2Connection;
     type Identity = DeboaIdentity;
     type Certificate = DeboaCertificate;
 
@@ -70,6 +70,6 @@ impl ProtoConnection for BaseHttpConnection<Http2Request, HttpBody, HttpBody> {
             };
         });
 
-        Ok(BaseHttpConnection::new(sender))
+        Ok(BaseHttpConnection::new(SendRequest::new(sender)))
     }
 }

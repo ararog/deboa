@@ -17,9 +17,9 @@
 //! ```
 use crate::cert::{DeboaCertificate, DeboaIdentity};
 #[cfg(feature = "http1")]
-use deboa::request::Http1Request;
+use deboa::{conn::SendRequest, request::Http1Request};
 #[cfg(feature = "http2")]
-use deboa::request::Http2Request;
+use deboa::{conn::SendRequest, request::Http2Request};
 use deboa::{
     conn::{ConnectionConfig, HttpConnectionDispatcher, ProtoConnection},
     errors::{DeboaError, RequestError},
@@ -28,7 +28,7 @@ use deboa::{
 };
 #[cfg(feature = "http3")]
 use deboa_h3::generic::Http3Request;
-use http::{Request, Response};
+use http::Request;
 use hyper_body_utils::HttpBody;
 use std::{marker::PhantomData, sync::Arc};
 use url::Url;
@@ -49,6 +49,16 @@ pub mod pool;
 /// Stream module for runtime-specific stream implementations.
 pub(crate) mod stream;
 
+#[cfg(feature = "http1")]
+pub(crate) type Http1Connection =
+    BaseHttpConnection<SendRequest<Http1Request, HttpBody>, HttpBody, HttpBody>;
+#[cfg(feature = "http2")]
+pub(crate) type Http2Connection =
+    BaseHttpConnection<SendRequest<Http2Request, HttpBody>, HttpBody, HttpBody>;
+#[cfg(feature = "http3")]
+pub(crate) type Http3Connection =
+    BaseHttpConnection<SendRequest<Http3Request, HttpBody>, HttpBody, HttpBody>;
+
 /// Enum that represents the connection type.
 ///
 /// # Variants
@@ -59,28 +69,28 @@ pub(crate) mod stream;
 pub enum DeboaConnection {
     /// HTTP/1.1 connection.
     #[cfg(feature = "http1")]
-    Http1(Box<BaseHttpConnection<Http1Request, HttpBody, HttpBody>>),
+    Http1(Box<Http1Connection>),
     /// HTTP/2 connection.
     #[cfg(feature = "http2")]
-    Http2(Box<BaseHttpConnection<Http2Request, HttpBody, HttpBody>>),
+    Http2(Box<Http2Connection>),
     /// HTTP/3 connection.
     #[cfg(feature = "http3")]
-    Http3(Box<BaseHttpConnection<Http3Request, HttpBody, HttpBody>>),
+    Http3(Box<Http3Connection>),
 }
 
 impl DeboaConnection {
     #[cfg(feature = "http1")]
-    pub fn http1(conn: BaseHttpConnection<Http1Request, HttpBody, HttpBody>) -> Self {
+    pub fn http1(conn: Http1Connection) -> Self {
         DeboaConnection::Http1(Box::new(conn))
     }
 
     #[cfg(feature = "http2")]
-    pub fn http2(conn: BaseHttpConnection<Http2Request, HttpBody, HttpBody>) -> Self {
+    pub fn http2(conn: Http2Connection) -> Self {
         DeboaConnection::Http2(Box::new(conn))
     }
 
     #[cfg(feature = "http3")]
-    pub fn http3(conn: BaseHttpConnection<Http3Request, HttpBody, HttpBody>) -> Self {
+    pub fn http3(conn: Http3Connection) -> Self {
         DeboaConnection::Http3(Box::new(conn))
     }
 }
@@ -121,9 +131,7 @@ impl HttpConnectionDispatcher for DeboaConnection {
             .await
             .map_err(|e| DeboaError::Request(RequestError::Send { message: e.to_string() }))?;
 
-        let (parts, body) = response.into_parts();
-
-        Ok(DeboaResponse::new(url, Response::from_parts(parts, HttpBody::from_incoming(body))))
+        Ok(DeboaResponse::new(url, response))
     }
 }
 
@@ -156,20 +164,17 @@ impl ConnectionFactory {
         let conn = match protocol {
             #[cfg(feature = "http1")]
             HttpVersion::Http1 => {
-                let conn =
-                    BaseHttpConnection::<Http1Request, HttpBody, HttpBody>::connect(config).await?;
+                let conn = Http1Connection::connect(config).await?;
                 DeboaConnection::http1(conn)
             }
             #[cfg(feature = "http2")]
             HttpVersion::Http2 => {
-                let conn =
-                    BaseHttpConnection::<Http2Request, HttpBody, HttpBody>::connect(config).await?;
+                let conn = Http2Connection::connect(config).await?;
                 DeboaConnection::http2(conn)
             }
             #[cfg(feature = "http3")]
             HttpVersion::Http3 => {
-                let conn = BaseHttpConnection::<Http3Request, HttpBody, HttpBody>::connect(&config)
-                    .await?;
+                let conn = Http3Connection::connect(&config).await?;
                 DeboaConnection::http3(conn)
             }
             _ => {

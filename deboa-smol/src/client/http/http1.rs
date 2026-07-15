@@ -8,7 +8,7 @@ use crate::{
     Result,
 };
 use deboa::{
-    conn::{ConnectionConfig, HttpConnection, ProtoConnection},
+    conn::{ConnectionConfig, HttpConnection, ProtoConnection, SendRequest},
     request::Http1Request,
 };
 use http::version::Version;
@@ -16,17 +16,17 @@ use hyper::client::conn::http1::handshake;
 use hyper_body_utils::HttpBody;
 use smol_hyper::rt::FuturesIo;
 
-impl HttpConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody> {
+impl HttpConnection for Http1Connection {
     type Sender = Http1Request;
     fn sender(&mut self) -> &mut Self::Sender {
         &mut self.sender
     }
 }
 
-impl ProtoConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody> {
+impl ProtoConnection for Http1Connection {
     type ReqBody = HttpBody;
     type ResBody = HttpBody;
-    type Connection = BaseHttpConnection<Http1Request, HttpBody, HttpBody>;
+    type Connection = Http1Connection;
     type Identity = DeboaIdentity;
     type Certificate = DeboaCertificate;
 
@@ -76,6 +76,6 @@ impl ProtoConnection for BaseHttpConnection<Http1Request, HttpBody, HttpBody> {
         })
         .detach();
 
-        Ok(BaseHttpConnection::new(sender))
+        Ok(BaseHttpConnection::new(SendRequest::new(sender)))
     }
 }

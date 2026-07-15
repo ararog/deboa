@@ -1,12 +1,15 @@
 use crate::{
     cert::{Certificate, Identity},
+    request::{Http1Request, Http2Request},
     response::DeboaResponse,
     HttpVersion, Result,
 };
-use http::{Request, Version};
+use http::{Request, Response, Version};
 use http_body::Body;
 use hyper_body_utils::HttpBody;
-use std::{collections::HashMap, future::Future, net::IpAddr, sync::Arc};
+use std::{
+    collections::HashMap, error::Error, future::Future, marker::PhantomData, net::IpAddr, sync::Arc,
+};
 use time::Duration;
 use url::Url;
 
@@ -316,4 +319,47 @@ pub trait HttpConnectionDispatcher {
         url: Arc<Url>,
         request: Request<HttpBody>,
     ) -> impl Future<Output = Result<DeboaResponse>>;
+}
+
+/// Wrapper for HTTP senders
+pub struct SendRequest<Sender, Body> {
+    sender: Sender,
+    _p: PhantomData<Body>,
+}
+
+impl<Sender, Body> SendRequest<Sender, Body> {
+    /// Create a new HTTP/1 request wrapper
+    pub fn new(sender: Sender) -> Self {
+        Self { sender, _p: PhantomData }
+    }
+}
+
+impl SendRequest<Http1Request, HttpBody> {
+    /// Send request
+    pub async fn send_request(
+        &mut self,
+        request: Request<HttpBody>,
+    ) -> std::result::Result<Response<HttpBody>, Box<dyn Error>> {
+        let response = self
+            .sender
+            .send_request(request)
+            .await?;
+        let (parts, body) = response.into_parts();
+        Ok(Response::from_parts(parts, HttpBody::from_incoming(body)))
+    }
+}
+
+impl SendRequest<Http2Request, HttpBody> {
+    /// Send request
+    pub async fn send_request(
+        &mut self,
+        request: Request<HttpBody>,
+    ) -> std::result::Result<Response<HttpBody>, Box<dyn Error>> {
+        let response = self
+            .sender
+            .send_request(request)
+            .await?;
+        let (parts, body) = response.into_parts();
+        Ok(Response::from_parts(parts, HttpBody::from_incoming(body)))
+    }
 }

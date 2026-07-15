@@ -1,6 +1,6 @@
 [package]
 name = "deboa"
-version = "0.1.0-beta.22"
+version = "0.1.0-beta.23"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
