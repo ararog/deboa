@@ -1,4 +1,5 @@
-use deboa::HttpVersion;
+#![allow(dead_code)]
+use crate::{tests::SKIP_CERT_VERIFICATION, Client, HttpVersion};
 use easyhttpmock_vetis_compio::{
     config::EasyHttpMockConfig,
     server::PortGenerator,
@@ -6,31 +7,31 @@ use easyhttpmock_vetis_compio::{
     EasyHttpMock, Protocol,
 };
 use std::net::IpAddr;
-
-use deboa_compio::Client;
 use url::Url;
 
-pub(crate) const SKIP_CERT_VERIFICATION: bool = cfg!(feature = "native-tls");
+pub(crate) const CA_CERT: &[u8] = include_bytes!("../../../certs/ca.der");
+// pub(crate) const CA_CERT_PEM: &[u8] = include_bytes!("../../../certs/ca.crt");
 
-pub const CA_CERT: &[u8] = include_bytes!("../../../certs/ca.der");
-// pub const CA_CERT_PEM: &[u8] = include_bytes!("../../../certs/ca.crt");
+pub(crate) const SERVER_CERT: &[u8] = include_bytes!("../../../certs/server.der");
+pub(crate) const SERVER_KEY: &[u8] = include_bytes!("../../../certs/server.key.der");
 
-pub const SERVER_CERT: &[u8] = include_bytes!("../../../certs/server.der");
-pub const SERVER_KEY: &[u8] = include_bytes!("../../../certs/server.key.der");
+// pub(crate) const IP6_SERVER_CERT: &[u8] = include_bytes!("../../../certs/ip6-server.der");
+// pub(crate) const IP6_SERVER_KEY: &[u8] = include_bytes!("../../../certs/ip6-server.key.der");
 
-// pub const IP6_SERVER_CERT: &[u8] = include_bytes!("../../../certs/ip6-server.der");
-// pub const IP6_SERVER_KEY: &[u8] = include_bytes!("../../../certs/ip6-server.key.der");
+// pub(crate) const SERVER_CERT_PEM: &[u8] = include_bytes!("../../../certs/server.crt");
+// pub(crate) const SERVER_KEY_PEM: &[u8] = include_bytes!("../../../certs/server.key");
 
-// pub const SERVER_CERT_PEM: &[u8] = include_bytes!("../../../certs/server.crt");
-// pub const SERVER_KEY_PEM: &[u8] = include_bytes!("../../../certs/server.key");
+pub(crate) const CLIENT_CERT: &[u8] = include_bytes!("../../../certs/client.der");
+pub(crate) const CLIENT_KEY: &[u8] = include_bytes!("../../../certs/client.key.der");
 
-// pub const CLIENT_CERT: &[u8] = include_bytes!("../../../certs/client.der");
-// pub const CLIENT_KEY: &[u8] = include_bytes!("../../../certs/client.key.der");
+pub(crate) const CLIENT_CERT_PEM: &[u8] = include_bytes!("../../../certs/client.crt");
+pub(crate) const CLIENT_KEY_PEM: &[u8] = include_bytes!("../../../certs/client.key");
 
-// pub const CLIENT_CERT_PEM: &[u8] = include_bytes!("../../../certs/client.crt");
-// pub const CLIENT_KEY_PEM: &[u8] = include_bytes!("../../../certs/client.key");
+pub(crate) const CLIENT_P12: &[u8] = include_bytes!("../../../certs/client.p12");
 
-// pub const CLIENT_P12: &[u8] = include_bytes!("../../../certs/client.p12");
+pub(crate) fn fake_url() -> Url {
+    Url::parse("https://httpbin.org/get").unwrap()
+}
 
 pub(crate) const fn deboa_default_protocol() -> HttpVersion {
     #[cfg(feature = "http1")]
@@ -50,14 +51,9 @@ pub(crate) const fn vetis_default_protocol() -> Protocol {
     return Protocol::Http3;
 }
 
-pub(crate) fn fake_url() -> Url {
-    Url::parse("https://httpbin.org/get").unwrap()
-}
-
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 pub(crate) fn ssl_client() -> Client {
     use deboa::cert::{Certificate, ContentEncoding};
-    use deboa_compio::cert::DeboaCertificate;
 
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let addr = interface.parse::<IpAddr>();
@@ -67,7 +63,7 @@ pub(crate) fn ssl_client() -> Client {
     };
 
     Client::builder()
-        .certificate(DeboaCertificate::from_slice(CA_CERT, ContentEncoding::DER))
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .bind_addr(addr)
         .protocol(deboa_default_protocol())
@@ -97,7 +93,7 @@ pub(crate) fn create_client() -> Client {
 }
 
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-pub async fn tls_mock_server() -> EasyHttpMock<VetisAdapter> {
+pub(crate) async fn tls_mock_server() -> EasyHttpMock<VetisAdapter> {
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
 
@@ -130,12 +126,12 @@ pub async fn tls_mock_server() -> EasyHttpMock<VetisAdapter> {
 }
 
 #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]
-pub async fn plain_mock_server() -> EasyHttpMock<VetisAdapter> {
+pub(crate) async fn plain_mock_server() -> EasyHttpMock<VetisAdapter> {
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
 
     let vetis_adapter_config = VetisAdapterConfig::builder()
-        .hostname(&hostname)
+        .hostname(hostname)
         .interface(&interface)
         .protocol(vetis_default_protocol())
         .with_random_port()
@@ -153,10 +149,15 @@ pub async fn plain_mock_server() -> EasyHttpMock<VetisAdapter> {
         }
     };
 
+    let result = server.start().await;
+    result.unwrap_or_else(|err| {
+        panic!("Failed to start mock server: {}", err);
+    });
+
     server
 }
 
-pub async fn create_server() -> EasyHttpMock<VetisAdapter> {
+pub(crate) async fn create_server() -> EasyHttpMock<VetisAdapter> {
     #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
     return tls_mock_server().await;
     #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]

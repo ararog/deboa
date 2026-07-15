@@ -16,8 +16,8 @@ use smol_macros::test;
 //
 // PUT
 //
-
-async fn do_put() -> Result<(), Box<dyn std::error::Error>> {
+#[apply(test!)]
+async fn test_put() -> Result<(), Box<dyn std::error::Error>> {
     let mock = Mock::of(
         given(method(Method::PUT).and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -47,9 +47,4 @@ async fn do_put() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     Ok(())
-}
-
-#[apply(test!)]
-async fn test_put() -> Result<(), Box<dyn std::error::Error>> {
-    do_put().await
 }

@@ -1,7 +1,7 @@
 use crate::{
     cookie::DeboaCookie,
     response::{DeboaResponse, IntoBody},
-    tests::{test_url, TestResult},
+    tests::test_url,
 };
 use http::{header, Response};
 
@@ -24,7 +24,7 @@ fn test_headers() -> Result<(), Box<dyn std::error::Error>> {
     let response = DeboaResponse::builder(test_url())
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
-        .build();
+        .empty();
     assert_eq!(*response.headers(), http::HeaderMap::new());
     Ok(())
 }

@@ -1,6 +1,6 @@
 use crate::Client;
 use deboa::{
-    errors::{ConnectionError, DeboaError, DnsError, ResponseError},
+    errors::{DeboaError, DnsError, ResponseError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
     HttpClient,
@@ -154,7 +154,7 @@ async fn test_get_by_query_with_retries() -> Result<(), Box<dyn std::error::Erro
 }
 
 #[cfg(feature = "smol-rt")]
-#[apply(test!)]
+#[compio::test]
 async fn test_get_by_query_with_retries() {
     let _ = do_get_by_query_with_retries().await;
 }
@@ -197,7 +197,7 @@ async fn test_get_with_redirect() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "smol-rt")]
-#[apply(test!)]
+#[compio::test]
 async fn test_get_with_redirect() {
     let _ = do_get_with_redirect().await;
 }
@@ -223,6 +223,5 @@ async fn test_fetch_from_str() -> Result<(), Box<dyn std::error::Error>> {
         .fetch_with(client)
         .await?;
     assert_eq!(response.status(), 200);
-
     Ok(())
 }

@@ -3,7 +3,7 @@ use crate::{
     response::DeboaResponse,
     HttpVersion, Result,
 };
-use http::{Request, Response, Version};
+use http::{Request, Version};
 use http_body::Body;
 use hyper_body_utils::HttpBody;
 use std::{collections::HashMap, future::Future, net::IpAddr, sync::Arc};
@@ -14,10 +14,6 @@ use url::Url;
 pub trait HttpConnection {
     /// The sender to use.
     type Sender;
-    /// The request body type.
-    type ReqBody: Body + Unpin;
-    /// The response body type.
-    type ResBody: Body + Unpin;
 
     /// Get the sender.
     fn sender(&mut self) -> &mut Self::Sender;
@@ -250,21 +246,6 @@ pub trait ProtoConnection {
     /// * `Version` - The connection protocol.
     ///
     fn protocol(&self) -> Version;
-
-    /// Send a request.
-    ///
-    /// # Arguments
-    ///
-    /// * `request` - The request to send.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<Response<Self::ResBody>>` - The response or error.
-    ///
-    fn send_request(
-        &mut self,
-        request: Request<Self::ReqBody>,
-    ) -> impl Future<Output = Result<Response<Self::ResBody>>>;
 }
 
 /// Trait that represents the HTTP connection pool.

@@ -4,7 +4,6 @@ use crate::{errors::DeboaError, request::IntoRequest, response::DeboaResponse};
 use std::{fmt::Display, future::Future};
 
 pub mod cache;
-pub mod catcher;
 /// Certificate module
 pub mod cert;
 /// Connection module

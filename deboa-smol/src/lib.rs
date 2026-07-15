@@ -31,8 +31,6 @@ compile_error!("HTTP3 is not supported within native-tls runtime.");
 #[cfg(not(any(feature = "http1", feature = "http2", feature = "http3")))]
 compile_error!("At least one HTTP version feature must be enabled.");
 
-pub(crate) const MAX_ERROR_MESSAGE_SIZE: usize = 50000;
-
 #[cfg(feature = "rust-tls")]
 #[inline]
 pub(crate) fn alpn() -> Vec<Vec<u8>> {
@@ -64,7 +62,6 @@ use crate::{
     client::{dns::DefaultDnsResolver, http::conn::pool::HttpConnectionPool},
 };
 use deboa::{
-    catcher::DeboaCatcher,
     conn::{ConnectionConfig, HttpConnectionDispatcher, HttpConnectionPool as _},
     dns::DnsResolver,
     errors::{DeboaError, RequestError},
@@ -170,7 +167,6 @@ pub struct ClientBuilder {
     request_timeout: u64,
     identity: Option<Identity>,
     certificate: Option<Certificate>,
-    catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     skip_cert_verification: bool,
     pool: RwLock<HttpConnectionPool>,
@@ -318,59 +314,6 @@ impl ClientBuilder {
     #[inline]
     pub fn certificate(mut self, certificate: Certificate) -> Self {
         self.certificate = Some(certificate);
-        self
-    }
-
-    /// Adds an error handler for specific types of errors.
-    ///
-    /// Catchers are called when an error occurs during request execution.
-    /// They can be used to implement custom error handling logic, such as
-    /// automatic retries, logging, or error transformation.
-    ///
-    /// # Arguments
-    ///
-    /// * `catcher` - A function or closure that handles specific error types.
-    ///
-    /// # Examples
-    ///
-    /// ## Automatic Retries
-    ///
-    /// ```ignore
-    /// use deboa::{Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
-    /// use deboa_smol::Client;
-    ///
-    /// struct AddAuthorization;
-    ///
-    /// #[deboa::async_trait]
-    /// impl DeboaCatcher for AddAuthorization {
-    ///     async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
-    ///         println!("Request: {:?}", request.url());
-    ///         Ok(None)
-    ///     }
-    ///
-    ///     async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
-    ///         println!("Response: {:?}", response.status());
-    ///         Ok(())
-    ///     }
-    /// }
-    ///
-    /// use macro_rules_attribute::apply;
-    /// use smol_macros::main;
-    ///
-    /// #[apply(main!)]
-    /// async fn main() -> Result<()> {
-    ///     let client = Client::builder()
-    ///         .catch(AddAuthorization)
-    ///         .build();
-    ///     Ok(())
-    /// }
-    /// ```
-    pub fn catch<C: DeboaCatcher>(mut self, catcher: C) -> Self {
-        if let Some(catchers) = &mut self.catchers {
-            catchers.push(Box::new(catcher));
-        } else {
-            self.catchers = Some(vec![Box::new(catcher)]);
-        }
         self
     }
 
@@ -553,7 +496,6 @@ impl ClientBuilder {
             request_timeout: self.request_timeout,
             identity: self.identity,
             certificate: self.certificate,
-            catchers: self.catchers,
             protocol: self.protocol,
             skip_cert_verification: self.skip_cert_verification,
             pool: self.pool,
@@ -621,7 +563,6 @@ pub struct Client {
     request_timeout: u64,
     identity: Option<Identity>,
     certificate: Option<Certificate>,
-    catchers: Option<Vec<Box<dyn DeboaCatcher>>>,
     protocol: HttpVersion,
     skip_cert_verification: bool,
     pool: RwLock<HttpConnectionPool>,
@@ -667,7 +608,6 @@ impl Default for Client {
             request_timeout: 0,
             identity: None,
             certificate: None,
-            catchers: None,
             protocol: default_protocol(),
             skip_cert_verification: false,
             pool: RwLock::new(HttpConnectionPool::default()),
@@ -728,7 +668,6 @@ impl Client {
             request_timeout: 0,
             identity: None,
             certificate: None,
-            catchers: None,
             protocol: default_protocol(),
             skip_cert_verification: false,
             pool: RwLock::new(HttpConnectionPool::default()),
@@ -752,7 +691,6 @@ impl Client {
             request_timeout: 0,
             identity: None,
             certificate: None,
-            catchers: None,
             protocol: default_protocol(),
             skip_cert_verification: false,
             pool: RwLock::new(HttpConnectionPool::default()),

@@ -1,15 +1,31 @@
+use crate::tests::helpers::{create_client, create_server};
 use deboa::{request::DeboaRequest, HttpClient};
-use http::StatusCode;
+use easyhttpmock_vetis_compio::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
+use http::{Method, StatusCode};
 
-use crate::Client;
 //
 // PUT
 //
 #[compio::test]
 async fn test_put() -> Result<(), Box<dyn std::error::Error>> {
-    let client = Client::default();
+    let mock = Mock::of(
+        given(method(Method::PUT).and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
+    );
 
-    let request = DeboaRequest::put("https://jsonplaceholder.typicode.com/posts/1")?
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
+    let client = create_client();
+
+    let request = DeboaRequest::put(server.url("/posts/1"))?
         .text("ping")
         .build()?;
 
@@ -18,6 +34,10 @@ async fn test_put() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     assert_eq!(response.status(), StatusCode::OK);
+
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }

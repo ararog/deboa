@@ -12,7 +12,7 @@
 //!
 //! - Automatic connection pooling
 //! - Protocol negotiation (HTTP/1.1, HTTP/2)
-//! - Connection lifecycle management\
+//! - Connection lifecycle management
 //! - Thread-safe connection handling
 //! ```
 use crate::cert::{DeboaCertificate, DeboaIdentity};
@@ -20,15 +20,15 @@ use crate::cert::{DeboaCertificate, DeboaIdentity};
 use deboa::request::Http1Request;
 #[cfg(feature = "http2")]
 use deboa::request::Http2Request;
-#[cfg(feature = "http3")]
-use deboa::request::Http3Request;
 use deboa::{
     conn::{ConnectionConfig, HttpConnectionDispatcher, ProtoConnection},
-    errors::DeboaError,
+    errors::{DeboaError, RequestError},
     response::DeboaResponse,
     HttpVersion, Result,
 };
-use http::Request;
+#[cfg(feature = "http3")]
+use deboa_h3::generic::Http3Request;
+use http::{Request, Response};
 use hyper_body_utils::HttpBody;
 use std::{marker::PhantomData, sync::Arc};
 use url::Url;
@@ -68,6 +68,23 @@ pub enum DeboaConnection {
     Http3(Box<BaseHttpConnection<Http3Request, HttpBody, HttpBody>>),
 }
 
+impl DeboaConnection {
+    #[cfg(feature = "http1")]
+    pub fn http1(conn: BaseHttpConnection<Http1Request, HttpBody, HttpBody>) -> Self {
+        DeboaConnection::Http1(Box::new(conn))
+    }
+
+    #[cfg(feature = "http2")]
+    pub fn http2(conn: BaseHttpConnection<Http2Request, HttpBody, HttpBody>) -> Self {
+        DeboaConnection::Http2(Box::new(conn))
+    }
+
+    #[cfg(feature = "http3")]
+    pub fn http3(conn: BaseHttpConnection<Http3Request, HttpBody, HttpBody>) -> Self {
+        DeboaConnection::Http3(Box::new(conn))
+    }
+}
+
 impl HttpConnectionDispatcher for DeboaConnection {
     /// Send a request over the connection.
     ///
@@ -85,34 +102,28 @@ impl HttpConnectionDispatcher for DeboaConnection {
         request: Request<HttpBody>,
     ) -> Result<DeboaResponse> {
         let url = url.clone();
-        let response = match self {
+        let conn = match self {
             #[cfg(feature = "http1")]
-            DeboaConnection::Http1(ref mut conn) => {
-                let response = conn
-                    .send_request(request)
-                    .await?;
-                DeboaResponse::new(url, response)
-            }
+            DeboaConnection::Http1(ref mut conn) => conn,
             #[cfg(feature = "http2")]
-            DeboaConnection::Http2(ref mut conn) => {
-                let response = conn
-                    .send_request(request)
-                    .await?;
-                DeboaResponse::new(url, response)
-            }
+            DeboaConnection::Http2(ref mut conn) => conn,
             #[cfg(feature = "http3")]
-            DeboaConnection::Http3(ref mut conn) => {
-                let response = conn
-                    .send_request(request)
-                    .await?;
-                DeboaResponse::new(url, response)
-            }
+            DeboaConnection::Http3(ref mut conn) => conn,
+            #[allow(unreachable_patterns)]
             _ => {
                 return Err(DeboaError::UnsupportedProtocol);
             }
         };
 
-        Ok(response)
+        let response = conn
+            .sender
+            .send_request(request)
+            .await
+            .map_err(|e| DeboaError::Request(RequestError::Send { message: e.to_string() }))?;
+
+        let (parts, body) = response.into_parts();
+
+        Ok(DeboaResponse::new(url, Response::from_parts(parts, HttpBody::from_incoming(body))))
     }
 }
 
@@ -147,19 +158,19 @@ impl ConnectionFactory {
             HttpVersion::Http1 => {
                 let conn =
                     BaseHttpConnection::<Http1Request, HttpBody, HttpBody>::connect(config).await?;
-                DeboaConnection::Http1(Box::new(conn))
+                DeboaConnection::http1(conn)
             }
             #[cfg(feature = "http2")]
             HttpVersion::Http2 => {
                 let conn =
                     BaseHttpConnection::<Http2Request, HttpBody, HttpBody>::connect(config).await?;
-                DeboaConnection::Http2(Box::new(conn))
+                DeboaConnection::http2(conn)
             }
             #[cfg(feature = "http3")]
             HttpVersion::Http3 => {
                 let conn = BaseHttpConnection::<Http3Request, HttpBody, HttpBody>::connect(&config)
                     .await?;
-                DeboaConnection::Http3(Box::new(conn))
+                DeboaConnection::http3(conn)
             }
             _ => {
                 return Err(DeboaError::UnsupportedProtocol);

@@ -1,7 +1,7 @@
 #![allow(unused_variables)]
 use crate::common::helpers::{create_client, create_server};
 use deboa_macros::submit;
-use easyhttpmock_vetis_smol::{
+use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };

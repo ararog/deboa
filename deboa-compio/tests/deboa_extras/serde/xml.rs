@@ -7,10 +7,8 @@ use deboa_extras::serde::xml::XmlBody;
 use http::header;
 use http::StatusCode;
 use http_body_util::BodyExt;
-use macro_rules_attribute::apply;
-use smol_macros::test;
 
-#[apply(test!)]
+#[compio::test]
 async fn test_set_xml() -> Result<()> {
     let request = DeboaRequest::post(fake_url())?
         .body_as(XmlBody, sample_post())?
@@ -28,7 +26,7 @@ async fn test_set_xml() -> Result<()> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_xml_response() -> Result<()> {
     let data = sample_post();
 

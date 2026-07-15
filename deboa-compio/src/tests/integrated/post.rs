@@ -1,19 +1,42 @@
-use crate::Client;
+use crate::{
+    tests::{
+        helpers::{create_client, create_server},
+        TestResult,
+    },
+    Client,
+};
 use deboa::{
     form::{DeboaForm, EncodedForm, MultiPartForm},
     request::DeboaRequest,
     HttpClient,
 };
-use http::StatusCode;
+use easyhttpmock_vetis_compio::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
+use http::{header::CONTENT_TYPE, Method, StatusCode};
+
 //
 // POST
 //
 
 #[compio::test]
 async fn test_post() -> Result<(), Box<dyn std::error::Error>> {
-    let client: Client = Client::default();
+    let mock = Mock::of(
+        given(method(Method::POST).and(path("/posts"))).will_return(
+            StatusCode::CREATED
+                .respond()
+                .with_body(b"{\n  \"id\": 101\n}"),
+        ),
+    );
 
-    let request = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts")?
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
+    let client: Client = create_client();
+
+    let request = DeboaRequest::post(server.url("/posts"))?
         .text("{ \"title\": \"foo\", \"body\": \"bar\", \"userId\": 1 }")
         .build()?;
 
@@ -29,18 +52,38 @@ async fn test_post() -> Result<(), Box<dyn std::error::Error>> {
         b"{\n  \"id\": 101\n}",
     );
 
+    server
+        .stop()
+        .await?;
+
     Ok(())
 }
 
 #[compio::test]
 async fn test_post_encoded_form() -> Result<(), Box<dyn std::error::Error>> {
-    let client: Client = Client::default();
+    let mock = Mock::of(
+        given(method(Method::POST).and(path("/posts"))).will_return(
+            StatusCode::CREATED
+                .respond()
+                .with_header(
+                    CONTENT_TYPE.as_str(),
+                    mime::APPLICATION_WWW_FORM_URLENCODED.essence_str(),
+                )
+                .with_body(b"ping"),
+        ),
+    );
+
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
+    let client: Client = create_client();
 
     let mut form = EncodedForm::builder();
     form.field("name", "deboa");
     form.field("version", "0.0.1");
 
-    let request = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts")?
+    let request = DeboaRequest::post(server.url("/posts"))?
         .form(form.into())
         .build()?;
 
@@ -53,12 +96,12 @@ async fn test_post_encoded_form() -> Result<(), Box<dyn std::error::Error>> {
         response
             .bytes()
             .await,
-        [
-            123, 10, 32, 32, 34, 110, 97, 109, 101, 34, 58, 32, 34, 100, 101, 98, 111, 97, 34, 44,
-            10, 32, 32, 34, 118, 101, 114, 115, 105, 111, 110, 34, 58, 32, 34, 48, 46, 48, 46, 49,
-            34, 44, 10, 32, 32, 34, 105, 100, 34, 58, 32, 49, 48, 49, 10, 125
-        ]
+        b"ping"
     );
+
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }
@@ -69,9 +112,22 @@ async fn test_post_multipart_form() -> Result<(), Box<dyn std::error::Error>> {
     form.field("name", "deboa");
     form.field("version", "0.0.1");
 
-    let client: Client = Client::default();
+    let mock = Mock::of(
+        given(method(Method::POST).and(path("/posts"))).will_return(
+            StatusCode::CREATED
+                .respond()
+                .with_header(CONTENT_TYPE.as_str(), mime::MULTIPART_FORM_DATA.essence_str())
+                .with_body(b"ping"),
+        ),
+    );
 
-    let request = DeboaRequest::post("https://jsonplaceholder.typicode.com/posts")?
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
+    let client: Client = create_client();
+
+    let request = DeboaRequest::post(server.url("/posts"))?
         .form(form.into())
         .build()?;
 
@@ -84,8 +140,12 @@ async fn test_post_multipart_form() -> Result<(), Box<dyn std::error::Error>> {
         response
             .bytes()
             .await,
-        [123, 10, 32, 32, 34, 105, 100, 34, 58, 32, 49, 48, 49, 10, 125]
+        b"ping"
     );
+
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }

@@ -1,7 +1,7 @@
 use crate::common::helpers::{create_server, CA_CERT, SKIP_CERT_VERIFICATION};
 use deboa::cert::{Certificate, ContentEncoding};
-use deboa_smol::Client as DeboaClient;
-use easyhttpmock_vetis_smol::{
+use deboa_compio::Client as DeboaClient;
+use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };

@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use easyhttpmock_vetis_smol::{
+use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
@@ -60,7 +60,7 @@ async fn do_get_by_id() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_get_by_id() -> Result<(), Box<dyn Error>> {
     do_get_by_id().await
 }
@@ -99,7 +99,7 @@ async fn do_get_all() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_get_all() -> Result<(), Box<dyn Error>> {
     do_get_all().await
 }
@@ -136,7 +136,7 @@ async fn do_query_by_id() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_query_by_id() -> Result<(), Box<dyn Error>> {
     do_query_by_id().await
 }
@@ -173,7 +173,7 @@ async fn do_query_by_title() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_query_by_title() -> Result<(), Box<dyn Error>> {
     do_query_by_title().await
 }

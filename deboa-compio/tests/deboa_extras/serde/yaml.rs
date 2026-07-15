@@ -7,10 +7,8 @@ use deboa_extras::serde::yaml::YamlBody;
 use http::header;
 use http::StatusCode;
 use http_body_util::BodyExt;
-use macro_rules_attribute::apply;
-use smol_macros::test;
 
-#[apply(test!)]
+#[compio::test]
 async fn test_set_yaml() -> Result<()> {
     let request = DeboaRequest::post(fake_url())?
         .body_as(YamlBody, sample_post())?
@@ -28,7 +26,7 @@ async fn test_set_yaml() -> Result<()> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_response_yaml() -> Result<()> {
     let data = sample_post();
 

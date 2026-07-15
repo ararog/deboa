@@ -8,7 +8,7 @@
 #[cfg(feature = "native-tls")]
 use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdentity};
 #[cfg(feature = "rust-tls")]
-use deboa::cert::Certificate;
+use deboa::cert::Certificate as _;
 use deboa::cert::ContentEncoding;
 #[cfg(feature = "rust-tls")]
 use rustls::pki_types::{pem::PemObject, CertificateDer, PrivateKeyDer};
@@ -48,10 +48,16 @@ pub struct DeboaIdentity {
     encoding: Option<ContentEncoding>,
 }
 
+/// Deprecated: Use `Identity` instead.
+///
+/// This type alias is kept for backward compatibility but will be removed in a future version.
 #[deprecated(note = "Use `Identity` instead")]
 pub type ClientCert = Identity;
 
+/// Type alias for backward compatibility
 pub type Identity = DeboaIdentity;
+/// Type alias for backward compatibility
+pub type Certificate = DeboaCertificate;
 
 impl DeboaIdentity {
     #[cfg(feature = "native-tls")]

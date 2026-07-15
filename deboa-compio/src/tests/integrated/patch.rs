@@ -1,14 +1,33 @@
-use crate::Client;
+use crate::{
+    tests::helpers::{create_client, create_server},
+    Client,
+};
 use deboa::{request::DeboaRequest, HttpClient};
-use http::StatusCode;
+use easyhttpmock_vetis_compio::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
+use http::{Method, StatusCode};
 //
 // PATCH
 //
 #[compio::test]
 async fn test_patch() -> Result<(), Box<dyn std::error::Error>> {
-    let client: Client = Client::default();
+    let mock = Mock::of(
+        given(method(Method::PATCH).and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .with_body(b"done"),
+        ),
+    );
 
-    let request = DeboaRequest::patch("https://jsonplaceholder.typicode.com/posts/1")?
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
+    let client: Client = create_client();
+
+    let request = DeboaRequest::patch(server.url("/posts/1"))?
         .text("text")
         .build()?;
 
@@ -21,8 +40,12 @@ async fn test_patch() -> Result<(), Box<dyn std::error::Error>> {
         response
             .text()
             .await?,
-        "{\n  \"userId\": 1,\n  \"id\": 1,\n  \"title\": \"sunt aut facere repellat provident occaecati excepturi optio reprehenderit\",\n  \"body\": \"quia et suscipit\\nsuscipit recusandae consequuntur expedita et cum\\nreprehenderit molestiae ut ut quas totam\\nnostrum rerum est autem sunt rem eveniet architecto\"\n}"
+        "done"
     );
+
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }

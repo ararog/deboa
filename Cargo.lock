@@ -433,6 +433,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
 
 [[package]]
+name = "bytemuck"
+version = "1.25.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d6aedf8ae72766347502cf3cb4f41cf5e9cc37d28bee90f1fdaaae15f9cf9424"
+
+[[package]]
 name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -646,11 +652,13 @@ checksum = "e5cf9e29d3c2d2a37078198795631b61d2b5c9cab68191e31526fe342d742135"
 dependencies = [
  "compio-buf",
  "compio-driver",
+ "compio-fs",
  "compio-io",
  "compio-log",
  "compio-macros",
  "compio-net",
  "compio-runtime",
+ "compio-signal",
  "compio-tls",
 ]
 
@@ -708,11 +716,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "compio-fs"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "934c384c7c1dca1d68540bd0ef16186a8e7f33fab330e54652b45ee80f051ee4"
+dependencies = [
+ "cfg_aliases",
+ "compio-buf",
+ "compio-driver",
+ "compio-io",
+ "compio-runtime",
+ "futures-util",
+ "libc",
+ "pin-project-lite",
+ "rustix",
+ "widestring",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
 name = "compio-io"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3a354e085c4046dd8d2d9d514cf8c15c615eb8adf6c5f41dbf7899420457e9b"
 dependencies = [
+ "bytemuck",
  "compio-buf",
  "futures-util",
  "libc",
@@ -767,6 +795,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "compio-quic"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "edd50cb1b2c2c8276728871bc3bf3c12618c551cdd550123d564aa49b059aea5"
+dependencies = [
+ "cfg_aliases",
+ "compio-buf",
+ "compio-io",
+ "compio-log",
+ "compio-net",
+ "compio-runtime",
+ "flume",
+ "futures-util",
+ "h3",
+ "h3-datagram",
+ "libc",
+ "quinn-proto",
+ "rustc-hash",
+ "rustls",
+ "synchrony",
+ "thiserror 2.0.18",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
 name = "compio-runtime"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -794,6 +847,19 @@ checksum = "fa4a63ae089032966c7eb5411267dd14524fb249e6833818b2d6d9d9548bf504"
 dependencies = [
  "cfg-if",
  "loom",
+]
+
+[[package]]
+name = "compio-signal"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1748b284601a5a267824b36894c7fc5e488b503f14a0a508f3b457ae018a451"
+dependencies = [
+ "nix",
+ "once_cell",
+ "slab",
+ "synchrony",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1080,7 +1146,7 @@ dependencies = [
 
 [[package]]
 name = "deboa"
-version = "0.1.0-beta.19"
+version = "0.1.0-beta.22"
 dependencies = [
  "async-trait",
  "base64",
@@ -1089,8 +1155,6 @@ dependencies = [
  "cookie",
  "criterion",
  "futures",
- "h3",
- "h3-quinn",
  "http",
  "http-body",
  "http-body-util",
@@ -1114,18 +1178,15 @@ dependencies = [
 
 [[package]]
 name = "deboa"
-version = "0.1.0-beta.19"
+version = "0.1.0-beta.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64219cb27db0478d53ccea3b46957d398e2fd3ce2a3239133b94d6efe79fd1b2"
+checksum = "d94b5e7870d4833ea967dda5ca211f3b8aa27c2460f636366647667961915503"
 dependencies = [
  "async-trait",
  "base64",
  "bytes",
- "cfg-if",
  "cookie",
  "futures",
- "h3",
- "h3-quinn",
  "http",
  "http-body",
  "http-body-util",
@@ -1147,26 +1208,30 @@ dependencies = [
 
 [[package]]
 name = "deboa-compio"
-version = "0.1.0"
+version = "0.1.1-beta.4"
 dependencies = [
  "async-executor",
  "async-trait",
  "base64",
  "bytes",
+ "ciborium",
  "compio",
- "compio-runtime",
+ "compio-quic",
  "compio-tls",
  "cookie",
  "criterion",
  "cyper-core",
- "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
+ "deboa-fory",
+ "deboa-h3",
  "deboa-macros",
+ "easyhttpmock-vetis-compio",
+ "fory",
+ "fory-core",
  "futures",
- "futures-rustls",
  "futures-util",
  "h3",
- "h3-quinn",
  "http",
  "http-body",
  "http-body-util",
@@ -1176,13 +1241,11 @@ dependencies = [
  "indexmap",
  "io-uring",
  "log",
- "macro_rules_attribute",
  "mime",
  "minimime",
  "mockall",
  "multer",
  "pin-project-lite",
- "quinn",
  "rand 0.10.2",
  "regex",
  "rustls",
@@ -1203,16 +1266,15 @@ dependencies = [
 
 [[package]]
 name = "deboa-extras"
-version = "0.0.9-beta.13"
+version = "0.0.9-beta.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b603ec82ce178e451c497e78bbda40cb532e378cfe54f36a6af0151cf530e166"
+checksum = "811e7b3bb5cd330554c90f0d120856b53692d49cb1152e07957f9857909a2f94"
 dependencies = [
  "bytes",
  "ciborium",
- "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "flexbuffers",
  "futures",
- "futures-util",
  "http",
  "http-body-util",
  "hyper",
@@ -1231,21 +1293,34 @@ dependencies = [
 
 [[package]]
 name = "deboa-fory"
-version = "0.1.6-beta.3"
+version = "0.1.6-beta.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8544822653acbcde8cd15fd1d892124a5b57e75075ff998b728dcf9321fa78ca"
+checksum = "a0d04a57b343fd5a6cabe9d6a476e33f30d44a00807ebcb6b2624ddc063b5ff4"
 dependencies = [
- "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "fory",
  "fory-core",
  "http",
 ]
 
 [[package]]
-name = "deboa-macros"
-version = "0.1.0-beta.4"
+name = "deboa-h3"
+version = "0.1.1-beta.1"
 dependencies = [
- "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bytes",
+ "compio-quic",
+ "deboa 0.1.0-beta.22 (registry+https://github.com/rust-lang/crates.io-index)",
+ "h3",
+ "h3-quinn",
+ "http",
+ "hyper-body-utils",
+]
+
+[[package]]
+name = "deboa-macros"
+version = "0.1.0-beta.5"
+dependencies = [
+ "deboa 0.1.0-beta.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
  "http",
  "proc-macro2",
@@ -1256,7 +1331,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-smol"
-version = "0.1.0-beta.7"
+version = "0.1.0-beta.9"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -1266,9 +1341,10 @@ dependencies = [
  "ciborium",
  "cookie",
  "criterion",
- "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
  "deboa-fory",
+ "deboa-h3",
  "deboa-macros",
  "easyhttpmock-vetis-smol",
  "fory",
@@ -1315,7 +1391,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-tokio"
-version = "0.1.0-beta.7"
+version = "0.1.0-beta.9"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -1325,9 +1401,10 @@ dependencies = [
  "ciborium",
  "cookie",
  "criterion",
- "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
  "deboa-fory",
+ "deboa-h3",
  "deboa-macros",
  "easyhttpmock-vetis-tokio",
  "fory",
@@ -1456,9 +1533,9 @@ checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 
 [[package]]
 name = "easyhttpmock"
-version = "0.1.3-beta.13"
+version = "0.1.3-beta.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c00d25bb7937ef1d45268066ff6e0b477c33b7bb490047a3ca66e318271bc40"
+checksum = "6a1b5de14e89e7fae6c58b738997aa531f4fae63f6066ccb3a0b77dccd02638e"
 dependencies = [
  "bytes",
  "caramelo",
@@ -1479,10 +1556,25 @@ dependencies = [
 ]
 
 [[package]]
-name = "easyhttpmock-vetis-smol"
-version = "0.1.0-beta.6"
+name = "easyhttpmock-vetis-compio"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bcc2c97a9aaa44e6a6e86f8fe103d2d71755aae5e6f34df954bbf4eb33ea8db1"
+checksum = "15549da77a9735660d1fadd51b20abc327023005a6d10601839a453a7472616d"
+dependencies = [
+ "caramelo",
+ "compio",
+ "easyhttpmock",
+ "http",
+ "http-body-util",
+ "rand 0.10.2",
+ "vetis-compio",
+]
+
+[[package]]
+name = "easyhttpmock-vetis-smol"
+version = "0.1.0-beta.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28691930ae2ea52622077afda0b198a02a03b2c131f1cda15c8b5c11b5265cef"
 dependencies = [
  "caramelo",
  "easyhttpmock",
@@ -1497,9 +1589,9 @@ dependencies = [
 
 [[package]]
 name = "easyhttpmock-vetis-tokio"
-version = "0.1.0-beta.6"
+version = "0.1.0-beta.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "372064684c7d74cbf524da75b1c3639dded03743f21b71c8f154c2694430ac83"
+checksum = "8ceea7a7b82e1420c0f94b131f370f0e99a0685850ba12cb175f08e438ec3531"
 dependencies = [
  "caramelo",
  "easyhttpmock",
@@ -1736,6 +1828,8 @@ version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e139bc46ca777eb5efaf62df0ab8cc5fd400866427e56c68b22e414e53bd3be"
 dependencies = [
+ "futures-core",
+ "futures-sink",
  "spin",
 ]
 
@@ -2016,9 +2110,9 @@ dependencies = [
 
 [[package]]
 name = "granit-parser"
-version = "0.0.6"
+version = "0.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14668345710c92cb04181d9268407067689327d4b055273e3c4179a0777ee6a1"
+checksum = "d03f81ad4732830d85cfd417a9f62cde6dadda4354d37d078a6084a19560aa2d"
 dependencies = [
  "arraydeque",
  "smallvec",
@@ -2066,6 +2160,17 @@ dependencies = [
  "http",
  "pin-project-lite",
  "tokio",
+]
+
+[[package]]
+name = "h3-datagram"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d2c9f77921668673721ae40f17c729fc48b9e38a663858097cea547484fdf0f"
+dependencies = [
+ "bytes",
+ "h3",
+ "pin-project-lite",
 ]
 
 [[package]]
@@ -2227,13 +2332,16 @@ dependencies = [
 
 [[package]]
 name = "hyper-body-utils"
-version = "0.1.8"
+version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75020e6f5bca49269aa84a3b6fb90465374979828597423122ad7f7d4f55f0d7"
+checksum = "3bbcedb0160531e4026eaa915976bb1f86f724ac71e8a7df94e78679004a97a0"
 dependencies = [
  "bytes",
+ "compio-quic",
  "futures",
  "h3",
+ "h3-quinn",
+ "http",
  "http-body-util",
  "hyper",
 ]
@@ -2764,6 +2872,18 @@ dependencies = [
 
 [[package]]
 name = "mockall_derive"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca41ce716dda6a9be188b385aa78ee5260fc25cd3802cb2a8afdc6afbe6b6dbf"
+dependencies = [
+ "cfg-if",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "mockall_derive"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9cfe16fbe8a314aeec0b861ac24e60b1e123e97634bab045475b9d6a18416fd8"
@@ -2864,6 +2984,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "nix"
+version = "0.31.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf20d2fde8ff38632c426f1165ed7436270b44f199fc55284c38276f9db47c3d"
+dependencies = [
+ "bitflags 2.13.0",
+ "cfg-if",
+ "cfg_aliases",
+ "libc",
+]
+
+[[package]]
 name = "nohash-hasher"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2909,7 +3041,7 @@ dependencies = [
  "num-integer",
  "num-iter",
  "num-traits",
- "rand 0.8.6",
+ "rand 0.8.7",
  "smallvec",
  "zeroize",
 ]
@@ -3474,7 +3606,7 @@ dependencies = [
  "bytes",
  "getrandom 0.3.4",
  "lru-slab",
- "rand 0.9.4",
+ "rand 0.9.5",
  "ring",
  "rustc-hash",
  "rustls",
@@ -3542,9 +3674,9 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.8.6"
+version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ca0ecfa931c29007047d1bc58e623ab12e5590e8c7cc53200d5202b69266d8a"
+checksum = "22f6172bdec972074665ed81ed53b71da00bfc44b65a753cfde883ec4c702a1a"
 dependencies = [
  "rand_chacha 0.3.1",
  "rand_core 0.6.4",
@@ -3552,9 +3684,9 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.9.4"
+version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44c5af06bb1b7d3216d91932aed5265164bf384dc89cd6ba05cf59a35f5f76ea"
+checksum = "b9ef1d0d795eb7d84685bca4f72f3649f064e6641543d3a8c415898726a57b41"
 dependencies = [
  "rand_chacha 0.9.0",
  "rand_core 0.9.5",
@@ -4059,9 +4191,9 @@ dependencies = [
 
 [[package]]
 name = "serde-saphyr"
-version = "0.0.28"
+version = "0.0.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a15e3bc297370dc9c526bcf0986f29167a9286cfaad404f2f572b3074dabe5ec"
+checksum = "7bd22781911de0ca6debda95f073c8f18bec65d1a94f1fa9573f3102e514cea4"
 dependencies = [
  "ahash",
  "annotate-snippets",
@@ -4895,12 +5027,12 @@ dependencies = [
 
 [[package]]
 name = "vamo"
-version = "0.0.9-beta.6"
+version = "0.0.9-beta.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6201a30b4976b5733136386c5591073c32d460ab092783c8f1116d2a653f8f79"
+checksum = "3f3d39aa44aab63b8f48410f6736c6080b33bc2b4dff6c869f9ade3f458a2fd8"
 dependencies = [
  "base64",
- "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
  "http",
  "serde",
@@ -4909,11 +5041,11 @@ dependencies = [
 
 [[package]]
 name = "vamo-macros"
-version = "0.0.9-beta.6"
+version = "0.0.9-beta.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c658f5ea18d9c7c0d0c33594d19feaac55cdf3d83e54124203c50e18331caf64"
+checksum = "c8ee72cc83e12c4db713c69373f2a0a6f4ce326f9960a449fd00b24ace07a012"
 dependencies = [
- "deboa 0.1.0-beta.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0-beta.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
  "http",
  "proc-macro2",
@@ -4939,26 +5071,22 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vetis"
-version = "0.1.4-beta.9"
+version = "0.1.4-beta.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c053d897ec9609758ea774d2cd1d2de62cedeaf722327e50801bfb5f7eca407"
+checksum = "3e44d5b52fb1bc27881b4ca4375cb26c21de218621342c7ef31459bea1d3626e"
 dependencies = [
  "argon2",
  "async-lock",
  "base64",
  "bcrypt",
  "bytes",
- "cfg-if",
- "clap",
- "env_logger",
  "futures-util",
  "http",
  "http-body-util",
  "hyper-body-utils",
  "log",
- "mimalloc",
  "radix_trie",
- "rand 0.9.4",
+ "rand 0.10.2",
  "serde",
  "serde_yaml_ng",
  "socket2",
@@ -4969,10 +5097,44 @@ dependencies = [
 ]
 
 [[package]]
-name = "vetis-smol"
-version = "0.1.0-beta.4"
+name = "vetis-compio"
+version = "0.1.0-beta.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9fccd0aa89a522cad526428226bd3dc4be8b326afbf312a464b30d602e28995"
+checksum = "d68027cc4b525b932e9faa6e72e154c0ef1a2aba3f329e3b28c8c6078e86ec90"
+dependencies = [
+ "async-lock",
+ "bytes",
+ "clap",
+ "compio",
+ "compio-tls",
+ "cyper-core",
+ "env_logger",
+ "futures-util",
+ "http",
+ "http-body-util",
+ "hyper",
+ "hyper-body-utils",
+ "hyper-util",
+ "log",
+ "radix_trie",
+ "rand 0.10.2",
+ "rustls",
+ "send_wrapper",
+ "serde",
+ "serde_yaml_ng",
+ "socket2",
+ "thiserror 2.0.18",
+ "time",
+ "typetag",
+ "url",
+ "vetis",
+]
+
+[[package]]
+name = "vetis-smol"
+version = "0.1.0-beta.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b58fc9c3815f10a4eba9053d2ee9bec378acb233dd9d803f205a2403eefea410"
 dependencies = [
  "async-lock",
  "async-net",
@@ -5012,9 +5174,9 @@ dependencies = [
 
 [[package]]
 name = "vetis-tokio"
-version = "0.1.0-beta.4"
+version = "0.1.0-beta.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c5cd400a9e345db24fee39063a5adc2bfb0afdcb7969b721d234c04d7da91e1"
+checksum = "85aaf4e0edb237c7b4977ea2b1c5c4cf2708c66a46b136f12573c3a6da6011c2"
 dependencies = [
  "async-lock",
  "bytes",
@@ -5029,7 +5191,6 @@ dependencies = [
  "hyper-util",
  "log",
  "mimalloc",
- "minimime",
  "moka",
  "peekable",
  "quinn",

@@ -12,8 +12,6 @@ use deboa_extras::serde::cbor::CborBody;
 use http::header;
 use http::StatusCode;
 use http_body_util::BodyExt;
-use macro_rules_attribute::apply;
-use smol_macros::test;
 
 fn build_sample_cbor_body() -> Vec<u8> {
     let mut buf = Vec::new();
@@ -22,7 +20,7 @@ fn build_sample_cbor_body() -> Vec<u8> {
     buf
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_set_cbor() -> Result<()> {
     let request = DeboaRequest::post(fake_url())?
         .body_as(CborBody, sample_post())?
@@ -68,7 +66,7 @@ fn test_set_cbor_registers_headers() -> Result<()> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_response_cbor() -> Result<()> {
     let data = sample_post();
 
@@ -86,7 +84,7 @@ async fn test_response_cbor() -> Result<()> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_response_cbor_invalid_body() {
     let response = DeboaResponse::builder(fake_url())
         .status(StatusCode::OK)

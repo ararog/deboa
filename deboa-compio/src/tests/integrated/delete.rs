@@ -1,20 +1,39 @@
+use crate::tests::helpers::{create_client, create_server};
 use deboa::request::DeboaRequest;
-use http::StatusCode;
-
-use crate::Client;
+use easyhttpmock_vetis_compio::{
+    matchers::{method, path},
+    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
+};
+use http::{Method, StatusCode};
 
 //
 // DELETE
 //
 #[compio::test]
 async fn test_delete() -> Result<(), Box<dyn std::error::Error>> {
-    let client = Client::default();
+    let mock = Mock::of(
+        given(method(Method::DELETE).and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
+    );
 
-    let response = DeboaRequest::delete("https://jsonplaceholder.typicode.com/posts/1")?
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
+    let client = create_client();
+
+    let response = DeboaRequest::delete(server.url("/posts/1"))?
         .send_with(&client)
         .await?;
 
     assert_eq!(response.status(), StatusCode::OK);
+
+    server
+        .stop()
+        .await?;
 
     Ok(())
 }

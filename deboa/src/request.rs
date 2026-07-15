@@ -62,23 +62,6 @@
 //!     .await?;
 //! ```
 
-use std::{collections::HashMap, fmt::Debug, future::Future, str::FromStr, sync::Arc};
-
-use bytes::Bytes;
-use h3_quinn::OpenStreams;
-use http::{
-    header::{self},
-    HeaderMap, HeaderName, HeaderValue, Method,
-};
-
-use base64::{engine::general_purpose::STANDARD, Engine as _};
-use http_body_util::combinators::BoxBody;
-use hyper_body_utils::HttpBody;
-use log::error;
-use regex::Regex;
-use serde::Serialize;
-use url::Url;
-
 use crate::{
     cookie::DeboaCookie,
     errors::{DeboaError, RequestError},
@@ -88,6 +71,20 @@ use crate::{
     url::IntoUrl,
     HttpClient, Result,
 };
+use base64::{engine::general_purpose::STANDARD, Engine as _};
+use bytes::Bytes;
+use http::{
+    header::{self},
+    HeaderMap, HeaderName, HeaderValue, Method,
+};
+use http_body_util::combinators::BoxBody;
+use hyper_body_utils::HttpBody;
+use log::error;
+use regex::Regex;
+use serde::Serialize;
+use std::{collections::HashMap, fmt::Debug, future::Future, str::FromStr, sync::Arc};
+use url::Url;
+
 /// Bytes body type
 pub type BytesBody = BoxBody<Bytes, std::io::Error>;
 
@@ -95,8 +92,6 @@ pub type BytesBody = BoxBody<Bytes, std::io::Error>;
 pub type Http1Request = hyper::client::conn::http1::SendRequest<HttpBody>;
 /// HTTP/2 request type
 pub type Http2Request = hyper::client::conn::http2::SendRequest<HttpBody>;
-/// HTTP/3 request type
-pub type Http3Request = h3::client::SendRequest<OpenStreams, Bytes>;
 
 /// Trait to allow making a request from different types.
 ///
@@ -348,14 +343,14 @@ pub trait FetchWith {
     ///
     fn fetch_with<T>(&self, client: T) -> impl Future<Output = Result<DeboaResponse>>
     where
-        T: HttpClient + Send;
+        T: HttpClient;
 }
 
 impl FetchWith for &str {
     #[inline]
     async fn fetch_with<T>(&self, ref client: T) -> Result<DeboaResponse>
     where
-        T: HttpClient + Send,
+        T: HttpClient,
     {
         DeboaRequest::get(*self)?
             .send_with(client)
@@ -367,7 +362,7 @@ impl FetchWith for String {
     #[inline]
     async fn fetch_with<T>(&self, ref client: T) -> Result<DeboaResponse>
     where
-        T: HttpClient + Send,
+        T: HttpClient,
     {
         DeboaRequest::get(self)?
             .send_with(client)

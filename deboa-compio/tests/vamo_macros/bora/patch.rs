@@ -1,5 +1,5 @@
 use crate::common::helpers::{create_client, create_server};
-use easyhttpmock_vetis_smol::{
+use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
@@ -55,7 +55,7 @@ async fn do_patch_by_id() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_patch_by_id() -> Result<(), Box<dyn Error>> {
     do_patch_by_id().await
 }

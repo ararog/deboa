@@ -78,22 +78,18 @@
 //!     // Process chunk
 //! }
 //! ```
-use std::fs::write;
-use std::{fmt::Debug, sync::Arc};
-
-use http::{header, HeaderName, HeaderValue, Response};
-use http_body_util::BodyExt;
-use hyper::body::Incoming;
-use hyper_body_utils::HttpBody;
-use log::error;
-use serde::Deserialize;
-
 use crate::{
     cookie::DeboaCookie,
     errors::{DeboaError, IoError},
     serde::ResponseBody,
     Result,
 };
+use http::{header, HeaderName, HeaderValue, Response};
+use http_body_util::BodyExt;
+use hyper_body_utils::HttpBody;
+use log::error;
+use serde::Deserialize;
+use std::{fmt::Debug, fs::write, sync::Arc};
 use url::Url;
 
 /// Trait to allow converting a type into a DeboaBody.
@@ -117,13 +113,6 @@ use url::Url;
 pub trait IntoBody {
     /// Convert self to a HttpBody
     fn into_body(self) -> HttpBody;
-}
-
-impl IntoBody for Incoming {
-    #[inline]
-    fn into_body(self) -> HttpBody {
-        HttpBody::Incoming(self)
-    }
 }
 
 impl IntoBody for &[u8] {
@@ -221,6 +210,17 @@ impl DeboaResponseBuilder {
             .inner
             .body_mut() = body.into_body();
         self
+    }
+
+    /// Create an empty response.
+    ///
+    /// # Returns
+    ///
+    /// * `DeboaResponse` - The empty response.
+    ///
+    #[inline]
+    pub fn empty(self) -> DeboaResponse {
+        DeboaResponse { url: self.url.into(), inner: self.inner }
     }
 
     /// Build the response. Consuming the builder.
@@ -530,28 +530,6 @@ impl DeboaResponse {
             .into_body()
     }
 
-    /// Convenient alias to raw_body.
-    ///
-    /// # Returns
-    ///
-    /// * `Vec<u8>` - The raw body of the response.
-    ///
-    #[inline]
-    pub async fn bytes(self) -> Vec<u8> {
-        let mut data = Vec::<u8>::new();
-        let bytes = self
-            .inner_body()
-            .collect()
-            .await;
-        match bytes {
-            Ok(bytes) => data.extend_from_slice(&bytes.to_bytes()),
-            Err(e) => {
-                error!("Failed to collect response body: {}", e);
-            }
-        }
-        data
-    }
-
     /// Allow get stream body at any time.
     ///
     /// # Returns
@@ -562,6 +540,26 @@ impl DeboaResponse {
     pub fn stream(self) -> HttpBody {
         self.inner
             .into_body()
+    }
+
+    /// Allow get inner response parts at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `http::response::Parts` - The parts of the response.
+    /// * `DeboaBody` - The body of the response.
+    ///
+    /// # Example
+    ///
+    /// ```compile_fail
+    /// let (parts, body) = response.into_parts();
+    /// ```
+    #[inline]
+    pub fn into_parts(self) -> (http::response::Parts, HttpBody) {
+        let (parts, body) = self
+            .inner
+            .into_parts();
+        (parts, body)
     }
 
     /// Returns the response body as a deserialized type, consuming body.
@@ -590,9 +588,9 @@ impl DeboaResponse {
     /// ```
     ///
     #[inline]
-    pub async fn body_as<T: ResponseBody, B: for<'a> Deserialize<'a>>(
+    pub async fn body_as<R: ResponseBody, B: for<'a> Deserialize<'a>>(
         self,
-        body_type: T,
+        body_type: R,
     ) -> Result<B> {
         let bytes = self.bytes().await;
         let result = body_type.deserialize::<B>(bytes)?;
@@ -661,23 +659,25 @@ impl DeboaResponse {
         Ok(())
     }
 
-    /// Allow get inner response parts at any time.
+    /// Convenient alias to raw_body.
     ///
     /// # Returns
     ///
-    /// * `http::response::Parts` - The parts of the response.
-    /// * `DeboaBody` - The body of the response.
+    /// * `Vec<u8>` - The raw body of the response.
     ///
-    /// # Example
-    ///
-    /// ```compile_fail
-    /// let (parts, body) = response.into_parts();
-    /// ```
     #[inline]
-    pub fn into_parts(self) -> (http::response::Parts, HttpBody) {
-        let (parts, body) = self
-            .inner
-            .into_parts();
-        (parts, body)
+    pub async fn bytes(self) -> Vec<u8> {
+        let mut data = Vec::<u8>::new();
+        let bytes = self
+            .inner_body()
+            .collect()
+            .await;
+        match bytes {
+            Ok(bytes) => data.extend_from_slice(&bytes.to_bytes()),
+            Err(e) => {
+                error!("Failed to collect response body: {}", e);
+            }
+        }
+        data
     }
 }

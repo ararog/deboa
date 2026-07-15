@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use easyhttpmock_vetis_smol::{
+use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
@@ -13,7 +13,7 @@ use crate::common::helpers::{create_client, create_server};
 #[bora(api(delete(name = "delete_post", path = "/posts/<id:i32>")))]
 pub struct PostService;
 
-#[apply(test!)]
+#[compio::test]
 async fn test_delete_by_id() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
         given(method("DELETE").and(path("/posts/1"))).will_return(

@@ -1,21 +1,19 @@
-use std::error::Error;
-
+use crate::common::{
+    data::{JSON_PATCH, JSON_POST},
+    helpers::{create_client, create_server},
+};
 use deboa::serde::RequestBody;
 use deboa_extras::serde::json::JsonBody;
-use easyhttpmock_vetis_smol::{
+use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
 use http::StatusCode;
 use serde::Serialize;
+use std::error::Error;
 use vamo::{
     resource::{Resource, ResourceMethod},
     Vamo,
-};
-
-use crate::common::{
-    data::{JSON_PATCH, JSON_POST},
-    helpers::{create_client, create_server},
 };
 
 #[derive(Serialize)]
@@ -42,7 +40,7 @@ impl Resource for Post {
     }
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_get() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts/1"))).will_return(
@@ -83,7 +81,7 @@ async fn test_get() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_put() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
         given(method("PUT").and(path("/posts/1"))).will_return(
@@ -115,7 +113,7 @@ async fn test_put() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_post() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
         given(method("POST").and(path("/api/posts"))).will_return(
@@ -155,7 +153,7 @@ async fn test_post() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_patch() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
         given(method("PATCH").and(path("/api/posts/1"))).will_return(
@@ -185,7 +183,7 @@ async fn test_patch() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_delete() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
         given(method("DELETE").and(path("/api/posts/1"))).will_return(
@@ -215,7 +213,7 @@ async fn test_delete() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_post_resource() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
         given(method("POST").and(path("/api/posts"))).will_return(
@@ -253,7 +251,7 @@ async fn test_post_resource() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_put_resource() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
         given(method("PUT").and(path("/api/posts/1"))).will_return(
@@ -291,7 +289,7 @@ async fn test_put_resource() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_patch_resource() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
         given(method("PATCH").and(path("/api/posts/1"))).will_return(
@@ -324,7 +322,7 @@ async fn test_patch_resource() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_remove_resource() -> Result<(), Box<dyn Error>> {
     let mock = Mock::of(
         given(method("DELETE").and(path("/api/posts/1"))).will_return(

@@ -7,10 +7,8 @@ use deboa_extras::serde::json::JsonBody;
 use http::header;
 use http::StatusCode;
 use http_body_util::BodyExt;
-use macro_rules_attribute::apply;
-use smol_macros::test;
 
-#[apply(test!)]
+#[compio::test]
 async fn test_set_json() -> Result<(), Box<dyn std::error::Error>> {
     let request = DeboaRequest::post(fake_url())?
         .body_as(JsonBody, sample_post())?
@@ -28,7 +26,7 @@ async fn test_set_json() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[apply(test!)]
+#[compio::test]
 async fn test_response_json() -> Result<(), Box<dyn std::error::Error>> {
     let data = sample_post();
 

@@ -5,7 +5,7 @@ use crate::common::{
 };
 use deboa_extras::serde::json::JsonBody;
 use deboa_macros::put;
-use easyhttpmock_vetis_smol::{
+use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
