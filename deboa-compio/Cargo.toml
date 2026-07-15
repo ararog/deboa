@@ -86,7 +86,7 @@ io-uring = "0.7.13"
 log = "0.4.28"
 macro_rules_attribute = { version = "0.2.2", optional = true, default-features = false }
 minimime = "1.0.0"
-mockall = "0.14.0"
+mockall = "0.15.0"
 pin-project-lite = "0.2.17"
 quinn = { version = "0.11.7", optional = true, default-features = false }
 rand = "0.10.2"
