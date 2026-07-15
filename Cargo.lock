@@ -1101,7 +1101,7 @@ dependencies = [
  "log",
  "mime",
  "minimime",
- "mockall 0.15.0",
+ "mockall",
  "multer",
  "rand 0.10.2",
  "regex",
@@ -1135,7 +1135,7 @@ dependencies = [
  "indexmap",
  "log",
  "minimime",
- "mockall 0.15.0",
+ "mockall",
  "rand 0.10.2",
  "regex",
  "serde",
@@ -1179,7 +1179,7 @@ dependencies = [
  "macro_rules_attribute",
  "mime",
  "minimime",
- "mockall 0.14.0",
+ "mockall",
  "multer",
  "pin-project-lite",
  "quinn",
@@ -1289,7 +1289,7 @@ dependencies = [
  "macro_rules_attribute",
  "mime",
  "minimime",
- "mockall 0.15.0",
+ "mockall",
  "multer",
  "quinn",
  "rand 0.10.2",
@@ -1347,7 +1347,7 @@ dependencies = [
  "log",
  "mime",
  "minimime",
- "mockall 0.15.0",
+ "mockall",
  "multer",
  "quinn",
  "rand 0.10.2",
@@ -2751,20 +2751,6 @@ dependencies = [
 
 [[package]]
 name = "mockall"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f58d964098a5f9c6b63d0798e5372fd04708193510a7af313c22e9f29b7b620b"
-dependencies = [
- "cfg-if",
- "downcast",
- "fragile",
- "mockall_derive 0.14.0",
- "predicates",
- "predicates-tree",
-]
-
-[[package]]
-name = "mockall"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a6ceddfe3ce334925e96bf420fdb2dcee5bed6c632a168ece622676dadeaf8a"
@@ -2772,21 +2758,9 @@ dependencies = [
  "cfg-if",
  "downcast",
  "fragile",
- "mockall_derive 0.15.0",
+ "mockall_derive",
  "predicates",
  "predicates-tree",
-]
-
-[[package]]
-name = "mockall_derive"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca41ce716dda6a9be188b385aa78ee5260fc25cd3802cb2a8afdc6afbe6b6dbf"
-dependencies = [
- "cfg-if",
- "proc-macro2",
- "quote",
- "syn 2.0.118",
 ]
 
 [[package]]
