@@ -1,8 +1,5 @@
 use crate::{
-    tests::{
-        helpers::{create_client, create_server},
-        TestResult,
-    },
+    tests::helpers::{create_client, create_server},
     Client,
 };
 use deboa::{
