@@ -1,10 +1,10 @@
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 use crate::alpn;
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::client::http::conn::stream::tls::tls_connection;
+use crate::client::http::conn::stream::tls_connection;
 use crate::{
     cert::{DeboaCertificate, DeboaIdentity},
-    client::http::conn::{stream::plain::plain_connection, BaseHttpConnection, Http2Connection},
+    client::http::conn::{stream::plain_connection, BaseHttpConnection, Http2Connection},
     rt::executor::SmolExecutor,
     Result,
 };

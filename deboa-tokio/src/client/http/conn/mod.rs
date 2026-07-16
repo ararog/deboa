@@ -16,10 +16,12 @@
 //! - Thread-safe connection handling
 //! ```
 use crate::cert::{DeboaCertificate, DeboaIdentity};
+#[cfg(any(feature = "http1", feature = "http2"))]
+use deboa::conn::SendRequest;
 #[cfg(feature = "http1")]
-use deboa::{conn::SendRequest, request::Http1Request};
+use deboa::request::Http1Request;
 #[cfg(feature = "http2")]
-use deboa::{conn::SendRequest, request::Http2Request};
+use deboa::request::Http2Request;
 use deboa::{
     conn::{ConnectionConfig, HttpConnectionDispatcher, ProtoConnection},
     errors::{DeboaError, RequestError},

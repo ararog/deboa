@@ -1,10 +1,10 @@
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+use crate::alpn;
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+use crate::client::http::conn::stream::tls_connection;
 use crate::{
-    alpn,
     cert::{DeboaCertificate, DeboaIdentity},
-    client::http::conn::{
-        stream::{plain_connection, tls_connection},
-        BaseHttpConnection, Http2Connection,
-    },
+    client::http::conn::{stream::plain_connection, BaseHttpConnection, Http2Connection},
     Result,
 };
 use cyper_core::CompioExecutor;

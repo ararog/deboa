@@ -1,7 +1,7 @@
 use crate::{
     alpn,
     cert::{DeboaCertificate, DeboaIdentity},
-    client::http::conn::{stream::tls::setup_rust_tls, BaseHttpConnection, Http3Connection},
+    client::http::conn::{stream::setup_rust_tls, BaseHttpConnection, Http3Connection},
 };
 use deboa::{
     conn::{ConnectionConfig, HttpConnection, ProtoConnection},

@@ -1,8 +1,8 @@
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::{alpn, client::http::conn::stream::tls::tls_connection};
+use crate::{alpn, client::http::conn::stream::tls_connection};
 use crate::{
     cert::{DeboaCertificate, DeboaIdentity},
-    client::http::conn::{stream::plain::plain_connection, BaseHttpConnection, Http1Connection},
+    client::http::conn::{stream::plain_connection, BaseHttpConnection, Http1Connection},
 };
 use deboa::{
     conn::{ConnectionConfig, HttpConnection, ProtoConnection, SendRequest},

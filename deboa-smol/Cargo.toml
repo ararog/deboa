@@ -1,6 +1,6 @@
 [package]
 name = "deboa-smol"
-version = "0.1.0-beta.11"
+version = "0.1.0-beta.12"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true

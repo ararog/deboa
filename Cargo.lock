@@ -1208,7 +1208,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-compio"
-version = "0.1.1-beta.6"
+version = "0.1.1-beta.7"
 dependencies = [
  "async-executor",
  "async-trait",
@@ -1331,7 +1331,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-smol"
-version = "0.1.0-beta.11"
+version = "0.1.0-beta.12"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -1391,7 +1391,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-tokio"
-version = "0.1.0-beta.11"
+version = "0.1.0-beta.12"
 dependencies = [
  "async-executor",
  "async-native-tls",

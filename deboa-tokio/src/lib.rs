@@ -31,8 +31,6 @@ compile_error!("HTTP3 is not supported within native-tls runtime.");
 #[cfg(not(any(feature = "http1", feature = "http2", feature = "http3")))]
 compile_error!("At least one HTTP version feature must be enabled.");
 
-pub(crate) const MAX_ERROR_MESSAGE_SIZE: usize = 50000;
-
 #[cfg(feature = "rust-tls")]
 #[inline]
 pub(crate) fn alpn() -> Vec<Vec<u8>> {
