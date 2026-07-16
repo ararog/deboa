@@ -21,7 +21,7 @@ use http::{header::CONTENT_TYPE, Method, StatusCode};
 //
 
 #[tokio::test]
-async fn test_post() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_post() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::POST).and(path("/posts"))).will_return(
             StatusCode::CREATED
@@ -59,7 +59,7 @@ async fn test_post() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn do_post_encoded_form() -> Result<(), Box<dyn std::error::Error>> {
+async fn do_post_encoded_form() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::POST).and(path("/posts"))).will_return(
             StatusCode::CREATED
@@ -106,12 +106,12 @@ async fn do_post_encoded_form() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn test_post_encoded_form() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_post_encoded_form() -> TestResult<()> {
     do_post_encoded_form().await
 }
 
 #[tokio::test]
-async fn test_post_multipart_form() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_post_multipart_form() -> TestResult<()> {
     let mut form = MultiPartForm::builder();
     form.field("name", "deboa");
     form.field("version", "0.0.1");

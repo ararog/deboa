@@ -2,6 +2,7 @@
 use crate::common::{
     data::{Post, PostWithId},
     helpers::{create_client, create_server},
+    TestResult,
 };
 use deboa_extras::serde::json::JsonBody;
 use deboa_macros::put;
@@ -10,10 +11,9 @@ use easyhttpmock_vetis_tokio::{
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
 use http::StatusCode;
-use std::error::Error;
 
 #[tokio::test]
-async fn test_only_put_minimal() -> Result<(), Box<dyn Error>> {
+async fn test_only_put_minimal() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PUT").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -42,67 +42,7 @@ async fn test_only_put_minimal() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_only_put_minimal_headers() -> Result<(), Box<dyn Error>> {
-    let mock = Mock::of(
-        given(method("PUT").and(path("/posts/1"))).will_return(
-            StatusCode::OK
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
-    let headers = vec![("Content-Type", "application/json")];
-    let response = put!(
-        data => data,
-        url => server.url("/posts/1"),
-        headers => headers,
-        client => &client
-    );
-    assert_eq!(response.status(), 200);
-    server
-        .stop()
-        .await?;
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_put() -> Result<(), Box<dyn Error>> {
-    let mock = Mock::of(
-        given(method("PUT").and(path("/posts/1"))).will_return(
-            StatusCode::OK
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
-    let response = put!(
-        data => data,
-        url => server.url("/posts/1"),
-        client => &client
-    );
-    assert_eq!(response.status(), 200);
-    server
-        .stop()
-        .await?;
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_put_with_headers() -> Result<(), Box<dyn Error>> {
+async fn test_only_put_minimal_headers() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PUT").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -133,7 +73,67 @@ async fn test_put_with_headers() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_put_with_json_body_request() -> Result<(), Box<dyn Error>> {
+async fn test_put() -> TestResult<()> {
+    let mock = Mock::of(
+        given(method("PUT").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
+    );
+
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
+    let client = create_client();
+
+    let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
+    let response = put!(
+        data => data,
+        url => server.url("/posts/1"),
+        client => &client
+    );
+    assert_eq!(response.status(), 200);
+    server
+        .stop()
+        .await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_put_with_headers() -> TestResult<()> {
+    let mock = Mock::of(
+        given(method("PUT").and(path("/posts/1"))).will_return(
+            StatusCode::OK
+                .respond()
+                .no_body(),
+        ),
+    );
+
+    let mut server = create_server().await;
+    server
+        .register_mock(mock)
+        .await?;
+    let client = create_client();
+
+    let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
+    let headers = vec![("Content-Type", "application/json")];
+    let response = put!(
+        data => data,
+        url => server.url("/posts/1"),
+        headers => headers,
+        client => &client
+    );
+    assert_eq!(response.status(), 200);
+    server
+        .stop()
+        .await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_put_with_json_body_request() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PUT").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -165,7 +165,7 @@ async fn test_put_with_json_body_request() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_put_with_json_body_no_headers() -> Result<(), Box<dyn Error>> {
+async fn test_put_with_json_body_no_headers() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PUT").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -197,7 +197,7 @@ async fn test_put_with_json_body_no_headers() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_put_with_json_body_response() -> Result<(), Box<dyn Error>> {
+async fn test_put_with_json_body_response() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PUT").and(path("/posts/1"))).will_return(
             StatusCode::OK

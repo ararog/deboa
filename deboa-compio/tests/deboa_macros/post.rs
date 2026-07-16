@@ -2,6 +2,7 @@
 use crate::common::{
     data::Post,
     helpers::{create_client, create_server},
+    TestResult,
 };
 use deboa_extras::serde::json::JsonBody;
 use deboa_macros::post;
@@ -10,10 +11,9 @@ use easyhttpmock_vetis_compio::{
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
 use http::StatusCode;
-use std::error::Error;
 
 #[compio::test]
-async fn test_only_post_minimal() -> Result<(), Box<dyn Error>> {
+async fn test_only_post_minimal() -> TestResult<()> {
     let mock = Mock::of(
         given(method("POST").and(path("/posts"))).will_return(
             StatusCode::CREATED
@@ -42,7 +42,7 @@ async fn test_only_post_minimal() -> Result<(), Box<dyn Error>> {
 }
 
 #[compio::test]
-async fn test_only_post_minimal_headers() -> Result<(), Box<dyn Error>> {
+async fn test_only_post_minimal_headers() -> TestResult<()> {
     let mock = Mock::of(
         given(method("POST").and(path("/posts"))).will_return(
             StatusCode::CREATED
@@ -72,7 +72,7 @@ async fn test_only_post_minimal_headers() -> Result<(), Box<dyn Error>> {
 }
 
 #[compio::test]
-async fn test_only_post() -> Result<(), Box<dyn Error>> {
+async fn test_only_post() -> TestResult<()> {
     let mock = Mock::of(
         given(method("POST").and(path("/posts"))).will_return(
             StatusCode::CREATED
@@ -101,7 +101,7 @@ async fn test_only_post() -> Result<(), Box<dyn Error>> {
 }
 
 #[compio::test]
-async fn test_post_with_headers() -> Result<(), Box<dyn Error>> {
+async fn test_post_with_headers() -> TestResult<()> {
     let mock = Mock::of(
         given(method("POST").and(path("/posts"))).will_return(
             StatusCode::CREATED

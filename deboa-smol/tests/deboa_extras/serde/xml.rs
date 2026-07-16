@@ -1,6 +1,7 @@
 use crate::common::{
     data::{sample_post, Post, XML_POST},
     helpers::fake_url,
+    TestResult,
 };
 use deboa::{request::DeboaRequest, response::DeboaResponse, Result};
 use deboa_extras::serde::xml::XmlBody;
@@ -11,7 +12,7 @@ use macro_rules_attribute::apply;
 use smol_macros::test;
 
 #[apply(test!)]
-async fn test_set_xml() -> Result<()> {
+async fn test_set_xml() -> TestResult<()> {
     let request = DeboaRequest::post(fake_url())?
         .body_as(XmlBody, sample_post())?
         .build()?;
@@ -29,7 +30,7 @@ async fn test_set_xml() -> Result<()> {
 }
 
 #[apply(test!)]
-async fn test_xml_response() -> Result<()> {
+async fn test_xml_response() -> TestResult<()> {
     let data = sample_post();
 
     let response = DeboaResponse::builder(fake_url())

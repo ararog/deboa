@@ -41,7 +41,7 @@ repos:
           export RUSTC_WRAPPER=kache &&
           export RUSTC_LINKER=clang &&
           export CARGO_BUILD_RUSTFLAGS="-C link-arg=-fuse-ld=mold" &&
-          cargo nextest run --package deboa-compio --features "http1 native-tls" --no-default-features
+          cargo nextest run --package deboa-compio --features "http1 native-tls easyhttpmock-vetis-compio/http1 easyhttpmock-vetis-compio/rust-tls" --no-default-features
           "
         language: "system"
         types: ["rust"]
@@ -53,7 +53,7 @@ repos:
           export RUSTC_WRAPPER=kache &&
           export RUSTC_LINKER=clang &&
           export CARGO_BUILD_RUSTFLAGS="-C link-arg=-fuse-ld=mold" &&
-          cargo nextest run --package deboa-compio --features "http2 native-tls" --no-default-features
+          cargo nextest run --package deboa-compio --features "http2 native-tls easyhttpmock-vetis-compio/http2 easyhttpmock-vetis-compio/rust-tls" --no-default-features
           "
         language: "system"
         types: ["rust"]
@@ -65,7 +65,7 @@ repos:
           export RUSTC_WRAPPER=kache &&
           export RUSTC_LINKER=clang &&
           export CARGO_BUILD_RUSTFLAGS="-C link-arg=-fuse-ld=mold" &&
-          cargo nextest run --package deboa-compio --features "http1 rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+          cargo nextest run --package deboa-compio --features "http1 rust-tls default-rustls-provider default-rustls-verifier easyhttpmock-vetis-compio/http1 easyhttpmock-vetis-compio/rust-tls" --no-default-features
           "
         language: "system"
         types: ["rust"]
@@ -77,7 +77,7 @@ repos:
           export RUSTC_WRAPPER=kache &&
           export RUSTC_LINKER=clang &&
           export CARGO_BUILD_RUSTFLAGS="-C link-arg=-fuse-ld=mold" &&
-          cargo nextest run --package deboa-compio --features "http3 rust-tls default-rustls-provider default-rustls-verifier" --no-default-features
+          cargo nextest run --package deboa-compio --features "http3 rust-tls default-rustls-provider default-rustls-verifier easyhttpmock-vetis-compio/http3 easyhttpmock-vetis-compio/rust-tls" --no-default-features
           "
         language: "system"
         types: ["rust"]

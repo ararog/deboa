@@ -1,10 +1,10 @@
-use crate::tests::helpers::fake_url;
+use crate::tests::{helpers::fake_url, TestResult};
 use deboa::request::DeboaRequest;
 use http_body_util::BodyExt;
-use std::{error::Error, str::FromStr};
+use std::str::FromStr;
 
 #[tokio::test]
-async fn test_from_str_body() -> Result<(), Box<dyn Error>> {
+async fn test_from_str_body() -> TestResult<()> {
     let request = DeboaRequest::from_str(
         r##"
     GET https://localhost:8000
@@ -26,7 +26,7 @@ async fn test_from_str_body() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_set_text_body() -> Result<(), Box<dyn Error>> {
+async fn test_set_text_body() -> TestResult<()> {
     let request = DeboaRequest::post(fake_url())?
         .text("test")
         .build()?;
@@ -44,7 +44,7 @@ async fn test_set_text_body() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_raw_body() -> Result<(), Box<dyn Error>> {
+async fn test_raw_body() -> TestResult<()> {
     let request = DeboaRequest::post(fake_url())?
         .text("test")
         .build()?;

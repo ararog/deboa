@@ -13,7 +13,7 @@ use http::{Method, StatusCode};
 // DELETE
 //
 #[tokio::test]
-async fn test_delete() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_delete() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::DELETE).and(path("/posts/1"))).will_return(
             StatusCode::OK

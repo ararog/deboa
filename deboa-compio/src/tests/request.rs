@@ -1,8 +1,9 @@
+use crate::tests::TestResult;
 use deboa::{request::DeboaRequest, url::IntoUrl};
 use http_body_util::BodyExt;
-use std::{error::Error, str::FromStr};
+use std::str::FromStr;
 
-async fn do_test_from_str_body() -> Result<(), Box<dyn Error>> {
+async fn do_test_from_str_body() -> TestResult<()> {
     let request = DeboaRequest::from_str(
         r##"
     GET https://localhost:8000
@@ -30,7 +31,7 @@ async fn test_from_str_body() {
         .unwrap();
 }
 
-async fn do_test_set_text_body() -> Result<(), Box<dyn Error>> {
+async fn do_test_set_text_body() -> TestResult<()> {
     let test_url = "https://example.com".into_url()?;
     let request = DeboaRequest::post(test_url)?
         .text("test")
@@ -49,11 +50,11 @@ async fn do_test_set_text_body() -> Result<(), Box<dyn Error>> {
 }
 
 #[compio::test]
-async fn test_set_text_body() -> Result<(), Box<dyn Error>> {
+async fn test_set_text_body() -> TestResult<()> {
     do_test_set_text_body().await
 }
 
-async fn do_test_raw_body() -> Result<(), Box<dyn Error>> {
+async fn do_test_raw_body() -> TestResult<()> {
     let test_url = "https://example.com".into_url()?;
     let request = DeboaRequest::post(test_url)?
         .text("test")
@@ -72,6 +73,6 @@ async fn do_test_raw_body() -> Result<(), Box<dyn Error>> {
 }
 
 #[compio::test]
-async fn test_raw_body() -> Result<(), Box<dyn Error>> {
+async fn test_raw_body() -> TestResult<()> {
     do_test_raw_body().await
 }

@@ -1,5 +1,8 @@
 use crate::{
-    tests::helpers::{create_client, create_server},
+    tests::{
+        helpers::{create_client, create_server},
+        TestResult,
+    },
     Client,
 };
 use deboa::{
@@ -18,7 +21,7 @@ use http::{header::CONTENT_TYPE, Method, StatusCode};
 //
 
 #[compio::test]
-async fn test_post() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_post() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::POST).and(path("/posts"))).will_return(
             StatusCode::CREATED
@@ -57,7 +60,7 @@ async fn test_post() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[compio::test]
-async fn test_post_encoded_form() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_post_encoded_form() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::POST).and(path("/posts"))).will_return(
             StatusCode::CREATED
@@ -104,7 +107,7 @@ async fn test_post_encoded_form() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[compio::test]
-async fn test_post_multipart_form() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_post_multipart_form() -> TestResult<()> {
     let mut form = MultiPartForm::builder();
     form.field("name", "deboa");
     form.field("version", "0.0.1");

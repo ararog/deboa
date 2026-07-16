@@ -1,5 +1,7 @@
-use std::error::Error;
-
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
 use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
@@ -8,8 +10,6 @@ use http::StatusCode;
 use serde::Deserialize;
 use vamo::Vamo;
 use vamo_macros::bora;
-
-use crate::common::helpers::{create_client, create_server};
 
 #[derive(Deserialize, Debug)]
 pub struct Post {
@@ -27,7 +27,7 @@ pub struct Post {
     )]
 pub struct PostService;
 
-async fn do_get_by_id() -> Result<(), Box<dyn Error>> {
+async fn do_get_by_id() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -61,11 +61,11 @@ async fn do_get_by_id() -> Result<(), Box<dyn Error>> {
 }
 
 #[compio::test]
-async fn test_get_by_id() -> Result<(), Box<dyn Error>> {
+async fn test_get_by_id() -> TestResult<()> {
     do_get_by_id().await
 }
 
-async fn do_get_all() -> Result<(), Box<dyn Error>> {
+async fn do_get_all() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -100,11 +100,11 @@ async fn do_get_all() -> Result<(), Box<dyn Error>> {
 }
 
 #[compio::test]
-async fn test_get_all() -> Result<(), Box<dyn Error>> {
+async fn test_get_all() -> TestResult<()> {
     do_get_all().await
 }
 
-async fn do_query_by_id() -> Result<(), Box<dyn Error>> {
+async fn do_query_by_id() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -137,11 +137,11 @@ async fn do_query_by_id() -> Result<(), Box<dyn Error>> {
 }
 
 #[compio::test]
-async fn test_query_by_id() -> Result<(), Box<dyn Error>> {
+async fn test_query_by_id() -> TestResult<()> {
     do_query_by_id().await
 }
 
-async fn do_query_by_title() -> Result<(), Box<dyn Error>> {
+async fn do_query_by_title() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -174,6 +174,6 @@ async fn do_query_by_title() -> Result<(), Box<dyn Error>> {
 }
 
 #[compio::test]
-async fn test_query_by_title() -> Result<(), Box<dyn Error>> {
+async fn test_query_by_title() -> TestResult<()> {
     do_query_by_title().await
 }

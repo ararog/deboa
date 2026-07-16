@@ -1,4 +1,7 @@
-use crate::common::helpers::{create_client, create_server};
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
 use deboa::serde::RequestBody;
 use deboa_extras::serde::json::JsonBody;
 use easyhttpmock_vetis_tokio::{
@@ -7,7 +10,6 @@ use easyhttpmock_vetis_tokio::{
 };
 use http::StatusCode;
 use serde::Serialize;
-use std::error::Error;
 use vamo::{resource::ResourceMethod, Vamo};
 use vamo_macros::Resource;
 
@@ -21,7 +23,7 @@ pub struct User {
 }
 
 #[tokio::test]
-async fn do_post_resource() -> Result<(), Box<dyn Error>> {
+async fn do_post_resource() -> TestResult<()> {
     let mock = Mock::of(
         given(method("POST").and(path("/api/users"))).will_return(
             StatusCode::CREATED

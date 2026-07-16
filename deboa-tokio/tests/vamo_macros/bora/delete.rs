@@ -1,10 +1,12 @@
-use crate::common::helpers::{create_client, create_server};
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
 use easyhttpmock_vetis_tokio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
 use http::StatusCode;
-use std::error::Error;
 use vamo::Vamo;
 use vamo_macros::bora;
 
@@ -12,7 +14,7 @@ use vamo_macros::bora;
 pub struct PostService;
 
 #[tokio::test]
-async fn test_delete_by_id() -> Result<(), Box<dyn Error>> {
+async fn test_delete_by_id() -> TestResult<()> {
     let mock = Mock::of(
         given(method("DELETE").and(path("/posts/1"))).will_return(
             StatusCode::OK

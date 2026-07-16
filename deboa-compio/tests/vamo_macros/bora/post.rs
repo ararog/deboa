@@ -1,11 +1,13 @@
-use crate::common::helpers::{create_client, create_server};
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
 use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
-use std::error::Error;
 use vamo::Vamo;
 use vamo_macros::bora;
 
@@ -26,7 +28,7 @@ pub struct Post {
 pub struct PostService;
 
 #[compio::test]
-async fn test_post_by_id() -> Result<(), Box<dyn Error>> {
+async fn test_post_by_id() -> TestResult<()> {
     let mock = Mock::of(
         given(method("POST").and(path("/posts"))).will_return(
             StatusCode::OK

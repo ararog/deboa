@@ -1,5 +1,7 @@
-use std::error::Error;
-
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
 use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
@@ -8,13 +10,11 @@ use http::StatusCode;
 use vamo::Vamo;
 use vamo_macros::bora;
 
-use crate::common::helpers::{create_client, create_server};
-
 #[bora(api(delete(name = "delete_post", path = "/posts/<id:i32>")))]
 pub struct PostService;
 
 #[compio::test]
-async fn test_delete_by_id() -> Result<(), Box<dyn Error>> {
+async fn test_delete_by_id() -> TestResult<()> {
     let mock = Mock::of(
         given(method("DELETE").and(path("/posts/1"))).will_return(
             StatusCode::OK

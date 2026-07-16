@@ -2,6 +2,7 @@
 use crate::common::{
     data::{Post, PostWithId},
     helpers::{create_client, create_server},
+    TestResult,
 };
 use deboa_extras::serde::json::JsonBody;
 use deboa_macros::patch;
@@ -10,10 +11,9 @@ use easyhttpmock_vetis_tokio::{
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
 use http::StatusCode;
-use std::error::Error;
 
 #[tokio::test]
-async fn test_only_patch_minimal() -> Result<(), Box<dyn Error>> {
+async fn test_only_patch_minimal() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PATCH").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -44,7 +44,7 @@ async fn test_only_patch_minimal() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_only_patch_minimal_headers() -> Result<(), Box<dyn Error>> {
+async fn test_only_patch_minimal_headers() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PATCH").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -75,7 +75,7 @@ async fn test_only_patch_minimal_headers() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_patch() -> Result<(), Box<dyn Error>> {
+async fn test_patch() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PATCH").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -106,7 +106,7 @@ async fn test_patch() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_patch_with_headers() -> Result<(), Box<dyn Error>> {
+async fn test_patch_with_headers() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PATCH").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -139,7 +139,7 @@ async fn test_patch_with_headers() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_patch_with_json_body_request() -> Result<(), Box<dyn Error>> {
+async fn test_patch_with_json_body_request() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PATCH").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -173,7 +173,7 @@ async fn test_patch_with_json_body_request() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_patch_with_json_body_no_headers() -> Result<(), Box<dyn Error>> {
+async fn test_patch_with_json_body_no_headers() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PATCH").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -207,7 +207,7 @@ async fn test_patch_with_json_body_no_headers() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_patch_with_json_body_response() -> Result<(), Box<dyn Error>> {
+async fn test_patch_with_json_body_response() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PATCH").and(path("/posts/1"))).will_return(
             StatusCode::OK

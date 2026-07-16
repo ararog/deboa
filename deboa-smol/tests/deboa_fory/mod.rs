@@ -1,4 +1,7 @@
-use crate::common::helpers::{create_client, create_server};
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
 use deboa::request::post;
 use deboa_fory::{ForyRequestBuilder, ForyResponse};
 use easyhttpmock_vetis_smol::{
@@ -9,7 +12,6 @@ use fory::{Fory, ForyStruct};
 use http::StatusCode;
 use macro_rules_attribute::apply;
 use smol_macros::test;
-use std::error::Error;
 
 const FORY_PERSON: [u8; 33] = [
     1, 255, 28, 0, 11, 160, 254, 175, 118, 89, 59, 92, 194, 1, 68, 9, 0, 196, 72, 21, 52, 12, 32,
@@ -23,7 +25,7 @@ struct Person {
 }
 
 #[apply(test!)]
-async fn do_fory_post_request() -> Result<(), Box<dyn Error>> {
+async fn do_fory_post_request() -> TestResult<()> {
     let mock = Mock::of(
         given(method("POST").and(path("/posts"))).will_return(
             StatusCode::OK

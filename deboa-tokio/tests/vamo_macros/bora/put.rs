@@ -1,4 +1,7 @@
-use crate::common::helpers::{create_client, create_server};
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
 use easyhttpmock_vetis_tokio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
@@ -23,7 +26,7 @@ pub struct Post {
 )]
 pub struct PostService;
 
-async fn do_put_by_id() -> Result<(), Box<dyn std::error::Error>> {
+async fn do_put_by_id() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PUT").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -54,6 +57,6 @@ async fn do_put_by_id() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn test_put_by_id() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_put_by_id() -> TestResult<()> {
     do_put_by_id().await
 }

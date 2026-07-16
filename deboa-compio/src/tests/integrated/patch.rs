@@ -1,5 +1,8 @@
 use crate::{
-    tests::helpers::{create_client, create_server},
+    tests::{
+        helpers::{create_client, create_server},
+        TestResult,
+    },
     Client,
 };
 use deboa::{request::DeboaRequest, HttpClient};
@@ -12,7 +15,7 @@ use http::{Method, StatusCode};
 // PATCH
 //
 #[compio::test]
-async fn test_patch() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_patch() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::PATCH).and(path("/posts/1"))).will_return(
             StatusCode::OK

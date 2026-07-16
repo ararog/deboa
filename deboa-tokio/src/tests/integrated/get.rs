@@ -24,7 +24,7 @@ use deboa::HttpVersion;
 #[cfg(feature = "http2")]
 use deboa::HttpVersion;
 use deboa::{
-    errors::{ConnectionError, DeboaError, ResponseError},
+    errors::{ConnectionError, DeboaError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
     HttpClient,
@@ -39,7 +39,7 @@ use http::StatusCode;
 // GET
 //
 #[tokio::test]
-async fn test_get_http() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_http() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -76,7 +76,7 @@ async fn test_get_http() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn skip_cert_verification_helper(skip: bool) -> Result<(), Box<dyn std::error::Error>> {
+async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -134,26 +134,26 @@ async fn skip_cert_verification_helper(skip: bool) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
-async fn do_get_http_skip_verification() -> Result<(), Box<dyn std::error::Error>> {
+async fn do_get_http_skip_verification() -> TestResult<()> {
     skip_cert_verification_helper(true).await
 }
 
 #[tokio::test]
-async fn test_get_http_skip_verification() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_http_skip_verification() -> TestResult<()> {
     do_get_http_skip_verification().await?;
     Ok(())
 }
-async fn do_get_http_verify() -> Result<(), Box<dyn std::error::Error>> {
+async fn do_get_http_verify() -> TestResult<()> {
     skip_cert_verification_helper(false).await
 }
 
 #[tokio::test]
-async fn test_get_http_verify() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_http_verify() -> TestResult<()> {
     do_get_http_verify().await
 }
 
 #[tokio::test]
-async fn test_get_http_mutual_authentication() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_http_mutual_authentication() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -199,8 +199,7 @@ async fn test_get_http_mutual_authentication() -> Result<(), Box<dyn std::error:
 
 #[cfg(feature = "native-tls")]
 #[tokio::test]
-async fn test_get_http_mutual_authentication_with_password(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -244,7 +243,7 @@ async fn test_get_http_mutual_authentication_with_password(
 // GET NOT FOUND
 //
 #[tokio::test]
-async fn test_get_not_found() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_not_found() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::NOT_FOUND
@@ -259,18 +258,10 @@ async fn test_get_not_found() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
     let client = create_client();
 
-    let response: crate::Result<DeboaResponse> =
-        DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
-            .send_with(&client)
-            .await;
-    assert!(response.is_err());
-    assert_eq!(
-        response.unwrap_err(),
-        DeboaError::Response(ResponseError::Receive {
-            status_code: StatusCode::NOT_FOUND,
-            message: "Could not process request (404 Not Found): Not found".to_string()
-        })
-    );
+    let response = DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
+        .send_with(&client)
+        .await?;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
     server
         .stop()
@@ -283,7 +274,7 @@ async fn test_get_not_found() -> Result<(), Box<dyn std::error::Error>> {
 // GET INVALID SERVER
 //
 #[tokio::test]
-async fn test_get_invalid_server() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_invalid_server() -> TestResult<()> {
     let client = Client::default();
     let request = DeboaRequest::get("https://invalid-server.com/posts")?
         .text("test")
@@ -302,7 +293,7 @@ async fn test_get_invalid_server() -> Result<(), Box<dyn std::error::Error>> {
 // GET BY QUERY
 //
 #[tokio::test]
-async fn test_get_by_query() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_by_query() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/comments/1"))).will_return(
             StatusCode::OK
@@ -376,7 +367,7 @@ async fn do_get_by_query_with_retries() -> Result<()> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_by_query_with_retries() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_by_query_with_retries() -> TestResult<()> {
     do_get_by_query_with_retries().await
 }
 
@@ -419,7 +410,7 @@ async fn do_get_with_redirect() -> Result<()> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_with_redirect() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_with_redirect() -> TestResult<()> {
     do_get_with_redirect().await
 }
 
@@ -431,7 +422,7 @@ async fn test_get_with_redirect() {
 */
 
 #[tokio::test]
-async fn test_try_into() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_try_into() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -460,7 +451,7 @@ async fn test_try_into() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn test_fetch_from_str() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_fetch_from_str() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK

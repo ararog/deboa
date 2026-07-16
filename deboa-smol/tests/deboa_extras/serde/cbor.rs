@@ -1,6 +1,7 @@
 use crate::common::{
     data::{sample_post, Post},
     helpers::fake_url,
+    TestResult,
 };
 use deboa::{
     errors::{ContentError, DeboaError},
@@ -23,7 +24,7 @@ fn build_sample_cbor_body() -> Vec<u8> {
 }
 
 #[apply(test!)]
-async fn test_set_cbor() -> Result<()> {
+async fn test_set_cbor() -> TestResult<()> {
     let request = DeboaRequest::post(fake_url())?
         .body_as(CborBody, sample_post())?
         .build()?;
@@ -41,7 +42,7 @@ async fn test_set_cbor() -> Result<()> {
 }
 
 #[test]
-fn test_set_cbor_registers_headers() -> Result<()> {
+fn test_set_cbor_registers_headers() -> TestResult<()> {
     let request = DeboaRequest::post(fake_url())?
         .body_as(CborBody, sample_post())?
         .build()?;
@@ -69,7 +70,7 @@ fn test_set_cbor_registers_headers() -> Result<()> {
 }
 
 #[apply(test!)]
-async fn test_response_cbor() -> Result<()> {
+async fn test_response_cbor() -> TestResult<()> {
     let data = sample_post();
 
     let response = DeboaResponse::builder(fake_url())

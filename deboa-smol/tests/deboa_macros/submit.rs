@@ -1,5 +1,8 @@
 #![allow(unused_variables)]
-use crate::common::helpers::{create_client, create_server};
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
 use deboa_macros::submit;
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
@@ -8,10 +11,9 @@ use easyhttpmock_vetis_smol::{
 use http::{Method, StatusCode};
 use macro_rules_attribute::apply;
 use smol_macros::test;
-use std::error::Error;
 
 #[apply(test!)]
-async fn test_submit_str_minimal() -> Result<(), Box<dyn Error>> {
+async fn test_submit_str_minimal() -> TestResult<()> {
     let mock = Mock::of(
         given(method("POST").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -42,7 +44,7 @@ async fn test_submit_str_minimal() -> Result<(), Box<dyn Error>> {
 }
 
 #[apply(test!)]
-async fn test_submit_str_method() -> Result<(), Box<dyn Error>> {
+async fn test_submit_str_method() -> TestResult<()> {
     let mock = Mock::of(
         given(method("POST").and(path("/posts"))).will_return(
             StatusCode::OK

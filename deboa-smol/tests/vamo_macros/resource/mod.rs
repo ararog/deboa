@@ -1,4 +1,7 @@
-use crate::common::helpers::{create_client, create_server};
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
 use deboa::serde::RequestBody;
 use deboa_extras::serde::json::JsonBody;
 use easyhttpmock_vetis_smol::{
@@ -9,7 +12,6 @@ use http::StatusCode;
 use macro_rules_attribute::apply;
 use serde::Serialize;
 use smol_macros::test;
-use std::error::Error;
 use vamo::{resource::ResourceMethod, Vamo};
 use vamo_macros::Resource;
 
@@ -22,7 +24,7 @@ pub struct User {
     name: String,
 }
 
-async fn do_post_resource() -> Result<(), Box<dyn Error>> {
+async fn do_post_resource() -> TestResult<()> {
     let mock = Mock::of(
         given(method("POST").and(path("/api/users"))).will_return(
             StatusCode::CREATED
@@ -54,6 +56,6 @@ async fn do_post_resource() -> Result<(), Box<dyn Error>> {
 }
 
 #[apply(test!)]
-async fn test_post_resource() -> Result<(), Box<dyn Error>> {
+async fn test_post_resource() -> TestResult<()> {
     do_post_resource().await
 }

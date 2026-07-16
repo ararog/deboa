@@ -22,7 +22,7 @@
 //! use deboa::errors::DeboaError;
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! async fn main() -> TestResult<()> {
 //!   let mut client = Deboa::default();
 //!
 //!   match get("https://example.com").and_then(|req| req.send_with(&mut client)) {

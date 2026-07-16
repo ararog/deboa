@@ -2,6 +2,7 @@
 use crate::common::{
     data::Post,
     helpers::{create_client, create_server},
+    TestResult,
 };
 use deboa_extras::serde::json::JsonBody;
 use deboa_macros::fetch;
@@ -10,10 +11,9 @@ use easyhttpmock_vetis_tokio::{
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
 use http::StatusCode;
-use std::error::Error;
 
 #[tokio::test]
-async fn test_fetch_str_minimal() -> Result<(), Box<dyn Error>> {
+async fn test_fetch_str_minimal() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -41,7 +41,7 @@ async fn test_fetch_str_minimal() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_fetch_str_minimal_headers() -> Result<(), Box<dyn Error>> {
+async fn test_fetch_str_minimal_headers() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -74,7 +74,7 @@ async fn test_fetch_str_minimal_headers() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_fetch_str() -> Result<(), Box<dyn Error>> {
+async fn test_fetch_str() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -105,7 +105,7 @@ async fn test_fetch_str() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_fetch_ident() -> Result<(), Box<dyn Error>> {
+async fn test_fetch_ident() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -137,7 +137,7 @@ async fn test_fetch_ident() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_fetch_ident_with_headers() -> Result<(), Box<dyn Error>> {
+async fn test_fetch_ident_with_headers() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts"))).will_return(
             StatusCode::OK

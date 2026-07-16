@@ -8,7 +8,10 @@ use crate::{
     tests::helpers::{CA_CERT, CLIENT_CERT, CLIENT_KEY},
 };
 use crate::{
-    tests::helpers::{create_client, create_server},
+    tests::{
+        helpers::{create_client, create_server},
+        TestResult,
+    },
     Client,
 };
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
@@ -16,7 +19,7 @@ use deboa::cert::Certificate;
 #[cfg(feature = "rust-tls")]
 use deboa::cert::{ContentEncoding, Identity};
 use deboa::{
-    errors::{ConnectionError, DeboaError, ResponseError},
+    errors::{ConnectionError, DeboaError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
     HttpClient, HttpVersion,
@@ -34,7 +37,7 @@ use smol_macros::test;
 //
 
 #[apply(test!)]
-async fn test_get_http() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_http() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::GET).and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -71,7 +74,7 @@ async fn test_get_http() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn skip_cert_verification_helper(skip: bool) -> Result<(), Box<dyn std::error::Error>> {
+async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::GET).and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -129,25 +132,25 @@ async fn skip_cert_verification_helper(skip: bool) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
-async fn do_get_http_skip_verification() -> Result<(), Box<dyn std::error::Error>> {
+async fn do_get_http_skip_verification() -> TestResult<()> {
     skip_cert_verification_helper(true).await
 }
 
 #[apply(test!)]
-async fn test_get_http_skip_verification() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_http_skip_verification() -> TestResult<()> {
     do_get_http_skip_verification().await
 }
 
-async fn do_get_http_verify() -> Result<(), Box<dyn std::error::Error>> {
+async fn do_get_http_verify() -> TestResult<()> {
     skip_cert_verification_helper(false).await
 }
 
 #[apply(test!)]
-async fn test_get_http_verify() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_http_verify() -> TestResult<()> {
     do_get_http_verify().await
 }
 
-async fn do_get_http_mutual_authentication() -> Result<(), Box<dyn std::error::Error>> {
+async fn do_get_http_mutual_authentication() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::GET).and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -192,13 +195,12 @@ async fn do_get_http_mutual_authentication() -> Result<(), Box<dyn std::error::E
 }
 
 #[apply(test!)]
-async fn test_get_http_mutual_authentication() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_http_mutual_authentication() -> TestResult<()> {
     do_get_http_mutual_authentication().await
 }
 
 #[cfg(feature = "native-tls")]
-async fn do_get_http_mutual_authentication_with_password() -> Result<(), Box<dyn std::error::Error>>
-{
+async fn do_get_http_mutual_authentication_with_password() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::GET).and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -241,8 +243,7 @@ async fn do_get_http_mutual_authentication_with_password() -> Result<(), Box<dyn
 
 #[cfg(feature = "native-tls")]
 #[apply(test!)]
-async fn test_get_http_mutual_authentication_with_password(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
     do_get_http_mutual_authentication_with_password().await
 }
 
@@ -251,7 +252,7 @@ async fn test_get_http_mutual_authentication_with_password(
 //
 
 #[apply(test!)]
-async fn test_get_not_found() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_not_found() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::GET).and(path("/posts/1"))).will_return(
             StatusCode::NOT_FOUND
@@ -266,19 +267,11 @@ async fn test_get_not_found() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
     let client = create_client();
 
-    let response: crate::Result<DeboaResponse> =
-        DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
-            .send_with(&client)
-            .await;
+    let response = DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
+        .send_with(&client)
+        .await?;
 
-    assert!(response.is_err());
-    assert_eq!(
-        response.unwrap_err(),
-        DeboaError::Response(ResponseError::Receive {
-            status_code: StatusCode::NOT_FOUND,
-            message: "Could not process request (404 Not Found): Not found".to_string()
-        })
-    );
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
     server
         .stop()
@@ -292,7 +285,7 @@ async fn test_get_not_found() -> Result<(), Box<dyn std::error::Error>> {
 //
 
 #[apply(test!)]
-async fn test_get_invalid_server() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_invalid_server() -> TestResult<()> {
     let client = Client::default();
 
     let request = DeboaRequest::get("https://invalid-server.com/posts")?
@@ -314,7 +307,7 @@ async fn test_get_invalid_server() -> Result<(), Box<dyn std::error::Error>> {
 //
 
 #[apply(test!)]
-async fn test_get_by_query() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_by_query() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::GET).and(path("/comments/1"))).will_return(
             StatusCode::OK
@@ -388,7 +381,7 @@ async fn do_get_by_query_with_retries() -> Result<()> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_by_query_with_retries() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_by_query_with_retries() -> TestResult<()> {
     do_get_by_query_with_retries().await
 }
 
@@ -431,7 +424,7 @@ async fn do_get_with_redirect() -> Result<()> {
 
 #[cfg(feature = "tokio-rt")]
 #[tokio::test]
-async fn test_get_with_redirect() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_get_with_redirect() -> TestResult<()> {
     do_get_with_redirect().await
 }
 
@@ -443,7 +436,7 @@ async fn test_get_with_redirect() {
 */
 
 #[apply(test!)]
-async fn test_try_into() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_try_into() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::GET).and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -472,7 +465,7 @@ async fn test_try_into() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[apply(test!)]
-async fn test_fetch_from_str() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_fetch_from_str() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::GET).and(path("/posts/1"))).will_return(
             StatusCode::OK

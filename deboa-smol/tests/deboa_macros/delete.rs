@@ -1,5 +1,8 @@
 #![allow(unused_variables)]
-use crate::common::helpers::{create_client, create_server};
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
 use deboa_macros::delete;
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
@@ -8,10 +11,9 @@ use easyhttpmock_vetis_smol::{
 use http::StatusCode;
 use macro_rules_attribute::apply;
 use smol_macros::test;
-use std::error::Error;
 
 #[apply(test!)]
-async fn delete() -> Result<(), Box<dyn Error>> {
+async fn delete() -> TestResult<()> {
     let mock = Mock::of(
         given(method("DELETE").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -39,7 +41,7 @@ async fn delete() -> Result<(), Box<dyn Error>> {
 }
 
 #[apply(test!)]
-async fn delete_with_headers() -> Result<(), Box<dyn Error>> {
+async fn delete_with_headers() -> TestResult<()> {
     let mock = Mock::of(
         given(method("DELETE").and(path("/posts/1"))).will_return(
             StatusCode::OK

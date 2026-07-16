@@ -1,6 +1,7 @@
 use crate::common::{
     data::{sample_post, Post, JSON_POST},
     helpers::fake_url,
+    TestResult,
 };
 use deboa::{request::DeboaRequest, response::DeboaResponse};
 use deboa_extras::serde::json::JsonBody;
@@ -11,7 +12,7 @@ use macro_rules_attribute::apply;
 use smol_macros::test;
 
 #[apply(test!)]
-async fn test_set_json() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_set_json() -> TestResult<()> {
     let request = DeboaRequest::post(fake_url())?
         .body_as(JsonBody, sample_post())?
         .build()?;
@@ -29,7 +30,7 @@ async fn test_set_json() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[apply(test!)]
-async fn test_response_json() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_response_json() -> TestResult<()> {
     let data = sample_post();
 
     let response = DeboaResponse::builder(fake_url())

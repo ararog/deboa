@@ -1,8 +1,9 @@
 use crate::common::{
     data::{sample_post, Post, FLEX_POST},
     helpers::fake_url,
+    TestResult,
 };
-use deboa::{request::DeboaRequest, response::DeboaResponse, Result};
+use deboa::{request::DeboaRequest, response::DeboaResponse};
 use deboa_extras::serde::flex::FlexBody;
 use http::header;
 use http::StatusCode;
@@ -11,7 +12,7 @@ use macro_rules_attribute::apply;
 use smol_macros::test;
 
 #[apply(test!)]
-async fn test_set_flex() -> Result<()> {
+async fn test_set_flex() -> TestResult<()> {
     let request = DeboaRequest::post(fake_url())?
         .body_as(FlexBody, sample_post())?
         .build()?;
@@ -29,7 +30,7 @@ async fn test_set_flex() -> Result<()> {
 }
 
 #[apply(test!)]
-async fn test_response_flex() -> Result<()> {
+async fn test_response_flex() -> TestResult<()> {
     let data = sample_post();
 
     let response = DeboaResponse::builder(fake_url())

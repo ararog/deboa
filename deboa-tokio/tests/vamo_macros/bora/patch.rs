@@ -1,5 +1,7 @@
-use std::error::Error;
-
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
 use easyhttpmock_vetis_tokio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
@@ -8,8 +10,6 @@ use http::StatusCode;
 use serde::{Deserialize, Serialize};
 use vamo::Vamo;
 use vamo_macros::bora;
-
-use crate::common::helpers::{create_client, create_server};
 
 #[derive(Serialize, Deserialize)]
 pub struct Post {
@@ -27,7 +27,7 @@ pub struct Post {
 pub struct PostService;
 
 #[tokio::test]
-async fn do_patch_by_id() -> Result<(), Box<dyn Error>> {
+async fn do_patch_by_id() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PATCH").and(path("/posts/1"))).will_return(
             StatusCode::OK

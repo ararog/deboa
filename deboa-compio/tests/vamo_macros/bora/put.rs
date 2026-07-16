@@ -1,4 +1,7 @@
-use crate::common::helpers::{create_server, CA_CERT, SKIP_CERT_VERIFICATION};
+use crate::common::{
+    helpers::{create_server, CA_CERT, SKIP_CERT_VERIFICATION},
+    TestResult,
+};
 use deboa::cert::{Certificate, ContentEncoding};
 use deboa_compio::Client as DeboaClient;
 use easyhttpmock_vetis_compio::{
@@ -26,7 +29,7 @@ pub struct Post {
 pub struct PostService;
 
 #[compio::test]
-async fn test_put_by_id() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_put_by_id() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PUT").and(path("/posts/1"))).will_return(
             StatusCode::OK

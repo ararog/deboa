@@ -2,6 +2,7 @@
 use crate::common::{
     data::Post,
     helpers::{create_client, create_server},
+    TestResult,
 };
 use deboa_extras::serde::json::JsonBody;
 use deboa_macros::get;
@@ -10,10 +11,9 @@ use easyhttpmock_vetis_tokio::{
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
 use http::StatusCode;
-use std::error::Error;
 
 #[tokio::test]
-async fn test_get_minimal() -> Result<(), Box<dyn Error>> {
+async fn test_get_minimal() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -43,7 +43,7 @@ async fn test_get_minimal() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_get_minimal_headers() -> Result<(), Box<dyn Error>> {
+async fn test_get_minimal_headers() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -73,7 +73,7 @@ async fn test_get_minimal_headers() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_get() -> Result<(), Box<dyn Error>> {
+async fn test_get() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts"))).will_return(
             StatusCode::OK
@@ -102,7 +102,7 @@ async fn test_get() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn test_get_with_headers() -> Result<(), Box<dyn Error>> {
+async fn test_get_with_headers() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts"))).will_return(
             StatusCode::OK

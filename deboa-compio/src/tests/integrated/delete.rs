@@ -1,4 +1,7 @@
-use crate::tests::helpers::{create_client, create_server};
+use crate::tests::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
 use deboa::request::DeboaRequest;
 use easyhttpmock_vetis_compio::{
     matchers::{method, path},
@@ -10,7 +13,7 @@ use http::{Method, StatusCode};
 // DELETE
 //
 #[compio::test]
-async fn test_delete() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_delete() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::DELETE).and(path("/posts/1"))).will_return(
             StatusCode::OK

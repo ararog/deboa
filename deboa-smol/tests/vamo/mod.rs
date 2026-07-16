@@ -1,5 +1,8 @@
-use std::error::Error;
-
+use crate::common::{
+    data::{JSON_PATCH, JSON_POST},
+    helpers::{create_client, create_server},
+    TestResult,
+};
 use deboa::serde::RequestBody;
 use deboa_extras::serde::json::JsonBody;
 use easyhttpmock_vetis_smol::{
@@ -13,11 +16,6 @@ use smol_macros::test;
 use vamo::{
     resource::{Resource, ResourceMethod},
     Vamo,
-};
-
-use crate::common::{
-    data::{JSON_PATCH, JSON_POST},
-    helpers::{create_client, create_server},
 };
 
 #[derive(Serialize)]
@@ -45,7 +43,7 @@ impl Resource for Post {
 }
 
 #[apply(test!)]
-async fn test_get() -> Result<(), Box<dyn Error>> {
+async fn test_get() -> TestResult<()> {
     let mock = Mock::of(
         given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -86,7 +84,7 @@ async fn test_get() -> Result<(), Box<dyn Error>> {
 }
 
 #[apply(test!)]
-async fn test_put() -> Result<(), Box<dyn Error>> {
+async fn test_put() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PUT").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -118,7 +116,7 @@ async fn test_put() -> Result<(), Box<dyn Error>> {
 }
 
 #[apply(test!)]
-async fn test_post() -> Result<(), Box<dyn Error>> {
+async fn test_post() -> TestResult<()> {
     let mock = Mock::of(
         given(method("POST").and(path("/api/posts"))).will_return(
             StatusCode::CREATED
@@ -158,7 +156,7 @@ async fn test_post() -> Result<(), Box<dyn Error>> {
 }
 
 #[apply(test!)]
-async fn test_patch() -> Result<(), Box<dyn Error>> {
+async fn test_patch() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PATCH").and(path("/api/posts/1"))).will_return(
             StatusCode::OK
@@ -188,7 +186,7 @@ async fn test_patch() -> Result<(), Box<dyn Error>> {
 }
 
 #[apply(test!)]
-async fn test_delete() -> Result<(), Box<dyn Error>> {
+async fn test_delete() -> TestResult<()> {
     let mock = Mock::of(
         given(method("DELETE").and(path("/api/posts/1"))).will_return(
             StatusCode::NO_CONTENT
@@ -218,7 +216,7 @@ async fn test_delete() -> Result<(), Box<dyn Error>> {
 }
 
 #[apply(test!)]
-async fn test_post_resource() -> Result<(), Box<dyn Error>> {
+async fn test_post_resource() -> TestResult<()> {
     let mock = Mock::of(
         given(method("POST").and(path("/api/posts"))).will_return(
             StatusCode::CREATED
@@ -256,7 +254,7 @@ async fn test_post_resource() -> Result<(), Box<dyn Error>> {
 }
 
 #[apply(test!)]
-async fn test_put_resource() -> Result<(), Box<dyn Error>> {
+async fn test_put_resource() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PUT").and(path("/api/posts/1"))).will_return(
             StatusCode::OK
@@ -294,7 +292,7 @@ async fn test_put_resource() -> Result<(), Box<dyn Error>> {
 }
 
 #[apply(test!)]
-async fn test_patch_resource() -> Result<(), Box<dyn Error>> {
+async fn test_patch_resource() -> TestResult<()> {
     let mock = Mock::of(
         given(method("PATCH").and(path("/api/posts/1"))).will_return(
             StatusCode::OK
@@ -327,7 +325,7 @@ async fn test_patch_resource() -> Result<(), Box<dyn Error>> {
 }
 
 #[apply(test!)]
-async fn test_remove_resource() -> Result<(), Box<dyn Error>> {
+async fn test_remove_resource() -> TestResult<()> {
     let mock = Mock::of(
         given(method("DELETE").and(path("/api/posts/1"))).will_return(
             StatusCode::OK
