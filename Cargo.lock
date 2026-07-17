@@ -1208,7 +1208,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-compio"
-version = "0.1.1-beta.9"
+version = "0.1.1-beta.10"
 dependencies = [
  "async-executor",
  "async-trait",
@@ -1221,7 +1221,7 @@ dependencies = [
  "cookie",
  "criterion",
  "cyper-core",
- "deboa 0.1.0-beta.25",
+ "deboa 0.1.0-beta.24",
  "deboa-extras",
  "deboa-fory",
  "deboa-h3",
@@ -1320,7 +1320,7 @@ dependencies = [
 name = "deboa-macros"
 version = "0.1.0-beta.5"
 dependencies = [
- "deboa 0.1.0-beta.25",
+ "deboa 0.1.0-beta.24",
  "deboa-extras",
  "http",
  "proc-macro2",
@@ -1331,7 +1331,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-smol"
-version = "0.1.0-beta.14"
+version = "0.1.0-beta.15"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -1341,7 +1341,7 @@ dependencies = [
  "ciborium",
  "cookie",
  "criterion",
- "deboa 0.1.0-beta.25",
+ "deboa 0.1.0-beta.24",
  "deboa-extras",
  "deboa-fory",
  "deboa-h3",
@@ -1391,7 +1391,7 @@ dependencies = [
 
 [[package]]
 name = "deboa-tokio"
-version = "0.1.0-beta.14"
+version = "0.1.0-beta.15"
 dependencies = [
  "async-executor",
  "async-native-tls",
@@ -1401,7 +1401,7 @@ dependencies = [
  "ciborium",
  "cookie",
  "criterion",
- "deboa 0.1.0-beta.25",
+ "deboa 0.1.0-beta.24",
  "deboa-extras",
  "deboa-fory",
  "deboa-h3",
