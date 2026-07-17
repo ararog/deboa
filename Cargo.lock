@@ -1572,9 +1572,9 @@ dependencies = [
 
 [[package]]
 name = "easyhttpmock-vetis-smol"
-version = "0.1.0-beta.7"
+version = "0.1.0-beta.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28691930ae2ea52622077afda0b198a02a03b2c131f1cda15c8b5c11b5265cef"
+checksum = "a8de1f507eb8ab26c0ceaacf7413d7d4160320d7b24d616d4ecef685f79ca655"
 dependencies = [
  "caramelo",
  "easyhttpmock",
@@ -5120,9 +5120,9 @@ dependencies = [
 
 [[package]]
 name = "vetis-smol"
-version = "0.1.0-beta.6"
+version = "0.1.0-beta.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b58fc9c3815f10a4eba9053d2ee9bec378acb233dd9d803f205a2403eefea410"
+checksum = "3d1227318f411af1b34728767fb404431df6011a368c3b189394c8d8ec4ecd88"
 dependencies = [
  "async-lock",
  "async-net",
