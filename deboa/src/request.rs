@@ -75,17 +75,14 @@ use base64::{engine::general_purpose::STANDARD, Engine as _};
 use bytes::Bytes;
 use http::{
     header::{self},
-    HeaderMap, HeaderName, HeaderValue, Method, Request, Response,
+    HeaderMap, HeaderName, HeaderValue, Method,
 };
 use http_body_util::combinators::BoxBody;
 use hyper_body_utils::HttpBody;
 use log::error;
 use regex::Regex;
 use serde::Serialize;
-use std::{
-    collections::HashMap, error::Error, fmt::Debug, future::Future, marker::PhantomData,
-    str::FromStr, sync::Arc,
-};
+use std::{collections::HashMap, fmt::Debug, future::Future, str::FromStr, sync::Arc};
 use url::Url;
 
 /// Bytes body type

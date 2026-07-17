@@ -19,8 +19,6 @@ use crate::{
     cert::{DeboaCertificate, DeboaIdentity},
     HttpVersion,
 };
-#[cfg(any(feature = "http1", feature = "http2"))]
-use deboa::conn::SendRequest;
 #[cfg(feature = "http1")]
 use deboa::request::Http1Request;
 #[cfg(feature = "http2")]
@@ -57,11 +55,9 @@ pub mod pool;
 pub(crate) mod stream;
 
 #[cfg(feature = "http1")]
-pub(crate) type Http1Connection =
-    BaseHttpConnection<SendRequest<Http1Request, HttpBody>, HttpBody, HttpBody>;
+pub(crate) type Http1Connection = BaseHttpConnection<Http1Request, HttpBody, HttpBody>;
 #[cfg(feature = "http2")]
-pub(crate) type Http2Connection =
-    BaseHttpConnection<SendRequest<Http2Request, HttpBody>, HttpBody, HttpBody>;
+pub(crate) type Http2Connection = BaseHttpConnection<Http2Request, HttpBody, HttpBody>;
 #[cfg(feature = "http3")]
 pub(crate) type Http3Connection = BaseHttpConnection<Http3Request, HttpBody, HttpBody>;
 
@@ -103,16 +99,19 @@ pub enum DeboaConnection {
 
 impl DeboaConnection {
     #[cfg(feature = "http1")]
+    /// Initialize a new HTTP/1.1 connection
     pub fn http1(conn: Http1Connection) -> Self {
         DeboaConnection::Http1(Box::new(conn))
     }
 
     #[cfg(feature = "http2")]
+    /// Initialize a new HTTP/2 connection
     pub fn http2(conn: Http2Connection) -> Self {
         DeboaConnection::Http2(Box::new(conn))
     }
 
     #[cfg(feature = "http3")]
+    /// Initialize a new HTTP/3 connection
     pub fn http3(conn: Http3Connection) -> Self {
         DeboaConnection::Http3(Box::new(conn))
     }
@@ -135,26 +134,56 @@ impl HttpConnectionDispatcher for DeboaConnection {
         request: Request<HttpBody>,
     ) -> Result<DeboaResponse> {
         let url = url.clone();
-        let conn = match self {
+        match self {
             #[cfg(feature = "http1")]
-            DeboaConnection::Http1(ref mut conn) => conn,
+            DeboaConnection::Http1(ref mut conn) => {
+                let (parts, body) = conn
+                    .sender
+                    .send_request(request)
+                    .await
+                    .map_err(|e| {
+                        DeboaError::Request(RequestError::Send { message: e.to_string() })
+                    })?
+                    .into_parts();
+
+                Ok(DeboaResponse::new(
+                    url,
+                    http::Response::from_parts(parts, HttpBody::from_incoming(body)),
+                ))
+            }
             #[cfg(feature = "http2")]
-            DeboaConnection::Http2(ref mut conn) => conn,
+            DeboaConnection::Http2(ref mut conn) => {
+                let (parts, body) = conn
+                    .sender
+                    .send_request(request)
+                    .await
+                    .map_err(|e| {
+                        DeboaError::Request(RequestError::Send { message: e.to_string() })
+                    })?
+                    .into_parts();
+
+                Ok(DeboaResponse::new(
+                    url,
+                    http::Response::from_parts(parts, HttpBody::from_incoming(body)),
+                ))
+            }
             #[cfg(feature = "http3")]
-            DeboaConnection::Http3(ref mut conn) => conn,
-            #[allow(unreachable_patterns)]
+            DeboaConnection::Http3(ref mut conn) => {
+                let response = conn
+                    .sender
+                    .send_request(request)
+                    .await
+                    .map_err(|e| {
+                        DeboaError::Request(RequestError::Send { message: e.to_string() })
+                    })?;
+
+                Ok(DeboaResponse::new(url, response))
+            }
+            #[allow(unreachable_patterns, clippy::needless_return)]
             _ => {
                 return Err(DeboaError::UnsupportedProtocol);
             }
-        };
-
-        let response = conn
-            .sender
-            .send_request(request)
-            .await
-            .map_err(|e| DeboaError::Request(RequestError::Send { message: e.to_string() }))?;
-
-        Ok(DeboaResponse::new(url, response))
+        }
     }
 }
 

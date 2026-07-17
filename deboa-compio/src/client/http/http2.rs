@@ -9,7 +9,7 @@ use crate::{
 };
 use cyper_core::CompioExecutor;
 use deboa::{
-    conn::{ConnectionConfig, HttpConnection, ProtoConnection, SendRequest},
+    conn::{ConnectionConfig, HttpConnection, ProtoConnection},
     request::Http2Request,
 };
 use http::version::Version;
@@ -17,7 +17,7 @@ use hyper::client::conn::http2::handshake;
 use hyper_body_utils::HttpBody;
 
 impl HttpConnection for Http2Connection {
-    type Sender = SendRequest<Http2Request, HttpBody>;
+    type Sender = Http2Request;
     fn sender(&mut self) -> &mut Self::Sender {
         &mut self.sender
     }
@@ -69,6 +69,6 @@ impl ProtoConnection for Http2Connection {
         })
         .detach();
 
-        Ok(BaseHttpConnection::new(SendRequest::new(sender)))
+        Ok(BaseHttpConnection::new(sender))
     }
 }

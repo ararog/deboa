@@ -5,7 +5,7 @@ use crate::{
     client::http::conn::{stream::plain_connection, BaseHttpConnection, Http1Connection},
 };
 use deboa::{
-    conn::{ConnectionConfig, HttpConnection, ProtoConnection, SendRequest},
+    conn::{ConnectionConfig, HttpConnection, ProtoConnection},
     request::Http1Request,
     Result,
 };
@@ -15,7 +15,7 @@ use hyper_body_utils::HttpBody;
 use hyper_util::rt::TokioIo;
 
 impl HttpConnection for Http1Connection {
-    type Sender = SendRequest<Http1Request, HttpBody>;
+    type Sender = Http1Request;
     fn sender(&mut self) -> &mut Self::Sender {
         &mut self.sender
     }
@@ -73,6 +73,6 @@ impl ProtoConnection for Http1Connection {
             };
         });
 
-        Ok(BaseHttpConnection::new(SendRequest::new(sender)))
+        Ok(BaseHttpConnection::new(sender))
     }
 }

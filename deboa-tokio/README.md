@@ -47,7 +47,8 @@ Either run from command line:
 Or add to your `Cargo.toml`:
 
 ```toml
-deboa-tokio = { version = "0.0.9", features = ["http1"] }
+deboa = { version = "0.1.0-beta.23" }
+deboa-tokio = { version = "0.1.0-beta.12" }
 http = "1.3.1"
 ```
 
@@ -63,6 +64,7 @@ http = "1.3.1"
 
 ```rust
 use deboa::{
+    HttpClient,
     request::{DeboaRequest, FetchWith, get},
     Result,
 };

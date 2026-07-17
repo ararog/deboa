@@ -15,7 +15,7 @@ This release has a major api change. Please check the [migration guide](https://
 ## Install
 
 ```toml
-deboa = { version = "0.0.9" }
+deboa = { version = "0.1.0-beta.23" }
 ```
 
 ## Runtimes
@@ -27,6 +27,7 @@ deboa = { version = "0.0.9" }
 
 ```rust
 use deboa::{
+    HttpClient,
     request::{DeboaRequest, FetchWith, get},
     Result,
 };

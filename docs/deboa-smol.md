@@ -14,8 +14,8 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-deboa = { version = "0.0.9" }
-deboa-smol = { version = "0.0.9", features = ["http1", "http2", "rust-tls"] }
+deboa = { version = "0.1.0-beta.23" }
+deboa-smol = { version = "0.1.0-beta.12", features = ["http1", "http2", "rust-tls"] }
 ```
 
 ## Features

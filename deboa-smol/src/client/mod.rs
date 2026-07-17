@@ -2,6 +2,6 @@
 ///
 /// This module provides DNS resolution functionality for the Deboa HTTP client.pub(crate) mod dns;
 pub mod dns;
-pub(crate) mod http;
+pub mod http;
 #[cfg(feature = "websockets")]
-pub(crate) mod ws;
+pub mod ws;

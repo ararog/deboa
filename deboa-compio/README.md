@@ -47,28 +47,28 @@ Either run from command line:
 Or add to your `Cargo.toml`:
 
 ```toml
-deboa = { version = "0.0.9", features = ["http1", "tokio-rt"] }
+deboa = { version = "0.1.0-beta.23" }
+deboa-compio = { version = "0.1.1-beta.7" }
 http = "1.3.1"
 ```
 
 ## Crate features
 
-- tokio-rt (default)
-- smol-rt
 - http1
 - http2 (default)
 - http3
-- tokio-rust-tls (default)
-- tokio-native-tls
-- smol-rust-tls
-- smol-native-tls
+- rust-tls (default)
+- native-tls
 
 ## Usage
 
 ```rust
 use deboa::{
-    Client, Result, request::{DeboaRequest, FetchWith, get}
+    HttpClient,
+    request::{DeboaRequest, FetchWith, get},
+    Result,
 };
+use deboa_compio::Client;
 use deboa_extras::http::{self, serde::json::JsonBody};
 
 use ::http::Method;
@@ -80,7 +80,7 @@ pub struct Post {
     pub body: String,
 }
 
-#[tokio::main]
+#[compio::main]
 async fn main() -> Result<()> {
     let client = Client::new();
 
@@ -103,7 +103,7 @@ async fn main() -> Result<()> {
       .await?;
 
     // shifleft? Yes sir! Defaults to GET, but you can change it, same for headers.
- 
+
     let request = &client << "https://jsonplaceholder.typicode.com/posts";
     let posts: Vec<Post> = client.execute(request)
       .await?

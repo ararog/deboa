@@ -5,7 +5,7 @@ use crate::{
     client::http::conn::{stream::plain_connection, BaseHttpConnection, Http2Connection},
 };
 use deboa::{
-    conn::{ConnectionConfig, HttpConnection, ProtoConnection, SendRequest},
+    conn::{ConnectionConfig, HttpConnection, ProtoConnection},
     request::Http2Request,
     Result,
 };
@@ -15,7 +15,7 @@ use hyper_body_utils::HttpBody;
 use hyper_util::rt::{TokioExecutor, TokioIo};
 
 impl HttpConnection for Http2Connection {
-    type Sender = SendRequest<Http2Request, HttpBody>;
+    type Sender = Http2Request;
     fn sender(&mut self) -> &mut Self::Sender {
         &mut self.sender
     }
@@ -70,6 +70,6 @@ impl ProtoConnection for Http2Connection {
             };
         });
 
-        Ok(BaseHttpConnection::new(SendRequest::new(sender)))
+        Ok(BaseHttpConnection::new(sender))
     }
 }

@@ -1,2 +1,2 @@
-pub(crate) mod dns;
-pub(crate) mod http;
+pub mod dns;
+pub mod http;

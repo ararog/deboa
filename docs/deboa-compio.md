@@ -1,12 +1,12 @@
 ---
 layout: default
-title: Deboa Tokio - HTTP Client for Tokio
-nav_order: 3
+title: Deboa Smol - HTTP Client for Smol
+nav_order: 4
 ---
 
-## Deboa Tokio
+## Deboa Smol
 
-The HTTP client library for Rust using Tokio, providing a simple yet powerful interface for making HTTP requests.
+The HTTP client library for Rust using Smol, providing a simple yet powerful interface for making HTTP requests.
 
 ## Installation
 
@@ -15,7 +15,7 @@ Add to your `Cargo.toml`:
 ```toml
 [dependencies]
 deboa = { version = "0.1.0-beta.23" }
-deboa-tokio = { version = "0.1.0-beta.12", features = ["http1", "http2", "rust-tls"] }
+deboa-compio = { version = "0.1.0-beta.7", features = ["http1", "http2", "rust-tls"] }
 ```
 
 ## Features
@@ -29,10 +29,10 @@ deboa-tokio = { version = "0.1.0-beta.12", features = ["http1", "http2", "rust-t
 ## Basic Usage
 
 ```rust
-use deboa::{request::get, Result};
-use deboa_tokio::Client;
+use deboa::{request::get, HttpClient, Result};
+use deboa_compio::Client;
 
-#[tokio::main]
+#[compio::main]
 async fn main() -> Result<()> {
     let client = Client::new();
 
@@ -53,8 +53,8 @@ async fn main() -> Result<()> {
 ### GET Request
 
 ```rust
-use deboa::request::get;
-use deboa_smol::Client;
+use deboa::{HttpClient, request::get};
+use deboa_compio::Client;
 
 let client = Client::new();
 
@@ -74,13 +74,13 @@ let response = "GET".from_url("https://api.example.com/data")
 ### POST Request with JSON
 
 ```rust
-use deboa::{request::post, Result};
+use deboa::{HttpCliemt, request::post, Result};
 use deboa_extras::serde::json::JsonBody;
-use deboa_smol::Client;
+use deboa_compio::Client;
 use serde_json::json;
 
+let client = Client::new();
 let data = json!({ "name": "John Doe", "age": 30 });
-
 let response = post("https://api.example.com/users")
     .body_as(JsonBody, &data)?
     .send_with(&client)
@@ -90,12 +90,12 @@ let response = post("https://api.example.com/users")
 ### Handling Responses
 
 ```rust
-use deboa::{request::get, Result};
+use deboa::{HttpClient, request::get, Result};
 use deboa_extras::serde::json::JsonBody;
-use deboa_smol::Client;
+use deboa_compio::Client;
 use serde::Deserialize;
 
-#[derive(serde::Deserialize)]
+#[derive(Deserialize)]
 struct User {
     id: u64,
     name: String,
@@ -103,7 +103,7 @@ struct User {
 }
 
 // Parse JSON response into a struct
-let user: User = deboa::get("https://api.example.com/users/1")
+let user: User = get("https://api.example.com/users/1")
     .send_with(&client)
     .await?
     .body_as(JsonBody)?;
@@ -115,39 +115,12 @@ let text = response.text().await?;
 let bytes = response.bytes().await?;
 ```
 
-## Catchers (Middleware)
-
-Deboa supports middleware for request/response processing:
-
-```rust
-use deboa::{Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
-
-struct TestMonitor;
-
-impl DeboaCatcher for TestMonitor {
-    async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
-        println!("Request: {:?}", request.url());
-        Ok(None)
-    }
-
-    async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
-        println!("Response: {:?}", response.status());
-        Ok(())
-    }
-}
-
-// Create a client with middleware
-let client = deboa::Client::builder()
-    .catch(TestMonitor)
-    .build();
-```
-
 ## Error Handling
 
 Deboa provides comprehensive error handling through the `deboa::errors::DeboaError` type:
 
 ```rust
-match deboa::get("https://api.example.com/data").send_with(&client).await {
+match deboa_compio::get("https://api.example.com/data").send_with(&client).await {
     Ok(response) => {
         // Handle successful response
     }

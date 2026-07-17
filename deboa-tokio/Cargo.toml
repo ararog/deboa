@@ -1,6 +1,6 @@
 [package]
 name = "deboa-tokio"
-version = "0.1.0-beta.12"
+version = "0.1.0-beta.14"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
