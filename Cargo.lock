@@ -1589,9 +1589,9 @@ dependencies = [
 
 [[package]]
 name = "easyhttpmock-vetis-tokio"
-version = "0.1.0-beta.7"
+version = "0.1.0-beta.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ceea7a7b82e1420c0f94b131f370f0e99a0685850ba12cb175f08e438ec3531"
+checksum = "78b142b505dba26f6ec75af52a85d7407074f05ece346b7924ada529eb5f4c67"
 dependencies = [
  "caramelo",
  "easyhttpmock",
@@ -5059,9 +5059,9 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vetis"
-version = "0.1.4-beta.11"
+version = "0.1.4-beta.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e44d5b52fb1bc27881b4ca4375cb26c21de218621342c7ef31459bea1d3626e"
+checksum = "3214b925436e76a35b33b7d643a5f9c30a9d7c4d19d273f693c570b095a330c3"
 dependencies = [
  "argon2",
  "async-lock",
@@ -5162,9 +5162,9 @@ dependencies = [
 
 [[package]]
 name = "vetis-tokio"
-version = "0.1.0-beta.6"
+version = "0.1.0-beta.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85aaf4e0edb237c7b4977ea2b1c5c4cf2708c66a46b136f12573c3a6da6011c2"
+checksum = "ea98db8b51b14215b30222ebf0f795679e8b8cedd457048ed96f4bf8281e0399"
 dependencies = [
  "async-lock",
  "bytes",
