@@ -24,8 +24,8 @@ pub const SERVER_KEY: &[u8] = include_bytes!("../../../certs/server.key.der");
 // pub const SERVER_CERT_PEM: &[u8] = include_bytes!("../../../certs/server.crt");
 // pub const SERVER_KEY_PEM: &[u8] = include_bytes!("../../../certs/server.key");
 
-// pub const CLIENT_CERT: &[u8] = include_bytes!("../../../certs/client.der");
-// pub const CLIENT_KEY: &[u8] = include_bytes!("../../../certs/client.key.der");
+pub const CLIENT_CERT: &[u8] = include_bytes!("../../../certs/client.der");
+pub const CLIENT_KEY: &[u8] = include_bytes!("../../../certs/client.key.der");
 
 // pub const CLIENT_CERT_PEM: &[u8] = include_bytes!("../../../certs/client.crt");
 // pub const CLIENT_KEY_PEM: &[u8] = include_bytes!("../../../certs/client.key");

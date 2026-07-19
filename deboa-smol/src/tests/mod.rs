@@ -6,6 +6,5 @@ mod cert;
 mod client;
 mod form;
 mod helpers;
-mod integrated;
 mod request;
 mod response;

@@ -1,4 +1,4 @@
-use crate::tests::{
+use crate::common::{
     helpers::{create_client, create_server},
     TestResult,
 };

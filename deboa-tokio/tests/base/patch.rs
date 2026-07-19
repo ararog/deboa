@@ -1,28 +1,26 @@
-use crate::tests::{
+use crate::common::{
     helpers::{create_client, create_server},
     TestResult,
 };
-
 use deboa::{request::DeboaRequest, HttpClient};
-use easyhttpmock_vetis_smol::{
+use deboa_tokio::Client;
+use easyhttpmock_vetis_tokio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
 use http::{Method, StatusCode};
 
-use macro_rules_attribute::apply;
-use smol_macros::test;
+//
+// PATCH
+//
 
-//
-// PUT
-//
-#[apply(test!)]
-async fn test_put() -> TestResult<()> {
+#[tokio::test]
+async fn test_patch() -> TestResult<()> {
     let mock = Mock::of(
-        given(method(Method::PUT).and(path("/posts/1"))).will_return(
+        given(method(Method::PATCH).and(path("/posts/1"))).will_return(
             StatusCode::OK
                 .respond()
-                .no_body(),
+                .with_body(b"done"),
         ),
     );
 
@@ -30,10 +28,10 @@ async fn test_put() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client = create_client();
 
-    let request = DeboaRequest::put(server.url("/posts/1"))?
-        .text("ping")
+    let client: Client = create_client();
+    let request = DeboaRequest::patch(server.url("/posts/1"))?
+        .text("text")
         .build()?;
 
     let response = client
@@ -41,6 +39,12 @@ async fn test_put() -> TestResult<()> {
         .await?;
 
     assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response
+            .text()
+            .await?,
+        "done"
+    );
 
     server
         .stop()

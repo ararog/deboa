@@ -1,15 +1,13 @@
-use crate::{
-    tests::{
-        helpers::{create_client, create_server},
-        TestResult,
-    },
-    Client,
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
 };
 use deboa::{
     form::{DeboaForm, EncodedForm, MultiPartForm},
     request::DeboaRequest,
     HttpClient,
 };
+use deboa_compio::Client;
 use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},

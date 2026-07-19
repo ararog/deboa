@@ -1,18 +1,21 @@
-use crate::tests::{
+use crate::common::{
     helpers::{create_client, create_server},
     TestResult,
 };
 use deboa::request::DeboaRequest;
-use easyhttpmock_vetis_compio::{
+use easyhttpmock_vetis_smol::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
 use http::{Method, StatusCode};
+use macro_rules_attribute::apply;
+use smol_macros::test;
 
 //
 // DELETE
 //
-#[compio::test]
+
+#[apply(test!)]
 async fn test_delete() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::DELETE).and(path("/posts/1"))).will_return(

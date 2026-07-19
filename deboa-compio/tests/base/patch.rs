@@ -1,25 +1,18 @@
-use crate::{
-    tests::{
-        helpers::{create_client, create_server},
-        TestResult,
-    },
-    Client,
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
 };
-
 use deboa::{request::DeboaRequest, HttpClient};
-use easyhttpmock_vetis_smol::{
+use deboa_compio::Client;
+use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
 use http::{Method, StatusCode};
-
-use macro_rules_attribute::apply;
-use smol_macros::test;
-
 //
 // PATCH
 //
-#[apply(test!)]
+#[compio::test]
 async fn test_patch() -> TestResult<()> {
     let mock = Mock::of(
         given(method(Method::PATCH).and(path("/posts/1"))).will_return(

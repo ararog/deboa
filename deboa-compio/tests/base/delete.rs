@@ -1,22 +1,21 @@
-use deboa::{request::DeboaRequest, HttpClient};
-use easyhttpmock_vetis_tokio::{
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
+use deboa::request::DeboaRequest;
+use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
 use http::{Method, StatusCode};
 
-use crate::tests::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
-
 //
-// PUT
+// DELETE
 //
-#[tokio::test]
-async fn test_put() -> TestResult<()> {
+#[compio::test]
+async fn test_delete() -> TestResult<()> {
     let mock = Mock::of(
-        given(method(Method::PUT).and(path("/posts/1"))).will_return(
+        given(method(Method::DELETE).and(path("/posts/1"))).will_return(
             StatusCode::OK
                 .respond()
                 .no_body(),
@@ -27,14 +26,10 @@ async fn test_put() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-
     let client = create_client();
-    let request = DeboaRequest::put(server.url("/posts/1"))?
-        .text("ping")
-        .build()?;
 
-    let response = client
-        .execute(request)
+    let response = DeboaRequest::delete(server.url("/posts/1"))?
+        .send_with(&client)
         .await?;
 
     assert_eq!(response.status(), StatusCode::OK);

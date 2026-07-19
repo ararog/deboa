@@ -1,15 +1,13 @@
-use crate::{
-    tests::{
-        helpers::{create_client, create_server},
-        TestResult,
-    },
-    Client,
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
 };
 use deboa::{
     form::{DeboaForm, EncodedForm, MultiPartForm},
     request::DeboaRequest,
     HttpClient,
 };
+use deboa_smol::Client;
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},

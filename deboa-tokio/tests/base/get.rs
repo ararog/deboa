@@ -1,43 +1,45 @@
-#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::cert::DeboaCertificate;
+#[cfg(feature = "rust-tls")]
+use crate::common::helpers::{CLIENT_CERT, CLIENT_KEY};
 #[cfg(feature = "native-tls")]
-use crate::tests::helpers::{CA_CERT, CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
+use crate::common::helpers::{CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
+use crate::common::{
+    helpers::{create_client, create_server, CA_CERT},
+    TestResult,
+};
 #[cfg(feature = "rust-tls")]
-use crate::{
-    cert::DeboaIdentity,
-    tests::helpers::{CA_CERT, CLIENT_CERT, CLIENT_KEY},
-};
-use crate::{
-    tests::{
-        helpers::{create_client, create_server},
-        TestResult,
-    },
-    Client,
-};
+use deboa::cert::Identity as _;
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use deboa::cert::Certificate;
-#[cfg(feature = "rust-tls")]
-use deboa::cert::{ContentEncoding, Identity};
+use deboa::cert::{Certificate as _, ContentEncoding};
+#[cfg(feature = "http3")]
+use deboa::HttpVersion;
+#[cfg(feature = "http1")]
+use deboa::HttpVersion;
+#[cfg(feature = "http2")]
+use deboa::HttpVersion;
 use deboa::{
     errors::{ConnectionError, DeboaError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
-    HttpClient, HttpVersion,
+    HttpClient,
 };
-use easyhttpmock_vetis_compio::{
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+use deboa_tokio::cert::DeboaCertificate;
+#[cfg(feature = "rust-tls")]
+use deboa_tokio::cert::DeboaIdentity;
+use deboa_tokio::Client;
+use easyhttpmock_vetis_tokio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
-use http::{Method, StatusCode};
+use http::StatusCode;
 
 //
 // GET
 //
-
-#[compio::test]
+#[tokio::test]
 async fn test_get_http() -> TestResult<()> {
     let mock = Mock::of(
-        given(method(Method::GET).and(path("/posts/1"))).will_return(
+        given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
                 .respond()
                 .with_body(b"Hello World!"),
@@ -74,7 +76,7 @@ async fn test_get_http() -> TestResult<()> {
 
 async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
     let mock = Mock::of(
-        given(method(Method::GET).and(path("/posts/1"))).will_return(
+        given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
                 .respond()
                 .with_body(b"Hello World!"),
@@ -85,10 +87,10 @@ async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
+
     let client = Client::builder()
         .skip_cert_verification(skip)
         .build();
-
     let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
     let response = client
         .execute(request)
@@ -134,23 +136,24 @@ async fn do_get_http_skip_verification() -> TestResult<()> {
     skip_cert_verification_helper(true).await
 }
 
-#[compio::test]
+#[tokio::test]
 async fn test_get_http_skip_verification() -> TestResult<()> {
-    do_get_http_skip_verification().await
+    do_get_http_skip_verification().await?;
+    Ok(())
 }
-
 async fn do_get_http_verify() -> TestResult<()> {
     skip_cert_verification_helper(false).await
 }
 
-#[compio::test]
+#[tokio::test]
 async fn test_get_http_verify() -> TestResult<()> {
     do_get_http_verify().await
 }
 
-async fn do_get_http_mutual_authentication() -> TestResult<()> {
+#[tokio::test]
+async fn test_get_http_mutual_authentication() -> TestResult<()> {
     let mock = Mock::of(
-        given(method(Method::GET).and(path("/posts/1"))).will_return(
+        given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
                 .respond()
                 .with_body(b"Hello World!"),
@@ -192,15 +195,11 @@ async fn do_get_http_mutual_authentication() -> TestResult<()> {
     Ok(())
 }
 
-#[compio::test]
-async fn test_get_http_mutual_authentication() -> TestResult<()> {
-    do_get_http_mutual_authentication().await
-}
-
 #[cfg(feature = "native-tls")]
-async fn do_get_http_mutual_authentication_with_password() -> TestResult<()> {
+#[tokio::test]
+async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
     let mock = Mock::of(
-        given(method(Method::GET).and(path("/posts/1"))).will_return(
+        given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
                 .respond()
                 .with_body(b"Hello World!"),
@@ -212,7 +211,6 @@ async fn do_get_http_mutual_authentication_with_password() -> TestResult<()> {
         .await?;
 
     let identity = Identity::from_pkcs12(CLIENT_P12, Some("test".to_string()));
-
     let client = Client::builder()
         .certificate(crate::cert::Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .identity(identity)
@@ -239,20 +237,13 @@ async fn do_get_http_mutual_authentication_with_password() -> TestResult<()> {
     Ok(())
 }
 
-#[cfg(feature = "native-tls")]
-#[compio::test]
-async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
-    do_get_http_mutual_authentication_with_password().await
-}
-
 //
 // GET NOT FOUND
 //
-
-#[compio::test]
+#[tokio::test]
 async fn test_get_not_found() -> TestResult<()> {
     let mock = Mock::of(
-        given(method(Method::GET).and(path("/posts/1"))).will_return(
+        given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::NOT_FOUND
                 .respond()
                 .with_body(b"Not found"),
@@ -268,7 +259,6 @@ async fn test_get_not_found() -> TestResult<()> {
     let response = DeboaRequest::get(server.url("/asasa/posts/1ddd"))?
         .send_with(&client)
         .await?;
-
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
     server
@@ -281,16 +271,13 @@ async fn test_get_not_found() -> TestResult<()> {
 //
 // GET INVALID SERVER
 //
-
-#[compio::test]
+#[tokio::test]
 async fn test_get_invalid_server() -> TestResult<()> {
     let client = Client::default();
-
     let request = DeboaRequest::get("https://invalid-server.com/posts")?
         .text("test")
         .build()?;
-
-    let response: crate::Result<DeboaResponse> = client
+    let response: deboa::Result<DeboaResponse> = client
         .execute(request)
         .await;
 
@@ -303,11 +290,10 @@ async fn test_get_invalid_server() -> TestResult<()> {
 //
 // GET BY QUERY
 //
-
-#[compio::test]
+#[tokio::test]
 async fn test_get_by_query() -> TestResult<()> {
     let mock = Mock::of(
-        given(method(Method::GET).and(path("/comments/1"))).will_return(
+        given(method("GET").and(path("/comments/1"))).will_return(
             StatusCode::OK
                 .respond()
                 .with_body(b"My comment"),
@@ -355,7 +341,7 @@ async fn do_get_by_query_with_retries() -> Result<()> {
     })
     .await;
 
-    let client = create_client();
+    let client = client_with_cert();
 
     let response = DeboaRequest::get(server.url("/comments/1"))?
         .retries(2)
@@ -384,7 +370,7 @@ async fn test_get_by_query_with_retries() -> TestResult<()> {
 }
 
 #[cfg(feature = "smol-rt")]
-#[compio::test]
+#[apply(test!)]
 async fn test_get_by_query_with_retries() {
     let _ = do_get_by_query_with_retries().await;
 }
@@ -427,16 +413,16 @@ async fn test_get_with_redirect() -> TestResult<()> {
 }
 
 #[cfg(feature = "smol-rt")]
-#[compio::test]
+#[apply(test!)]
 async fn test_get_with_redirect() {
     let _ = do_get_with_redirect().await;
 }
 */
 
-#[compio::test]
+#[tokio::test]
 async fn test_try_into() -> TestResult<()> {
     let mock = Mock::of(
-        given(method(Method::GET).and(path("/posts/1"))).will_return(
+        given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
                 .respond()
                 .no_body(),
@@ -462,10 +448,10 @@ async fn test_try_into() -> TestResult<()> {
     Ok(())
 }
 
-#[compio::test]
+#[tokio::test]
 async fn test_fetch_from_str() -> TestResult<()> {
     let mock = Mock::of(
-        given(method(Method::GET).and(path("/posts/1"))).will_return(
+        given(method("GET").and(path("/posts/1"))).will_return(
             StatusCode::OK
                 .respond()
                 .no_body(),

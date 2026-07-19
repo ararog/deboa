@@ -69,7 +69,7 @@ use deboa::{
     response::DeboaResponse,
     HttpClient, HttpVersion, Result,
 };
-use http::{header, HeaderValue, Request};
+use http::{header, HeaderValue, Request, Version};
 use log::{error, info};
 use smol::lock::RwLock;
 use std::{fmt::Debug, net::IpAddr, ops::Shl, sync::Arc};
@@ -921,9 +921,16 @@ impl HttpClient for Client {
             .as_ref()
             .method();
 
+        let version = match self.protocol() {
+            HttpVersion::Http1 => Version::HTTP_11,
+            HttpVersion::Http2 => Version::HTTP_2,
+            HttpVersion::Http3 => Version::HTTP_3,
+        };
+
         info!("Building request: {} {}", method, uri);
         let mut builder = Request::builder()
             .uri(uri)
+            .version(version)
             .method(
                 method
                     .to_string()

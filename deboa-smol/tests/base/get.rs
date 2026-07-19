@@ -1,29 +1,26 @@
-#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::cert::DeboaCertificate;
+#[cfg(feature = "rust-tls")]
+use crate::common::helpers::{CA_CERT, CLIENT_CERT, CLIENT_KEY};
+use crate::common::{
+    helpers::{create_client, create_server},
+    TestResult,
+};
 #[cfg(feature = "native-tls")]
 use crate::tests::helpers::{CA_CERT, CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
-#[cfg(feature = "rust-tls")]
-use crate::{
-    cert::DeboaIdentity,
-    tests::helpers::{CA_CERT, CLIENT_CERT, CLIENT_KEY},
-};
-use crate::{
-    tests::{
-        helpers::{create_client, create_server},
-        TestResult,
-    },
-    Client,
-};
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 use deboa::cert::Certificate;
 #[cfg(feature = "rust-tls")]
-use deboa::cert::{ContentEncoding, Identity};
+use deboa::cert::{ContentEncoding, Identity as _};
 use deboa::{
     errors::{ConnectionError, DeboaError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
     HttpClient, HttpVersion,
 };
+#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
+use deboa_smol::cert::DeboaCertificate;
+#[cfg(feature = "rust-tls")]
+use deboa_smol::cert::DeboaIdentity;
+use deboa_smol::Client;
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
@@ -292,7 +289,7 @@ async fn test_get_invalid_server() -> TestResult<()> {
         .text("test")
         .build()?;
 
-    let response: crate::Result<DeboaResponse> = client
+    let response: deboa::Result<DeboaResponse> = client
         .execute(request)
         .await;
 
