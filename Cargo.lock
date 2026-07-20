@@ -1869,9 +1869,9 @@ dependencies = [
 
 [[package]]
 name = "fory"
-version = "1.3.0"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1611d2fb768726574ff6a6b354c9c50deeda528fdb34ce1b1d7d9c0b15d3443d"
+checksum = "47379370722674846b6f0910570542d5058d32f68928b6f047ff1db66abae22f"
 dependencies = [
  "fory-core",
  "fory-derive",
@@ -1893,9 +1893,9 @@ dependencies = [
 
 [[package]]
 name = "fory-derive"
-version = "1.3.0"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92e7b702a4d7f6e848f73b0dd505841c0ec083ac65140f1f992ad4ad70b57194"
+checksum = "cd912c8893ef65830fcc718787c43bccd27b75299a9f925c3bf129dad6da2a97"
 dependencies = [
  "fory-core",
  "proc-macro-crate 1.3.1",
