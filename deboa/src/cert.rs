@@ -1,3 +1,6 @@
+//! Certificate module
+//!
+//! This module provides functionality for handling client certificates and keys.
 #[derive(Debug, Clone)]
 /// Supported encodings for client certificates.
 pub enum ContentEncoding {

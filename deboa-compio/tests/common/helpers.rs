@@ -1,4 +1,8 @@
-use deboa::HttpVersion;
+use deboa::{
+    cert::{Certificate as _, ContentEncoding},
+    ClientManager, HttpVersion,
+};
+use deboa_compio::{cert::Certificate, Client};
 use easyhttpmock_vetis_compio::{
     config::EasyHttpMockConfig,
     server::PortGenerator,
@@ -6,8 +10,6 @@ use easyhttpmock_vetis_compio::{
     EasyHttpMock, Protocol,
 };
 use std::net::IpAddr;
-
-use deboa_compio::Client;
 use url::Url;
 
 pub(crate) const SKIP_CERT_VERIFICATION: bool = cfg!(feature = "native-tls");
@@ -55,10 +57,7 @@ pub(crate) fn fake_url() -> Url {
 }
 
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-pub(crate) fn ssl_client() -> Client {
-    use deboa::cert::{Certificate, ContentEncoding};
-    use deboa_compio::cert::DeboaCertificate;
-
+pub(crate) fn ssl_client() -> ClientManager<Client> {
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let addr = interface.parse::<IpAddr>();
     let addr = match addr {
@@ -66,16 +65,18 @@ pub(crate) fn ssl_client() -> Client {
         Err(e) => panic!("Could not parse IP address: {}", e),
     };
 
-    Client::builder()
-        .certificate(DeboaCertificate::from_slice(CA_CERT, ContentEncoding::DER))
+    let client = Client::builder()
+        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .bind_addr(addr)
         .protocol(deboa_default_protocol())
-        .build()
+        .build();
+
+    ClientManager::new(client)
 }
 
 #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]
-pub(crate) fn plain_client() -> Client {
+pub(crate) fn plain_client() -> ClientManager<Client> {
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let addr = interface.parse::<IpAddr>();
     let addr = match addr {
@@ -83,13 +84,15 @@ pub(crate) fn plain_client() -> Client {
         Err(e) => panic!("Could not parse IP address: {}", e),
     };
 
-    Client::builder()
+    let client = Client::builder()
         .bind_addr(addr)
         .protocol(deboa_default_protocol())
-        .build()
+        .build();
+
+    ClientManager::new(client)
 }
 
-pub(crate) fn create_client() -> Client {
+pub(crate) fn create_client() -> ClientManager<Client> {
     #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
     return ssl_client();
     #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]

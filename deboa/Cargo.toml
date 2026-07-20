@@ -19,7 +19,6 @@ all-features = true
 default = []
 
 [dependencies]
-async-trait = "0.1.89"
 base64 = "0.22.1"
 bytes = { version = "1.11" }
 cookie = { version = "0.18.1", default-features = false }

@@ -1,6 +1,8 @@
-use url::Url;
-
+//! URL module
+//!
+//! This module provides functionality for handling URLs.
 use crate::{errors::RequestError, DeboaError, Result};
+use url::Url;
 
 /// Trait to convert a value into a Url.
 pub trait IntoUrl: private::IntoUrlSealed {

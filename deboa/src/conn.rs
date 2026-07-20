@@ -1,3 +1,6 @@
+//! Connection module
+//!
+//! This module provides functionality for managing HTTP connections.
 use crate::{
     cert::{Certificate, Identity},
     response::DeboaResponse,
@@ -9,15 +12,6 @@ use hyper_body_utils::HttpBody;
 use std::{collections::HashMap, future::Future, net::IpAddr, sync::Arc};
 use time::Duration;
 use url::Url;
-
-/// Trait that represents an HTTP connection.
-pub trait HttpConnection {
-    /// The sender to use.
-    type Sender;
-
-    /// Get the sender.
-    fn sender(&mut self) -> &mut Self::Sender;
-}
 
 /// Builder for connection configuration.
 pub struct ConnectionConfigBuilder<'a, I, C> {
@@ -196,56 +190,13 @@ where
     }
 }
 
-/// Trait that represents the HTTP connection.
-///
-/// # Type Parameters
-///
-/// * `Sender` - The sender to use.
-/// * `ReqBody` - The request body type.
-/// * `ResBody` - The response body type.
-///
-pub trait ProtoConnection {
-    /// The request body type.
-    type ReqBody: Body + Unpin;
-    /// The response body type.
-    type ResBody: Body + Unpin;
-    /// The connection type.
-    type Connection: HttpConnection;
-    /// The identity type.
-    type Identity: crate::cert::Identity;
-    /// The certificate type.
-    type Certificate: crate::cert::Certificate;
+/// Trait that represents an HTTP connection.
+pub trait HttpConnection {
+    /// The sender to use.
+    type Sender;
 
-    /// Create a new connection.
-    ///
-    /// # Arguments
-    ///
-    /// * `is_secure` - Whether the connection is secure.
-    /// * `host` - The host to connect.
-    /// * `port` - The port to connect.
-    /// * `identity` - The identity to use.
-    /// * `certificate` - The certificate to use.
-    /// * `skip_cert_verification` - Whether to skip certificate verification.
-    ///
-    /// # Errors
-    ///
-    /// * `DeboaError` - If the connection fails.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<Self::Connection>` - The connection or error.
-    ///
-    fn connect(
-        config: &ConnectionConfig<Self::Identity, Self::Certificate>,
-    ) -> impl Future<Output = Result<Self::Connection>>;
-
-    /// Get connection protocol.
-    ///
-    /// # Returns
-    ///
-    /// * `Version` - The connection protocol.
-    ///
-    fn protocol(&self) -> Version;
+    /// Get the sender.
+    fn sender(&mut self) -> &mut Self::Sender;
 }
 
 /// Trait that represents the HTTP connection pool.
@@ -316,4 +267,62 @@ pub trait HttpConnectionDispatcher {
         url: Arc<Url>,
         request: Request<HttpBody>,
     ) -> impl Future<Output = Result<DeboaResponse>>;
+}
+
+/// Trait that represents the HTTP connection.
+///
+/// # Type Parameters
+///
+/// * `Sender` - The sender to use.
+/// * `ReqBody` - The request body type.
+/// * `ResBody` - The response body type.
+///
+pub trait ProtoConnection {
+    /// The request body type.
+    type ReqBody: Body + Unpin;
+    /// The response body type.
+    type ResBody: Body + Unpin;
+    /// The connection type.
+    type Connection: HttpConnection;
+    /// The identity type.
+    type Identity: crate::cert::Identity;
+    /// The certificate type.
+    type Certificate: crate::cert::Certificate;
+
+    /// Create a new connection.
+    ///
+    /// # Arguments
+    ///
+    /// * `is_secure` - Whether the connection is secure.
+    /// * `host` - The host to connect.
+    /// * `port` - The port to connect.
+    /// * `identity` - The identity to use.
+    /// * `certificate` - The certificate to use.
+    /// * `skip_cert_verification` - Whether to skip certificate verification.
+    ///
+    /// # Errors
+    ///
+    /// * `DeboaError` - If the connection fails.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Self::Connection>` - The connection or error.
+    ///
+    fn connect(
+        config: &ConnectionConfig<Self::Identity, Self::Certificate>,
+    ) -> impl Future<Output = Result<Self::Connection>>;
+
+    /// Get connection protocol.
+    ///
+    /// # Returns
+    ///
+    /// * `Version` - The connection protocol.
+    ///
+    fn protocol(&self) -> Version;
+}
+
+/// Common interface for Plain and TLS stream connections
+pub trait StreamConnector {
+    /// Connect using ip and port
+    fn connect(ip: IpAddr, port: u16);
 }

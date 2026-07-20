@@ -65,16 +65,15 @@ use deboa::{
     conn::{ConnectionConfig, HttpConnectionDispatcher, HttpConnectionPool as _},
     dns::DnsResolver,
     errors::{DeboaError, RequestError},
+    hook::{Hook, NoopHook},
     request::{DeboaRequest, IntoRequest},
     response::DeboaResponse,
-    HttpClient, HttpVersion, Result,
+    HttpClient, HttpVersion, Result, SharedHook,
 };
 use http::{header, HeaderValue, Request};
 use log::{error, info};
 use std::{fmt::Debug, net::IpAddr, ops::Shl, sync::Arc};
 use tokio::sync::RwLock;
-
-pub use async_trait::async_trait;
 
 /// Certificate management module for handling SSL/TLS certificates.
 pub mod cert;
@@ -880,148 +879,177 @@ impl HttpClient for Client {
     /// - Uses connection pooling for better performance
     /// - Automatically reuses connections when possible
     /// - Supports HTTP/1.1, HTTP/2 and HTTP/3
-    async fn execute<R>(&self, request: R) -> Result<DeboaResponse>
+    async fn execute<R>(&self, _request: R) -> Result<DeboaResponse>
     where
         R: IntoRequest,
     {
-        let request = request.into_request()?;
+        unimplemented!()
+    }
+}
 
-        let url = request
-            .as_ref()
-            .url();
-        let mut uri = url
-            .path()
-            .to_string();
-        if let Some(query) = url.query() {
-            uri.push('?');
-            uri.push_str(query);
-        }
-
-        let method = request
-            .as_ref()
-            .method();
-
-        info!("Building request: {} {}", method, uri);
-        let mut builder = Request::builder()
-            .uri(uri)
-            .method(
-                method
-                    .to_string()
-                    .as_str(),
-            );
-        {
-            let req_headers = builder
-                .headers_mut()
-                .unwrap();
-
-            request
-                .as_ref()
-                .headers()
-                .into_iter()
-                .fold(&mut *req_headers, |acc, (key, value)| {
-                    acc.insert(key, value.into());
-                    acc
-                });
-
-            if let Some(deboa_cookies) = request
-                .as_ref()
-                .cookies()
-            {
-                let mut cookies = Vec::<String>::new();
-
-                for cookie in deboa_cookies.values() {
-                    cookies.push(cookie.to_string());
-                }
-
-                if let Ok(cookie_header) = HeaderValue::from_str(&cookies.join("; ")) {
-                    req_headers.insert(header::COOKIE, cookie_header);
-                }
-            }
-        }
-
-        let request = builder.body(request.body());
-
-        if let Err(err) = request {
-            error!("Failed to send request: {}", err);
-            return Err(DeboaError::Request(RequestError::Send { message: err.to_string() }));
-        }
-
-        let request = request.unwrap();
-
-        let scheme = url.scheme();
-
-        let host = url
-            .host_str()
-            .unwrap_or("localhost");
-
-        let (port, is_secure) = if let Some(port) = url.port() {
-            (port, scheme == "https" || scheme == "wss")
-        } else {
-            match scheme {
-                "http" | "ws" => (80, false),
-                "https" | "wss" => (443, true),
-                _ => panic!("Unsupported scheme: {}", scheme),
-            }
-        };
-
-        let ips = self
+impl Hook<DeboaRequest, DeboaResponse> for Client {
+    fn handle(
+        &self,
+        request: DeboaRequest,
+        _next: SharedHook<DeboaRequest, DeboaResponse>,
+    ) -> deboa::DeboaFutureResult<'_, DeboaResponse>
+    where
+        Self: Send + Sync,
+    {
+        let resolver = self
             .dns_resolver
-            .resolve(host.to_string(), port)
-            .await?;
+            .clone();
 
-        let ips = if self
-            .bind_addr
-            .is_ipv4()
-        {
-            ips.into_iter()
-                .filter(|ip| ip.is_ipv4())
-                .collect::<Vec<_>>()
-        } else {
-            ips.into_iter()
-                .filter(|ip| ip.is_ipv6())
-                .collect::<Vec<_>>()
+        let future = async move {
+            let url = request
+                .as_ref()
+                .url();
+            let mut uri = url
+                .path()
+                .to_string();
+            if let Some(query) = url.query() {
+                uri.push('?');
+                uri.push_str(query);
+            }
+
+            let method = request
+                .as_ref()
+                .method();
+
+            info!("Building request: {} {}", method, uri);
+            let mut builder = Request::builder()
+                .uri(uri)
+                .method(
+                    method
+                        .to_string()
+                        .as_str(),
+                );
+            {
+                let req_headers = builder
+                    .headers_mut()
+                    .unwrap();
+
+                request
+                    .as_ref()
+                    .headers()
+                    .into_iter()
+                    .fold(&mut *req_headers, |acc, (key, value)| {
+                        acc.insert(key, value.into());
+                        acc
+                    });
+
+                if let Some(deboa_cookies) = request
+                    .as_ref()
+                    .cookies()
+                {
+                    let mut cookies = Vec::<String>::new();
+
+                    for cookie in deboa_cookies.values() {
+                        cookies.push(cookie.to_string());
+                    }
+
+                    if let Ok(cookie_header) = HeaderValue::from_str(&cookies.join("; ")) {
+                        req_headers.insert(header::COOKIE, cookie_header);
+                    }
+                }
+            }
+
+            let request = builder.body(request.body());
+
+            if let Err(err) = request {
+                error!("Failed to send request: {}", err);
+                return Err(DeboaError::Request(RequestError::Send { message: err.to_string() }));
+            }
+
+            let request = request.unwrap();
+
+            let scheme = url.scheme();
+
+            let host = url
+                .host_str()
+                .unwrap_or("localhost");
+
+            let (port, is_secure) = if let Some(port) = url.port() {
+                (port, scheme == "https" || scheme == "wss")
+            } else {
+                match scheme {
+                    "http" | "ws" => (80, false),
+                    "https" | "wss" => (443, true),
+                    _ => panic!("Unsupported scheme: {}", scheme),
+                }
+            };
+
+            let ips = resolver
+                .resolve(host.to_string(), port)
+                .await?;
+
+            let ips = if self
+                .bind_addr
+                .is_ipv4()
+            {
+                ips.into_iter()
+                    .filter(|ip| ip.is_ipv4())
+                    .collect::<Vec<_>>()
+            } else {
+                ips.into_iter()
+                    .filter(|ip| ip.is_ipv6())
+                    .collect::<Vec<_>>()
+            };
+
+            let Some(ip) = ips.first() else {
+                return Err(DeboaError::Request(RequestError::Send {
+                    message: format!("No IP addresses found for hostname: {}", host),
+                }));
+            };
+
+            let config = ConnectionConfig::builder()
+                .is_secure(is_secure)
+                .ip(*ip)
+                .host(host)
+                .port(port)
+                .protocol(
+                    self.protocol
+                        .clone(),
+                )
+                .identity(
+                    self.identity
+                        .clone(),
+                )
+                .certificate(
+                    self.certificate
+                        .clone(),
+                )
+                .skip_cert_verification(self.skip_cert_verification)
+                .client_bind_addr(self.bind_addr)
+                .build();
+
+            let mut pool = self
+                .pool
+                .write()
+                .await;
+
+            let conn = pool
+                .create_connection(&config)
+                .await?;
+
+            let response = conn
+                .send_request(url.clone(), request)
+                .await?;
+
+            Ok(response)
         };
 
-        let Some(ip) = ips.first() else {
-            return Err(DeboaError::Request(RequestError::Send {
-                message: format!("No IP addresses found for hostname: {}", host),
-            }));
-        };
+        Box::pin(future)
+    }
 
-        let config = ConnectionConfig::builder()
-            .is_secure(is_secure)
-            .ip(*ip)
-            .host(host)
-            .port(port)
-            .protocol(
-                self.protocol
-                    .clone(),
-            )
-            .identity(
-                self.identity
-                    .clone(),
-            )
-            .certificate(
-                self.certificate
-                    .clone(),
-            )
-            .skip_cert_verification(self.skip_cert_verification)
-            .client_bind_addr(self.bind_addr)
-            .build();
+    fn call(&self, request: DeboaRequest) -> deboa::DeboaFutureResult<'_, DeboaResponse>
+    where
+        Self: Sync + Send,
+    {
+        self.handle(request, NoopHook::noop())
+    }
 
-        let mut pool = self
-            .pool
-            .write()
-            .await;
-
-        let conn = pool
-            .create_connection(&config)
-            .await?;
-
-        let response = conn
-            .send_request(url.clone(), request)
-            .await?;
-
-        Ok(response)
+    fn next_hook(&self) -> SharedHook<DeboaRequest, DeboaResponse> {
+        NoopHook::noop()
     }
 }

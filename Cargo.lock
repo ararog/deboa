@@ -1178,7 +1178,6 @@ dependencies = [
 name = "deboa"
 version = "0.1.0-beta.25"
 dependencies = [
- "async-trait",
  "base64",
  "bytes",
  "caramelo",
@@ -1221,7 +1220,7 @@ dependencies = [
  "cookie",
  "criterion",
  "cyper-core",
- "deboa 0.1.0-beta.24",
+ "deboa 0.1.0-beta.25",
  "deboa-extras",
  "deboa-fory",
  "deboa-h3",
@@ -1320,7 +1319,7 @@ dependencies = [
 name = "deboa-macros"
 version = "0.1.0-beta.5"
 dependencies = [
- "deboa 0.1.0-beta.24",
+ "deboa 0.1.0-beta.25",
  "deboa-extras",
  "http",
  "proc-macro2",
@@ -1341,7 +1340,7 @@ dependencies = [
  "ciborium",
  "cookie",
  "criterion",
- "deboa 0.1.0-beta.24",
+ "deboa 0.1.0-beta.25",
  "deboa-extras",
  "deboa-fory",
  "deboa-h3",
@@ -1395,13 +1394,12 @@ version = "0.1.0-beta.15"
 dependencies = [
  "async-executor",
  "async-native-tls",
- "async-trait",
  "base64",
  "bytes",
  "ciborium",
  "cookie",
  "criterion",
- "deboa 0.1.0-beta.24",
+ "deboa 0.1.0-beta.25",
  "deboa-extras",
  "deboa-fory",
  "deboa-h3",
