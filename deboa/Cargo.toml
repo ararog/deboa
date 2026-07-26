@@ -19,7 +19,7 @@ all-features = true
 default = []
 
 [dependencies]
-base64 = "0.22.1"
+base64 = "0.23.0"
 bytes = { version = "1.11" }
 cookie = { version = "0.18.1", default-features = false }
 futures = { version = "0.3.31", default-features = false }
