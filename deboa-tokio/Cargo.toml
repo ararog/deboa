@@ -84,7 +84,7 @@ websockets = ["ws-framer/http", "ws-framer/alloc"]
 [dependencies]
 async-executor = { version = "1.13.3", optional = true, default-features = false }
 async-native-tls = { version = "0.6.0", optional = true, default-features = false }
-base64 = {version = "0.22.1" }
+base64 = {version = "0.23.0" }
 bytes = { version = "1.11", default-features = false }
 cookie = { version = "0.18.1", default-features = false }
 deboa = { workspace = true }
