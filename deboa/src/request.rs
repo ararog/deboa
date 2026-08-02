@@ -31,7 +31,8 @@
 //! ### Basic GET Request
 //!
 //! ```rust, ignore
-//! use deboa::{Client, request::IntoRequest};
+//! use deboa::{request::IntoRequest};
+//! use deboa_tokio::Client;
 //!
 //! let mut client = Client::new();
 //! let response = "https://api.example.com/data".into_request().execute(&mut client).await?;
@@ -40,8 +41,9 @@
 //! ### POST Request with JSON
 //!
 //! ```rust, ignore
-//! use deboa::{Client, request::post};
+//! use deboa::{request::post};
 //! use deboa_extras::http::serde::json::JsonBody;
+//! use deboa_tokio::Client;
 //!
 //! let mut client = Client::new();
 //! let response = post("https://api.example.com/users")
@@ -53,7 +55,8 @@
 //! ### Authentication
 //!
 //! ```rust, ignore
-//! use deboa::{Client, request::get};
+//! use deboa::{request::get};
+//! use deboa_tokio::Client;
 //!
 //! let mut client = Client::new();
 //! let response = get("https://api.example.com/protected")
@@ -100,8 +103,9 @@ pub type Http2Request = hyper::client::conn::http2::SendRequest<HttpBody>;
 ///
 /// # Examples
 ///
-/// ``` compile_fail
-/// use deboa::{Client, request::IntoRequest};
+/// ```rust,compile_fail
+/// use deboa::{request::IntoRequest};
+/// use deboa_tokio::Client;
 ///
 /// let mut client = Client::new();
 ///
@@ -150,7 +154,7 @@ impl IntoRequest for Url {
 ///
 /// # Examples
 ///
-/// ``` compile_fail
+/// ```rust,compile_fail
 /// use deboa::request::{IntoHeaders, DeboaRequest, DeboaRequestBuilder};
 ///
 /// let headers = vec![("User-Agent", "deboa/0.1")];
@@ -213,7 +217,7 @@ impl<'a> IntoHeaders for Vec<(&'a str, &'a str)> {
 /// Allows creating requests using method names as strings or Method enum values.
 ///
 /// # Examples
-/// ``` compile_fail
+/// ```rust,compile_fail
 /// use http::Method;
 /// use deboa::request::MethodExt;
 ///
@@ -277,8 +281,9 @@ pub trait Fetch {
     ///
     /// # Examples
     ///
-    /// ``` compile_fail
-    /// use deboa::{Client, request::Fetch};
+    /// ```rust,compile_fail
+    /// use deboa::{request::Fetch};
+    /// use deboa_tokio::Client;
     ///
     /// let client = Client::new();
     ///
@@ -310,7 +315,7 @@ impl Fetch for &str {
 ///
 /// # Examples
 ///
-/// ``` compile_fail
+/// ```rust,compile_fail
 /// use deboa::{Deboa, request::FetchWith};
 ///
 /// let client = Deboa::default();
@@ -329,8 +334,9 @@ pub trait FetchWith {
     ///
     /// # Examples
     ///
-    /// ``` compile_fail
-    /// use deboa::{Client, request::FetchWith};
+    /// ```rust,compile_fail
+    /// use deboa::{request::FetchWith};
+    /// use deboa_tokio::Client;
     ///
     /// let client = Client::new();
     ///
@@ -381,8 +387,9 @@ impl FetchWith for String {
 ///
 /// # Examples
 ///
-/// ``` compile_fail
-/// use deboa::{Client, request::get};
+/// ```rust,compile_fail
+/// use deboa::{request::get};
+/// use deboa_tokio::Client;
 ///
 /// let client = Client::new();
 ///
@@ -408,8 +415,9 @@ pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 ///
 /// # Examples
 ///
-/// ``` compile_fail
-/// use deboa::{Client, request::post};
+/// ```rust,compile_fail
+/// use deboa::{request::post};
+/// use deboa_tokio::Client;
 ///
 /// let client = Client::new();
 ///
@@ -437,8 +445,9 @@ pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 ///
 /// # Examples
 ///
-/// ``` compile_fail
-/// use deboa::{Client, request::put};
+/// ```rust,compile_fail
+/// use deboa::{request::put};
+/// use deboa_tokio::Client;
 ///
 /// let client = Client::new();
 ///
@@ -465,8 +474,9 @@ pub fn put<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 ///
 /// # Examples
 ///
-/// ``` compile_fail
-/// use deboa::{Client, request::delete};
+/// ```rust,compile_fail
+/// use deboa::{request::delete};
+/// use deboa_tokio::Client;
 ///
 /// let client = Client::new();
 ///
@@ -491,8 +501,9 @@ pub fn delete<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 ///
 /// # Examples
 ///
-/// ``` compile_fail
-/// use deboa::{Client, request::patch};
+/// ```rust,compile_fail
+/// use deboa::{request::patch};
+/// use deboa_tokio::Client;
 ///
 /// let client = Client::new();
 ///
@@ -514,7 +525,7 @@ pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 ///
 /// # Examples
 ///
-/// ```ignore
+/// ```rust,ignore
 /// use deboa::{request::post, Result};
 /// use http::header;
 ///
@@ -649,7 +660,7 @@ impl DeboaRequestBuilder {
     ///
     /// # Examples
     ///
-    /// ``` compile_fail
+    /// ```rust,compile_fail
     /// use deboa::request::post;
     /// use http::header;
     ///
@@ -745,7 +756,7 @@ impl DeboaRequestBuilder {
     ///
     /// # Examples
     ///
-    /// ```compile_fail
+    /// ```rust,compile_fail
     /// use deboa::request::post;
     /// use deboa::form::MultiPartForm;
     ///
@@ -791,7 +802,7 @@ impl DeboaRequestBuilder {
     ///
     /// # Examples
     ///
-    /// ```compile_fail
+    /// ```rust,compile_fail
     /// use deboa::request::post;
     ///
     /// let request = post("https://jsonplaceholder.typicode.com/posts")?
@@ -822,7 +833,7 @@ impl DeboaRequestBuilder {
     ///
     /// # Examples
     ///
-    /// ```compile_fail
+    /// ```rust,compile_fail
     /// use deboa::request::post;
     /// use deboa_extras::http::serde::JsonBody;
     ///
@@ -856,7 +867,7 @@ impl DeboaRequestBuilder {
     ///
     /// # Examples
     ///
-    /// ```compile_fail
+    /// ```rust,compile_fail
     /// use deboa::request::post;
     ///
     /// let request = post("https://jsonplaceholder.typicode.com/posts")?
@@ -885,7 +896,7 @@ impl DeboaRequestBuilder {
     ///
     /// # Examples
     ///
-    /// ```compile_fail
+    /// ```rust,compile_fail
     /// use deboa::request::post;
     ///
     /// let request = post("https://jsonplaceholder.typicode.com/posts")?
@@ -931,7 +942,7 @@ impl DeboaRequestBuilder {
     ///
     /// # Examples
     ///
-    /// ```compile_fail
+    /// ```rust,compile_fail
     /// use deboa::request::post;
     ///
     /// let request = post("https://jsonplaceholder.typicode.com/posts")?
@@ -968,7 +979,7 @@ impl DeboaRequestBuilder {
     ///
     /// # Examples
     ///
-    /// ```compile_fail
+    /// ```rust,compile_fail
     /// use deboa::request::post;
     ///
     /// let request = post("https://jsonplaceholder.typicode.com/posts")?
@@ -1000,7 +1011,6 @@ impl Debug for DeboaRequest {
             .field("url", &self.inner.uri())
             .field("headers", &self.inner.headers())
             .field("cookies", &None::<HashMap<String, DeboaCookie>>)
-            .field("retries", &0)
             .field("version", &self.inner.version())
             .field("method", &self.inner.method())
             .finish()
@@ -1019,7 +1029,7 @@ impl Debug for DeboaRequest {
 ///
 /// # Examples
 ///
-/// ```compile_fail
+/// ```rust,compile_fail
 /// use deboa::request::DeboaRequest;
 ///
 /// let request = DeboaRequest::from_str("GET https://jsonplaceholder.typicode.com/posts").unwrap();
