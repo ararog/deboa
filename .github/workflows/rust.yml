@@ -9,6 +9,10 @@ on:
   pull_request:
     branches: ["**"]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -50,7 +54,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install nextest
-        uses: taiki-e/install-action@nextest        
+        uses: taiki-e/install-action@nextest
 
       - name: Run deboa-${{ matrix.runtime }} tests on ${{ matrix.os }} with ${{ matrix.protocol }} using ${{ matrix.tls }}
         if: (matrix.os != 'windows-latest' && matrix.tls != 'native-tls') || (matrix.os != 'macos-latest' && matrix.tls != 'native-tls')
