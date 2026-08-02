@@ -6,7 +6,8 @@ use crate::{
 use compio_quic::{crypto::rustls::QuicClientConfig, ClientConfig, Endpoint};
 use deboa::{
     conn::{ConnectionConfig, HttpConnection, ProtoConnection},
-    errors::{ConnectionError, DeboaError}, Result
+    errors::{ConnectionError, DeboaError},
+    Result,
 };
 use deboa_h3::compio::{Http3Request, SendRequest};
 use futures::future;

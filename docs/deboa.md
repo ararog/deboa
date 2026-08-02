@@ -13,16 +13,16 @@ With Deboa, you can:
 - easily add, remove and update headers
 - helpers to add basic and bearer auth
 - set retries and timeout
-- pluggable catchers (interceptors)
-- pluggable compression (gzip, deflate, brotli)
+- compression (gzip, deflate, brotli)
+- pluggable hooks (interceptors)
 - pluggable serialization (json, xml, msgpack, yaml, fory and cbor)
 - cookies support
 - urlencoded and multipart forms
 - comprehensive error handling
 - response streaming
 - upgrade support (websocket, etc.)
-- runtime compatibility (tokio and smol)
-- http1/2/3 support (see deboa-smol and deboa-tokio crates)
+- runtime compatibility (tokio, smol and compio)
+- http 1/2/3 support (via runtime crates)
 
 ## Installation
 
@@ -36,7 +36,8 @@ deboa = { version = "0.0.9" }
 ## Basic Usage
 
 ```rust
-use deboa::{Client, request::get, Result};
+use deboa::{request::get, Result};
+use deboa_tokio::Client;
 
 #[tokio::main]
 async fn main() -> Result<(), Result> {
@@ -111,31 +112,52 @@ let text = response.text().await?;
 let bytes = response.bytes().await?;
 ```
 
-## Catchers (Middleware)
+## Hooks (Middleware)
 
 Deboa supports middleware for request/response processing:
 
 ```rust
 use deboa::{Result, catcher::DeboaCatcher, request::DeboaRequest, response::DeboaResponse};
 
-struct TestMonitor;
+use tackle::{Chain, Hook};
 
-impl DeboaCatcher for TestMonitor {
-    async fn on_request(&self, request: &mut DeboaRequest) -> Result<Option<DeboaResponse>> {
-        println!("Request: {:?}", request.url());
-        Ok(None)
+struct PrintRequestHook<H> {
+    inner: H,
+}
+
+impl<H> Hook<DeboaRequest, DeboaResponse> for PrintRequestHook<H>
+where
+    H: Hook<DeboaRequest, DeboaResponse, Result = Result<DeboaResponse>>,
+{
+    type Result = Result<DeboaResponse>;
+    type Error = DeboaError;
+
+    async fn call(&self, request: DeboaRequest) -> Self::Result {
+        println!("Request: {:?}", request);
+        let res = self.inner
+            .call(request)
+            .await
+        println!("Response: {:?}", response);
+        res
     }
+}
 
-    async fn on_response(&self, response: &mut DeboaResponse) -> Result<()> {
-        println!("Response: {:?}", response.status());
-        Ok(())
+struct PrintRequest;
+
+impl<H> Chain<H, DeboaError, DeboaRequest, DeboaResponse> for PrintRequest
+where
+    H: Hook<DeboaRequest, DeboaResponse, Result = Result<DeboaResponse>>,
+{
+    type Hook = PrintRequestHook<H>;
+
+    fn chain(&self, hook: H) -> Self::Hook {
+        PrintRequestHook { inner: hook }
     }
 }
 
 // Create a client with middleware
-let client = deboa::Client::builder()
-    .catch(TestMonitor)
-    .build();
+let client = deboa::Client::default()
+    .hook(PrintRequest);
 ```
 
 ## Error Handling

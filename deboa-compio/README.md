@@ -15,16 +15,15 @@ This release has a major api change. Please check the [migration guide](https://
 - easily add, remove and update headers
 - helpers to add basic and bearer auth
 - set retries and timeout
-- pluggable catchers (interceptors)
-- pluggable compression (gzip, deflate, br)
+- compression (gzip, deflate, br)
+- pluggable hooks
 - pluggable serialization (json, xml, msgpack)
 - cookies support
 - urlencoded and multipart forms
 - comprehensive error handling
 - response streaming
 - upgrade support (websocket, etc.)
-- runtime compatibility (tokio and smol)
-- http1/2/3 support
+- http 1/2/3 support via runtime crates
 
 ## Benchmark Results
 

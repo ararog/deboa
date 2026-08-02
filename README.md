@@ -72,6 +72,10 @@ A crate with collection of convenience macros for deboa. It is close equivalent 
 apisauce for axios, where one macro does it all, from request to response.
 It used to be the home of bora macro, which has been moved to vamo-macros crate.
 
+### [deboa-compio](https://github.com/ararog/deboa/tree/develop/deboa-compio)
+
+Deboa implementation for compio runtime.
+
 ### [deboa-smol](https://github.com/ararog/deboa/tree/develop/deboa-smol)
 
 Deboa implementation for smol runtime.

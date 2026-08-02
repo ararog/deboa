@@ -8,7 +8,8 @@ use crate::{
 };
 use deboa::{
     conn::{ConnectionConfig, HttpConnection, ProtoConnection},
-    request::Http1Request, Result
+    request::Http1Request,
+    Result,
 };
 use http::version::Version;
 use hyper::client::conn::http1::handshake;

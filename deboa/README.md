@@ -15,16 +15,16 @@ This release has a major api change. Please check the [migration guide](https://
 - easily add, remove and update headers
 - helpers to add basic and bearer auth
 - set retries and timeout
-- pluggable catchers (interceptors)
-- pluggable compression (gzip, deflate, br)
+- compression (gzip, deflate, br)
+- pluggable hooks (interceptors)
 - pluggable serialization (json, xml, msgpack)
 - cookies support
 - urlencoded and multipart forms
 - comprehensive error handling
 - response streaming
 - upgrade support (websocket, etc.)
-- runtime compatibility (tokio and smol)
-- http1/2/3 support
+- runtime compatibility (tokio, smol and compio)
+- http 1/2/3 support via runtime crates
 
 ## Benchmark Results
 
@@ -48,7 +48,7 @@ Or add to your `Cargo.toml`:
 
 ```toml
 deboa = { version = "0.0.9" }
-deboa-extras = { version = "0.1.0" } 
+deboa-extras = { version = "0.1.0" }
 deboa-tokio = { version = "0.1.0" }
 http = "1.3.1"
 ```
@@ -103,7 +103,7 @@ async fn main() -> Result<()> {
       .await?;
 
     // shifleft? Yes sir! Defaults to GET, but you can change it, same for headers.
- 
+
     let request = &client << "https://jsonplaceholder.typicode.com/posts";
     let posts: Vec<Post> = client.execute(request)
       .await?

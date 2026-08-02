@@ -23,8 +23,8 @@ Built on top of [hyper](https://github.com/hyperium/hyper).
 - easily add, remove and update headers
 - helpers to add basic and bearer auth
 - set retries and timeout
-- pluggable catchers (interceptors)
-- pluggable compression (gzip, deflate, brotli)
+- compression (gzip, deflate, brotli)
+- hooks (interceptors)
 - pluggable serialization (json, xml, msgpack, yaml, fory and cbor)
 - cookies support
 - urlencoded and multipart forms
@@ -89,6 +89,7 @@ async fn main() -> Result<()> {
 | Crate | Description | Documentation |
 |-------|-------------|---------------|
 | [deboa](./deboa) | Core HTTP client library | [![docs.rs](https://img.shields.io/docsrs/deboa/latest)](https://docs.rs/deboa) |
+| [deboa-compio](./deboa-compio) | Compio runtime support for Deboa | [![docs.rs](https://img.shields.io/docsrs/deboa-compio/latest)](https://docs.rs/deboa-compio) |
 | [deboa-smol](./deboa-smol) | Smol runtime support for Deboa | [![docs.rs](https://img.shields.io/docsrs/deboa-smol/latest)](https://docs.rs/deboa-smol) |
 | [deboa-tokio](./deboa-tokio) | Tokio runtime support for Deboa | [![docs.rs](https://img.shields.io/docsrs/deboa-tokio/latest)](https://docs.rs/deboa-tokio) |
 | [deboa-macros](./deboa-macros) | Procedural macros for Deboa | [![docs.rs](https://img.shields.io/docsrs/deboa-macros/latest)](https://docs.rs/deboa-macros) |
@@ -115,6 +116,7 @@ You can create a new project from the template using `cargo generate`:
 - [easyhttpmock](https://crates.io/crates/easyhttpmock) - HTTP mock server
 - [sofie](https://crates.io/crates/sofie) - Fullstack web framework
 - [uget](https://crates.io/crates/uget) - CLI HTTP client
+- [tackle](https://crates.io/crates/tackle) - An easy to use api to crate a hooks based solution
 - [vetis](https://crates.io/crates/vetis) - Very Tiny Http server
 
 ## License

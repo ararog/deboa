@@ -13,7 +13,10 @@ use deboa::{
     response::DeboaResponse,
     HttpClient, TestResult,
 };
-use deboa_tokio::{Client, cert::{DeboaCertificate, DeboaIdentity}};
+use deboa_tokio::{
+    cert::{DeboaCertificate, DeboaIdentity},
+    Client,
+};
 use easyhttpmock_vetis_tokio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},

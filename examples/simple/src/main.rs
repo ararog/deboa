@@ -16,7 +16,7 @@ pub struct Post {
 async fn main() -> Result<()> {
     let client = Client::default();
 
-    /* 
+    /*
     let response: Post = format!("https://jsonplaceholder.typicode.com/posts/{}", 1)
         .fetch_with(&client)
         .await?

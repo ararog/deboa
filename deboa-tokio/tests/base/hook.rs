@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::common::helpers::{create_client, create_server};
 use deboa::{
     errors::DeboaError, request::DeboaRequest, response::DeboaResponse, HttpClient as _, Result,
@@ -10,7 +8,7 @@ use easyhttpmock_vetis_tokio::{
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt as _},
 };
 use http::StatusCode;
-use tackle::{Chain, Hook};
+use tackle::{Chain, Hook, NextHook};
 
 struct PrintRequestHook<H> {
     inner: H,
@@ -44,7 +42,7 @@ where
     }
 }
 
-async fn print_request<H>(request: DeboaRequest, _next: Rc<H>) -> Result<DeboaResponse>
+async fn print_request<H>(request: DeboaRequest, _next: NextHook<H>) -> Result<DeboaResponse>
 where
     H: Hook<DeboaRequest, DeboaResponse, Result = Result<DeboaResponse>>,
 {

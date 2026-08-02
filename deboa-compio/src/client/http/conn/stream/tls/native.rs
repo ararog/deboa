@@ -72,7 +72,8 @@ pub(crate) async fn tls_connection(
     let connector = compio_tls::TlsConnector::from(connector);
 
     let stream = connector
-        .connect(host, socket).await;
+        .connect(host, socket)
+        .await;
 
     if let Err(e) = stream {
         return Err(DeboaError::Connection(ConnectionError::Tls {
