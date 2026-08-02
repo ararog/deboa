@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-#[cfg(feature = "http2")]
 use http::Version;
 use url::Url;
 

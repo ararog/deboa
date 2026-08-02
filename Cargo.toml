@@ -9,6 +9,7 @@ members = [
     "deboa-macros",
     "deboa-smol",
     "deboa-tokio",
+    "examples/simple"
 ]
 
 [workspace.package]
@@ -24,14 +25,14 @@ rust-version = "1.85.0"
 deboa = { version = ">= 0.1.0" }
 deboa-compio = { path = "deboa-compio" }
 deboa-h3 = { path = "deboa-h3", version = "^0.1.1-beta.1" }
-deboa-extras = { path = "../deboa-contrib/deboa-extras", version = ">= 0.0.9-beta.14" }
-deboa-fory = { path = "../deboa-contrib/deboa-fory", version = ">= 0.1.6-beta.4" }
+deboa-extras = { version = ">= 0.0.9-beta.14" }
+deboa-fory = { version = ">= 0.1.6-beta.4" }
 deboa-macros = { path = "deboa-macros" }
 deboa-smol = { path = "deboa-smol" }
 deboa-tokio = { path = "deboa-tokio" }
 hyper-body-utils = { version = ">= 0.1.9" }
-vamo = { path = "../vamo/vamo", version = ">= 0.0.9-beta.7" }
-vamo-macros = { path = "../vamo/vamo-macros", version = ">= 0.0.9-beta.7" }
+vamo = { version = ">= 0.0.9-beta.7" }
+vamo-macros = { version = ">= 0.0.9-beta.7" }
 
 [profile.test]
 lto = false

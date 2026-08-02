@@ -1,9 +1,7 @@
-use async_trait::async_trait;
-use deboa::{Client, Result, request::DeboaRequest, response::DeboaResponse};
-use http::{HeaderValue, header};
-use vamo::Vamo;
-
 use crate::post_service::{Post, PostService};
+use deboa::{Result};
+use deboa_tokio::Client;
+use vamo::Vamo;
 
 mod post_service;
 
@@ -31,7 +29,6 @@ mod post_service;
 #[tokio::main]
 async fn main() -> Result<()> {
     let client = Client::builder()
-        //.catch(AuthCatcher)
         .build();
     let mut vamo = Vamo::new("https://jsonplaceholder.typicode.com")?;
     vamo.client(client);

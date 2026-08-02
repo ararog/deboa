@@ -28,9 +28,7 @@ use deboa::{
 };
 #[cfg(feature = "http3")]
 use deboa_h3::generic::Http3Request;
-use http::Request;
-#[cfg(feature = "http2")]
-use http::Version;
+use http::{Request, Version};
 use hyper_body_utils::HttpBody;
 use std::marker::PhantomData;
 
@@ -200,7 +198,7 @@ impl ConnectionFactory {
                 let conn = Http2Connection::connect(config).await?;
                 DeboaConnection::http2(conn)
             }
-            #[cfg(feature = "http3")]
+            #[cfg(all(feature = "http3", feature = "rust-tls"))]
             &Version::HTTP_3 => {
                 let conn = Http3Connection::connect(&config).await?;
                 DeboaConnection::http3(conn)

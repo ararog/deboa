@@ -1,6 +1,6 @@
-use deboa::{Client, Result, async_trait};
-use deboa_extras::http::serde::json::JsonBody;
-use http::{HeaderValue, header::AUTHORIZATION};
+use deboa::{Result};
+use deboa_tokio::Client;
+use deboa_extras::serde::json::JsonBody;
 use serde::Deserialize;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -36,7 +36,6 @@ struct Post {
 #[tokio::main]
 async fn main() -> Result<()> {
     let client = Client::builder()
-        //.catch(AuthCatcher)
         .build();
     let vamo = Arc::new(Mutex::new(Vamo::new("https://jsonplaceholder.typicode.com")?));
     vamo.lock()
@@ -64,7 +63,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn fetch_post(vamo: Arc<Mutex<Vamo>>, id: u32) -> Result<Post> {
+async fn fetch_post(vamo: Arc<Mutex<Vamo<Client>>>, id: u32) -> Result<Post> {
     let post: Post = vamo
         .lock()
         .await

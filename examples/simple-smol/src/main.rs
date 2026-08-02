@@ -1,6 +1,6 @@
 use deboa::{
     request::{get, DeboaRequest, FetchWith},
-    Client, Result,
+    Result,
 };
 use deboa_extras::http::serde::json::JsonBody;
 use macro_rules_attribute::apply;
@@ -16,7 +16,7 @@ pub struct Post {
 #[apply(main!)]
 async fn main() -> Result<()> {
     let client = Client::builder()
-        .protocol_version(deboa::HttpVersion::Http2)
+        .protocol_version(Version::HTTP_2)
         .build();
 
     let response: Post = format!("https://jsonplaceholder.typicode.com/posts/{}", 1)

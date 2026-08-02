@@ -1,25 +1,19 @@
-use crate::common::helpers::{create_client, create_server, default_protocol_version, CA_CERT};
+use crate::common::helpers::{create_client, create_server, default_protocol_version};
 #[cfg(feature = "rust-tls")]
-use crate::common::helpers::{CLIENT_CERT, CLIENT_KEY};
+use crate::common::helpers::{CA_CERT, CLIENT_CERT, CLIENT_KEY};
 #[cfg(feature = "native-tls")]
-use crate::common::helpers::{CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
+use crate::common::helpers::{CA_CERT, CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
+#[cfg(feature = "native-tls")]
+use deboa::cert::IdentityNativeExt as _;
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use deboa::cert::CertificateExt as _;
-#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use deboa::cert::ContentEncoding;
-#[cfg(feature = "rust-tls")]
-use deboa::cert::IdentityExt as _;
+use deboa::cert::{CertificateExt as _, ContentEncoding, IdentityExt as _};
 use deboa::{
     errors::{ConnectionError, DeboaError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
     HttpClient, TestResult,
 };
-#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use deboa_tokio::cert::DeboaCertificate;
-#[cfg(feature = "rust-tls")]
-use deboa_tokio::cert::DeboaIdentity;
-use deboa_tokio::Client;
+use deboa_tokio::{Client, cert::{DeboaCertificate, DeboaIdentity}};
 use easyhttpmock_vetis_tokio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
@@ -167,7 +161,7 @@ async fn test_get_http_mutual_authentication() -> TestResult<()> {
     let identity = DeboaIdentity::from_pkcs8(CLIENT_CERT, CLIENT_KEY, ContentEncoding::DER);
 
     #[cfg(feature = "native-tls")]
-    let identity = Identity::from_pkcs8(CLIENT_CERT_PEM, CLIENT_KEY_PEM, ContentEncoding::PEM);
+    let identity = DeboaIdentity::from_pkcs8(CLIENT_CERT_PEM, CLIENT_KEY_PEM, ContentEncoding::PEM);
 
     #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
     let client = Client::builder()
@@ -209,7 +203,7 @@ async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
         .register_mock(mock)
         .await?;
 
-    let identity = Identity::from_pkcs12(CLIENT_P12, Some("test".to_string()));
+    let identity = DeboaIdentity::from_pkcs12(CLIENT_P12, Some("test".to_string()));
     let client = Client::builder()
         .certificate(DeboaCertificate::from_slice(CA_CERT, ContentEncoding::DER))
         .identity(identity)

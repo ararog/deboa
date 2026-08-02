@@ -1,12 +1,12 @@
 use crate::{
     alpn,
     cert::{DeboaCertificate, DeboaIdentity},
-    client::http::conn::{stream::setup_rust_tls, BaseHttpConnection, Http3Connection},
-    Result,
+    client::http::conn::{BaseHttpConnection, Http3Connection},
 };
 use deboa::{
     conn::{ConnectionConfig, HttpConnection, ProtoConnection},
     errors::{ConnectionError, DeboaError},
+    Result,
 };
 use deboa_h3::generic::{Http3Request, SendRequest};
 use futures::future;

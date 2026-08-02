@@ -7,9 +7,9 @@
 
 #[cfg(feature = "native-tls")]
 use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdentity};
-#[cfg(feature = "rust-tls")]
-use deboa::cert::Certificate as _;
-use deboa::cert::{CertificateExt, ContentEncoding, IdentityExt};
+#[cfg(feature = "native-tls")]
+use deboa::cert::IdentityNativeExt;
+use deboa::cert::{Certificate as _, CertificateExt, ContentEncoding, IdentityExt};
 #[cfg(feature = "rust-tls")]
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
@@ -67,7 +67,7 @@ impl IdentityNativeExt for DeboaIdentity {
     ///
     /// * `Identity` - The new Identity instance.
     ///
-    pub fn from_pkcs12(bundle: &[u8], password: Option<String>) -> Self {
+    fn from_pkcs12(bundle: &[u8], password: Option<String>) -> Self {
         DeboaIdentity { cert: bundle.to_vec(), key: None, password, encoding: None }
     }
 
@@ -82,7 +82,7 @@ impl IdentityNativeExt for DeboaIdentity {
     ///
     /// * `Identity` - The new Identity instance.
     ///
-    pub async fn from_pkcs12_file(file: &str, password: Option<String>) -> std::io::Result<Self> {
+    async fn from_pkcs12_file(file: &str, password: Option<String>) -> std::io::Result<Self> {
         let data = smol::fs::read(file).await?;
         Ok(DeboaIdentity { cert: data, key: None, password, encoding: None })
     }

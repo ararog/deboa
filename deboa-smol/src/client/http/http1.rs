@@ -5,11 +5,10 @@ use crate::client::http::conn::stream::tls_connection;
 use crate::{
     cert::{DeboaCertificate, DeboaIdentity},
     client::http::conn::{stream::plain_connection, BaseHttpConnection, Http1Connection},
-    Result,
 };
 use deboa::{
     conn::{ConnectionConfig, HttpConnection, ProtoConnection},
-    request::Http1Request,
+    request::Http1Request, Result
 };
 use http::version::Version;
 use hyper::client::conn::http1::handshake;

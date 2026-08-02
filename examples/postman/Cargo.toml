@@ -4,10 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-deboa = { version = "0.1.0-beta.5" }
-deboa-extras = { version = "0.0.8" }
-vamo = { version = "0.0.8" }
-vamo-macros = { version = "0.0.8" }
+deboa = { version = "0.1.0" }
+deboa-extras = { version = "0.0.9" }
+deboa-tokio = { version = "0.1.0" }
+vamo = { version = "0.0.9" }
+vamo-macros = { version = "0.0.9" }
 tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"], default-features = false }
 serde = "1.0.219"
 serde_json = "1.0.138"

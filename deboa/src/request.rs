@@ -569,7 +569,7 @@ impl DeboaRequestBuilder {
     /// # Returns
     ///
     /// * `Self` - The request builder.
-    ///    
+    ///
     pub fn version(mut self, version: http::Version) -> Self {
         *self
             .inner

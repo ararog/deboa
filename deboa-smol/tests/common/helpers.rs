@@ -24,13 +24,17 @@ pub const SERVER_KEY: &[u8] = include_bytes!("../../../certs/server.key.der");
 // pub const SERVER_CERT_PEM: &[u8] = include_bytes!("../../../certs/server.crt");
 // pub const SERVER_KEY_PEM: &[u8] = include_bytes!("../../../certs/server.key");
 
+#[cfg(feature = "rust-tls")]
 pub const CLIENT_CERT: &[u8] = include_bytes!("../../../certs/client.der");
+#[cfg(feature = "rust-tls")]
 pub const CLIENT_KEY: &[u8] = include_bytes!("../../../certs/client.key.der");
 
-// pub const CLIENT_CERT_PEM: &[u8] = include_bytes!("../../../certs/client.crt");
-// pub const CLIENT_KEY_PEM: &[u8] = include_bytes!("../../../certs/client.key");
-
-// pub const CLIENT_P12: &[u8] = include_bytes!("../../../certs/client.p12");
+#[cfg(feature = "native-tls")]
+pub const CLIENT_CERT_PEM: &[u8] = include_bytes!("../../../certs/client.crt");
+#[cfg(feature = "native-tls")]
+pub const CLIENT_KEY_PEM: &[u8] = include_bytes!("../../../certs/client.key");
+#[cfg(feature = "native-tls")]
+pub const CLIENT_P12: &[u8] = include_bytes!("../../../certs/client.p12");
 
 pub(crate) const fn default_protocol_version() -> Version {
     #[cfg(feature = "http1")]

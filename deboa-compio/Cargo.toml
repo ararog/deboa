@@ -1,6 +1,6 @@
 [package]
 name = "deboa-compio"
-version = "0.1.1-beta.10"
+version = "0.1.2"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -18,9 +18,9 @@ all-features = true
 [features]
 default = [
   "http2",
-  "rust-tls",
-  "default-rustls-provider",
-  "default-rustls-verifier",
+  "native-tls",
+  #"default-rustls-provider",
+  #"default-rustls-verifier",
 ]
 
 rust-tls = [

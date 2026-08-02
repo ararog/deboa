@@ -1,8 +1,9 @@
 use deboa::{
     request::{get, DeboaRequest, FetchWith},
-    Client, Result,
+    HttpClient as _, Result,
 };
-use deboa_extras::http::serde::json::JsonBody;
+use deboa_extras::serde::json::JsonBody;
+use deboa_tokio::Client;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Post {
@@ -15,6 +16,7 @@ pub struct Post {
 async fn main() -> Result<()> {
     let client = Client::default();
 
+    /* 
     let response: Post = format!("https://jsonplaceholder.typicode.com/posts/{}", 1)
         .fetch_with(&client)
         .await?
@@ -22,6 +24,7 @@ async fn main() -> Result<()> {
         .await?;
 
     println!("post: {response:#?}");
+    */
 
     let posts: Vec<Post> = get("https://jsonplaceholder.typicode.com/posts")?
         .send_with(&client)

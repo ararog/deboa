@@ -11,5 +11,5 @@ pub mod conn;
 pub(crate) mod http1;
 #[cfg(feature = "http2")]
 pub(crate) mod http2;
-#[cfg(feature = "http3")]
+#[cfg(all(feature = "http3", feature = "rust-tls"))]
 pub(crate) mod http3;

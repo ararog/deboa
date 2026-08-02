@@ -6,9 +6,11 @@
 //! It also provides the `Certificate` struct for working with CA certificates.
 
 #[cfg(feature = "native-tls")]
-use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdentity};
+use compio_tls::native_tls::{Certificate as NativeCertificate, Identity as NativeIdentity};
 #[cfg(feature = "rust-tls")]
 use deboa::cert::Certificate as _;
+#[cfg(feature = "native-tls")]
+use deboa::cert::{Certificate as _, IdentityNativeExt};
 use deboa::cert::{CertificateExt, ContentEncoding, IdentityExt};
 #[cfg(feature = "rust-tls")]
 use rustls::pki_types::{pem::PemObject, CertificateDer, PrivateKeyDer};
