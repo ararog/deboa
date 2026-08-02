@@ -1,11 +1,10 @@
 use crate::{
     request::{DeboaRequest, IntoRequest, MethodExt},
-    tests::{test_url, TEST_URL},
+    tests::{test_uri, test_url, TEST_URL},
 };
 use caramelo::{expect, matchers::eq};
-use http::{header, HeaderValue, Method};
-use std::{error::Error, str::FromStr, sync::Arc};
-use url::Url;
+use http::{header, HeaderValue, Method, Uri};
+use std::{error::Error, str::FromStr};
 
 #[test]
 fn test_method_ext_from_url() -> Result<(), Box<dyn Error>> {
@@ -13,7 +12,7 @@ fn test_method_ext_from_url() -> Result<(), Box<dyn Error>> {
         .from_url(TEST_URL)?
         .build()?;
     expect(request.method()).to_be(eq(&Method::GET));
-    expect(request.url()).to_be(eq(test_url().into()));
+    expect(request.uri()).to_be(eq(&test_uri()));
     Ok(())
 }
 
@@ -23,7 +22,7 @@ fn test_method_ext_to_url() -> Result<(), Box<dyn Error>> {
         .to_url(TEST_URL)?
         .build()?;
     expect(request.method()).to_be(eq(&Method::POST));
-    expect(request.url()).to_be(eq(test_url().into()));
+    expect(request.uri()).to_be(eq(&test_uri()));
     Ok(())
 }
 
@@ -33,7 +32,7 @@ fn test_str_method_ext_from_url() -> Result<(), Box<dyn Error>> {
         .from_url(TEST_URL)?
         .build()?;
     expect(request.method()).to_be(eq(&Method::GET));
-    expect(request.url()).to_be(eq(test_url().into()));
+    expect(request.uri()).to_be(eq(&test_uri()));
     Ok(())
 }
 
@@ -43,15 +42,15 @@ fn test_str_method_ext_to_url() -> Result<(), Box<dyn Error>> {
         .to_url(TEST_URL)?
         .build()?;
     assert_eq!(request.method(), &Method::POST);
-    assert_eq!(*request.url(), test_url());
+    assert_eq!(*request.uri(), test_uri());
     Ok(())
 }
 
 #[test]
 fn test_into_url() -> Result<(), Box<dyn Error>> {
     let url = test_url();
-    let request = DeboaRequest::get(url.clone())?.build()?;
-    expect(request.url()).to_be(eq(url.into()));
+    let request = DeboaRequest::get(url)?.build()?;
+    expect(request.uri()).to_be(eq(&test_uri()));
     Ok(())
 }
 
@@ -61,7 +60,7 @@ fn test_into_request_from_str() -> Result<(), Box<dyn Error>> {
     let request = url
         .clone()
         .into_request()?;
-    expect(request.url()).to_be(eq(url.into()));
+    expect(request.uri()).to_be(eq(&test_uri()));
     Ok(())
 }
 
@@ -72,9 +71,11 @@ fn test_into_request_from_string() -> Result<(), Box<dyn Error>> {
     let request = post_url
         .clone()
         .into_request()?;
-    expect(request.url()).to_be(eq(url
-        .join("/posts/1")?
-        .into()));
+    let uri = Uri::from_str(
+        url.join("/posts/1")?
+            .as_ref(),
+    )?;
+    expect(request.uri()).to_be(eq(&uri));
     Ok(())
 }
 
@@ -82,7 +83,7 @@ fn test_into_request_from_string() -> Result<(), Box<dyn Error>> {
 fn test_into_str() -> Result<(), Box<dyn Error>> {
     let url = test_url();
     let request = DeboaRequest::get(url.clone())?.build()?;
-    expect(request.url()).to_be(eq(url.into()));
+    expect(request.uri()).to_be(eq(&test_uri()));
     Ok(())
 }
 
@@ -90,7 +91,7 @@ fn test_into_str() -> Result<(), Box<dyn Error>> {
 fn test_into_string() -> Result<(), Box<dyn Error>> {
     let url = test_url();
     let request = DeboaRequest::get(url.clone())?.build()?;
-    expect(request.url()).to_be(eq(url.into()));
+    expect(request.uri()).to_be(eq(&test_uri()));
     Ok(())
 }
 
@@ -102,7 +103,7 @@ fn test_from_str_method_and_url() -> Result<(), Box<dyn Error>> {
     "##,
     )?;
     expect(request.method()).to_be(eq(&Method::GET));
-    expect(request.url()).to_be(eq(Arc::new(Url::parse("https://localhost:8000").unwrap())));
+    expect(request.uri()).to_be(eq(&Uri::from_static("https://localhost:8000")));
     Ok(())
 }
 
@@ -124,20 +125,10 @@ fn test_from_str_headers() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn test_set_retries() -> Result<(), Box<dyn Error>> {
-    let url = test_url();
-    let api = DeboaRequest::get(url)?
-        .retries(5)
-        .build()?;
-    assert_eq!(api.retries(), 5);
-    Ok(())
-}
-
-#[test]
 fn test_base_url() -> Result<(), Box<dyn Error>> {
     let url = test_url();
     let api = DeboaRequest::get(url.clone())?.build()?;
-    assert_eq!(*api.url(), url);
+    assert_eq!(*api.uri(), test_uri());
     Ok(())
 }
 

@@ -64,11 +64,11 @@ http = "1.3.1"
 
 ```rust
 use deboa::{
-    HttpClient,
+    Client,
     request::{DeboaRequest, FetchWith, get},
     Result,
 };
-use deboa_smol::Client;
+use deboa_smol::InnerClient;
 use deboa_extras::serde::json::JsonBody;
 use ::http::Method;
 use macro_rules_attribute::apply;
@@ -83,7 +83,7 @@ pub struct Post {
 
 #[apply(main!)]
 async fn main() -> Result<()> {
-    let client = Client::default();
+    let client = Client::<InnerClient>::default();
 
     /*
     // You can also use the Fetch trait to issue requests

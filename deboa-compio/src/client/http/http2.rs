@@ -5,12 +5,12 @@ use crate::client::http::conn::stream::tls_connection;
 use crate::{
     cert::{DeboaCertificate, DeboaIdentity},
     client::http::conn::{stream::plain_connection, BaseHttpConnection, Http2Connection},
-    Result,
 };
 use cyper_core::CompioExecutor;
 use deboa::{
     conn::{ConnectionConfig, HttpConnection, ProtoConnection},
     request::Http2Request,
+    Result,
 };
 use http::version::Version;
 use hyper::client::conn::http2::handshake;
@@ -31,7 +31,7 @@ impl ProtoConnection for Http2Connection {
     type Certificate = DeboaCertificate;
 
     #[inline]
-    fn protocol(&self) -> Version {
+    fn protocol_version(&self) -> Version {
         Version::HTTP_2
     }
 
@@ -64,7 +64,10 @@ impl ProtoConnection for Http2Connection {
         compio::runtime::spawn(async move {
             match conn.await {
                 Ok(_) => (),
-                Err(_err) => {}
+                Err(err) => {
+                    println!("Error: {:#}", err)
+                }
+                _ => {}
             };
         })
         .detach();

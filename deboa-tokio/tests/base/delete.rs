@@ -1,8 +1,5 @@
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
-use deboa::request::DeboaRequest;
+use crate::common::helpers::{create_client, create_server};
+use deboa::{request::DeboaRequest, TestResult};
 use easyhttpmock_vetis_tokio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},

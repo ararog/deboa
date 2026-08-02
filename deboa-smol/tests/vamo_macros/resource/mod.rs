@@ -1,8 +1,5 @@
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
-use deboa::serde::RequestBody;
+use crate::common::helpers::{create_client, create_server, default_protocol_version};
+use deboa::{serde::RequestBody, TestResult};
 use deboa_extras::serde::json::JsonBody;
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
@@ -24,7 +21,8 @@ pub struct User {
     name: String,
 }
 
-async fn do_post_resource() -> TestResult<()> {
+#[apply(test!)]
+async fn test_post_resource() -> TestResult<()> {
     let mock = Mock::of(
         given(method("POST").and(path("/api/users"))).will_return(
             StatusCode::CREATED
@@ -37,13 +35,14 @@ async fn do_post_resource() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client = create_client();
 
+    let client = create_client();
     let mut user = User { id: 32, name: "User 1".to_string() };
     let mut url = server.base_url();
     url.push_str("/api");
 
     let mut vamo = Vamo::new(url.to_string())?;
+    vamo.version(default_protocol_version());
     vamo.client(client);
     let response = vamo
         .create(&mut user)?
@@ -53,9 +52,4 @@ async fn do_post_resource() -> TestResult<()> {
     assert_eq!(response.status(), StatusCode::CREATED);
 
     Ok(())
-}
-
-#[apply(test!)]
-async fn test_post_resource() -> TestResult<()> {
-    do_post_resource().await
 }

@@ -2,9 +2,11 @@ use crate::{
     cert::{DeboaCertificate, DeboaIdentity},
     client::http::conn::stream::plain::create_stream,
     rt::stream::SmolStream,
+};
+use deboa::{
+    errors::{ConnectionError, DeboaError},
     Result,
 };
-use deboa::errors::{ConnectionError, DeboaError};
 use futures_rustls::TlsConnector;
 use rustls::{pki_types::ServerName, ClientConfig};
 use rustls_pki_types::{CertificateDer, PrivateKeyDer};

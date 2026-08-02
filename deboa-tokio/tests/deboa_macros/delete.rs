@@ -1,8 +1,6 @@
 #![allow(unused_variables)]
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
+use crate::common::helpers::{create_client, create_server};
+use deboa::TestResult;
 use deboa_macros::delete;
 use easyhttpmock_vetis_tokio::{
     matchers::{method, path},
@@ -11,7 +9,7 @@ use easyhttpmock_vetis_tokio::{
 use http::StatusCode;
 
 #[tokio::test]
-async fn delete() -> TestResult<()> {
+async fn test_delete() -> TestResult<()> {
     let mock = Mock::of(
         given(method("DELETE").and(path("/posts/1"))).will_return(
             StatusCode::OK
@@ -42,7 +40,7 @@ async fn delete() -> TestResult<()> {
 }
 
 #[tokio::test]
-async fn delete_with_headers() -> TestResult<()> {
+async fn test_delete_with_headers() -> TestResult<()> {
     let mock = Mock::of(
         given(method("DELETE").and(path("/posts/1"))).will_return(
             StatusCode::OK

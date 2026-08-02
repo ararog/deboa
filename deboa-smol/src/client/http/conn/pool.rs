@@ -1,8 +1,8 @@
 use crate::{
     cert::{DeboaCertificate, DeboaIdentity},
     client::http::conn::{ConnectionConfig, ConnectionFactory, DeboaConnection},
-    Result,
 };
+use deboa::Result;
 use std::collections::HashMap;
 use time::Duration;
 
@@ -97,7 +97,8 @@ impl deboa::conn::HttpConnectionPool for HttpConnectionPool {
         }
 
         log::debug!("Creating new connection for {}", host);
-        let connection = ConnectionFactory::create_connection(config.protocol(), config).await?;
+        let connection =
+            ConnectionFactory::create_connection(config.protocol_version(), config).await?;
 
         self.connections
             .insert(host.to_string(), connection);

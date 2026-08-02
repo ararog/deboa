@@ -1,13 +1,9 @@
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
+use crate::common::helpers::{create_client, create_server, default_protocol_version};
 use deboa::{
     form::{DeboaForm, EncodedForm, MultiPartForm},
     request::DeboaRequest,
-    HttpClient,
+    HttpClient, TestResult,
 };
-use deboa_smol::Client;
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
@@ -34,9 +30,10 @@ async fn test_post() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client: Client = create_client();
+    let client = create_client();
 
     let request = DeboaRequest::post(server.url("/posts"))?
+        .version(default_protocol_version())
         .text("{ \"title\": \"foo\", \"body\": \"bar\", \"userId\": 1 }")
         .build()?;
 
@@ -77,14 +74,15 @@ async fn test_post_encoded_form() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client: Client = create_client();
+    let client = create_client();
 
     let mut form = EncodedForm::builder();
     form.field("name", "deboa");
     form.field("version", "0.0.1");
 
     let request = DeboaRequest::post(server.url("/posts"))?
-        .form(form.into())
+        .version(default_protocol_version())
+        .form(form.into())?
         .build()?;
 
     let response = client
@@ -125,10 +123,11 @@ async fn test_post_multipart_form() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client: Client = create_client();
+    let client = create_client();
 
     let request = DeboaRequest::post(server.url("/posts"))?
-        .form(form.into())
+        .version(default_protocol_version())
+        .form(form.into())?
         .build()?;
 
     let response = client

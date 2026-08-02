@@ -1,19 +1,14 @@
-use std::sync::Arc;
+use deboa::Result;
+use http::Uri;
 
-use url::Url;
-
-use crate::{Client, Result};
-
-async fn shl() -> Result<()> {
-    let client = Client::default();
-    let request = &client << "https://httpbin.org/get";
-
-    assert_eq!(request.url(), Arc::new(Url::parse("https://httpbin.org/get").unwrap()));
-
-    Ok(())
-}
+use crate::Client;
 
 #[compio::test]
 async fn test_shl() -> Result<()> {
-    shl().await
+    let client = Client::default();
+    let builder = &client << "https://httpbin.org/get";
+    let request = builder.build()?;
+    assert_eq!(*request.uri(), Uri::from_static("https://httpbin.org/get"));
+
+    Ok(())
 }

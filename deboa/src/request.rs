@@ -75,19 +75,18 @@ use base64::{engine::general_purpose::STANDARD, Engine as _};
 use bytes::Bytes;
 use http::{
     header::{self},
-    HeaderMap, HeaderName, HeaderValue, Method,
+    HeaderMap, HeaderName, HeaderValue, Method, Request, Uri, Version,
 };
 use http_body_util::combinators::BoxBody;
 use hyper_body_utils::HttpBody;
 use log::error;
 use regex::Regex;
 use serde::Serialize;
-use std::{collections::HashMap, fmt::Debug, future::Future, str::FromStr, sync::Arc};
+use std::{collections::HashMap, fmt::Debug, future::Future, str::FromStr};
 use url::Url;
 
 /// Bytes body type
 pub type BytesBody = BoxBody<Bytes, std::io::Error>;
-
 /// HTTP/1 request type
 pub type Http1Request = hyper::client::conn::http1::SendRequest<HttpBody>;
 /// HTTP/2 request type
@@ -532,7 +531,6 @@ pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 ///
 /// # Fields
 ///
-/// * `retries` - Number of retry attempts for failed requests
 /// * `url` - The target URL for the request
 /// * `headers` - HTTP headers to include in the request
 /// * `cookies` - Optional cookies to include in the request
@@ -540,28 +538,10 @@ pub fn patch<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 /// * `body` - The request body as raw bytes
 /// * `form` - Optional form data for form submissions
 pub struct DeboaRequestBuilder {
-    retries: u32,
-    url: Arc<Url>,
-    headers: HeaderMap,
-    cookies: Option<HashMap<String, DeboaCookie>>,
-    method: http::Method,
-    body: HttpBody,
-    form: Option<Form>,
+    inner: Request<HttpBody>,
 }
 
 impl DeboaRequestBuilder {
-    /// Allow set request retries at any time.
-    ///
-    /// # Arguments
-    ///
-    /// * `retries` - The new retries.
-    ///
-    #[inline]
-    pub fn retries(mut self, retries: u32) -> Self {
-        self.retries = retries;
-        self
-    }
-
     /// Set the method of the request.
     ///
     /// # Arguments
@@ -574,7 +554,26 @@ impl DeboaRequestBuilder {
     ///
     #[inline]
     pub fn method(mut self, method: http::Method) -> Self {
-        self.method = method;
+        *self
+            .inner
+            .method_mut() = method;
+        self
+    }
+
+    /// Set the protocol version for the request.
+    ///
+    /// # Arguments
+    ///
+    /// * `version` - The version.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - The request builder.
+    ///    
+    pub fn version(mut self, version: http::Version) -> Self {
+        *self
+            .inner
+            .version_mut() = version;
         self
     }
 
@@ -590,7 +589,9 @@ impl DeboaRequestBuilder {
     ///
     #[inline]
     pub fn bytes(mut self, body: &[u8]) -> Self {
-        self.body = HttpBody::from_bytes(body);
+        *self
+            .inner
+            .body_mut() = HttpBody::from_bytes(body);
         self
     }
 
@@ -606,7 +607,9 @@ impl DeboaRequestBuilder {
     ///
     #[inline]
     pub fn body(mut self, body: HttpBody) -> Self {
-        self.body = body;
+        *self
+            .inner
+            .body_mut() = body;
         self
     }
 
@@ -625,7 +628,9 @@ impl DeboaRequestBuilder {
     where
         I: IntoHeaders,
     {
-        self.headers = headers
+        *self
+            .inner
+            .headers_mut() = headers
             .into_headers()
             .unwrap_or_default();
         self
@@ -658,7 +663,8 @@ impl DeboaRequestBuilder {
     ///
     #[inline]
     pub fn header(mut self, key: HeaderName, value: &str) -> Self {
-        self.headers
+        self.inner
+            .headers_mut()
             .insert(key, HeaderValue::from_str(value).unwrap());
         self
     }
@@ -675,7 +681,19 @@ impl DeboaRequestBuilder {
     ///
     #[inline]
     pub fn cookies(mut self, cookies: HashMap<String, DeboaCookie>) -> Self {
-        self.cookies = Some(cookies);
+        self.inner
+            .headers_mut()
+            .insert(
+                header::COOKIE,
+                HeaderValue::from_str(
+                    &cookies
+                        .iter()
+                        .map(|(k, v)| format!("{}={}", k, v.value()))
+                        .collect::<Vec<_>>()
+                        .join("; "),
+                )
+                .unwrap(),
+            );
         self
     }
 
@@ -691,20 +709,24 @@ impl DeboaRequestBuilder {
     ///
     #[inline]
     pub fn cookie(mut self, cookie: DeboaCookie) -> Self {
-        if let Some(cookies) = &mut self.cookies {
-            cookies.insert(
-                cookie
-                    .name()
-                    .to_string(),
-                cookie,
-            );
+        if let Some(cookies) = self
+            .inner
+            .headers_mut()
+            .get_mut(header::COOKIE)
+        {
+            let cookie_str = cookies
+                .to_str()
+                .unwrap();
+            let cookie_str = format!("{}; {}={}", cookie_str, cookie.name(), cookie.value());
+            *cookies = HeaderValue::from_str(&cookie_str).unwrap();
         } else {
-            self.cookies = Some(HashMap::from([(
-                cookie
-                    .name()
-                    .to_string(),
-                cookie,
-            )]));
+            self.inner
+                .headers_mut()
+                .insert(
+                    header::COOKIE,
+                    HeaderValue::from_str(&format!("{}={}", cookie.name(), cookie.value()))
+                        .unwrap(),
+                );
         }
         self
     }
@@ -738,9 +760,23 @@ impl DeboaRequestBuilder {
     /// assert_eq!(response.status(), 201);
     /// ```
     #[inline]
-    pub fn form(mut self, form: Form) -> Self {
-        self.form = Some(form);
-        self
+    pub fn form(mut self, form: Form) -> Result<Self> {
+        let (content_type, body) = match form {
+            Form::EncodedForm(form) => (form.content_type(), form.build()),
+            Form::MultiPartForm(form) => (form.content_type(), form.build()),
+        };
+        match HeaderValue::from_str(content_type.as_str()) {
+            Ok(value) => {
+                self.inner
+                    .headers_mut()
+                    .insert(header::CONTENT_TYPE, value);
+            }
+            Err(err) => return Err(DeboaError::Header { message: err.to_string() }),
+        }
+        *self
+            .inner
+            .body_mut() = HttpBody::from_bytes(&body);
+        Ok(self)
     }
 
     /// Set the body of the request as text.
@@ -767,7 +803,9 @@ impl DeboaRequestBuilder {
     /// ```
     #[inline]
     pub fn text(mut self, text: &str) -> Self {
-        self.body = HttpBody::from_bytes(text.as_bytes());
+        *self
+            .inner
+            .body_mut() = HttpBody::from_bytes(text.as_bytes());
         self
     }
 
@@ -878,46 +916,7 @@ impl DeboaRequestBuilder {
     ///
     #[inline]
     pub fn build(self) -> Result<DeboaRequest> {
-        let mut request = DeboaRequest {
-            url: self.url,
-            headers: self.headers,
-            cookies: self.cookies,
-            retries: self.retries,
-            method: self.method,
-            body: self.body,
-        };
-
-        if let Some(host) = request.url().host() {
-            match HeaderValue::from_str(
-                host.to_string()
-                    .as_str(),
-            ) {
-                Ok(value) => {
-                    request
-                        .headers_mut()
-                        .insert(header::HOST, value);
-                }
-                Err(err) => return Err(DeboaError::Header { message: err.to_string() }),
-            }
-        }
-
-        if let Some(form) = self.form {
-            let (content_type, body) = match form {
-                Form::EncodedForm(form) => (form.content_type(), form.build()),
-                Form::MultiPartForm(form) => (form.content_type(), form.build()),
-            };
-            match HeaderValue::from_str(content_type.as_str()) {
-                Ok(value) => {
-                    request
-                        .headers_mut()
-                        .insert(header::CONTENT_TYPE, value);
-                }
-                Err(err) => return Err(DeboaError::Header { message: err.to_string() }),
-            }
-            request.body = HttpBody::from_bytes(&body);
-        }
-
-        Ok(request)
+        Ok(DeboaRequest { inner: self.inner })
     }
 
     /// Send the request. Consuming the builder.
@@ -992,22 +991,18 @@ impl DeboaRequestBuilder {
 
 /// Deboa request
 pub struct DeboaRequest {
-    url: Arc<Url>,
-    headers: HeaderMap,
-    cookies: Option<HashMap<String, DeboaCookie>>,
-    retries: u32,
-    method: http::Method,
-    body: HttpBody,
+    inner: Request<HttpBody>,
 }
 
 impl Debug for DeboaRequest {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("DeboaRequest")
-            .field("url", &self.url)
-            .field("headers", &self.headers)
-            .field("cookies", &self.cookies)
-            .field("retries", &self.retries)
-            .field("method", &self.method)
+            .field("url", &self.inner.uri())
+            .field("headers", &self.inner.headers())
+            .field("cookies", &None::<HashMap<String, DeboaCookie>>)
+            .field("retries", &0)
+            .field("version", &self.inner.version())
+            .field("method", &self.inner.method())
             .finish()
     }
 }
@@ -1126,25 +1121,48 @@ impl FromStr for DeboaRequest {
             }
         }
 
-        let url = url.parse_url()?;
+        let uri = url
+            .parse::<Uri>()
+            .map_err(|e| {
+                error!("Invalid URL: {}", e);
+                DeboaError::Request(RequestError::Parse { message: "Invalid URL".into() })
+            })?;
+
         if headers
             .get(header::HOST)
             .is_none()
         {
-            let authority = url.authority();
-            headers.insert(header::HOST, HeaderValue::from_str(authority).unwrap());
+            if let Some(authority) = uri.authority() {
+                headers.insert(header::HOST, HeaderValue::from_str(authority.as_str()).unwrap());
+            }
         }
 
-        Ok(DeboaRequest {
-            url: Arc::new(url),
-            headers,
-            cookies: None,
-            retries: 0,
-            method: method
-                .parse::<http::Method>()
-                .unwrap(),
-            body: HttpBody::from_bytes(&body),
-        })
+        let method = method
+            .parse::<Method>()
+            .map_err(|e| {
+                error!("Invalid method: {}", e);
+                DeboaError::Request(RequestError::Parse { message: "Invalid method".into() })
+            })?;
+
+        let mut builder = Request::builder()
+            .uri(uri)
+            .method(method)
+            .version(Version::HTTP_2);
+
+        *builder
+            .headers_mut()
+            .unwrap() = headers;
+
+        let request = builder
+            .body(HttpBody::from_bytes(&body))
+            .map_err(|e| {
+                error!("Failed to build request: {}", e);
+                DeboaError::Request(RequestError::Parse {
+                    message: "Failed to build request".into(),
+                })
+            })?;
+
+        Ok(DeboaRequest { inner: request })
     }
 }
 
@@ -1191,26 +1209,30 @@ impl DeboaRequest {
     ///
     #[inline]
     pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
-        let parsed_url = url.into_url();
-        if let Err(e) = parsed_url {
-            error!("Failed to parse url: {}", e);
-            return Err(DeboaError::Request(RequestError::UrlParse { message: e.to_string() }));
-        }
+        let parsed_url = url
+            .into_url()
+            .map_err(|e| {
+                error!("Failed to parse url: {}", e);
+                DeboaError::Request(RequestError::UrlParse { message: e.to_string() })
+            })?;
 
-        let url = parsed_url.unwrap();
-        let authority = url.authority();
-        let mut headers = HeaderMap::new();
-        headers.insert(header::HOST, HeaderValue::from_str(authority).unwrap());
+        let uri = parsed_url
+            .to_string()
+            .parse::<http::Uri>()
+            .map_err(|e| {
+                error!("Failed to parse uri: {}", e);
+                DeboaError::Request(RequestError::UrlParse { message: e.to_string() })
+            })?;
 
-        Ok(DeboaRequestBuilder {
-            url: url.into(),
-            headers,
-            cookies: None,
-            retries: 0,
-            method,
-            body: HttpBody::from_bytes(&[]),
-            form: None,
-        })
+        let request = Request::builder()
+            .method(method)
+            .version(Version::HTTP_2)
+            .header(header::HOST, uri.host().unwrap())
+            .uri(uri)
+            .body(HttpBody::from_bytes(&[]))
+            .map_err(|e| DeboaError::Request(RequestError::Prepare { message: e.to_string() }))?;
+
+        Ok(DeboaRequestBuilder { inner: request })
     }
 
     /// Allow make a GET request.
@@ -1346,6 +1368,17 @@ impl DeboaRequest {
         Ok(DeboaRequest::from(url)?.method(Method::DELETE))
     }
 
+    /// Get request version at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `http::Version` - The version.
+    ///
+    #[inline]
+    pub fn version(&self) -> http::Version {
+        self.inner.version()
+    }
+
     /// Get request method at any time.
     ///
     /// # Returns
@@ -1354,7 +1387,7 @@ impl DeboaRequest {
     ///
     #[inline]
     pub fn method(&self) -> &http::Method {
-        &self.method
+        self.inner.method()
     }
 
     /// Allow get request url at any time.
@@ -1364,19 +1397,8 @@ impl DeboaRequest {
     /// * `Url` - The url.
     ///
     #[inline]
-    pub fn url(&self) -> Arc<Url> {
-        Arc::clone(&self.url)
-    }
-
-    /// Allow get retries at any time.
-    ///
-    /// # Returns
-    ///
-    /// * `u32` - The retries.
-    ///
-    #[inline]
-    pub fn retries(&self) -> u32 {
-        self.retries
+    pub fn uri(&self) -> &Uri {
+        self.inner.uri()
     }
 
     /// Allow get request headers at any time.
@@ -1387,7 +1409,7 @@ impl DeboaRequest {
     ///
     #[inline]
     pub fn headers(&self) -> &HeaderMap {
-        &self.headers
+        self.inner.headers()
     }
 
     /// Return mutable headers
@@ -1398,7 +1420,8 @@ impl DeboaRequest {
     ///
     #[inline]
     pub fn headers_mut(&mut self) -> &mut HeaderMap {
-        &mut self.headers
+        self.inner
+            .headers_mut()
     }
 
     /// Allow get cookies at any time.
@@ -1408,9 +1431,23 @@ impl DeboaRequest {
     /// * `Option<&HashMap<String, DeboaCookie>>` - The cookies.
     ///
     #[inline]
-    pub fn cookies(&self) -> Option<&HashMap<String, DeboaCookie>> {
-        self.cookies
-            .as_ref()
+    pub fn cookies(&self) -> Option<HashMap<String, DeboaCookie>> {
+        self.inner
+            .headers()
+            .get("cookie")
+            .map(|cookie| {
+                // Parse cookies from header
+                let mut cookies = HashMap::new();
+                if let Ok(cookie_str) = cookie.to_str() {
+                    for cookie_pair in cookie_str.split(';') {
+                        let trimmed = cookie_pair.trim();
+                        if let Some((name, value)) = trimmed.split_once('=') {
+                            cookies.insert(name.to_string(), DeboaCookie::new(name, value));
+                        }
+                    }
+                }
+                cookies
+            })
     }
 
     /// Allow get body at any time.
@@ -1419,8 +1456,8 @@ impl DeboaRequest {
     ///
     /// * `&DeboaBody` - The body.
     ///
-    pub fn body(self) -> HttpBody {
-        self.body
+    pub fn body(self) -> Request<HttpBody> {
+        self.inner
     }
 }
 mod private {

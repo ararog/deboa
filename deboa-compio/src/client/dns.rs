@@ -5,6 +5,7 @@ use deboa::{
 use rand::seq::SliceRandom;
 use std::net::{IpAddr, ToSocketAddrs};
 
+#[derive(Default, Clone)]
 /// Default DNS resolver implementation using smol::net::resolve
 pub struct DefaultDnsResolver;
 

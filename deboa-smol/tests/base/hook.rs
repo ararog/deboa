@@ -1,8 +1,5 @@
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
-use deboa::{hook::hook_fn, request::DeboaRequest, response::DeboaResponse, HttpClient as _};
+use crate::common::helpers::{create_client, create_server};
+use deboa::{request::DeboaRequest, response::DeboaResponse, HttpClient as _, TestResult};
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt as _},
@@ -10,6 +7,7 @@ use easyhttpmock_vetis_smol::{
 use http::StatusCode;
 use macro_rules_attribute::apply;
 use smol_macros::test;
+use tackle::Hook;
 
 #[apply(test!)]
 async fn test_hook() -> TestResult<()> {
@@ -25,11 +23,11 @@ async fn test_hook() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client = create_client().hook(hook_fn(|request, next| async move {
+    let client = create_client().chain_fn(|request, next| async move {
         println!("Request: {:?}", request);
-        next.call(request, next.next_hook())
+        next.call(request)
             .await
-    }));
+    });
 
     let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
     let response: DeboaResponse = client

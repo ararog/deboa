@@ -1,6 +1,8 @@
 //! Certificate module
 //!
 //! This module provides functionality for handling client certificates and keys.
+use std::{fmt::Debug, future::Future};
+
 #[derive(Debug, Clone)]
 /// Supported encodings for client certificates.
 pub enum ContentEncoding {
@@ -10,8 +12,42 @@ pub enum ContentEncoding {
     DER,
 }
 
-/// Identity
-pub trait Identity {
+/// Extension trait for Identity to provide native certificate loading methods.
+pub trait IdentityNativeExt {
+    /// Load a DER encoded PKCS#12 archive from a slice of bytes
+    ///
+    /// # Arguments
+    ///
+    /// * `bundle` - The DER encoded PKCS#12 archive.
+    /// * `password` - The password for the PKCS#12 archive.
+    ///
+    /// # Returns
+    ///
+    /// * `Identity` - The new Identity instance.
+    ///
+    fn from_pkcs12(bundle: &[u8], password: Option<String>) -> Self;
+
+    /// Load a DER encoded PKCS#12 archive from a file
+    ///
+    /// # Arguments
+    ///
+    /// * `file` - The path to the DER encoded PKCS#12 archive.
+    /// * `password` - The password for the PKCS#12 archive.
+    ///
+    /// # Returns
+    ///
+    /// * `Identity` - The new Identity instance.
+    ///
+    fn from_pkcs12_file(
+        file: &str,
+        password: Option<String>,
+    ) -> impl Future<Output = std::io::Result<Self>>
+    where
+        Self: Sized;
+}
+
+/// Extension trait for Identity to provide certificate loading methods.
+pub trait IdentityExt {
     /// Load DER encoded certificate and key from a slice of bytes
     ///
     /// # Arguments
@@ -37,13 +73,39 @@ pub trait Identity {
     ///
     /// * `Identity` - The new Identity instance.
     ///
-    fn from_pkcs8_file(cert: &str, key: &str, encoding: ContentEncoding) -> std::io::Result<Self>
+    fn from_pkcs8_file(
+        cert: &str,
+        key: &str,
+        encoding: ContentEncoding,
+    ) -> impl Future<Output = std::io::Result<Self>>
     where
         Self: Sized;
 }
 
+/// Identity
+pub trait Identity {
+    /// Get the certificate
+    ///
+    /// # Returns
+    ///
+    /// * `&Vec<u8>` - The certificate
+    fn cert(&self) -> &Vec<u8>;
+    /// Get the private key
+    ///
+    /// # Returns
+    ///
+    /// * `&Option<Vec<u8>>` - The private key
+    fn ket(&self) -> &Option<Vec<u8>>;
+    /// Get the encoding
+    ///
+    /// # Returns
+    ///
+    /// * `&Option<ContentEncoding>` - The encoding
+    fn encoding(&self) -> &Option<ContentEncoding>;
+}
+
 /// Certificate
-pub trait Certificate {
+pub trait CertificateExt {
     /// Create certificate from slice of DER encoded bytes.
     ///
     /// # Arguments
@@ -66,10 +128,16 @@ pub trait Certificate {
     ///
     /// * `Result<Certificate, std::io::Error>` - The new Certificate instance.
     ///
-    fn from_file(file: &str, encoding: ContentEncoding) -> std::io::Result<Self>
+    fn from_file(
+        file: &str,
+        encoding: ContentEncoding,
+    ) -> impl Future<Output = std::io::Result<Self>>
     where
         Self: Sized;
+}
 
+/// Certificate
+pub trait Certificate {
     /// Allow get the client certificate path.
     ///
     /// # Returns

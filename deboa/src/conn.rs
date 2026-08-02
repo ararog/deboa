@@ -4,14 +4,13 @@
 use crate::{
     cert::{Certificate, Identity},
     response::DeboaResponse,
-    HttpVersion, Result,
+    Result,
 };
 use http::{Request, Version};
 use http_body::Body;
 use hyper_body_utils::HttpBody;
-use std::{collections::HashMap, future::Future, net::IpAddr, sync::Arc};
+use std::{collections::HashMap, future::Future, net::IpAddr};
 use time::Duration;
-use url::Url;
 
 /// Builder for connection configuration.
 pub struct ConnectionConfigBuilder<'a, I, C> {
@@ -19,7 +18,7 @@ pub struct ConnectionConfigBuilder<'a, I, C> {
     ip: IpAddr,
     host: &'a str,
     port: u16,
-    protocol: HttpVersion,
+    protocol_version: Version,
     identity: Option<I>,
     certificate: Option<C>,
     skip_cert_verification: bool,
@@ -41,7 +40,7 @@ where
                 .unwrap(),
             host: "",
             port: 80,
-            protocol: HttpVersion::Http2,
+            protocol_version: Version::HTTP_2,
             identity: None,
             certificate: None,
             skip_cert_verification: false,
@@ -76,8 +75,8 @@ where
     }
 
     /// Set the protocol for the connection.
-    pub fn protocol(mut self, protocol: HttpVersion) -> Self {
-        self.protocol = protocol;
+    pub fn protocol_version(mut self, protocol_version: Version) -> Self {
+        self.protocol_version = protocol_version;
         self
     }
 
@@ -112,7 +111,7 @@ where
             ip: self.ip,
             host: self.host,
             port: self.port,
-            protocol: self.protocol,
+            protocol_version: self.protocol_version,
             identity: self.identity,
             certificate: self.certificate,
             skip_cert_verification: self.skip_cert_verification,
@@ -127,7 +126,7 @@ pub struct ConnectionConfig<'a, I, C> {
     ip: IpAddr,
     host: &'a str,
     port: u16,
-    protocol: HttpVersion,
+    protocol_version: Version,
     identity: Option<I>,
     certificate: Option<C>,
     skip_cert_verification: bool,
@@ -165,8 +164,8 @@ where
     }
 
     /// Get the protocol for the connection.
-    pub fn protocol(&self) -> &HttpVersion {
-        &self.protocol
+    pub fn protocol_version(&self) -> &Version {
+        &self.protocol_version
     }
 
     /// Get the identity for the connection.
@@ -256,7 +255,6 @@ pub trait HttpConnectionDispatcher {
     ///
     /// # Arguments
     ///
-    /// * `url` - The URL to send the request to.
     /// * `request` - The request to send.
     ///
     /// # Returns
@@ -264,7 +262,6 @@ pub trait HttpConnectionDispatcher {
     /// * `Result<DeboaResponse>` - The response from the server.
     fn send_request(
         &mut self,
-        url: Arc<Url>,
         request: Request<HttpBody>,
     ) -> impl Future<Output = Result<DeboaResponse>>;
 }
@@ -318,7 +315,7 @@ pub trait ProtoConnection {
     ///
     /// * `Version` - The connection protocol.
     ///
-    fn protocol(&self) -> Version;
+    fn protocol_version(&self) -> Version;
 }
 
 /// Common interface for Plain and TLS stream connections

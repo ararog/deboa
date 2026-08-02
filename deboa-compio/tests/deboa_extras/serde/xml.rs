@@ -1,6 +1,6 @@
 use crate::common::{
     data::{sample_post, Post, XML_POST},
-    helpers::fake_url,
+    helpers::{default_protocol_version, fake_url},
 };
 use deboa::{request::DeboaRequest, response::DeboaResponse, Result};
 use deboa_extras::serde::xml::XmlBody;
@@ -11,6 +11,7 @@ use http_body_util::BodyExt;
 #[compio::test]
 async fn test_set_xml() -> Result<()> {
     let request = DeboaRequest::post(fake_url())?
+        .version(default_protocol_version())
         .body_as(XmlBody, sample_post())?
         .build()?;
 
@@ -30,7 +31,7 @@ async fn test_set_xml() -> Result<()> {
 async fn test_xml_response() -> Result<()> {
     let data = sample_post();
 
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/xml")
         .body(&XML_POST[..])

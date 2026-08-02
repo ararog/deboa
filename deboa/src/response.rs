@@ -89,8 +89,7 @@ use http_body_util::BodyExt;
 use hyper_body_utils::HttpBody;
 use log::error;
 use serde::Deserialize;
-use std::{fmt::Debug, fs::write, sync::Arc};
-use url::Url;
+use std::{fmt::Debug, fs::write};
 
 /// Trait to allow converting a type into a DeboaBody.
 ///
@@ -131,7 +130,6 @@ impl IntoBody for Vec<u8> {
 
 /// Deboa response builder
 pub struct DeboaResponseBuilder {
-    url: Url,
     inner: Response<HttpBody>,
 }
 
@@ -220,7 +218,7 @@ impl DeboaResponseBuilder {
     ///
     #[inline]
     pub fn empty(self) -> DeboaResponse {
-        DeboaResponse { url: self.url.into(), inner: self.inner }
+        DeboaResponse { inner: self.inner }
     }
 
     /// Build the response. Consuming the builder.
@@ -231,7 +229,7 @@ impl DeboaResponseBuilder {
     ///
     #[inline]
     pub fn build(self) -> DeboaResponse {
-        DeboaResponse { url: self.url.into(), inner: self.inner }
+        DeboaResponse { inner: self.inner }
     }
 }
 
@@ -297,14 +295,12 @@ impl DeboaResponseBuilder {
 /// * `headers` - The response headers
 /// * `body` - The response body (can be streamed or buffered)
 pub struct DeboaResponse {
-    url: Arc<Url>,
     inner: Response<HttpBody>,
 }
 
 impl Debug for DeboaResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("DeboaResponse")
-            .field("url", &self.url)
             .field("status", &self.inner.status())
             .field("headers", &self.inner.headers())
             .finish()
@@ -331,25 +327,14 @@ impl DeboaResponse {
     /// * `url` - The url of the response.
     /// * `inner` - The inner response.
     ///
-    pub fn new(url: Arc<Url>, inner: Response<HttpBody>) -> Self {
-        Self { url, inner }
+    pub fn new(inner: Response<HttpBody>) -> Self {
+        Self { inner }
     }
 
     /// Create a new DeboaResponseBuilder
     #[inline]
-    pub fn builder(url: Url) -> DeboaResponseBuilder {
-        DeboaResponseBuilder { url, inner: Response::new(HttpBody::from_bytes(&[])) }
-    }
-
-    /// Allow get url at any time.
-    ///
-    /// # Returns
-    ///
-    /// * `&Url` - The url of the response.
-    ///
-    #[inline]
-    pub fn url(&self) -> &Url {
-        &self.url
+    pub fn builder() -> DeboaResponseBuilder {
+        DeboaResponseBuilder { inner: Response::new(HttpBody::from_bytes(&[])) }
     }
 
     /// Allow get status code at any time.

@@ -1,20 +1,15 @@
+use crate::common::helpers::{create_client, create_server, default_protocol_version};
 #[cfg(feature = "rust-tls")]
 use crate::common::helpers::{CA_CERT, CLIENT_CERT, CLIENT_KEY};
 #[cfg(feature = "native-tls")]
 use crate::common::helpers::{CA_CERT, CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
-#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use deboa::cert::Certificate;
 #[cfg(feature = "rust-tls")]
-use deboa::cert::{ContentEncoding, Identity as _};
+use deboa::cert::{CertificateExt as _, ContentEncoding, IdentityExt as _};
 use deboa::{
     errors::{ConnectionError, DeboaError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
-    HttpClient, HttpVersion,
+    HttpClient, TestResult,
 };
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 use deboa_compio::cert::DeboaCertificate;
@@ -25,7 +20,7 @@ use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
 };
-use http::{Method, StatusCode};
+use http::{Method, StatusCode, Version};
 
 //
 // GET
@@ -47,7 +42,9 @@ async fn test_get_http() -> TestResult<()> {
         .await?;
     let client = create_client();
 
-    let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
+    let request = DeboaRequest::get(server.url("/posts/1"))?
+        .version(default_protocol_version())
+        .build()?;
     let response: DeboaResponse = client
         .execute(request)
         .await?;
@@ -86,25 +83,28 @@ async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
         .skip_cert_verification(skip)
         .build();
 
-    let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
+    let request = DeboaRequest::get(server.url("/posts/1"))?
+        .version(default_protocol_version())
+        .build()?;
+    let http_version = request.version();
     let response = client
         .execute(request)
         .await;
 
     if skip {
-        match client.protocol() {
+        match http_version {
             #[cfg(feature = "http1")]
-            HttpVersion::Http1 => {
+            Version::HTTP_11 => {
                 let response = response?;
                 assert_eq!(response.status(), StatusCode::OK);
             }
             #[cfg(feature = "http2")]
-            HttpVersion::Http2 => {
+            Version::HTTP_2 => {
                 let response = response?;
                 assert_eq!(response.status(), StatusCode::OK);
             }
             #[cfg(feature = "http3")]
-            HttpVersion::Http3 => {
+            Version::HTTP_3 => {
                 let error = DeboaError::Connection(ConnectionError::Udp {
                     host: "localhost".to_string(),
                     message: "Could not connect to server: aborted by peer: the cryptographic handshake failed: error 120: peer doesn't support any known protocol".to_string(),
@@ -174,8 +174,9 @@ async fn do_get_http_mutual_authentication() -> TestResult<()> {
     #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]
     let client = Client::default();
 
-    let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
-
+    let request = DeboaRequest::get(server.url("/posts/1"))?
+        .version(default_protocol_version())
+        .build()?;
     let response = client
         .execute(request)
         .await;
@@ -215,8 +216,9 @@ async fn do_get_http_mutual_authentication_with_password() -> TestResult<()> {
         .identity(identity)
         .build();
 
-    let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
-
+    let request = DeboaRequest::get(server.url("/posts/1"))?
+        .version(default_protocol_version())
+        .build()?;
     let response = client
         .execute(request)
         .await?;
@@ -282,7 +284,6 @@ async fn test_get_not_found() -> TestResult<()> {
 #[compio::test]
 async fn test_get_invalid_server() -> TestResult<()> {
     let client = Client::default();
-
     let request = DeboaRequest::get("https://invalid-server.com/posts")?
         .text("test")
         .build()?;
@@ -318,6 +319,7 @@ async fn test_get_by_query() -> TestResult<()> {
     let client = create_client();
 
     let response = DeboaRequest::get(server.url("/comments/1"))?
+        .version(default_protocol_version())
         .send_with(&client)
         .await?;
 

@@ -29,7 +29,7 @@ impl ProtoConnection for Http2Connection {
     type Certificate = DeboaCertificate;
 
     #[inline]
-    fn protocol(&self) -> Version {
+    fn protocol_version(&self) -> Version {
         Version::HTTP_2
     }
 
@@ -66,7 +66,10 @@ impl ProtoConnection for Http2Connection {
         tokio::spawn(async move {
             match conn.await {
                 Ok(_) => (),
-                Err(_err) => {}
+                Err(err) => {
+                    println!("Error: {:#}", err)
+                }
+                _ => {}
             };
         });
 

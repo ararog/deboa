@@ -1,9 +1,8 @@
 use crate::common::{
     data::{JSON_PATCH, JSON_POST},
-    helpers::{create_client, create_server},
-    TestResult,
+    helpers::{create_client, create_server, default_protocol_version},
 };
-use deboa::serde::RequestBody;
+use deboa::{serde::RequestBody, TestResult};
 use deboa_extras::serde::json::JsonBody;
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
@@ -63,6 +62,7 @@ async fn test_get() -> TestResult<()> {
             .base_url()
             .as_str(),
     )?;
+    vamo.version(default_protocol_version());
     vamo.client(client);
 
     let response = vamo
@@ -97,13 +97,14 @@ async fn test_put() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client = create_client();
 
+    let client = create_client();
     let mut vamo = Vamo::new(
         server
             .base_url()
             .as_str(),
     )?;
+    vamo.version(default_protocol_version());
     vamo.client(client);
     let response = vamo
         .put("/posts/1")
@@ -141,6 +142,7 @@ async fn test_post() -> TestResult<()> {
     };
 
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.version(default_protocol_version());
     vamo.client(client);
     let response = vamo
         .post("/posts")
@@ -172,6 +174,7 @@ async fn test_patch() -> TestResult<()> {
     let client = create_client();
 
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.version(default_protocol_version());
     vamo.client(client);
     let response = vamo
         .patch("/posts/1")
@@ -202,6 +205,7 @@ async fn test_delete() -> TestResult<()> {
     let client = create_client();
 
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.version(default_protocol_version());
     vamo.client(client);
     let response = vamo
         .delete("/posts/1")
@@ -240,6 +244,7 @@ async fn test_post_resource() -> TestResult<()> {
     let client = create_client();
 
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.version(default_protocol_version());
     vamo.client(client);
     let response = vamo
         .create(&mut post)?
@@ -278,6 +283,7 @@ async fn test_put_resource() -> TestResult<()> {
     let client = create_client();
 
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.version(default_protocol_version());
     vamo.client(client);
     let response = vamo
         .update(&mut post)?
@@ -311,6 +317,7 @@ async fn test_patch_resource() -> TestResult<()> {
     let client = create_client();
 
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.version(default_protocol_version());
     vamo.client(client);
     let response = vamo
         .edit(&mut post)?
@@ -344,6 +351,7 @@ async fn test_remove_resource() -> TestResult<()> {
     let client = create_client();
 
     let mut vamo = Vamo::new(server.url("/api"))?;
+    vamo.version(default_protocol_version());
     vamo.client(client);
     let response = vamo
         .remove(&mut post)?

@@ -1,9 +1,8 @@
 use crate::common::{
     data::{sample_post, Post, JSON_POST},
     helpers::fake_url,
-    TestResult,
 };
-use deboa::{request::DeboaRequest, response::DeboaResponse};
+use deboa::{request::DeboaRequest, response::DeboaResponse, TestResult};
 use deboa_extras::serde::json::JsonBody;
 use http::header;
 use http::StatusCode;
@@ -31,7 +30,7 @@ async fn test_set_json() -> TestResult<()> {
 async fn test_response_json() -> TestResult<()> {
     let data = sample_post();
 
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/json")
         .body(&JSON_POST[..])

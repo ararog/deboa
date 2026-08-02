@@ -1,9 +1,11 @@
-use crate::common::{
-    helpers::{create_server, CA_CERT, SKIP_CERT_VERIFICATION},
+use crate::common::helpers::{
+    create_server, default_protocol_version, CA_CERT, SKIP_CERT_VERIFICATION,
+};
+use deboa::{
+    cert::{CertificateExt as _, ContentEncoding},
     TestResult,
 };
-use deboa::cert::{Certificate, ContentEncoding};
-use deboa_compio::Client as DeboaClient;
+use deboa_compio::{cert::DeboaCertificate, Client};
 use easyhttpmock_vetis_compio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
@@ -42,12 +44,13 @@ async fn test_put_by_id() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client = DeboaClient::builder()
-        .certificate(Certificate::from_slice(CA_CERT, ContentEncoding::DER))
+    let client = Client::builder()
+        .certificate(DeboaCertificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .build();
 
     let mut vamo = Vamo::new(server.base_url())?;
+    vamo.version(default_protocol_version());
     vamo.client(client);
 
     let mut post_service = PostService::new(vamo);

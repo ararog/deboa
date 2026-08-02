@@ -30,7 +30,7 @@ async fn test_set_flex() -> Result<()> {
 async fn test_response_flex() -> Result<()> {
     let data = sample_post();
 
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/flex")
         .body(&FLEX_POST[..])

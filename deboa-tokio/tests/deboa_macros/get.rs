@@ -2,8 +2,8 @@
 use crate::common::{
     data::Post,
     helpers::{create_client, create_server},
-    TestResult,
 };
+use deboa::TestResult;
 use deboa_extras::serde::json::JsonBody;
 use deboa_macros::get;
 use easyhttpmock_vetis_tokio::{

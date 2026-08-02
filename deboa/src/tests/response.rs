@@ -1,7 +1,7 @@
 use crate::{
     cookie::DeboaCookie,
     response::{DeboaResponse, IntoBody},
-    tests::{test_url, TestResult},
+    TestResult,
 };
 use http::{header, Response};
 
@@ -14,14 +14,14 @@ fn test_status() -> TestResult<()> {
         .body(SAMPLE_TEST.into_body())
         .unwrap();
 
-    let response = DeboaResponse::new(test_url().into(), response);
+    let response = DeboaResponse::new(response);
     assert_eq!(response.status(), http::StatusCode::OK);
     Ok(())
 }
 
 #[test]
 fn test_headers() -> TestResult<()> {
-    let response = DeboaResponse::builder(test_url())
+    let response = DeboaResponse::builder()
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .empty();
@@ -33,7 +33,7 @@ fn test_headers() -> TestResult<()> {
 fn test_cookies() -> TestResult<()> {
     let mut headers = http::HeaderMap::new();
     headers.insert(header::SET_COOKIE, http::HeaderValue::from_static("test=test"));
-    let response = DeboaResponse::builder(test_url())
+    let response = DeboaResponse::builder()
         .status(http::StatusCode::OK)
         .headers(headers)
         .build();
@@ -43,7 +43,7 @@ fn test_cookies() -> TestResult<()> {
 
 #[test]
 fn test_header() -> TestResult<()> {
-    let response = DeboaResponse::builder(test_url())
+    let response = DeboaResponse::builder()
         .status(http::StatusCode::OK)
         .header(header::ACCEPT_LANGUAGE, "pt-BR")
         .build();
@@ -57,23 +57,8 @@ fn test_header() -> TestResult<()> {
 }
 
 #[test]
-fn test_response_url() -> TestResult<()> {
-    let response = DeboaResponse::builder(test_url())
-        .status(http::StatusCode::OK)
-        .header(header::ACCEPT_LANGUAGE, "pt-BR")
-        .build();
-    assert_eq!(
-        response
-            .url()
-            .as_str(),
-        test_url().as_str()
-    );
-    Ok(())
-}
-
-#[test]
 fn test_content_type() -> TestResult<()> {
-    let response = DeboaResponse::builder(test_url())
+    let response = DeboaResponse::builder()
         .status(http::StatusCode::OK)
         .header(header::CONTENT_TYPE, "text/html")
         .build();
@@ -83,7 +68,7 @@ fn test_content_type() -> TestResult<()> {
 
 #[test]
 fn test_content_length() -> TestResult<()> {
-    let response = DeboaResponse::builder(test_url())
+    let response = DeboaResponse::builder()
         .status(http::StatusCode::OK)
         .header(header::CONTENT_LENGTH, "9")
         .build();

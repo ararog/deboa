@@ -168,7 +168,7 @@ pub fn get(item: TokenStream) -> TokenStream {
 /// ```rust, no_run, compile_fail
 /// use deboa_macros::post;
 /// use deboa_extras::serde::json::JsonBody;
-/// use deboa_tokio::Client;
+/// use deboa_tokio::TokioClient;
 ///
 /// #[derive(serde::Serialize)]
 /// struct Post {
@@ -184,7 +184,7 @@ pub fn get(item: TokenStream) -> TokenStream {
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let client = Client::default();
+///     let client = TokioClient::default();
 ///     let data = Post {
 ///         title: "foo".to_string(),
 ///         body: "bar".to_string(),
@@ -206,7 +206,7 @@ pub fn get(item: TokenStream) -> TokenStream {
 /// ```rust, no_run, compile_fail
 /// use deboa_macros::post;
 /// use deboa_extras::serde::json::JsonBody;
-/// use deboa_tokio::Client;
+/// use deboa_tokio::TokioClient;
 ///
 /// #[derive(serde::Serialize)]
 /// struct Post {
@@ -222,12 +222,12 @@ pub fn get(item: TokenStream) -> TokenStream {
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let client = Client::default();
+///     let client = TokioClient::default();
 ///     let data = Post {
 ///         title: "foo".to_string(),
 ///         body: "bar".to_string(),
 ///         userId: 1,
-///     };
+/// };
 ///     let response = post!(
 ///         data => data,
 ///         req_body_ty => JsonBody,
@@ -316,9 +316,9 @@ pub fn post(item: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```rust, no_run, compile_fail
-/// use deboa_macros::put;
 /// use deboa_extras::serde::json::JsonBody;
-/// use deboa_tokio::Client;
+/// use deboa_macros::put;
+/// use deboa_tokio::TokioClient;
 ///
 /// #[derive(serde::Serialize)]
 /// struct Post {
@@ -329,7 +329,7 @@ pub fn post(item: TokenStream) -> TokenStream {
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let client = Client::default();
+///     let client = TokioClient::default();
 ///     let data = Post {
 ///         title: "foo".to_string(),
 ///         body: "bar".to_string(),
@@ -420,9 +420,9 @@ pub fn put(item: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```rust, no_run, compile_fail
-/// use deboa_tokio::Client;
-/// use deboa_macros::patch;
 /// use deboa_extras::serde::json::JsonBody;
+/// use deboa_macros::patch;
+/// use deboa_tokio::TokioClient;
 ///
 /// #[derive(serde::Serialize)]
 /// struct Post {
@@ -523,7 +523,7 @@ pub fn patch(item: TokenStream) -> TokenStream {
 ///
 /// ```rust, no_run, compile_fail
 /// use deboa_macros::delete;
-/// use deboa_tokio::Client;
+/// use deboa_tokio::TokioClient;
 ///
 /// #[derive(serde::Deserialize)]
 /// struct Post {
@@ -532,7 +532,7 @@ pub fn patch(item: TokenStream) -> TokenStream {
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let client = Client::default();
+///     let client = TokioClient::default();
 ///     let response = delete!(url => "https://jsonplaceholder.typicode.com/posts/1", client => &client);
 ///     Ok(())
 /// }
@@ -604,9 +604,9 @@ pub fn delete(item: TokenStream) -> TokenStream {
 /// # Example
 ///
 /// ```rust, no_run, compile_fail
-/// use deboa_macros::fetch;
 /// use deboa_extras::serde::json::JsonBody;
-/// use deboa_tokio::Client;
+/// use deboa_macros::fetch;
+/// use deboa_tokio::TokioClient;
 ///
 /// #[derive(serde::Deserialize)]
 /// struct Post {
@@ -615,7 +615,7 @@ pub fn delete(item: TokenStream) -> TokenStream {
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let client = Client::default();
+///     let client = TokioClient::default();
 ///     let response = fetch!(url => "https://jsonplaceholder.typicode.com/posts", client => &client, res_body_ty => JsonBody, res_ty => Post);
 ///     assert_eq!(response.id, 1);
 ///     Ok(())
@@ -699,11 +699,11 @@ pub fn fetch(item: TokenStream) -> TokenStream {
 ///
 /// ```rust, no_run, compile_fail
 /// use deboa_macros::submit;
-/// use deboa_tokio::Client;
+/// use deboa_tokio::TokioClient;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let client = Client::default();
+///     let client = TokioClient::default();
 ///     submit!(method => http::Method::POST, data => "user=deboa", url => "https://jsonplaceholder.typicode.com/posts", client => &client);
 ///     Ok(())
 /// }
@@ -784,11 +784,11 @@ pub fn submit(item: TokenStream) -> TokenStream {
 ///
 /// ```rust, no_run, compile_fail
 /// use deboa_macros::stream;
-/// use deboa_tokio::Client;
+/// use deboa_tokio::TokioClient;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let client = Client::default();
+///     let client = TokioClient::default();
 ///     let response = stream!(url => "https://jsonplaceholder.typicode.com/posts", client => &client);
 ///     Ok(())
 /// }

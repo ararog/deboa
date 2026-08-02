@@ -16,7 +16,7 @@ pub struct Post {
 #[apply(main!)]
 async fn main() -> Result<()> {
     let client = Client::builder()
-        .protocol(deboa::HttpVersion::Http2)
+        .protocol_version(deboa::HttpVersion::Http2)
         .build();
 
     let response: Post = format!("https://jsonplaceholder.typicode.com/posts/{}", 1)

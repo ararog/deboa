@@ -1,14 +1,13 @@
-use std::convert::Infallible;
-use std::fs::{read, remove_file, write as write_file};
-use std::path::Path;
-
 use bytes::Bytes;
-use futures_util::stream::once;
-use futures_util::stream::Stream;
-
 use deboa::{
     form::{DeboaForm, MultiPartForm},
     Result,
+};
+use futures_util::stream::{once, Stream};
+use std::{
+    convert::Infallible,
+    fs::{read, remove_file, write as write_file},
+    path::Path,
 };
 
 #[tokio::test]

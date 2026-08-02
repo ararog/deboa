@@ -3,7 +3,8 @@ use deboa::{request::DeboaRequest, url::IntoUrl};
 use http_body_util::BodyExt;
 use std::str::FromStr;
 
-async fn do_test_from_str_body() -> TestResult<()> {
+#[compio::test]
+async fn test_from_str_body() -> TestResult<()> {
     let request = DeboaRequest::from_str(
         r##"
     GET https://localhost:8000
@@ -25,36 +26,7 @@ async fn do_test_from_str_body() -> TestResult<()> {
 }
 
 #[compio::test]
-async fn test_from_str_body() {
-    do_test_from_str_body()
-        .await
-        .unwrap();
-}
-
-async fn do_test_set_text_body() -> TestResult<()> {
-    let test_url = "https://example.com".into_url()?;
-    let request = DeboaRequest::post(test_url)?
-        .text("test")
-        .build()?;
-
-    let bytes = request
-        .body()
-        .collect()
-        .await
-        .unwrap()
-        .to_bytes();
-
-    assert_eq!(bytes, b"test"[..]);
-
-    Ok(())
-}
-
-#[compio::test]
 async fn test_set_text_body() -> TestResult<()> {
-    do_test_set_text_body().await
-}
-
-async fn do_test_raw_body() -> TestResult<()> {
     let test_url = "https://example.com".into_url()?;
     let request = DeboaRequest::post(test_url)?
         .text("test")
@@ -74,5 +46,19 @@ async fn do_test_raw_body() -> TestResult<()> {
 
 #[compio::test]
 async fn test_raw_body() -> TestResult<()> {
-    do_test_raw_body().await
+    let test_url = "https://example.com".into_url()?;
+    let request = DeboaRequest::post(test_url)?
+        .text("test")
+        .build()?;
+
+    let bytes = request
+        .body()
+        .collect()
+        .await
+        .unwrap()
+        .to_bytes();
+
+    assert_eq!(bytes, b"test"[..]);
+
+    Ok(())
 }

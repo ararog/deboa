@@ -9,7 +9,7 @@
 use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdentity};
 #[cfg(feature = "rust-tls")]
 use deboa::cert::Certificate as _;
-use deboa::cert::ContentEncoding;
+use deboa::cert::{CertificateExt, ContentEncoding, IdentityExt};
 #[cfg(feature = "rust-tls")]
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
@@ -48,20 +48,14 @@ pub struct DeboaIdentity {
     encoding: Option<ContentEncoding>,
 }
 
-/// Deprecated: Use `Identity` instead.
-///
-/// This type alias is kept for backward compatibility but will be removed in a future version.
-#[deprecated(note = "Use `Identity` instead")]
-pub type ClientCert = Identity;
-
 /// Type alias for backward compatibility
 pub type Identity = DeboaIdentity;
 /// Type alias for backward compatibility
 pub type Certificate = DeboaCertificate;
 
+#[cfg(feature = "native-tls")]
 /// Implementation of the Identity struct
-impl DeboaIdentity {
-    #[cfg(feature = "native-tls")]
+impl IdentityNativeExt for DeboaIdentity {
     /// Load a DER encoded PKCS#12 archive from a slice of bytes
     ///
     /// # Arguments
@@ -77,7 +71,6 @@ impl DeboaIdentity {
         DeboaIdentity { cert: bundle.to_vec(), key: None, password, encoding: None }
     }
 
-    #[cfg(feature = "native-tls")]
     /// Load a DER encoded PKCS#12 archive from a file
     ///
     /// # Arguments
@@ -89,13 +82,27 @@ impl DeboaIdentity {
     ///
     /// * `Identity` - The new Identity instance.
     ///
-    pub fn from_pkcs12_file(file: &str, password: Option<String>) -> std::io::Result<Self> {
-        let data = std::fs::read(file)?;
+    pub async fn from_pkcs12_file(file: &str, password: Option<String>) -> std::io::Result<Self> {
+        let data = smol::fs::read(file).await?;
         Ok(DeboaIdentity { cert: data, key: None, password, encoding: None })
     }
 }
 
 impl deboa::cert::Identity for DeboaIdentity {
+    fn cert(&self) -> &Vec<u8> {
+        &self.cert
+    }
+
+    fn ket(&self) -> &Option<Vec<u8>> {
+        &self.key
+    }
+
+    fn encoding(&self) -> &Option<ContentEncoding> {
+        &self.encoding
+    }
+}
+
+impl IdentityExt for DeboaIdentity {
     /// Load DER encoded certificate and key from a slice of bytes
     ///
     /// # Arguments
@@ -128,9 +135,13 @@ impl deboa::cert::Identity for DeboaIdentity {
     ///
     /// * `Identity` - The new Identity instance.
     ///
-    fn from_pkcs8_file(cert: &str, key: &str, encoding: ContentEncoding) -> std::io::Result<Self> {
-        let cert = std::fs::read(cert)?;
-        let key = std::fs::read(key)?;
+    async fn from_pkcs8_file(
+        cert: &str,
+        key: &str,
+        encoding: ContentEncoding,
+    ) -> std::io::Result<Self> {
+        let cert = smol::fs::read(cert).await?;
+        let key = smol::fs::read(key).await?;
         Ok(DeboaIdentity { cert, key: Some(key), password: None, encoding: Some(encoding) })
     }
 }
@@ -230,11 +241,12 @@ impl TryFrom<&DeboaIdentity> for NativeIdentity {
 ///
 /// # Examples
 ///
-/// ```
-/// use deboa_smol::cert::{Certificate, ContentEncoding};
+/// ```rust, no_run
+/// use deboa::cert::{CertificateExt as _, ContentEncoding};
+/// use deboa_smol::cert::{DeboaCertificate};
 ///
 /// // Load a DER encoded certificate from a file
-/// let cert = Certificate::from_file(
+/// let cert = DeboaCertificate::from_file(
 ///     "/path/to/cert.crt",
 ///     ContentEncoding::DER,
 /// );
@@ -246,7 +258,7 @@ pub struct DeboaCertificate {
     encoding: ContentEncoding,
 }
 
-impl deboa::cert::Certificate for DeboaCertificate {
+impl CertificateExt for DeboaCertificate {
     /// Create certificate from slice of DER encoded bytes.
     ///
     /// # Arguments
@@ -271,18 +283,20 @@ impl deboa::cert::Certificate for DeboaCertificate {
     ///
     /// * `Result<Certificate, std::io::Error>` - The new Certificate instance.
     ///
-    fn from_file(file: &str, encoding: ContentEncoding) -> std::io::Result<Self> {
-        let data = std::fs::read(file)?;
+    async fn from_file(file: &str, encoding: ContentEncoding) -> std::io::Result<Self> {
+        let data = smol::fs::read(file).await?;
         Ok(DeboaCertificate { data, encoding })
     }
+}
 
+impl deboa::cert::Certificate for DeboaCertificate {
+    #[inline]
     /// Allow get the client certificate path.
     ///
     /// # Returns
     ///
     /// * `&str` - The client certificate path.
     ///
-    #[inline]
     fn as_bytes(&self) -> &Vec<u8> {
         &self.data
     }

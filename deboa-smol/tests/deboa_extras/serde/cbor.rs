@@ -1,13 +1,12 @@
 use crate::common::{
     data::{sample_post, Post},
-    helpers::fake_url,
-    TestResult,
+    helpers::{default_protocol_version, fake_url},
 };
 use deboa::{
     errors::{ContentError, DeboaError},
     request::DeboaRequest,
     response::DeboaResponse,
-    Result,
+    Result, TestResult,
 };
 use deboa_extras::serde::cbor::CborBody;
 use http::header;
@@ -26,6 +25,7 @@ fn build_sample_cbor_body() -> Vec<u8> {
 #[apply(test!)]
 async fn test_set_cbor() -> TestResult<()> {
     let request = DeboaRequest::post(fake_url())?
+        .version(default_protocol_version())
         .body_as(CborBody, sample_post())?
         .build()?;
 
@@ -44,6 +44,7 @@ async fn test_set_cbor() -> TestResult<()> {
 #[test]
 fn test_set_cbor_registers_headers() -> TestResult<()> {
     let request = DeboaRequest::post(fake_url())?
+        .version(default_protocol_version())
         .body_as(CborBody, sample_post())?
         .build()?;
 
@@ -73,7 +74,7 @@ fn test_set_cbor_registers_headers() -> TestResult<()> {
 async fn test_response_cbor() -> TestResult<()> {
     let data = sample_post();
 
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/cbor")
         .body(build_sample_cbor_body())
@@ -89,7 +90,7 @@ async fn test_response_cbor() -> TestResult<()> {
 
 #[apply(test!)]
 async fn test_response_cbor_invalid_body() {
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/cbor")
         .body(vec![0xff])

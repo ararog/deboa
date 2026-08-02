@@ -1,8 +1,5 @@
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
-use deboa::request::post;
+use crate::common::helpers::{create_client, create_server};
+use deboa::{request::post, TestResult};
 use deboa_fory::{ForyRequestBuilder, ForyResponse};
 use easyhttpmock_vetis_tokio::{
     matchers::{method, path},

@@ -1,4 +1,3 @@
-use crate::tests::helpers::fake_url;
 use deboa::{response::DeboaResponse, Result};
 use std::fs::remove_file;
 
@@ -6,7 +5,7 @@ const SAMPLE_TEST: &[u8] = b"Hello, world!";
 
 #[tokio::test]
 async fn test_raw_body() -> Result<()> {
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder()
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
@@ -22,7 +21,7 @@ async fn test_raw_body() -> Result<()> {
 
 #[tokio::test]
 async fn test_text_body() -> Result<()> {
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder()
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
@@ -39,7 +38,7 @@ async fn test_text_body() -> Result<()> {
 #[tokio::test]
 async fn test_to_file() -> Result<()> {
     let output_file = "test.txt";
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder()
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)

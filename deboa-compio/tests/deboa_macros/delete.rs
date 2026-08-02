@@ -1,8 +1,6 @@
 #![allow(unused_variables)]
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
+use crate::common::helpers::{create_client, create_server};
+use deboa::TestResult;
 use deboa_macros::delete;
 use easyhttpmock_vetis_compio::{
     matchers::{method, path},

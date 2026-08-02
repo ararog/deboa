@@ -1,8 +1,5 @@
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
-use deboa::request::post;
+use crate::common::helpers::{create_client, create_server, default_protocol_version};
+use deboa::{request::post, TestResult};
 use deboa_fory::{ForyRequestBuilder, ForyResponse};
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
@@ -45,10 +42,9 @@ async fn do_fory_post_request() -> TestResult<()> {
     assert!(result.is_ok());
 
     let person = Person { name: "John Doe".to_string(), age: 30 };
-
     let request = post(server.url("/posts"))?.body_as_fory(&fory, person)?;
-
     let response: Person = request
+        .version(default_protocol_version())
         .send_with(&client)
         .await?
         .body_as_fory(&fory)

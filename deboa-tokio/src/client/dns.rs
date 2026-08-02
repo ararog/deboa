@@ -7,6 +7,7 @@ use std::net::IpAddr;
 use tokio::net::lookup_host;
 
 /// Default DNS resolver implementation using tokio::net::lookup_host
+#[derive(Default, Clone)]
 pub struct DefaultDnsResolver;
 
 impl DnsResolver for DefaultDnsResolver {

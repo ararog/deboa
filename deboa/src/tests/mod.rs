@@ -1,6 +1,7 @@
-use ::url::Url;
+//! Test utilities and modules
 
-pub(crate) type TestResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+use ::url::Url;
+use http::Uri;
 
 mod cache;
 //mod catcher;
@@ -10,8 +11,12 @@ mod request;
 mod response;
 mod url;
 
-pub const TEST_URL: &str = "https://localhost:8000";
+const TEST_URL: &str = "https://localhost:8000";
 
 pub(crate) fn test_url() -> Url {
     Url::parse(TEST_URL).unwrap()
+}
+
+pub(crate) fn test_uri() -> Uri {
+    Uri::from_static(TEST_URL)
 }

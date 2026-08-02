@@ -6,6 +6,7 @@ use rand::seq::SliceRandom;
 use smol::net::resolve;
 use std::net::IpAddr;
 
+#[derive(Default, Clone)]
 /// Default DNS resolver implementation using smol::net::resolve
 pub struct DefaultDnsResolver;
 

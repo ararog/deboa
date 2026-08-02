@@ -1,7 +1,5 @@
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
+use crate::common::helpers::{create_client, create_server, default_protocol_version};
+use deboa::TestResult;
 use easyhttpmock_vetis_tokio::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
@@ -43,6 +41,7 @@ async fn do_patch_by_id() -> TestResult<()> {
     let client = create_client();
 
     let mut vamo = Vamo::new(server.base_url())?;
+    vamo.version(default_protocol_version());
     vamo.client(client);
     let mut post_service = PostService::new(vamo);
     post_service

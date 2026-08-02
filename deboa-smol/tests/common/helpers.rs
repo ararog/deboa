@@ -1,13 +1,13 @@
-use deboa::HttpVersion;
+use deboa::cert::{CertificateExt as _, ContentEncoding};
+use deboa_smol::{cert::DeboaCertificate, Client};
 use easyhttpmock_vetis_smol::{
     config::EasyHttpMockConfig,
     server::PortGenerator,
     vetis_adapter::{VetisAdapter, VetisAdapterConfig},
-    EasyHttpMock, Protocol,
+    EasyHttpMock,
 };
+use http::Version;
 use std::net::IpAddr;
-
-use deboa_smol::Client;
 use url::Url;
 
 pub(crate) const SKIP_CERT_VERIFICATION: bool = cfg!(feature = "native-tls");
@@ -32,22 +32,13 @@ pub const CLIENT_KEY: &[u8] = include_bytes!("../../../certs/client.key.der");
 
 // pub const CLIENT_P12: &[u8] = include_bytes!("../../../certs/client.p12");
 
-pub(crate) const fn deboa_default_protocol() -> HttpVersion {
+pub(crate) const fn default_protocol_version() -> Version {
     #[cfg(feature = "http1")]
-    return HttpVersion::Http1;
+    return Version::HTTP_11;
     #[cfg(feature = "http2")]
-    return HttpVersion::Http2;
+    return Version::HTTP_2;
     #[cfg(feature = "http3")]
-    return HttpVersion::Http3;
-}
-
-pub(crate) const fn vetis_default_protocol() -> Protocol {
-    #[cfg(feature = "http1")]
-    return Protocol::Http1;
-    #[cfg(feature = "http2")]
-    return Protocol::Http2;
-    #[cfg(feature = "http3")]
-    return Protocol::Http3;
+    return Version::HTTP_3;
 }
 
 pub(crate) fn fake_url() -> Url {
@@ -56,9 +47,6 @@ pub(crate) fn fake_url() -> Url {
 
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 pub(crate) fn ssl_client() -> Client {
-    use deboa::cert::{Certificate, ContentEncoding};
-    use deboa_smol::cert::DeboaCertificate;
-
     let interface = std::env::var("INTERFACE").unwrap_or_else(|_| "0.0.0.0".to_string());
     let addr = interface.parse::<IpAddr>();
     let addr = match addr {
@@ -70,7 +58,6 @@ pub(crate) fn ssl_client() -> Client {
         .certificate(DeboaCertificate::from_slice(CA_CERT, ContentEncoding::DER))
         .skip_cert_verification(SKIP_CERT_VERIFICATION)
         .bind_addr(addr)
-        .protocol(deboa_default_protocol())
         .build()
 }
 
@@ -85,7 +72,6 @@ pub(crate) fn plain_client() -> Client {
 
     Client::builder()
         .bind_addr(addr)
-        .protocol(deboa_default_protocol())
         .build()
 }
 
@@ -107,7 +93,7 @@ pub async fn tls_mock_server() -> EasyHttpMock<VetisAdapter> {
     let vetis_adapter_config = VetisAdapterConfig::builder()
         .hostname(&hostname)
         .interface(&interface)
-        .protocol(vetis_default_protocol())
+        .protocol_version(default_protocol_version())
         .with_random_port()
         .cert(server_cert.to_vec())
         .key(server_key.to_vec())
@@ -137,7 +123,7 @@ pub async fn plain_mock_server() -> EasyHttpMock<VetisAdapter> {
     let vetis_adapter_config = VetisAdapterConfig::builder()
         .hostname(&hostname)
         .interface(&interface)
-        .protocol(vetis_default_protocol())
+        .protocol_version(default_protocol_version())
         .with_random_port()
         .build();
 

@@ -30,7 +30,7 @@ async fn test_set_msgpack() -> Result<()> {
 async fn test_msgpack_response() -> Result<()> {
     let data = sample_post();
 
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/msgpack")
         .body(&MSGPACK_POST[..])

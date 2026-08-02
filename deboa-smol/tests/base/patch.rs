@@ -1,9 +1,5 @@
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
-use deboa::{request::DeboaRequest, HttpClient};
-use deboa_smol::Client;
+use crate::common::helpers::{create_client, create_server, default_protocol_version};
+use deboa::{request::DeboaRequest, HttpClient, TestResult};
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
@@ -29,9 +25,11 @@ async fn test_patch() -> TestResult<()> {
     server
         .register_mock(mock)
         .await?;
-    let client: Client = create_client();
+    let client = create_client();
 
     let request = DeboaRequest::patch(server.url("/posts/1"))?
+        .version(default_protocol_version())
+        .version(default_protocol_version())
         .text("text")
         .build()?;
 

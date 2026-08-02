@@ -1,5 +1,5 @@
-use crate::tests::{helpers::fake_url, TestResult};
-use deboa::request::DeboaRequest;
+use crate::tests::helpers::fake_url;
+use deboa::{request::DeboaRequest, TestResult};
 use http_body_util::BodyExt;
 use std::str::FromStr;
 

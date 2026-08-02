@@ -70,7 +70,7 @@ fn test_set_cbor_registers_headers() -> Result<()> {
 async fn test_response_cbor() -> Result<()> {
     let data = sample_post();
 
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/cbor")
         .body(build_sample_cbor_body())
@@ -86,7 +86,7 @@ async fn test_response_cbor() -> Result<()> {
 
 #[tokio::test]
 async fn test_response_cbor_invalid_body() {
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/cbor")
         .body(vec![0xff])

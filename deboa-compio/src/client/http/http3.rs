@@ -67,7 +67,7 @@ impl ProtoConnection for Http3Connection {
     type Certificate = DeboaCertificate;
 
     #[inline]
-    fn protocol(&self) -> Version {
+    fn protocol_version(&self) -> Version {
         Version::HTTP_3
     }
 

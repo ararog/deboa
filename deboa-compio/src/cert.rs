@@ -9,9 +9,14 @@
 use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdentity};
 #[cfg(feature = "rust-tls")]
 use deboa::cert::Certificate as _;
-use deboa::cert::ContentEncoding;
+use deboa::cert::{CertificateExt, ContentEncoding, IdentityExt};
 #[cfg(feature = "rust-tls")]
 use rustls::pki_types::{pem::PemObject, CertificateDer, PrivateKeyDer};
+
+/// Type alias for backward compatibility
+pub type Identity = DeboaIdentity;
+/// Type alias for backward compatibility
+pub type Certificate = DeboaCertificate;
 
 /// Represents a client certificate and its associated data for mutual TLS authentication.
 ///
@@ -48,19 +53,8 @@ pub struct DeboaIdentity {
     encoding: Option<ContentEncoding>,
 }
 
-/// Deprecated: Use `Identity` instead.
-///
-/// This type alias is kept for backward compatibility but will be removed in a future version.
-#[deprecated(note = "Use `Identity` instead")]
-pub type ClientCert = Identity;
-
-/// Type alias for backward compatibility
-pub type Identity = DeboaIdentity;
-/// Type alias for backward compatibility
-pub type Certificate = DeboaCertificate;
-
-impl DeboaIdentity {
-    #[cfg(feature = "native-tls")]
+#[cfg(feature = "native-tls")]
+impl IdentityNativeExt for DeboaIdentity {
     /// Load a DER encoded PKCS#12 archive from a slice of bytes
     ///
     /// # Arguments
@@ -76,14 +70,38 @@ impl DeboaIdentity {
         Identity { cert: bundle.to_vec(), key: None, password, encoding: None }
     }
 
-    #[cfg(feature = "native-tls")]
-    fn from_pkcs12_file(file: &str, password: Option<String>) -> std::io::Result<Self> {
-        let data = std::fs::read(file)?;
+    /// Load a DER encoded PKCS#12 archive from a file
+    ///
+    /// # Arguments
+    ///
+    /// * `file` - The path to the DER encoded PKCS#12 archive.
+    /// * `password` - The password for the PKCS#12 archive.
+    ///
+    /// # Returns
+    ///
+    /// * `Identity` - The new Identity instance.
+    ///
+    async fn from_pkcs12_file(file: &str, password: Option<String>) -> std::io::Result<Self> {
+        let data = compio::fs::read(file).await?;
         Ok(Identity { cert: data, key: None, password, encoding: None })
     }
 }
 
 impl deboa::cert::Identity for DeboaIdentity {
+    fn cert(&self) -> &Vec<u8> {
+        &self.cert
+    }
+
+    fn ket(&self) -> &Option<Vec<u8>> {
+        &self.key
+    }
+
+    fn encoding(&self) -> &Option<ContentEncoding> {
+        &self.encoding
+    }
+}
+
+impl IdentityExt for DeboaIdentity {
     /// Load DER encoded certificate and key from a slice of bytes
     ///
     /// # Arguments
@@ -104,9 +122,13 @@ impl deboa::cert::Identity for DeboaIdentity {
         }
     }
 
-    fn from_pkcs8_file(cert: &str, key: &str, encoding: ContentEncoding) -> std::io::Result<Self> {
-        let cert = std::fs::read(cert)?;
-        let key = std::fs::read(key)?;
+    async fn from_pkcs8_file(
+        cert: &str,
+        key: &str,
+        encoding: ContentEncoding,
+    ) -> std::io::Result<Self> {
+        let cert = compio::fs::read(cert).await?;
+        let key = compio::fs::read(key).await?;
         Ok(DeboaIdentity { cert, key: Some(key), password: None, encoding: Some(encoding) })
     }
 }
@@ -204,11 +226,11 @@ impl TryFrom<&Identity> for NativeIdentity {
 ///
 /// # Examples
 ///
-/// ```
-/// use deboa::cert::{Certificate, ContentEncoding};
+/// ```rust, ignore
+/// use deboa::cert::{CertificateExt as _, ContentEncoding};
 ///
 /// // Load a DER encoded certificate from a file
-/// let cert = Certificate::from_file(
+/// let cert = DeboaCertificate::from_file(
 ///     "/path/to/cert.crt",
 ///     ContentEncoding::DER,
 /// );
@@ -220,7 +242,7 @@ pub struct DeboaCertificate {
     encoding: ContentEncoding,
 }
 
-impl deboa::cert::Certificate for DeboaCertificate {
+impl CertificateExt for DeboaCertificate {
     /// Create certificate from slice of DER encoded bytes.
     ///
     /// # Arguments
@@ -245,11 +267,13 @@ impl deboa::cert::Certificate for DeboaCertificate {
     ///
     /// * `Result<Certificate, std::io::Error>` - The new Certificate instance.
     ///
-    fn from_file(file: &str, encoding: ContentEncoding) -> std::io::Result<Self> {
-        let data = std::fs::read(file)?;
+    async fn from_file(file: &str, encoding: ContentEncoding) -> std::io::Result<Self> {
+        let data = compio::fs::read(file).await?;
         Ok(DeboaCertificate { data, encoding })
     }
+}
 
+impl deboa::cert::Certificate for DeboaCertificate {
     /// Allow get the client certificate path.
     ///
     /// # Returns

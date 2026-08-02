@@ -1,8 +1,5 @@
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
-use deboa::serde::RequestBody;
+use crate::common::helpers::{create_client, create_server, default_protocol_version};
+use deboa::{serde::RequestBody, TestResult};
 use deboa_extras::serde::json::JsonBody;
 use easyhttpmock_vetis_tokio::{
     matchers::{method, path},
@@ -43,6 +40,7 @@ async fn do_post_resource() -> TestResult<()> {
 
     let client = create_client();
     let mut vamo = Vamo::new(url.to_string())?;
+    vamo.version(default_protocol_version());
     vamo.client(client);
     let response = vamo
         .create(&mut user)?

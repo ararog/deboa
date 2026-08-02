@@ -1,9 +1,8 @@
 use crate::common::{
     data::{sample_post, Post, FLEX_POST},
-    helpers::fake_url,
-    TestResult,
+    helpers::{default_protocol_version, fake_url},
 };
-use deboa::{request::DeboaRequest, response::DeboaResponse};
+use deboa::{request::DeboaRequest, response::DeboaResponse, TestResult};
 use deboa_extras::serde::flex::FlexBody;
 use http::header;
 use http::StatusCode;
@@ -14,6 +13,7 @@ use smol_macros::test;
 #[apply(test!)]
 async fn test_set_flex() -> TestResult<()> {
     let request = DeboaRequest::post(fake_url())?
+        .version(default_protocol_version())
         .body_as(FlexBody, sample_post())?
         .build()?;
 
@@ -33,7 +33,7 @@ async fn test_set_flex() -> TestResult<()> {
 async fn test_response_flex() -> TestResult<()> {
     let data = sample_post();
 
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/flex")
         .body(&FLEX_POST[..])

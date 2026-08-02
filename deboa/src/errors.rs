@@ -243,6 +243,13 @@ pub enum DnsError {
         /// Error message
         message: String,
     },
+
+    /// Failed to initialize resolver
+    #[error("Failed to initialize resolver: {message}")]
+    Resolver {
+        /// Error message
+        message: String,
+    },
 }
 
 /// Io error

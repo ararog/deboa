@@ -15,10 +15,7 @@
 //! - Connection lifecycle management
 //! - Thread-safe connection handling
 //! ```
-use crate::{
-    cert::{DeboaCertificate, DeboaIdentity},
-    HttpVersion,
-};
+use crate::cert::{DeboaCertificate, DeboaIdentity};
 #[cfg(feature = "http1")]
 use deboa::request::Http1Request;
 #[cfg(feature = "http2")]
@@ -32,9 +29,10 @@ use deboa::{
 #[cfg(feature = "http3")]
 use deboa_h3::generic::Http3Request;
 use http::Request;
+#[cfg(feature = "http2")]
+use http::Version;
 use hyper_body_utils::HttpBody;
-use std::{marker::PhantomData, sync::Arc};
-use url::Url;
+use std::marker::PhantomData;
 
 /// Connection pooling for efficient HTTP connections.
 ///
@@ -128,12 +126,7 @@ impl HttpConnectionDispatcher for DeboaConnection {
     /// # Returns
     ///
     /// * `Result<DeboaResponse>` - The response from the server.
-    async fn send_request(
-        &mut self,
-        url: Arc<Url>,
-        request: Request<HttpBody>,
-    ) -> Result<DeboaResponse> {
-        let url = url.clone();
+    async fn send_request(&mut self, request: Request<HttpBody>) -> Result<DeboaResponse> {
         match self {
             #[cfg(feature = "http1")]
             DeboaConnection::Http1(ref mut conn) => {
@@ -146,10 +139,10 @@ impl HttpConnectionDispatcher for DeboaConnection {
                     })?
                     .into_parts();
 
-                Ok(DeboaResponse::new(
-                    url,
-                    http::Response::from_parts(parts, HttpBody::from_incoming(body)),
-                ))
+                Ok(DeboaResponse::new(http::Response::from_parts(
+                    parts,
+                    HttpBody::from_incoming(body),
+                )))
             }
             #[cfg(feature = "http2")]
             DeboaConnection::Http2(ref mut conn) => {
@@ -162,10 +155,10 @@ impl HttpConnectionDispatcher for DeboaConnection {
                     })?
                     .into_parts();
 
-                Ok(DeboaResponse::new(
-                    url,
-                    http::Response::from_parts(parts, HttpBody::from_incoming(body)),
-                ))
+                Ok(DeboaResponse::new(http::Response::from_parts(
+                    parts,
+                    HttpBody::from_incoming(body),
+                )))
             }
             #[cfg(feature = "http3")]
             DeboaConnection::Http3(ref mut conn) => {
@@ -177,7 +170,7 @@ impl HttpConnectionDispatcher for DeboaConnection {
                         DeboaError::Request(RequestError::Send { message: e.to_string() })
                     })?;
 
-                Ok(DeboaResponse::new(url, response))
+                Ok(DeboaResponse::new(response))
             }
             #[allow(unreachable_patterns, clippy::needless_return)]
             _ => {
@@ -193,22 +186,22 @@ pub struct ConnectionFactory {}
 impl ConnectionFactory {
     /// Create a new connection.
     pub async fn create_connection<'a>(
-        protocol: &HttpVersion,
+        protocol: &Version,
         config: &'a ConnectionConfig<'a, DeboaIdentity, DeboaCertificate>,
     ) -> Result<DeboaConnection> {
         let conn = match protocol {
             #[cfg(feature = "http1")]
-            HttpVersion::Http1 => {
+            &Version::HTTP_11 => {
                 let conn = Http1Connection::connect(config).await?;
                 DeboaConnection::http1(conn)
             }
             #[cfg(feature = "http2")]
-            HttpVersion::Http2 => {
+            &Version::HTTP_2 => {
                 let conn = Http2Connection::connect(config).await?;
                 DeboaConnection::http2(conn)
             }
             #[cfg(feature = "http3")]
-            HttpVersion::Http3 => {
+            &Version::HTTP_3 => {
                 let conn = Http3Connection::connect(&config).await?;
                 DeboaConnection::http3(conn)
             }

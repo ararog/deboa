@@ -1,7 +1,5 @@
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
+use crate::common::helpers::{create_client, create_server};
+use deboa::TestResult;
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},

@@ -30,7 +30,7 @@ async fn test_set_xml() -> Result<()> {
 async fn test_xml_response() -> Result<()> {
     let data = sample_post();
 
-    let response = DeboaResponse::builder(fake_url())
+    let response = DeboaResponse::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/xml")
         .body(&XML_POST[..])

@@ -2,8 +2,8 @@
 use crate::common::{
     data::{Post, PostWithId},
     helpers::{create_client, create_server},
-    TestResult,
 };
+use deboa::TestResult;
 use deboa_extras::serde::json::JsonBody;
 use deboa_macros::put;
 use easyhttpmock_vetis_compio::{

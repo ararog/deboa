@@ -1,8 +1,5 @@
-use crate::common::{
-    helpers::{create_client, create_server},
-    TestResult,
-};
-use deboa::request::DeboaRequest;
+use crate::common::helpers::{create_client, create_server, default_protocol_version};
+use deboa::{request::DeboaRequest, TestResult};
 use easyhttpmock_vetis_smol::{
     matchers::{method, path},
     mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
@@ -32,6 +29,7 @@ async fn test_delete() -> TestResult<()> {
     let client = create_client();
 
     let response = DeboaRequest::delete(server.url("/posts/1"))?
+        .version(default_protocol_version())
         .send_with(&client)
         .await?;
 

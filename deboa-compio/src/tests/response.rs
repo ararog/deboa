@@ -1,10 +1,11 @@
-use deboa::{response::DeboaResponse, url::IntoUrl, Result};
+use deboa::{response::DeboaResponse, Result};
 use std::fs::remove_file;
 
 const SAMPLE_TEST: &[u8] = b"Hello, world!";
 
-async fn raw_body() -> Result<()> {
-    let response = DeboaResponse::builder("https://example.com".into_url()?)
+#[compio::test]
+async fn test_raw_body() -> Result<()> {
+    let response = DeboaResponse::builder()
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
@@ -19,12 +20,8 @@ async fn raw_body() -> Result<()> {
 }
 
 #[compio::test]
-async fn test_raw_body() -> Result<()> {
-    raw_body().await
-}
-
-async fn text_body() -> Result<()> {
-    let response = DeboaResponse::builder("https://example.com".into_url()?)
+async fn test_text_body() -> Result<()> {
+    let response = DeboaResponse::builder()
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
@@ -39,13 +36,9 @@ async fn text_body() -> Result<()> {
 }
 
 #[compio::test]
-async fn test_text_body() -> Result<()> {
-    text_body().await
-}
-
-async fn to_file() -> Result<()> {
+async fn test_to_file() -> Result<()> {
     let output_file = "test.txt";
-    let response = DeboaResponse::builder("https://example.com".into_url()?)
+    let response = DeboaResponse::builder()
         .status(http::StatusCode::OK)
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
@@ -58,9 +51,4 @@ async fn to_file() -> Result<()> {
     );
     remove_file(output_file).unwrap();
     Ok(())
-}
-
-#[compio::test]
-async fn test_to_file() -> Result<()> {
-    to_file().await
 }
