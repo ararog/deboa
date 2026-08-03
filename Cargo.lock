@@ -52,9 +52,9 @@ dependencies = [
 
 [[package]]
 name = "aho-corasick"
-version = "1.1.5"
+version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c982642fa9e8606056828ee9a8505737230110bb1099153c79efe865c59d12ba"
+checksum = "ddd31a130427c27518df266943a5308ed92d4b226cc639f5a8f1002816174301"
 dependencies = [
  "memchr",
 ]
@@ -1070,6 +1070,36 @@ dependencies = [
 
 [[package]]
 name = "deboa"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0420e86eca809d1efbf009ae21aec08ffb0e9c20051beeac6b100d954929ef1b"
+dependencies = [
+ "async-lock",
+ "base64 0.23.0",
+ "bytes",
+ "cookie",
+ "futures",
+ "http",
+ "http-body",
+ "http-body-util",
+ "hyper",
+ "hyper-body-utils",
+ "hyper-util",
+ "indexmap",
+ "log",
+ "minimime",
+ "rand 0.10.2",
+ "regex",
+ "serde",
+ "tackle",
+ "thiserror 2.0.19",
+ "time",
+ "url",
+ "urlencoding",
+]
+
+[[package]]
+name = "deboa"
 version = "0.1.1"
 dependencies = [
  "async-lock",
@@ -1101,36 +1131,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "deboa"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcf9d17f9a19c7149b85491abd625bfbd760d40af973732351625573256d68ef"
-dependencies = [
- "async-lock",
- "base64 0.23.0",
- "bytes",
- "cookie",
- "futures",
- "http",
- "http-body",
- "http-body-util",
- "hyper",
- "hyper-body-utils",
- "hyper-util",
- "indexmap",
- "log",
- "minimime",
- "rand 0.10.2",
- "regex",
- "serde",
- "tackle",
- "thiserror 2.0.19",
- "time",
- "url",
- "urlencoding",
-]
-
-[[package]]
 name = "deboa-compio"
 version = "0.1.2"
 dependencies = [
@@ -1146,7 +1146,7 @@ dependencies = [
  "cookie",
  "criterion",
  "cyper-core",
- "deboa 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0",
  "deboa-extras",
  "deboa-fory",
  "deboa-h3",
@@ -1198,7 +1198,7 @@ checksum = "f6e4be2c12dcfe853e40f04981a4cfdc795093ae6b2100e407954801f8426557"
 dependencies = [
  "bytes",
  "ciborium",
- "deboa 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0",
  "flexbuffers",
  "futures",
  "http",
@@ -1223,7 +1223,7 @@ version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c53288e5d0b0c29afb7dc18294b3cf913082b42e8c8172a20c256d251d04eebe"
 dependencies = [
- "deboa 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0",
  "fory",
  "fory-core",
  "http",
@@ -1235,7 +1235,7 @@ version = "0.1.1"
 dependencies = [
  "bytes",
  "compio-quic",
- "deboa 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0",
  "h3",
  "h3-quinn",
  "http",
@@ -1246,7 +1246,7 @@ dependencies = [
 name = "deboa-macros"
 version = "0.1.0"
 dependencies = [
- "deboa 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0",
  "deboa-extras",
  "http",
  "proc-macro2",
@@ -1268,7 +1268,7 @@ dependencies = [
  "ciborium",
  "cookie",
  "criterion",
- "deboa 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0",
  "deboa-extras",
  "deboa-fory",
  "deboa-h3",
@@ -1330,7 +1330,7 @@ dependencies = [
  "ciborium",
  "cookie",
  "criterion",
- "deboa 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0",
  "deboa-extras",
  "deboa-fory",
  "deboa-h3",
@@ -4443,9 +4443,9 @@ dependencies = [
 
 [[package]]
 name = "tackle"
-version = "0.1.2"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7a11b7b762306f3fd0bebd36193435ddb90760104577f1222e4221babb1b6ed"
+checksum = "48a2a03a080b83faa6cc1b702100fbb500613d50cb569fff76d5154ec0c0c84d"
 
 [[package]]
 name = "tagptr"
@@ -4905,7 +4905,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22532a5d065745445dae08f4be1e2d939bed75b8addbc51fd9a0af0facaf07cd"
 dependencies = [
  "base64 0.23.0",
- "deboa 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0",
  "deboa-extras",
  "http",
  "serde",
@@ -4918,7 +4918,7 @@ version = "0.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5646f08b17b427008ce77263df12998ae354a59960c02f538182ed7ca89c31f"
 dependencies = [
- "deboa 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.0",
  "deboa-extras",
  "http",
  "proc-macro2",
