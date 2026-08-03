@@ -1,4 +1,8 @@
 use bytes::Bytes;
+use caramelo::{
+    expect,
+    matchers::{eq, truthy},
+};
 use deboa::{
     form::{DeboaForm, MultiPartForm},
     Result,
@@ -34,7 +38,7 @@ async fn multipart_validate_form() -> Result<()> {
             .text()
             .await
             .unwrap();
-        assert_eq!(value, "deboa");
+        expect(value).to_be(eq("deboa"));
     }
 
     if let Ok(Some(field)) = multer
@@ -45,7 +49,7 @@ async fn multipart_validate_form() -> Result<()> {
             .text()
             .await
             .unwrap();
-        assert_eq!(value, "0.0.1");
+        expect(value).to_be(eq("0.0.1"));
     }
 
     Ok(())
@@ -87,11 +91,11 @@ async fn multipart_validate_form_file() -> Result<()> {
 
     let result = read(output_file);
     if let Ok(result) = result {
-        assert_eq!(result, b"teste");
+        expect(result).to_be(eq(b"teste".to_vec()));
     }
 
-    assert!(Path::exists(Path::new(input_file)));
-    assert!(Path::exists(Path::new(output_file)));
+    expect(Path::exists(Path::new(input_file))).to_be(truthy());
+    expect(Path::exists(Path::new(output_file))).to_be(truthy());
 
     let result = remove_file(input_file);
     if let Err(e) = result {

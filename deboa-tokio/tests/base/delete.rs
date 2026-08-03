@@ -1,4 +1,5 @@
 use crate::common::helpers::{create_client, create_server};
+use caramelo::{expect, matchers::eq};
 use deboa::{request::DeboaRequest, TestResult};
 use easyhttpmock_vetis_tokio::{
     matchers::{method, path},
@@ -29,7 +30,7 @@ async fn test_delete() -> TestResult<()> {
         .send_with(&client)
         .await?;
 
-    assert_eq!(response.status(), StatusCode::OK);
+    expect(response.status()).to_be(eq(StatusCode::OK));
 
     server
         .stop()

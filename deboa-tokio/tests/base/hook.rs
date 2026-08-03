@@ -1,4 +1,5 @@
 use crate::common::helpers::{create_client, create_server};
+use caramelo::{expect, matchers::eq};
 use deboa::{
     errors::DeboaError, request::DeboaRequest, response::DeboaResponse, HttpClient as _, Result,
     TestResult,
@@ -80,15 +81,7 @@ async fn test_hook() -> TestResult<()> {
         .execute(request)
         .await?;
 
-    assert_eq!(
-        response.status(),
-        StatusCode::OK,
-        "Status code is {} and should be {}",
-        response
-            .status()
-            .as_u16(),
-        StatusCode::OK.as_u16()
-    );
+    expect(response.status()).to_be(eq(StatusCode::OK));
 
     server
         .stop()
