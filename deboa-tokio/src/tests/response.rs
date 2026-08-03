@@ -1,3 +1,4 @@
+use caramelo::{expect, matchers::eq};
 use deboa::{response::DeboaResponse, Result};
 use std::fs::remove_file;
 
@@ -10,12 +11,12 @@ async fn test_raw_body() -> Result<()> {
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
         .build();
-    assert_eq!(
+    expect(
         response
             .bytes()
             .await,
-        SAMPLE_TEST
-    );
+    )
+    .to_be(eq(SAMPLE_TEST.to_vec()));
     Ok(())
 }
 
@@ -26,12 +27,12 @@ async fn test_text_body() -> Result<()> {
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
         .build();
-    assert_eq!(
+    expect(
         response
             .text()
             .await,
-        Ok(String::from_utf8_lossy(SAMPLE_TEST).to_string())
-    );
+    )
+    .to_be(eq(Ok(String::from_utf8_lossy(SAMPLE_TEST).to_string())));
     Ok(())
 }
 
@@ -43,12 +44,12 @@ async fn test_to_file() -> Result<()> {
         .headers(http::HeaderMap::new())
         .body(SAMPLE_TEST)
         .build();
-    assert_eq!(
+    expect(
         response
             .to_file(output_file)
             .await,
-        Ok(())
-    );
+    )
+    .to_be(eq(Ok(())));
     remove_file(output_file).unwrap();
     Ok(())
 }

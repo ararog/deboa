@@ -1,4 +1,5 @@
 use crate::tests::helpers::fake_url;
+use caramelo::{expect, matchers::eq};
 use deboa::{request::DeboaRequest, TestResult};
 use http_body_util::BodyExt;
 use std::str::FromStr;
@@ -21,7 +22,7 @@ async fn test_from_str_body() -> TestResult<()> {
         .unwrap()
         .to_bytes();
 
-    assert_eq!(bytes, b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}"[..]);
+    expect(bytes).to_be(eq(&b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}"[..]));
     Ok(())
 }
 
@@ -38,7 +39,7 @@ async fn test_set_text_body() -> TestResult<()> {
         .unwrap()
         .to_bytes();
 
-    assert_eq!(bytes, b"test"[..]);
+    expect(bytes).to_be(eq(&b"test"[..]));
 
     Ok(())
 }
@@ -56,7 +57,7 @@ async fn test_raw_body() -> TestResult<()> {
         .unwrap()
         .to_bytes();
 
-    assert_eq!(bytes, b"test"[..]);
+    expect(bytes).to_be(eq(&b"test"[..]));
 
     Ok(())
 }

@@ -1,4 +1,5 @@
 use crate::common::helpers::{create_client, create_server, default_protocol_version};
+use caramelo::{expect, matchers::eq};
 use deboa::{
     form::{DeboaForm, EncodedForm, MultiPartForm},
     request::DeboaRequest,
@@ -39,7 +40,7 @@ async fn test_post() -> TestResult<()> {
         .execute(request)
         .await?;
 
-    assert_eq!(response.status(), StatusCode::CREATED);
+    expect(response.status()).to_be(eq(StatusCode::CREATED));
     assert_eq!(
         response
             .bytes()
@@ -87,7 +88,7 @@ async fn test_post_encoded_form() -> TestResult<()> {
         .execute(request)
         .await?;
 
-    assert_eq!(response.status(), StatusCode::CREATED);
+    expect(response.status()).to_be(eq(StatusCode::CREATED));
     assert_eq!(
         response
             .bytes()
@@ -132,7 +133,7 @@ async fn test_post_multipart_form() -> TestResult<()> {
         .execute(request)
         .await?;
 
-    assert_eq!(response.status(), StatusCode::CREATED);
+    expect(response.status()).to_be(eq(StatusCode::CREATED));
     assert_eq!(
         response
             .bytes()

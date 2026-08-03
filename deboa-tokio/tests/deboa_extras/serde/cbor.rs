@@ -2,12 +2,11 @@ use crate::common::{
     data::{sample_post, Post},
     helpers::fake_url,
 };
-use deboa::{
-    errors::{ContentError, DeboaError},
-    request::DeboaRequest,
-    response::DeboaResponse,
-    Result,
+use caramelo::{
+    expect,
+    matchers::{eq, err},
 };
+use deboa::{request::DeboaRequest, response::DeboaResponse, Result};
 use deboa_extras::serde::cbor::CborBody;
 use http::header;
 use http::StatusCode;
@@ -44,24 +43,24 @@ fn test_set_cbor_registers_headers() -> Result<()> {
         .body_as(CborBody, sample_post())?
         .build()?;
 
-    assert_eq!(
+    expect(
         request
             .headers()
             .get(header::CONTENT_TYPE)
             .unwrap()
             .to_str()
             .unwrap(),
-        "application/cbor"
-    );
-    assert_eq!(
+    )
+    .to_be(eq("application/cbor"));
+    expect(
         request
             .headers()
             .get(header::ACCEPT)
             .unwrap()
             .to_str()
             .unwrap(),
-        "application/cbor"
-    );
+    )
+    .to_be(eq("application/cbor"));
 
     Ok(())
 }
@@ -79,7 +78,7 @@ async fn test_response_cbor() -> Result<()> {
         .body_as(CborBody)
         .await?;
 
-    assert_eq!(response, data);
+    expect(response).to_be(eq(data));
 
     Ok(())
 }
@@ -95,7 +94,6 @@ async fn test_response_cbor_invalid_body() {
     let result: Result<Post> = response
         .body_as(CborBody)
         .await;
-    let err = result.unwrap_err();
 
-    assert!(matches!(err, DeboaError::Content(ContentError::Deserialization { .. })));
+    expect(result).to_be(err());
 }

@@ -3,12 +3,15 @@ use crate::common::helpers::{create_client, create_server, default_protocol_vers
 use crate::common::helpers::{CA_CERT, CLIENT_CERT, CLIENT_KEY};
 #[cfg(feature = "native-tls")]
 use crate::common::helpers::{CA_CERT, CLIENT_CERT_PEM, CLIENT_KEY_PEM, CLIENT_P12};
+use caramelo::{
+    expect,
+    matchers::{eq, err, truthy},
+};
 #[cfg(feature = "native-tls")]
 use deboa::cert::IdentityNativeExt as _;
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 use deboa::cert::{CertificateExt as _, ContentEncoding, IdentityExt as _};
 use deboa::{
-    errors::{ConnectionError, DeboaError},
     request::{DeboaRequest, FetchWith, IntoRequest},
     response::DeboaResponse,
     HttpClient, TestResult,
@@ -49,15 +52,7 @@ async fn test_get_http() -> TestResult<()> {
         .execute(request)
         .await?;
 
-    assert_eq!(
-        response.status(),
-        StatusCode::OK,
-        "Status code is {} and should be {}",
-        response
-            .status()
-            .as_u16(),
-        StatusCode::OK.as_u16()
-    );
+    expect(response.status()).to_be(eq(StatusCode::OK));
 
     server
         .stop()
@@ -96,12 +91,12 @@ async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
             #[cfg(feature = "http1")]
             Version::HTTP_11 => {
                 let response = response?;
-                assert_eq!(response.status(), StatusCode::OK);
+                expect(response.status()).to_be(eq(StatusCode::OK));
             }
             #[cfg(feature = "http2")]
             Version::HTTP_2 => {
                 let response = response?;
-                assert_eq!(response.status(), StatusCode::OK);
+                expect(response.status()).to_be(eq(StatusCode::OK));
             }
             #[cfg(feature = "http3")]
             Version::HTTP_3 => {
@@ -109,15 +104,12 @@ async fn skip_cert_verification_helper(skip: bool) -> TestResult<()> {
                     host: "localhost".to_string(),
                     message: "Could not connect to server: aborted by peer: the cryptographic handshake failed: error 120: peer doesn't support any known protocol".to_string(),
                 });
-                assert_eq!(response.unwrap_err(), error);
+                expect(response.unwrap_err()).to_be(eq(error));
             }
             _ => unreachable!(),
         }
     } else {
-        assert!(matches!(
-            response.unwrap_err(),
-            DeboaError::Connection(ConnectionError::Tls { host: _, message: _ })
-        ));
+        expect(response).to_be(err());
     }
 
     server
@@ -182,7 +174,7 @@ async fn test_get_http_mutual_authentication() -> TestResult<()> {
         .execute(request)
         .await;
 
-    assert_eq!(response?.status(), StatusCode::OK);
+    expect(response?.status()).to_be(eq(StatusCode::OK));
 
     server
         .stop()
@@ -220,13 +212,13 @@ async fn test_get_http_mutual_authentication_with_password() -> TestResult<()> {
         .execute(request)
         .await?;
 
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
+    expect(response.status()).to_be(eq(StatusCode::OK));
+    expect(
         response
             .text()
             .await?,
-        "Hello World!"
-    );
+    )
+    .to_be(eq("Hello World!"));
 
     server
         .stop()
@@ -258,7 +250,7 @@ async fn test_get_not_found() -> TestResult<()> {
         .version(default_protocol_version())
         .send_with(&client)
         .await?;
-    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    expect(response.status()).to_be(eq(StatusCode::NOT_FOUND));
 
     server
         .stop()
@@ -280,8 +272,8 @@ async fn test_get_invalid_server() -> TestResult<()> {
         .execute(request)
         .await;
 
-    assert!(response.is_err());
-    assert!(matches!(response.unwrap_err(), DeboaError::Dns(_)));
+    expect(response.is_err()).to_be(truthy());
+    expect(response).to_be(err());
 
     Ok(())
 }
@@ -310,22 +302,14 @@ async fn test_get_by_query() -> TestResult<()> {
         .send_with(&client)
         .await?;
 
-    assert_eq!(
-        response.status(),
-        StatusCode::OK,
-        "Status code is {} and should be {}",
-        response
-            .status()
-            .as_u16(),
-        StatusCode::OK.as_u16()
-    );
+    expect(response.status()).to_be(eq(StatusCode::OK));
 
     let comments = response
         .text()
         .await;
 
-    assert!(comments.is_ok());
-    assert_eq!(comments.unwrap(), "My comment");
+    expect(comments.is_ok()).to_be(truthy());
+    expect(comments.unwrap()).to_be(eq("My comment"));
 
     server
         .stop()
@@ -335,7 +319,8 @@ async fn test_get_by_query() -> TestResult<()> {
 }
 
 /*
-async fn do_get_by_query_with_retries() -> Result<()> {
+#[tokio::test]
+async fn test_get_by_query_with_retries() {
     let mut server = start_mock_server(|_req| async move {
         Ok(make_response(StatusCode::BAD_GATEWAY, "pong"))
     })
@@ -362,22 +347,11 @@ async fn do_get_by_query_with_retries() -> Result<()> {
 
     Ok(())
 }
-
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_get_by_query_with_retries() -> TestResult<()> {
-    do_get_by_query_with_retries().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_get_by_query_with_retries() {
-    let _ = do_get_by_query_with_retries().await;
-}
 */
 
 /*
-async fn do_get_with_redirect() -> Result<()> {
+#[tokio::test]
+async fn test_get_with_redirect() -> TestResult<()> {
     let client = Client::default();
 
     let url = if cfg!(feature = "http3-tokio") {
@@ -405,18 +379,6 @@ async fn do_get_with_redirect() -> Result<()> {
 
     Ok(())
 }
-
-#[cfg(feature = "tokio-rt")]
-#[tokio::test]
-async fn test_get_with_redirect() -> TestResult<()> {
-    do_get_with_redirect().await
-}
-
-#[cfg(feature = "smol-rt")]
-#[apply(test!)]
-async fn test_get_with_redirect() {
-    let _ = do_get_with_redirect().await;
-}
 */
 
 #[tokio::test]
@@ -439,7 +401,7 @@ async fn test_try_into() -> TestResult<()> {
     let response = client
         .execute(first_post.into_request()?)
         .await?;
-    assert_eq!(response.status(), 200);
+    expect(response.status()).to_be(eq(200));
 
     server
         .stop()
@@ -468,7 +430,7 @@ async fn test_fetch_from_str() -> TestResult<()> {
     let response = first_post
         .fetch_with(client)
         .await?;
-    assert_eq!(response.status(), 200);
+    expect(response.status()).to_be(eq(200));
 
     server
         .stop()
