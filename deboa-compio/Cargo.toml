@@ -130,6 +130,7 @@ compio = { version = "0.19.1", features = [
 ], default-features = false }
 
 [dev-dependencies]
+caramelo = { version = "0.1.2" }
 ciborium = "0.2.2"
 compio = { version = "0.19.1", default-features = false }
 deboa-extras = { workspace = true, default-features = false, features = [

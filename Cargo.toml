@@ -9,7 +9,6 @@ members = [
     "deboa-macros",
     "deboa-smol",
     "deboa-tokio",
-    "examples/simple"
 ]
 
 [workspace.package]
