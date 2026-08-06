@@ -577,7 +577,7 @@ impl DeboaResponse {
         self,
         body_type: R,
     ) -> Result<B> {
-        let bytes = self.bytes().await;
+        let bytes = self.bytes().await?;
         let result = body_type.deserialize::<B>(bytes)?;
         Ok(result)
     }
@@ -604,7 +604,7 @@ impl DeboaResponse {
     ///
     #[inline]
     pub async fn text(self) -> Result<String> {
-        let body = self.bytes().await;
+        let body = self.bytes().await?;
         Ok(String::from_utf8_lossy(&body).to_string())
     }
 
@@ -635,7 +635,7 @@ impl DeboaResponse {
     ///
     #[inline]
     pub async fn to_file(self, path: &str) -> Result<()> {
-        let body = self.bytes().await;
+        let body = self.bytes().await?;
         let result = write(path, body);
         if let Err(e) = result {
             error!("Failed to write file: {}", e);
@@ -651,7 +651,7 @@ impl DeboaResponse {
     /// * `Vec<u8>` - The raw body of the response.
     ///
     #[inline]
-    pub async fn bytes(self) -> Vec<u8> {
+    pub async fn bytes(self) -> Result<Vec<u8>> {
         let mut data = Vec::<u8>::new();
         let bytes = self
             .inner_body()
@@ -661,8 +661,9 @@ impl DeboaResponse {
             Ok(bytes) => data.extend_from_slice(&bytes.to_bytes()),
             Err(e) => {
                 error!("Failed to collect response body: {}", e);
+                return Err(DeboaError::Io(IoError::Content { message: e.to_string() }));
             }
         }
-        data
+        Ok(data)
     }
 }
