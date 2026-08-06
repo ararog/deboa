@@ -25,6 +25,7 @@ default = [
 
 rust-tls = [
   "compio-tls/rustls",
+  "rustls/tls12",
   "dep:rustls-native-certs",
   "dep:webpki-roots",
 ]

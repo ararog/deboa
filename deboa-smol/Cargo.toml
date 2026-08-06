@@ -34,7 +34,7 @@ default = [
 
 # tls
 rust-tls = [
-  "dep:rustls",
+  "rustls/tls12",
   "dep:rustls-native-certs",
   "dep:futures-rustls",
   "dep:rustls-pki-types",
