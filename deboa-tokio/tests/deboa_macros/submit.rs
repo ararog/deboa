@@ -1,73 +1,28 @@
 #![allow(unused_variables)]
 use crate::common::helpers::{create_client, create_server};
 use deboa::TestResult;
-use deboa_macros::submit;
-use easyhttpmock_vetis_tokio::{
-    matchers::{method, path},
-    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
-};
-use http::{Method, StatusCode};
+use deboa_tokio::Client;
+use easyhttpmock_vetis_tokio::{vetis_adapter::VetisAdapter, EasyHttpMock};
+use rstest::*;
 
+#[rstest]
 #[tokio::test]
-async fn test_submit_str_minimal() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("POST").and(path("/posts"))).will_return(
-            StatusCode::OK
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let response = submit!(
-        method => Method::POST,
-        data => "user=deboa",
-        url => server.url("/posts"),
-        client => &client
-    );
-    assert!(response
-        .status()
-        .is_success());
-    server
-        .stop()
-        .await?;
-    Ok(())
+async fn test_submit_str_minimal(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::deboa_macros::submit::test_submit_str_minimal(&create_client, &mut server)
+        .await
 }
 
+#[rstest]
 #[tokio::test]
-async fn test_submit_str_method() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("POST").and(path("/posts"))).will_return(
-            StatusCode::OK
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let headers = vec![("Content-Type", "application/x-www-form-urlencoded")];
-    let response = submit!(
-        method => Method::POST,
-        data => "user=deboa",
-        url => server.url("/posts"),
-        headers => headers,
-        client => &client
-    );
-    assert!(response
-        .status()
-        .is_success());
-    server
-        .stop()
-        .await?;
-    Ok(())
+async fn test_submit_str_method(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::deboa_macros::submit::test_submit_str_method(&create_client, &mut server)
+        .await
 }

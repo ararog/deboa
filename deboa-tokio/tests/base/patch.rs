@@ -1,52 +1,15 @@
-use crate::common::helpers::{create_client, create_server, default_protocol_version};
-use caramelo::{expect, matchers::eq};
-use deboa::{request::DeboaRequest, HttpClient, TestResult};
-use easyhttpmock_vetis_tokio::{
-    matchers::{method, path},
-    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
-};
-use http::{Method, StatusCode};
+use crate::common::helpers::{create_client, create_server};
+use deboa::TestResult;
+use deboa_tokio::Client;
+use easyhttpmock_vetis_tokio::{vetis_adapter::VetisAdapter, EasyHttpMock};
+use rstest::*;
 
-//
-// PATCH
-//
-
+#[rstest]
 #[tokio::test]
-async fn test_patch() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method(Method::PATCH).and(path("/posts/1"))).will_return(
-            StatusCode::OK
-                .respond()
-                .with_body(b"done"),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-
-    let client = create_client();
-    let request = DeboaRequest::patch(server.url("/posts/1"))?
-        .version(default_protocol_version())
-        .text("text")
-        .build()?;
-
-    let response = client
-        .execute(request)
-        .await?;
-
-    expect(response.status()).to_be(eq(StatusCode::OK));
-    assert_eq!(
-        response
-            .text()
-            .await?,
-        "done"
-    );
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+async fn test_patch(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::base::delete::test_delete(&create_client, &mut server).await
 }

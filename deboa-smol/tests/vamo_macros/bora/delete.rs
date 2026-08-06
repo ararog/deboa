@@ -1,45 +1,22 @@
-use crate::common::helpers::{create_client, create_server, default_protocol_version};
+use crate::common::helpers::{create_client, create_server, protocol_version};
 use deboa::TestResult;
-use easyhttpmock_vetis_smol::{
-    matchers::{method, path},
-    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
-};
-use http::StatusCode;
+use deboa_smol::Client;
+use easyhttpmock_vetis_smol::{vetis_adapter::VetisAdapter, EasyHttpMock};
 use macro_rules_attribute::apply;
+use rstest::*;
 use smol_macros::test;
-use vamo::Vamo;
-use vamo_macros::bora;
 
-#[bora(api(delete(name = "delete_post", path = "/posts/<id:i32>")))]
-pub struct PostService;
-
-#[apply(test!)]
-async fn test_delete_by_id() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("DELETE").and(path("/posts/1"))).will_return(
-            StatusCode::OK
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-
-    let client = create_client();
-    let mut vamo = Vamo::new(server.base_url())?;
-    vamo.version(default_protocol_version());
-    vamo.client(client);
-    let mut post_service = PostService::new(vamo);
-    post_service
-        .delete_post(1)
-        .await?;
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_delete_by_id(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    deboa_test_utils::vamo_macros::bora::delete::test_delete_by_id(
+        create_client,
+        &mut create_server.await,
+        protocol_version,
+    )
+    .await
 }

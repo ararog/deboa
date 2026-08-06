@@ -1,366 +1,106 @@
-use crate::common::{
-    data::{JSON_PATCH, JSON_POST},
-    helpers::{create_client, create_server, default_protocol_version},
-};
-use deboa::{serde::RequestBody, TestResult};
-use deboa_extras::serde::json::JsonBody;
-use easyhttpmock_vetis_smol::{
-    matchers::{method, path},
-    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
-};
-use http::StatusCode;
+use crate::common::helpers::{create_client, create_server, protocol_version};
+use deboa::TestResult;
+use deboa_smol::Client;
+use easyhttpmock_vetis_smol::{vetis_adapter::VetisAdapter, EasyHttpMock};
 use macro_rules_attribute::apply;
-use serde::Serialize;
+use rstest::*;
 use smol_macros::test;
-use vamo::{
-    resource::{Resource, ResourceMethod},
-    Vamo,
-};
 
-#[derive(Serialize)]
-struct Post {
-    id: u64,
-    title: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    body: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    user_id: Option<u64>,
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_get(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    deboa_test_utils::vamo::test_get(create_client, &mut create_server.await, protocol_version)
+        .await
 }
 
-impl Resource for Post {
-    fn id(&self) -> String {
-        self.id.to_string()
-    }
-
-    fn name(&self) -> &str {
-        "posts"
-    }
-
-    fn body_type(&self) -> impl RequestBody {
-        JsonBody
-    }
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_put(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    deboa_test_utils::vamo::test_put(create_client, &mut create_server.await, protocol_version)
+        .await
 }
 
-#[apply(test!)]
-async fn test_get() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("GET").and(path("/posts/1"))).will_return(
-            StatusCode::OK
-                .respond()
-                .with_body(b"pong"),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let mut vamo = Vamo::new(
-        server
-            .base_url()
-            .as_str(),
-    )?;
-    vamo.version(default_protocol_version());
-    vamo.client(client);
-
-    let response = vamo
-        .get("/posts/1")
-        .send()
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response
-            .text()
-            .await?,
-        "pong"
-    );
-
-    let _ = server.stop().await;
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_post(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::vamo::test_post(create_client, &mut server, protocol_version).await
 }
 
-#[apply(test!)]
-async fn test_put() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("PUT").and(path("/posts/1"))).will_return(
-            StatusCode::OK
-                .respond()
-                .with_body(b"pong"),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-
-    let client = create_client();
-    let mut vamo = Vamo::new(
-        server
-            .base_url()
-            .as_str(),
-    )?;
-    vamo.version(default_protocol_version());
-    vamo.client(client);
-    let response = vamo
-        .put("/posts/1")
-        .send()
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::OK);
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_patch(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::vamo::test_patch(create_client, &mut server, protocol_version).await
 }
 
-#[apply(test!)]
-async fn test_post() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("POST").and(path("/api/posts"))).will_return(
-            StatusCode::CREATED
-                .respond()
-                .with_body(
-                    b"{\"id\":1,\"title\":\"Some title\",\"body\":\"Some body\",\"user_id\":1}",
-                ),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let post = Post {
-        id: 1,
-        title: "Some title".to_string(),
-        body: Some("Some body".to_string()),
-        user_id: Some(1),
-    };
-
-    let mut vamo = Vamo::new(server.url("/api"))?;
-    vamo.version(default_protocol_version());
-    vamo.client(client);
-    let response = vamo
-        .post("/posts")
-        .body_as(JsonBody, post)?
-        .send()
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::CREATED);
-
-    let _ = server.stop().await;
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_delete(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::vamo::test_delete(create_client, &mut server, protocol_version).await
 }
 
-#[apply(test!)]
-async fn test_patch() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("PATCH").and(path("/api/posts/1"))).will_return(
-            StatusCode::OK
-                .respond()
-                .with_body(b"pong"),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let mut vamo = Vamo::new(server.url("/api"))?;
-    vamo.version(default_protocol_version());
-    vamo.client(client);
-    let response = vamo
-        .patch("/posts/1")
-        .send()
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::OK);
-
-    let _ = server.stop().await;
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_post_resource(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::vamo::test_post_resource(create_client, &mut server, protocol_version).await
 }
 
-#[apply(test!)]
-async fn test_delete() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("DELETE").and(path("/api/posts/1"))).will_return(
-            StatusCode::NO_CONTENT
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let mut vamo = Vamo::new(server.url("/api"))?;
-    vamo.version(default_protocol_version());
-    vamo.client(client);
-    let response = vamo
-        .delete("/posts/1")
-        .send()
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::NO_CONTENT);
-
-    let _ = server.stop().await;
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_put_resource(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::vamo::test_put_resource(create_client, &mut server, protocol_version).await
 }
 
-#[apply(test!)]
-async fn test_post_resource() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("POST").and(path("/api/posts"))).will_return(
-            StatusCode::CREATED
-                .respond()
-                .with_body(JSON_POST),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-
-    let mut post = Post {
-        id: 1,
-        title: "Some title".to_string(),
-        body: Some("Some body".to_string()),
-        user_id: Some(1),
-    };
-
-    let client = create_client();
-
-    let mut vamo = Vamo::new(server.url("/api"))?;
-    vamo.version(default_protocol_version());
-    vamo.client(client);
-    let response = vamo
-        .create(&mut post)?
-        .send()
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::CREATED);
-
-    let _ = server.stop().await;
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_patch_resource(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::vamo::test_patch_resource(create_client, &mut server, protocol_version).await
 }
 
-#[apply(test!)]
-async fn test_put_resource() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("PUT").and(path("/api/posts/1"))).will_return(
-            StatusCode::OK
-                .respond()
-                .with_body(JSON_PATCH),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-
-    let mut post = Post {
-        id: 1,
-        title: "Some title".to_string(),
-        body: Some("Some body".to_string()),
-        user_id: Some(1),
-    };
-
-    let client = create_client();
-
-    let mut vamo = Vamo::new(server.url("/api"))?;
-    vamo.version(default_protocol_version());
-    vamo.client(client);
-    let response = vamo
-        .update(&mut post)?
-        .send()
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::OK);
-
-    let _ = server.stop().await;
-
-    Ok(())
-}
-
-#[apply(test!)]
-async fn test_patch_resource() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("PATCH").and(path("/api/posts/1"))).will_return(
-            StatusCode::OK
-                .respond()
-                .with_body(JSON_PATCH),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-
-    let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
-
-    let client = create_client();
-
-    let mut vamo = Vamo::new(server.url("/api"))?;
-    vamo.version(default_protocol_version());
-    vamo.client(client);
-    let response = vamo
-        .edit(&mut post)?
-        .send()
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::OK);
-
-    let _ = server.stop().await;
-
-    Ok(())
-}
-
-#[apply(test!)]
-async fn test_remove_resource() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("DELETE").and(path("/api/posts/1"))).will_return(
-            StatusCode::OK
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-
-    let mut post = Post { id: 1, title: "Some other title".to_string(), body: None, user_id: None };
-
-    let client = create_client();
-
-    let mut vamo = Vamo::new(server.url("/api"))?;
-    vamo.version(default_protocol_version());
-    vamo.client(client);
-    let response = vamo
-        .remove(&mut post)?
-        .send()
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::OK);
-
-    let _ = server.stop().await;
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_remove_resource(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::vamo::test_remove_resource(create_client, &mut server, protocol_version).await
 }

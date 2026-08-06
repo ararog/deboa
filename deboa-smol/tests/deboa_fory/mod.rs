@@ -1,61 +1,24 @@
-use crate::common::helpers::{create_client, create_server, default_protocol_version};
-use deboa::{request::post, TestResult};
-use deboa_fory::{ForyRequestBuilder, ForyResponse};
-use easyhttpmock_vetis_smol::{
-    matchers::{method, path},
-    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
-};
-use fory::{Fory, ForyStruct};
-use http::StatusCode;
+#![allow(unused_variables)]
+use crate::common::helpers::{create_client, create_server, protocol_version};
+use deboa::TestResult;
+use deboa_smol::Client;
+use easyhttpmock_vetis_smol::{vetis_adapter::VetisAdapter, EasyHttpMock};
 use macro_rules_attribute::apply;
+use rstest::*;
 use smol_macros::test;
 
-const FORY_PERSON: [u8; 33] = [
-    1, 255, 28, 0, 11, 160, 254, 175, 118, 89, 59, 92, 194, 1, 68, 9, 0, 196, 72, 21, 52, 12, 32,
-    30, 34, 74, 111, 104, 110, 32, 68, 111, 101,
-];
-
-#[derive(ForyStruct, Debug, PartialEq)]
-struct Person {
-    name: String,
-    age: u8,
-}
-
-#[apply(test!)]
-async fn do_fory_post_request() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("POST").and(path("/posts"))).will_return(
-            StatusCode::OK
-                .respond()
-                .with_body(&FORY_PERSON),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let mut fory = Fory::default();
-    let result = fory.register::<Person>(1);
-    assert!(result.is_ok());
-
-    let person = Person { name: "John Doe".to_string(), age: 30 };
-    let request = post(server.url("/posts"))?.body_as_fory(&fory, person)?;
-    let response: Person = request
-        .version(default_protocol_version())
-        .send_with(&client)
-        .await?
-        .body_as_fory(&fory)
-        .await?;
-
-    assert_eq!(response.name, "John Doe");
-    assert_eq!(response.age, 30);
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_fory_post_request(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::deboa_fory::test_fory_post_request(
+        &create_client,
+        &mut server,
+        protocol_version,
+    )
+    .await
 }

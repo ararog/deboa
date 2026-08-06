@@ -65,9 +65,8 @@ impl ProtoConnection for Http2Connection {
             match conn.await {
                 Ok(_) => (),
                 Err(err) => {
-                    println!("Error: {:#}", err)
+                    println!("Error: {:#}", err);
                 }
-                _ => {}
             };
         })
         .detach();

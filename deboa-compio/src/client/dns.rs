@@ -1,9 +1,10 @@
+use compio::net::ToSocketAddrsAsync;
 use deboa::{
     dns::{DnsResolver, DnsResolverFuture},
     errors::{DeboaError::Dns, DnsError},
 };
 use rand::seq::SliceRandom;
-use std::net::{IpAddr, ToSocketAddrs};
+use std::net::IpAddr;
 
 #[derive(Default, Clone)]
 /// Default DNS resolver implementation using smol::net::resolve
@@ -13,7 +14,9 @@ impl DnsResolver for DefaultDnsResolver {
     fn resolve(&self, host: String, port: u16) -> DnsResolverFuture {
         let future = async move {
             let hostname = format!("{}:{}", host, port);
-            let addrs = hostname.to_socket_addrs();
+            let addrs = hostname
+                .to_socket_addrs_async()
+                .await;
             if let Err(e) = addrs {
                 return Err(Dns(DnsError::Resolve { host, message: e.to_string() }));
             };

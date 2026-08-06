@@ -7,7 +7,6 @@
             feature = "default-rustls-provider",
             feature = "aws-lc-rustls-provider",
             feature = "ring-rustls-provider",
-            feature = "rustcrypto-rustl-provider"
         ),
         any(
             feature = "default-rustls-verifier",
@@ -64,9 +63,6 @@ use crate::{
 
 pub mod cert;
 pub mod client;
-
-#[cfg(test)]
-mod tests;
 
 /// Inner client type with generic resolver.
 pub type RuntimeClient<Resolver> =

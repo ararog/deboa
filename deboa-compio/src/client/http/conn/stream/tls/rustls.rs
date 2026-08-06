@@ -57,8 +57,6 @@ pub(crate) fn default_provider() -> Arc<rustls::crypto::CryptoProvider> {
     let provider = rustls::crypto::aws_lc_rs::default_provider();
     #[cfg(feature = "__rustls_ring")]
     let provider = rustls::crypto::ring::default_provider();
-    #[cfg(feature = "__rustls_rustcrypto")]
-    let provider = rustls_rustcrypto::provider();
     Arc::new(provider)
 }
 

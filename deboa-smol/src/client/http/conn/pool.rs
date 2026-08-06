@@ -3,7 +3,7 @@ use crate::{
     client::http::conn::{ConnectionConfig, ConnectionFactory, DeboaConnection},
 };
 use deboa::Result;
-use std::collections::HashMap;
+use hashbrown::HashMap;
 use time::Duration;
 
 /// Struct that represents the HTTP connection pool.
@@ -59,13 +59,14 @@ impl deboa::conn::HttpConnectionPool for HttpConnectionPool {
     type Identity = DeboaIdentity;
     type Certificate = DeboaCertificate;
     type ConnectionDispather = DeboaConnection;
+    type ConnectionCache = HashMap<String, DeboaConnection>;
 
     fn new(max_idle_connections: u32, keep_alive_duration: Duration) -> Self {
         Self { max_idle_connections, keep_alive_duration, connections: HashMap::new() }
     }
 
     #[inline]
-    fn connections(&self) -> &HashMap<String, DeboaConnection> {
+    fn connections(&self) -> &Self::ConnectionCache {
         &self.connections
     }
 

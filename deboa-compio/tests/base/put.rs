@@ -1,44 +1,21 @@
-use crate::common::helpers::{create_client, create_server, default_protocol_version};
-use deboa::{request::DeboaRequest, HttpClient, TestResult};
-use easyhttpmock_vetis_compio::{
-    matchers::{method, path},
-    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
-};
-use http::{Method, StatusCode};
+#![allow(unused_variables)]
+use crate::common::helpers::{create_client, create_server, protocol_version};
+use deboa::TestResult;
+use deboa_compio::Client;
+use easyhttpmock_vetis_compio::{vetis_adapter::VetisAdapter, EasyHttpMock};
+use rstest::*;
 
-//
-// PUT
-//
+#[rstest]
 #[compio::test]
-async fn test_put() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method(Method::PUT).and(path("/posts/1"))).will_return(
-            StatusCode::OK
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let request = DeboaRequest::put(server.url("/posts/1"))?
-        .version(default_protocol_version())
-        .text("ping")
-        .build()?;
-
-    let response = client
-        .execute(request)
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::OK);
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+async fn test_put(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    deboa_test_utils::base::put::test_put(
+        &create_client,
+        &mut create_server.await,
+        protocol_version,
+    )
+    .await
 }

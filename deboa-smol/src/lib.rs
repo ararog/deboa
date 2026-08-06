@@ -9,7 +9,6 @@
             feature = "default-rustls-provider",
             feature = "aws-lc-rustls-provider",
             feature = "ring-rustls-provider",
-            feature = "rustcrypto-rustl-provider"
         ),
         any(
             feature = "default-rustls-verifier",
@@ -70,9 +69,6 @@ pub mod cert;
 pub mod client;
 /// Internal runtime module for Smol-based HTTP client implementation.
 pub(crate) mod rt;
-
-#[cfg(test)]
-mod tests;
 
 /// Inner client type with generic resolver.
 pub type RuntimeClient<Resolver> =

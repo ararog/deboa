@@ -1,52 +1,18 @@
+#![allow(unused_variables)]
 use crate::common::helpers::{create_client, create_server};
-use deboa::{request::DeboaRequest, response::DeboaResponse, HttpClient as _, TestResult};
-use easyhttpmock_vetis_smol::{
-    matchers::{method, path},
-    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt as _},
-};
-use http::StatusCode;
+use deboa::TestResult;
+use deboa_smol::Client;
+use easyhttpmock_vetis_smol::{vetis_adapter::VetisAdapter, EasyHttpMock};
 use macro_rules_attribute::apply;
+use rstest::*;
 use smol_macros::test;
-use tackle::Hook;
 
-#[apply(test!)]
-async fn test_hook() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("GET").and(path("/posts/1"))).will_return(
-            StatusCode::OK
-                .respond()
-                .with_body(b"Hello World!"),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client().chain_fn(|request, next| async move {
-        println!("Request: {:?}", request);
-        next.call(request)
-            .await
-    });
-
-    let request = DeboaRequest::get(server.url("/posts/1"))?.build()?;
-    let response: DeboaResponse = client
-        .execute(request)
-        .await?;
-
-    assert_eq!(
-        response.status(),
-        StatusCode::OK,
-        "Status code is {} and should be {}",
-        response
-            .status()
-            .as_u16(),
-        StatusCode::OK.as_u16()
-    );
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_hook(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::base::hook::test_hook(create_client, &mut server).await
 }

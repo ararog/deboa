@@ -436,9 +436,6 @@ where
     I: Identity + Send + Clone,
     C: Certificate + Send + Clone,
     P: HttpConnectionPool<Identity = I, Certificate = C> + Send,
-    P::Certificate: Certificate,
-    P::Identity: Identity,
-    P::ConnectionDispather: HttpConnectionDispatcher,
     R: DnsResolver + Send,
 {
     type Result = Result<DeboaResponse>;

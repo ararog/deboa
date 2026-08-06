@@ -1,169 +1,64 @@
 #![allow(unused_variables)]
-use crate::common::{
-    data::Post,
-    helpers::{create_client, create_server},
-};
+use crate::common::helpers::{create_client, create_server};
 use deboa::TestResult;
-use deboa_extras::serde::json::JsonBody;
-use deboa_macros::fetch;
-use easyhttpmock_vetis_tokio::{
-    matchers::{method, path},
-    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
-};
-use http::StatusCode;
+use deboa_tokio::Client;
+use easyhttpmock_vetis_tokio::{vetis_adapter::VetisAdapter, EasyHttpMock};
+use rstest::*;
 
+#[rstest]
 #[tokio::test]
-async fn test_fetch_str_minimal() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("GET").and(path("/posts"))).will_return(
-            StatusCode::OK
-                .respond()
-                .with_body(b"[{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}]"),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let response = fetch!(url => server.url("/posts"), client => &client);
-    assert!(response
-        .status()
-        .is_success());
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+async fn test_fetch_str_minimal(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::deboa_macros::fetch::test_fetch_str_minimal(&create_client, &mut server).await
 }
 
+#[rstest]
 #[tokio::test]
-async fn test_fetch_str_minimal_headers() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("GET").and(path("/posts"))).will_return(
-            StatusCode::OK
-                .respond()
-                .with_body(b"[{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}]"),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let headers = vec![("User-Agent", "deboa")];
-    let response = fetch!(
-        url => server.url("/posts"),
-        headers => headers,
-        client => &client
-    );
-    assert!(response
-        .status()
-        .is_success());
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+async fn test_fetch_str_minimal_headers(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::deboa_macros::fetch::test_fetch_str_minimal_headers(
+        &create_client,
+        &mut server,
+    )
+    .await
 }
 
+#[rstest]
 #[tokio::test]
-async fn test_fetch_str() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("GET").and(path("/posts"))).will_return(
-            StatusCode::OK
-                .respond()
-                .with_body(b"[{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}]"),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let response = fetch!(
-        url => server.url("/posts"),
-        client => &client,
-        res_body_ty => JsonBody,
-        res_ty => Vec<Post>
-    );
-    assert_eq!(response.len(), 1);
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+async fn test_fetch_str(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::deboa_macros::fetch::test_fetch_str(&create_client, &mut server).await
 }
 
+#[rstest]
 #[tokio::test]
-async fn test_fetch_ident() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("GET").and(path("/posts"))).will_return(
-            StatusCode::OK
-                .respond()
-                .with_body(b"[{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}]"),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let url = server.url("/posts");
-    let response = fetch!(
-        url => url,
-        client => &client,
-        res_body_ty => JsonBody,
-        res_ty => Vec<Post>
-    );
-    assert_eq!(response.len(), 1);
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+async fn test_fetch_ident(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::deboa_macros::fetch::test_fetch_ident(&create_client, &mut server).await
 }
 
+#[rstest]
 #[tokio::test]
-async fn test_fetch_ident_with_headers() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("GET").and(path("/posts"))).will_return(
-            StatusCode::OK
-                .respond()
-                .with_body(b"[{\"id\": 20, \"title\": \"Teste\", \"body\": \"Teste\"}]"),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let url = server.url("/posts");
-    let headers = vec![("User-Agent", "deboa")];
-    let response = fetch!(
-        url => url,
-        headers => headers,
-        client => &client,
-        res_body_ty => JsonBody,
-        res_ty => Vec<Post>
-    );
-    assert_eq!(response.len(), 1);
-    server
-        .stop()
-        .await?;
-    Ok(())
+async fn test_fetch_ident_with_headers(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::deboa_macros::fetch::test_fetch_ident_with_headers(
+        &create_client,
+        &mut server,
+    )
+    .await
 }
