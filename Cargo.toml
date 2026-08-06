@@ -8,6 +8,7 @@ members = [
     "deboa-compio",
     "deboa-macros",
     "deboa-smol",
+    "deboa-test-utils",
     "deboa-tokio",
 ]
 
@@ -21,17 +22,18 @@ license = "MIT OR Apache-2.0"
 rust-version = "1.85.0"
 
 [workspace.dependencies]
-deboa = { version = ">= 0.1.0" }
+deboa = { version = "0.1.2" }
 deboa-compio = { path = "deboa-compio" }
-deboa-h3 = { path = "deboa-h3", version = "^0.1.1-beta.1" }
-deboa-extras = { version = ">= 0.0.9-beta.14" }
-deboa-fory = { version = ">= 0.1.6-beta.4" }
+deboa-h3 = { path = "deboa-h3", version = "^0.1.1" }
+deboa-extras = { version = ">= 0.0.9" }
+deboa-fory = { version = ">= 0.1.6" }
 deboa-macros = { path = "deboa-macros" }
 deboa-smol = { path = "deboa-smol" }
+deboa-test-utils = { path = "deboa-test-utils" }
 deboa-tokio = { path = "deboa-tokio" }
 hyper-body-utils = { version = ">= 0.1.9" }
-vamo = { version = ">= 0.0.9-beta.7" }
-vamo-macros = { version = ">= 0.0.9-beta.7" }
+vamo = { version = ">= 0.0.9" }
+vamo-macros = { version = ">= 0.0.9" }
 
 [profile.test]
 lto = false

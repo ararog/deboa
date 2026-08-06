@@ -9,7 +9,7 @@ use crate::{
 use http::{Request, Version};
 use http_body::Body;
 use hyper_body_utils::HttpBody;
-use std::{collections::HashMap, future::Future, net::IpAddr};
+use std::{future::Future, net::IpAddr};
 use time::Duration;
 
 /// Builder for connection configuration.
@@ -206,6 +206,8 @@ pub trait HttpConnectionPool {
     type Certificate: crate::cert::Certificate;
     /// The connection dispatcher type.
     type ConnectionDispather: HttpConnectionDispatcher;
+    /// The connection cache type.
+    type ConnectionCache;
 
     /// Allow create a new connection pool.
     ///
@@ -219,9 +221,9 @@ pub trait HttpConnectionPool {
     ///
     /// # Returns
     ///
-    /// * `&HashMap<String, Self::ConnectionDispather>` - The connections.
+    /// * `&Self::ConnectionCache` - The connections.
     ///
-    fn connections(&self) -> &HashMap<String, Self::ConnectionDispather>;
+    fn connections(&self) -> &Self::ConnectionCache;
 
     /// Returns the number of connections.
     ///

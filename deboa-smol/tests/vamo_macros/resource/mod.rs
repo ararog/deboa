@@ -1,55 +1,22 @@
-use crate::common::helpers::{create_client, create_server, default_protocol_version};
-use deboa::{serde::RequestBody, TestResult};
-use deboa_extras::serde::json::JsonBody;
-use easyhttpmock_vetis_smol::{
-    matchers::{method, path},
-    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
-};
-use http::StatusCode;
+use crate::common::helpers::{create_client, create_server, protocol_version};
+use deboa::TestResult;
+use deboa_smol::Client;
+use easyhttpmock_vetis_smol::{vetis_adapter::VetisAdapter, EasyHttpMock};
 use macro_rules_attribute::apply;
-use serde::Serialize;
+use rstest::*;
 use smol_macros::test;
-use vamo::{resource::ResourceMethod, Vamo};
-use vamo_macros::Resource;
 
-#[derive(Resource, Serialize)]
-#[name("users")]
-#[body_type(JsonBody)]
-pub struct User {
-    #[rid]
-    id: i32,
-    name: String,
-}
-
-#[apply(test!)]
-async fn test_post_resource() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("POST").and(path("/api/users"))).will_return(
-            StatusCode::CREATED
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-
-    let client = create_client();
-    let mut user = User { id: 32, name: "User 1".to_string() };
-    let mut url = server.base_url();
-    url.push_str("/api");
-
-    let mut vamo = Vamo::new(url.to_string())?;
-    vamo.version(default_protocol_version());
-    vamo.client(client);
-    let response = vamo
-        .create(&mut user)?
-        .send()
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::CREATED);
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_post_resource(
+    create_client: Client,
+    #[future] _create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    deboa_test_utils::vamo_macros::resource::test_post_resource(
+        create_client,
+        &mut _create_server.await,
+        protocol_version,
+    )
+    .await
 }

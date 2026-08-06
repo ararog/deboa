@@ -18,9 +18,9 @@ all-features = true
 [features]
 default = [
   "http2",
-  "native-tls",
-  #"default-rustls-provider",
-  #"default-rustls-verifier",
+  "rust-tls",
+  "default-rustls-provider",
+  "default-rustls-verifier",
 ]
 
 rust-tls = [
@@ -40,12 +40,10 @@ __platform_rustls_verifier = ["dep:rustls-platform-verifier"]
 no-provider = []
 aws-lc-rustls-provider = ["__rustls_aws_lc_rs"]
 ring-rustls-provider = ["__rustls_ring"]
-rustcrypto-rustl-provider = ["__rustls_rustcrypto"]
 
 default-rustls-provider = ["__rustls_aws_lc_rs"]
 __rustls_aws_lc_rs = ["rustls/aws-lc-rs"]
 __rustls_ring = ["rustls/ring"]
-__rustls_rustcrypto = ["dep:rustls-rustcrypto"]
 
 # tls implementations
 native-tls = ["compio-tls/native-tls"]
@@ -73,9 +71,11 @@ cookie = "0.18.1"
 cyper-core = "0.9.0"
 deboa = { workspace = true }
 deboa-h3 = { workspace = true, optional = true }
+deboa-test-utils.workspace = true
 futures = "0.3.31"
 futures-util = { version = "0.3.31", default-features = false }
 h3 = { version = "0.0.8", optional = true, default-features = false }
+hashbrown = "0.17.1"
 http = "1"
 http-body = "1"
 http-body-util = "0.1"
@@ -97,7 +97,6 @@ rustls = { version = "0.23.36", optional = true, default-features = false }
 rustls-native-certs = { version = "0.8.0", optional = true, default-features = false }
 rustls-pki-types = { version = "1.13.2", optional = true, default-features = false }
 rustls-platform-verifier = { version = "0.7.0", optional = true, default-features = false }
-rustls-rustcrypto = { version = "0.0.2-alpha", optional = true, default-features = false }
 send_wrapper = { version = "0.6.0", default-features = false }
 serde = { version = "1.0.217", features = ["derive"] }
 tackle = { version = "0.1.1"}
@@ -130,28 +129,19 @@ compio = { version = "0.19.1", features = [
 ], default-features = false }
 
 [dev-dependencies]
-caramelo = { version = "0.1.2" }
-ciborium = "0.2.2"
+caramelo = "0.1.2"
 compio = { version = "0.19.1", default-features = false }
-deboa-extras = { workspace = true, default-features = false, features = [
-  "serialization_all",
-] }
-deboa-fory = { workspace = true, default-features = false }
-deboa-macros = { workspace = true }
 criterion = { version = "0.8.2", features = [
   "html_reports",
   "async",
   "async_smol",
   "async_tokio",
 ] }
-easyhttpmock-vetis-compio = { path = "../../easyhttpmock/easyhttpmock-vetis-compio", features = [
+deboa-test-utils = { workspace = true }
+easyhttpmock-vetis-compio = { version = "0.1.0", features = [
   "http2",
   "rust-tls",
 ], default-features = false }
-fory = "1.1.0"
-fory-core = "1.1.0"
 futures-util = "0.3.31"
-mime = { version = "0.3.17" }
 multer = "3.1.0"
-vamo.workspace = true
-vamo-macros.workspace = true
+rstest = "0.26.1"

@@ -255,6 +255,13 @@ pub enum DnsError {
 /// Io error
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum IoError {
+    /// Failed to read content
+    #[error("Failed to read content: {message}")]
+    Content {
+        /// Error message
+        message: String,
+    },
+
     /// Failed to write file
     #[error("Failed to write file: {message}")]
     File {

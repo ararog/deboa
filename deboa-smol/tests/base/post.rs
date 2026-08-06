@@ -1,150 +1,52 @@
-use crate::common::helpers::{create_client, create_server, default_protocol_version};
-use deboa::{
-    form::{DeboaForm, EncodedForm, MultiPartForm},
-    request::DeboaRequest,
-    HttpClient, TestResult,
-};
-use easyhttpmock_vetis_smol::{
-    matchers::{method, path},
-    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
-};
-use http::{header::CONTENT_TYPE, Method, StatusCode};
+#![allow(unused_variables)]
+use crate::common::helpers::{create_client, create_server, protocol_version};
+use deboa::TestResult;
+use deboa_smol::Client;
+use easyhttpmock_vetis_smol::{vetis_adapter::VetisAdapter, EasyHttpMock};
+use http::Version;
 use macro_rules_attribute::apply;
+use rstest::*;
 use smol_macros::test;
 
-//
-// POST
-//
-
-#[apply(test!)]
-async fn test_post() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method(Method::POST).and(path("/posts"))).will_return(
-            StatusCode::CREATED
-                .respond()
-                .with_body(b"{\n  \"id\": 101\n}"),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let request = DeboaRequest::post(server.url("/posts"))?
-        .version(default_protocol_version())
-        .text("{ \"title\": \"foo\", \"body\": \"bar\", \"userId\": 1 }")
-        .build()?;
-
-    let response = client
-        .execute(request)
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::CREATED);
-    assert_eq!(
-        response
-            .bytes()
-            .await,
-        b"{\n  \"id\": 101\n}",
-    );
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_post(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: Version,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::base::post::test_post(&create_client, &mut server, protocol_version).await
 }
 
-#[apply(test!)]
-async fn test_post_encoded_form() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method(Method::POST).and(path("/posts"))).will_return(
-            StatusCode::CREATED
-                .respond()
-                .with_header(
-                    CONTENT_TYPE.as_str(),
-                    mime::APPLICATION_WWW_FORM_URLENCODED.essence_str(),
-                )
-                .with_body(b"ping"),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let mut form = EncodedForm::builder();
-    form.field("name", "deboa");
-    form.field("version", "0.0.1");
-
-    let request = DeboaRequest::post(server.url("/posts"))?
-        .version(default_protocol_version())
-        .form(form.into())?
-        .build()?;
-
-    let response = client
-        .execute(request)
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::CREATED);
-    assert_eq!(
-        response
-            .bytes()
-            .await,
-        b"ping"
-    );
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_post_encoded_form(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: Version,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::base::post::test_post_encoded_form(
+        &create_client,
+        &mut server,
+        protocol_version,
+    )
+    .await
 }
 
-#[apply(test!)]
-async fn test_post_multipart_form() -> TestResult<()> {
-    let mut form = MultiPartForm::builder();
-    form.field("name", "deboa");
-    form.field("version", "0.0.1");
-
-    let mock = Mock::of(
-        given(method(Method::POST).and(path("/posts"))).will_return(
-            StatusCode::CREATED
-                .respond()
-                .with_header(CONTENT_TYPE.as_str(), mime::MULTIPART_FORM_DATA.essence_str())
-                .with_body(b"ping"),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let request = DeboaRequest::post(server.url("/posts"))?
-        .version(default_protocol_version())
-        .form(form.into())?
-        .build()?;
-
-    let response = client
-        .execute(request)
-        .await?;
-
-    assert_eq!(response.status(), StatusCode::CREATED);
-    assert_eq!(
-        response
-            .bytes()
-            .await,
-        b"ping"
-    );
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_post_multipart_form(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: Version,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::base::post::test_post_multipart_form(
+        &create_client,
+        &mut server,
+        protocol_version,
+    )
+    .await
 }

@@ -1,142 +1,50 @@
 #![allow(unused_variables)]
-use crate::common::{
-    data::Post,
-    helpers::{create_client, create_server},
-};
+use crate::common::helpers::{create_client, create_server};
 use deboa::TestResult;
-use deboa_extras::serde::json::JsonBody;
-use deboa_macros::post;
-use easyhttpmock_vetis_tokio::{
-    matchers::{method, path},
-    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
-};
-use http::StatusCode;
+use deboa_tokio::Client;
+use easyhttpmock_vetis_tokio::{vetis_adapter::VetisAdapter, EasyHttpMock};
+use rstest::*;
 
+#[rstest]
 #[tokio::test]
-async fn test_only_post_minimal() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("POST").and(path("/posts"))).will_return(
-            StatusCode::CREATED
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
-    let response = post!(
-        data => data,
-        url => server.url("/posts"),
-        client => &client
-    );
-
-    assert_eq!(response.status(), 201);
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+async fn test_only_post_minimal(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::deboa_macros::post::test_only_post_minimal(&create_client, &mut server).await
 }
 
+#[rstest]
 #[tokio::test]
-async fn test_only_post_minimal_headers() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("POST").and(path("/posts"))).will_return(
-            StatusCode::CREATED
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
-    let headers = vec![("Content-Type", "application/json")];
-    let response = post!(
-        data => data,
-        url => server.url("/posts"),
-        headers => headers,
-        client => &client
-    );
-
-    assert_eq!(response.status(), 201);
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+async fn test_only_post_minimal_headers(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::deboa_macros::post::test_only_post_minimal_headers(
+        &create_client,
+        &mut server,
+    )
+    .await
 }
 
+#[rstest]
 #[tokio::test]
-async fn test_only_post() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("POST").and(path("/posts"))).will_return(
-            StatusCode::CREATED
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
-    let response = post!(
-        data => data,
-        req_body_ty => JsonBody,
-        url => server.url("/posts"),
-        client => &client
-    );
-
-    assert_eq!(response.status(), 201);
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+async fn test_only_post(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::deboa_macros::post::test_only_post(&create_client, &mut server).await
 }
 
+#[rstest]
 #[tokio::test]
-async fn test_post_with_headers() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("POST").and(path("/posts"))).will_return(
-            StatusCode::CREATED
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-    let client = create_client();
-
-    let data: Post = Post { id: 1, title: "title".to_string(), body: "body".to_string() };
-    let headers = vec![("Content-Type", "application/json")];
-    let response = post!(
-        data => data,
-        req_body_ty => JsonBody,
-        url => server.url("/posts"),
-        headers => headers,
-        client => &client
-    );
-    assert_eq!(response.status(), 201);
-    server
-        .stop()
-        .await?;
-
-    Ok(())
+async fn test_post_with_headers(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+) -> TestResult<()> {
+    let mut server = create_server.await;
+    deboa_test_utils::deboa_macros::post::test_post_with_headers(&create_client, &mut server).await
 }

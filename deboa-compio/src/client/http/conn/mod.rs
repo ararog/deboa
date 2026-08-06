@@ -5,13 +5,13 @@
 //!
 //! # Architecture
 //!
-//! - [`http`]: Core HTTP protocol implementations (HTTP/1.1, HTTP/2)
+//! - [`http`]: Core HTTP protocol implementations (HTTP/1.1, HTTP/2 and HTTP/3)
 //! - [`pool`]: Connection pooling for efficient request handling
 //!
 //! # Features
 //!
 //! - Automatic connection pooling
-//! - Protocol negotiation (HTTP/1.1, HTTP/2)
+//! - Protocol negotiation (HTTP/1.1, HTTP/2 and HTTP/3)
 //! - Connection lifecycle management
 //! - Thread-safe connection handling
 //! ```

@@ -76,6 +76,7 @@ use crate::{
 };
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use bytes::Bytes;
+use hashbrown::HashMap;
 use http::{
     header::{self},
     HeaderMap, HeaderName, HeaderValue, Method, Request, Uri, Version,
@@ -85,7 +86,7 @@ use hyper_body_utils::HttpBody;
 use log::error;
 use regex::Regex;
 use serde::Serialize;
-use std::{collections::HashMap, fmt::Debug, future::Future, str::FromStr};
+use std::{fmt::Debug, future::Future, str::FromStr};
 use url::Url;
 
 /// Bytes body type

@@ -1,69 +1,22 @@
-use crate::common::helpers::{create_client, create_server, default_protocol_version};
+use crate::common::helpers::{create_client, create_server, protocol_version};
 use deboa::TestResult;
-use easyhttpmock_vetis_smol::{
-    matchers::{method, path},
-    mock::{given, AsyncMatcherExt, Mock, StatusCodeExt},
-};
-use http::StatusCode;
+use deboa_smol::Client;
+use easyhttpmock_vetis_smol::{vetis_adapter::VetisAdapter, EasyHttpMock};
 use macro_rules_attribute::apply;
-use serde::{Deserialize, Serialize};
+use rstest::*;
 use smol_macros::test;
-use vamo::Vamo;
-use vamo_macros::bora;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Post {
-    pub id: u32,
-    pub title: String,
-    pub body: String,
-    #[serde(rename = "userId")]
-    pub user_id: u32,
-}
-
-#[bora(
-  api(
-    post(name="create_post", path="/posts", req_body=Post, format="json"),
-  )
-)]
-pub struct PostService;
-
-async fn do_post_by_id() -> TestResult<()> {
-    let mock = Mock::of(
-        given(method("POST").and(path("/posts"))).will_return(
-            StatusCode::OK
-                .respond()
-                .no_body(),
-        ),
-    );
-
-    let mut server = create_server().await;
-    server
-        .register_mock(mock)
-        .await?;
-
-    let client = create_client();
-    let mut vamo = Vamo::new(server.base_url())?;
-    vamo.version(default_protocol_version());
-    vamo.client(client);
-
-    let mut post_service = PostService::new(vamo);
-    post_service
-        .create_post(Post {
-            id: 1,
-            title: "title".to_string(),
-            body: "body".to_string(),
-            user_id: 1,
-        })
-        .await?;
-
-    server
-        .stop()
-        .await?;
-
-    Ok(())
-}
-
-#[apply(test!)]
-async fn test_post_by_id() -> TestResult<()> {
-    do_post_by_id().await
+#[rstest]
+#[test_attr(apply(test))]
+async fn test_post_by_id(
+    create_client: Client,
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    deboa_test_utils::vamo_macros::bora::post::test_post_by_id(
+        create_client,
+        &mut create_server.await,
+        protocol_version,
+    )
+    .await
 }

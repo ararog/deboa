@@ -30,7 +30,7 @@ use deboa::{
 use deboa_h3::generic::Http3Request;
 use http::{Request, Version};
 use hyper_body_utils::HttpBody;
-use std::{error::Error as _, marker::PhantomData};
+use std::marker::PhantomData;
 
 /// Connection pooling for efficient HTTP connections.
 ///
@@ -114,7 +114,6 @@ impl HttpConnectionDispatcher for DeboaConnection {
                     .send_request(request)
                     .await
                     .map_err(|e| {
-                        println!("Error: {:?}", e.source());
                         DeboaError::Request(RequestError::Send { message: e.to_string() })
                     })?
                     .into_parts();
@@ -131,7 +130,6 @@ impl HttpConnectionDispatcher for DeboaConnection {
                     .send_request(request)
                     .await
                     .map_err(|e| {
-                        println!("Error: {:?}", e.source());
                         DeboaError::Request(RequestError::Send { message: e.to_string() })
                     })?
                     .into_parts();
@@ -148,7 +146,6 @@ impl HttpConnectionDispatcher for DeboaConnection {
                     .send_request(request)
                     .await
                     .map_err(|e| {
-                        println!("Error: {:?}", e.source());
                         DeboaError::Request(RequestError::Send { message: e.to_string() })
                     })?;
 

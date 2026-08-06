@@ -1,6 +1,6 @@
 [package]
 name = "deboa"
-version = "0.1.1"
+version = "0.1.2"
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -24,6 +24,7 @@ base64 = "0.23.0"
 bytes = { version = "1.11" }
 cookie = { version = "0.18.1", default-features = false }
 futures = { version = "0.3.31", default-features = false }
+hashbrown = "0.17.1"
 http = "1"
 http-body = "1"
 http-body-util = "0.1"
