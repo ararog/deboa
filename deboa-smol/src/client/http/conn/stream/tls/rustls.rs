@@ -68,7 +68,7 @@ pub(crate) fn setup_rust_tls<'a>(
     if skip_server_verification {
         use verify::SkipServerVerification;
         let config = rustls::ClientConfig::builder_with_provider(provider)
-            .with_protocol_versions(&[&rustls::version::TLS13])
+            .with_protocol_versions(rustls::ALL_VERSIONS)
             .expect("Failed to set TLS version")
             .dangerous()
             .with_custom_certificate_verifier(SkipServerVerification::new())
@@ -79,7 +79,7 @@ pub(crate) fn setup_rust_tls<'a>(
     #[cfg(feature = "__webpki_rustls_verifier")]
     let config = {
         let config = rustls::ClientConfig::builder_with_provider(provider)
-            .with_protocol_versions(&[&rustls::version::TLS13])
+            .with_protocol_versions(rustls::ALL_VERSIONS)
             .expect("Failed to set TLS version");
 
         let mut root_store =
@@ -112,7 +112,7 @@ pub(crate) fn setup_rust_tls<'a>(
         use rustls_platform_verifier::Verifier;
         let verifier = Verifier::new(provider).expect("Failed to create platform verifier");
         rustls::ClientConfig::builder_with_provider(default_provider())
-            .with_protocol_versions(&[&rustls::version::TLS13])
+            .with_protocol_versions(rustls::ALL_VERSIONS)
             .expect("Failed to set TLS version")
             .dangerous()
             .with_custom_certificate_verifier(Arc::new(verifier))

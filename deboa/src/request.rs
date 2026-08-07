@@ -1379,6 +1379,39 @@ impl DeboaRequest {
         Ok(DeboaRequest::from(url)?.method(Method::DELETE))
     }
 
+    /// Create a request from parts and body.
+    ///
+    /// # Arguments
+    ///
+    /// * `parts` - The request parts.
+    /// * `body` - The request body.
+    ///
+    /// # Returns
+    ///
+    /// * `DeboaRequest` - The request.
+    ///
+    /// # Errors
+    ///
+    /// * `DeboaError` - If the request is invalid.
+    ///
+    #[inline]
+    pub fn from_parts(parts: http::request::Parts, body: HttpBody) -> Result<DeboaRequest> {
+        let request = http::Request::from_parts(parts, body);
+        Ok(DeboaRequest { inner: request })
+    }
+
+    /// Convert the request into parts and body.
+    ///
+    /// # Returns
+    ///
+    /// * `(http::request::Parts, HttpBody)` - The request parts and body.
+    ///
+    #[inline]
+    pub fn into_parts(self) -> (http::request::Parts, HttpBody) {
+        self.inner
+            .into_parts()
+    }
+
     /// Get request version at any time.
     ///
     /// # Returns
