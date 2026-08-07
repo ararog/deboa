@@ -1547,9 +1547,9 @@ dependencies = [
 
 [[package]]
 name = "fory"
-version = "1.5.0"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f38c2a3ddc2e799d9046c669f466774ea8ec74dd25f9cc429a01420b422aebc"
+checksum = "0c8155dc3e7c1a5c76f5ef4099959ad81feca9d05103a5fa0642667fffec04e7"
 dependencies = [
  "fory-core",
  "fory-derive",
@@ -1557,9 +1557,9 @@ dependencies = [
 
 [[package]]
 name = "fory-core"
-version = "1.5.0"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6cdc1163edfb2a6ebed5774df3bf41cb871e6c36ddc9b55de0a3422687f4459"
+checksum = "d46b95ef39fa59427f03622506a8912fe92d8785cc4300d0aa6210feb8efeb97"
 dependencies = [
  "byteorder",
  "num-bigint",
@@ -1571,9 +1571,9 @@ dependencies = [
 
 [[package]]
 name = "fory-derive"
-version = "1.5.0"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7cb4a87eb736a30014e74c55c91786ba5cce4154f65d4b531eff92723ea75126"
+checksum = "937c67531d4ea65a4cdaa79ea311838021ed3d3315b6d968a75b947f92add2e4"
 dependencies = [
  "fory-core",
  "proc-macro-crate 1.3.1",
