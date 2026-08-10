@@ -29,6 +29,7 @@ http = "1"
 http-body = "1"
 http-body-util = "0.1"
 hyper = { version = "1.10.1", features = ["client", "http1", "http2"], default-features = false }
+hyper-timeout = "0.15"
 hyper-body-utils = { workspace = true, default-features = false }
 hyper-util = { version = "0.1.20", features = [
   "client",
