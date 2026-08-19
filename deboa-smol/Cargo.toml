@@ -62,6 +62,7 @@ http1 = ["rustls/tls12", "hyper/http1", "hyper-util/http1"]
 http2 = ["rustls/tls12", "hyper/http2", "hyper-util/http2"]
 http3 = [
   "deboa-h3/generic",
+  "dep:futures",
   "dep:h3",
   "dep:h3-quinn",
   "dep:rustls",
