@@ -6,6 +6,7 @@ members = [
     "deboa",
     "deboa-h3",
     "deboa-compio",
+    "deboa-glommio",
     "deboa-macros",
     "deboa-smol",
     "deboa-test-utils",
@@ -24,6 +25,7 @@ rust-version = "1.85.0"
 [workspace.dependencies]
 deboa = { version = "0.1.2" }
 deboa-compio = { path = "deboa-compio" }
+deboa-glommio = { path = "deboa-glommio" }
 deboa-h3 = { path = "deboa-h3", version = "^0.1.1" }
 deboa-extras = { version = ">= 0.0.9" }
 deboa-fory = { version = ">= 0.1.6" }
