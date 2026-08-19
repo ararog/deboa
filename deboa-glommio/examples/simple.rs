@@ -19,7 +19,17 @@ fn main() {
         .expect("build glommio executor")
         .run(async move {
             let client = Client::default();
-            match get(url.as_str()).unwrap().send_with(&client).await {
+
+            // deboa defaults a request to HTTP/2; ask for 1.1 when this build
+            // has no http2 feature, or the dispatcher has no protocol to use.
+            #[cfg(not(feature = "http2"))]
+            let request = get(url.as_str())
+                .unwrap()
+                .version(http::Version::HTTP_11);
+            #[cfg(feature = "http2")]
+            let request = get(url.as_str()).unwrap();
+
+            match request.send_with(&client).await {
                 Ok(response) => println!("{}", response.status()),
                 Err(e) => {
                     eprintln!("request failed: {e:?}");

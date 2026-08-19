@@ -20,6 +20,28 @@ puzzle:
 - **`http3`** — needs a `quinn::Runtime` implementation for glommio.
 - **`websockets`** — not ported yet.
 
+## The glommio dependency
+
+This crate depends on [`glommio-ng`](https://crates.io/crates/glommio-ng),
+renamed back to `glommio` in the manifest so the source reads normally:
+
+```toml
+glommio = { package = "glommio-ng", version = "0.10" }
+```
+
+The canonical [`glommio`](https://crates.io/crates/glommio) crate is stuck at
+0.9.0 (March 2024), and its vendored liburing no longer compiles against
+current kernel headers — it fails with `invalid application of 'sizeof' to
+incomplete type 'struct open_how'` on any recent glibc. `glommio-ng` is a
+republish of the community fork at
+[github.com/glommio/glommio](https://github.com/glommio/glommio), which keeps
+io_uring and its dependencies current.
+
+**They are different crates and their types do not unify.** A library compiled
+against `glommio-ng` cannot accept an executor or socket from canonical
+`glommio`, and vice versa. If 0.10 is ever published under the canonical name
+this dependency becomes a one-line change and `glommio-ng` gets deprecated.
+
 ## Usage
 
 ```rust
