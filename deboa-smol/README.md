@@ -61,7 +61,7 @@ http = "1.3.1"
 
 ## Usage
 
-```rust
+```rust,ignore
 use deboa::{
     Client,
     request::{DeboaRequest, FetchWith, get},
