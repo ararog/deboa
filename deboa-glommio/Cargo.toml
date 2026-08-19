@@ -57,7 +57,11 @@ cookie = { version = "0.18.1", default-features = false }
 deboa = { workspace = true }
 futures = { version = "0.3.31", default-features = false, features = ["std"] }
 futures-rustls = { version = "0.26.0", optional = true, default-features = false }
-glommio = "0.9"
+# `glommio-ng` is a republish of the community fork at github.com/glommio/glommio.
+# The canonical `glommio` crate is stuck at 0.9.0 (March 2024) and its vendored
+# liburing no longer compiles against current kernel headers. Renamed back to
+# `glommio` here so the source reads normally; see this crate's README.
+glommio = { package = "glommio-ng", version = "0.10" }
 hashbrown = "0.17.1"
 http = "1"
 http-body = "1"
