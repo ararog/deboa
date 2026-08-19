@@ -12,7 +12,7 @@ use std::{
 };
 
 /// A stream that can be either plain TCP or TLS-secured.
-pub(crate) enum SmolStream {
+pub enum SmolStream {
     /// A plain TCP connection.
     Plain(TcpStream),
 

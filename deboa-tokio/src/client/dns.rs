@@ -1,3 +1,7 @@
+//! DNS resolution for the Deboa HTTP client.
+//!
+//! This module provides DNS resolution functionality for the Deboa HTTP client.
+
 use deboa::{
     dns::DnsResolver,
     errors::{DeboaError::Dns, DnsError},

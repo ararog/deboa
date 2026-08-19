@@ -12,7 +12,7 @@ use tokio::{
 use tokio_rustls::client::TlsStream;
 
 /// Stream enum for runtime-specific stream implementations.
-pub(crate) enum TokioStream {
+pub enum TokioStream {
     /// A plain TCP connection.
     Plain(TcpStream),
 

@@ -12,8 +12,8 @@ rust-version.workspace = true
 
 [features]
 default = []
-generic = ["dep:h3", "dep:h3-quinn", "hyper-body-utils/http3", "hyper-body-utils/generic"]
-compio = ["dep:h3", "dep:compio-quic", "hyper-body-utils/http3", "hyper-body-utils/compio"]
+generic = ["dep:h3", "dep:h3-quinn", "hyper-body-utils/generic-h3", "hyper-body-utils/generic"]
+compio = ["dep:h3", "dep:compio-quic", "hyper-body-utils/compio-h3", "hyper-body-utils/compio"]
 
 [dependencies]
 bytes = { version = "1.11" }

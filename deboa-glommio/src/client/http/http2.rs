@@ -25,11 +25,7 @@ impl HttpConnection for Http2Connection {
 }
 
 impl ProtoConnection for Http2Connection {
-    type ReqBody = HttpBody;
-    type ResBody = HttpBody;
     type Connection = Http2Connection;
-    type Identity = DeboaIdentity;
-    type Certificate = DeboaCertificate;
 
     #[inline]
     fn protocol_version(&self) -> Version {

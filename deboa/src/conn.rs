@@ -3,24 +3,24 @@
 //! This module provides functionality for managing HTTP connections.
 use crate::{
     cert::{Certificate, Identity},
+    dns::DnsResolver,
     response::DeboaResponse,
     Result,
 };
 use http::{Request, Version};
-use http_body::Body;
 use hyper_body_utils::HttpBody;
+use std::time::Duration;
 use std::{future::Future, net::IpAddr};
-use time::Duration;
 
 /// Builder for connection configuration.
 pub struct ConnectionConfigBuilder<'a, I, C> {
-    is_secure: bool,
-    ip: IpAddr,
+    scheme: &'a str,
     host: &'a str,
     port: u16,
     protocol_version: Version,
-    identity: Option<I>,
-    certificate: Option<C>,
+    connection_timeout: Duration,
+    identity: Option<&'a I>,
+    certificate: Option<&'a C>,
     skip_cert_verification: bool,
     client_bind_addr: IpAddr,
 }
@@ -34,13 +34,11 @@ where
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
-            is_secure: false,
-            ip: "127.0.0.1"
-                .parse::<IpAddr>()
-                .unwrap(),
+            scheme: "http",
             host: "",
             port: 80,
             protocol_version: Version::HTTP_2,
+            connection_timeout: Duration::from_secs(30),
             identity: None,
             certificate: None,
             skip_cert_verification: false,
@@ -50,15 +48,9 @@ where
         }
     }
 
-    /// Set whether the connection is secure.
-    pub fn is_secure(mut self, is_secure: bool) -> Self {
-        self.is_secure = is_secure;
-        self
-    }
-
-    /// Set the IP address for the connection.
-    pub fn ip(mut self, ip: IpAddr) -> Self {
-        self.ip = ip;
+    /// Set the scheme for the connection.
+    pub fn scheme(mut self, scheme: &'a str) -> Self {
+        self.scheme = scheme;
         self
     }
 
@@ -80,14 +72,20 @@ where
         self
     }
 
+    /// Set the connection timeout for the connection.
+    pub fn connection_timeout(mut self, connection_timeout: Duration) -> Self {
+        self.connection_timeout = connection_timeout;
+        self
+    }
+
     /// Set the identity for the connection.
-    pub fn identity(mut self, identity: Option<I>) -> Self {
+    pub fn identity(mut self, identity: Option<&'a I>) -> Self {
         self.identity = identity;
         self
     }
 
     /// Set the certificate for the connection.
-    pub fn certificate(mut self, certificate: Option<C>) -> Self {
+    pub fn certificate(mut self, certificate: Option<&'a C>) -> Self {
         self.certificate = certificate;
         self
     }
@@ -107,11 +105,11 @@ where
     /// Build the connection configuration.
     pub fn build(self) -> ConnectionConfig<'a, I, C> {
         ConnectionConfig {
-            is_secure: self.is_secure,
-            ip: self.ip,
+            scheme: self.scheme,
             host: self.host,
             port: self.port,
             protocol_version: self.protocol_version,
+            connection_timeout: self.connection_timeout,
             identity: self.identity,
             certificate: self.certificate,
             skip_cert_verification: self.skip_cert_verification,
@@ -122,13 +120,13 @@ where
 
 /// Connection configuration.
 pub struct ConnectionConfig<'a, I, C> {
-    is_secure: bool,
-    ip: IpAddr,
+    scheme: &'a str,
     host: &'a str,
     port: u16,
     protocol_version: Version,
-    identity: Option<I>,
-    certificate: Option<C>,
+    connection_timeout: Duration,
+    identity: Option<&'a I>,
+    certificate: Option<&'a C>,
     skip_cert_verification: bool,
     client_bind_addr: IpAddr,
 }
@@ -143,14 +141,9 @@ where
         ConnectionConfigBuilder::new()
     }
 
-    /// Get whether the connection is secure.
-    pub fn is_secure(&self) -> bool {
-        self.is_secure
-    }
-
-    /// Get the IP address for the connection.
-    pub fn ip(&self) -> &IpAddr {
-        &self.ip
+    /// Get the scheme for the connection.
+    pub fn scheme(&self) -> &str {
+        self.scheme
     }
 
     /// Get the host for the connection.
@@ -168,14 +161,19 @@ where
         &self.protocol_version
     }
 
+    /// Get the connection timeout for the connection.
+    pub fn connection_timeout(&self) -> Duration {
+        self.connection_timeout
+    }
+
     /// Get the identity for the connection.
-    pub fn identity(&self) -> &Option<I> {
-        &self.identity
+    pub fn identity(&self) -> Option<&I> {
+        self.identity
     }
 
     /// Get the certificate for the connection.
-    pub fn certificate(&self) -> &Option<C> {
-        &self.certificate
+    pub fn certificate(&self) -> Option<&C> {
+        self.certificate
     }
 
     /// Get whether to skip certificate verification.
@@ -237,18 +235,20 @@ pub trait HttpConnectionPool {
     ///
     /// # Arguments
     ///
-    /// * `url` - The url to connect.
-    /// * `protocol` - The protocol to use.
-    /// * `retries` - The number of retries.
+    /// * `config` - The connection configuration.
+    /// * `dns_resolver` - The DNS resolver to use.
     ///
     /// # Returns
     ///
     /// * `Result<&mut Self::ConnectionDispather>` - The connection or error.
     ///
-    fn create_connection<'a>(
-        &'a mut self,
-        config: &ConnectionConfig<'a, Self::Identity, Self::Certificate>,
-    ) -> impl Future<Output = Result<&'a mut Self::ConnectionDispather>>;
+    fn create_connection<D>(
+        &mut self,
+        config: &ConnectionConfig<Self::Identity, Self::Certificate>,
+        dns_resolver: &D,
+    ) -> impl Future<Output = Result<&mut Self::ConnectionDispather>>
+    where
+        D: DnsResolver;
 }
 
 /// Trait that represents the HTTP connection dispatcher.
@@ -265,6 +265,7 @@ pub trait HttpConnectionDispatcher {
     fn send_request(
         &mut self,
         request: Request<HttpBody>,
+        timeout: Duration,
     ) -> impl Future<Output = Result<DeboaResponse>>;
 }
 
@@ -272,32 +273,20 @@ pub trait HttpConnectionDispatcher {
 ///
 /// # Type Parameters
 ///
-/// * `Sender` - The sender to use.
-/// * `ReqBody` - The request body type.
-/// * `ResBody` - The response body type.
+/// * `Connection` - The connection type.
+/// * `RuntimeStream` - The runtime stream type.
 ///
 pub trait ProtoConnection {
-    /// The request body type.
-    type ReqBody: Body + Unpin;
-    /// The response body type.
-    type ResBody: Body + Unpin;
     /// The connection type.
     type Connection: HttpConnection;
-    /// The identity type.
-    type Identity: crate::cert::Identity;
-    /// The certificate type.
-    type Certificate: crate::cert::Certificate;
+    /// The runtime stream type.
+    type RuntimeStream;
 
     /// Create a new connection.
     ///
     /// # Arguments
     ///
-    /// * `is_secure` - Whether the connection is secure.
-    /// * `host` - The host to connect.
-    /// * `port` - The port to connect.
-    /// * `identity` - The identity to use.
-    /// * `certificate` - The certificate to use.
-    /// * `skip_cert_verification` - Whether to skip certificate verification.
+    /// * `stream` - The runtime stream to use.
     ///
     /// # Errors
     ///
@@ -307,9 +296,7 @@ pub trait ProtoConnection {
     ///
     /// * `Result<Self::Connection>` - The connection or error.
     ///
-    fn connect(
-        config: &ConnectionConfig<Self::Identity, Self::Certificate>,
-    ) -> impl Future<Output = Result<Self::Connection>>;
+    fn connect(stream: Self::RuntimeStream) -> impl Future<Output = Result<Self::Connection>>;
 
     /// Get connection protocol.
     ///
@@ -318,10 +305,4 @@ pub trait ProtoConnection {
     /// * `Version` - The connection protocol.
     ///
     fn protocol_version(&self) -> Version;
-}
-
-/// Common interface for Plain and TLS stream connections
-pub trait StreamConnector {
-    /// Connect using ip and port
-    fn connect(ip: IpAddr, port: u16);
 }

@@ -24,11 +24,7 @@ impl HttpConnection for Http1Connection {
 }
 
 impl ProtoConnection for Http1Connection {
-    type ReqBody = HttpBody;
-    type ResBody = HttpBody;
     type Connection = Http1Connection;
-    type Identity = DeboaIdentity;
-    type Certificate = DeboaCertificate;
 
     #[inline]
     fn protocol_version(&self) -> Version {

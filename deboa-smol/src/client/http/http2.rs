@@ -1,20 +1,15 @@
-#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::alpn;
-#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::client::http::conn::stream::tls_connection;
 use crate::{
-    cert::{DeboaCertificate, DeboaIdentity},
-    client::http::conn::{stream::plain_connection, BaseHttpConnection, Http2Connection},
-    rt::executor::SmolExecutor,
+    client::http::conn::{BaseHttpConnection, Http2Connection},
+    rt::{executor::SmolExecutor, stream::SmolStream},
 };
 use deboa::{
-    conn::{ConnectionConfig, HttpConnection, ProtoConnection},
+    conn::{HttpConnection, ProtoConnection},
+    errors::{ConnectionError, DeboaError},
     request::Http2Request,
     Result,
 };
 use http::version::Version;
 use hyper::client::conn::http2::handshake;
-use hyper_body_utils::HttpBody;
 use smol_hyper::rt::FuturesIo;
 
 impl HttpConnection for Http2Connection {
@@ -25,54 +20,27 @@ impl HttpConnection for Http2Connection {
 }
 
 impl ProtoConnection for Http2Connection {
-    type ReqBody = HttpBody;
-    type ResBody = HttpBody;
     type Connection = Http2Connection;
-    type Identity = DeboaIdentity;
-    type Certificate = DeboaCertificate;
+    type RuntimeStream = SmolStream;
 
     #[inline]
     fn protocol_version(&self) -> Version {
         Version::HTTP_2
     }
 
-    async fn connect<'a>(
-        config: &ConnectionConfig<'a, Self::Identity, Self::Certificate>,
-    ) -> Result<Self::Connection> {
-        #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-        let stream = if config.is_secure() {
-            tls_connection(
-                *config.ip(),
-                config.host(),
-                config.port(),
-                config.identity(),
-                config.certificate(),
-                config.skip_cert_verification(),
-                alpn(),
-            )
+    async fn connect(stream: Self::RuntimeStream) -> Result<Self::Connection> {
+        let (sender, conn) = handshake(SmolExecutor::new(), FuturesIo::new(stream))
             .await
-        } else {
-            plain_connection(*config.ip(), config.host(), config.port()).await
-        };
-
-        #[cfg(not(any(feature = "rust-tls", feature = "native-tls")))]
-        let stream = plain_connection(*config.ip(), config.host(), config.port()).await;
-
-        if let Err(e) = stream {
-            return Err(e);
-        }
-
-        let result = handshake(SmolExecutor::new(), FuturesIo::new(stream.unwrap())).await;
-
-        let (sender, conn) = result.unwrap();
+            .map_err(|e| {
+                DeboaError::Connection(ConnectionError::Handshake { message: e.to_string() })
+            })?;
 
         smol::spawn(async move {
             match conn.await {
                 Ok(_) => (),
                 Err(err) => {
-                    println!("Error: {:#}", err)
+                    log::error!("Error: {:#}", err)
                 }
-                _ => {}
             };
         })
         .detach();

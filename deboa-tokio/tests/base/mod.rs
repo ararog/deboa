@@ -8,6 +8,7 @@ mod delete;
 mod form;
 #[cfg(test)]
 mod get;
+#[cfg(test)]
 mod hook;
 #[cfg(test)]
 mod patch;

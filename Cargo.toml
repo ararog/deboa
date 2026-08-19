@@ -4,13 +4,13 @@ resolver = "3"
 # Include both parts of the library in the workspace
 members = [
     "deboa",
-    "deboa-h3",
-    "deboa-compio",
+    #"deboa-h3",
+    #"deboa-compio",
     "deboa-glommio",
-    "deboa-macros",
-    "deboa-smol",
+    #"deboa-macros",
+    #"deboa-smol",
     "deboa-test-utils",
-    "deboa-tokio",
+    #"deboa-tokio",
 ]
 
 [workspace.package]
@@ -23,7 +23,8 @@ license = "MIT OR Apache-2.0"
 rust-version = "1.85.0"
 
 [workspace.dependencies]
-deboa = { version = "0.1.2" }
+#deboa = { path = "deboa", version = ">= 0.1.2" }
+deboa = { path = "deboa" }
 deboa-compio = { path = "deboa-compio" }
 deboa-glommio = { path = "deboa-glommio" }
 deboa-h3 = { path = "deboa-h3", version = "^0.1.1" }
@@ -33,7 +34,7 @@ deboa-macros = { path = "deboa-macros" }
 deboa-smol = { path = "deboa-smol" }
 deboa-test-utils = { path = "deboa-test-utils" }
 deboa-tokio = { path = "deboa-tokio" }
-hyper-body-utils = { version = ">= 0.1.9" }
+hyper-body-utils = { version = ">= 0.1.14", default-features = false }
 vamo = { version = ">= 0.0.9" }
 vamo-macros = { version = ">= 0.0.9" }
 

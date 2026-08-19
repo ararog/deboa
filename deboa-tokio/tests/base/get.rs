@@ -2,6 +2,8 @@
 use crate::common::helpers::{create_client, create_server, protocol_version};
 #[cfg(feature = "rust-tls")]
 use deboa::cert::IdentityExt as _;
+#[cfg(feature = "native-tls")]
+use deboa::cert::IdentityNativeExt as _;
 #[cfg(any(feature = "rust-tls", feature = "native-tls"))]
 use deboa::cert::{CertificateExt as _, ContentEncoding};
 use deboa::TestResult;
@@ -26,39 +28,6 @@ async fn test_get_http(
 #[rstest]
 #[tokio::test]
 async fn test_get_http_skip_verification(
-    create_client: Client,
-    #[future] create_server: EasyHttpMock<VetisAdapter>,
-    protocol_version: http::Version,
-) -> TestResult<()> {
-    deboa_test_utils::base::get::test_skip_cert_verification(
-        &create_client,
-        &mut create_server.await,
-        protocol_version,
-        true,
-    )
-    .await
-}
-
-#[rstest]
-#[tokio::test]
-async fn test_get_http_verify(
-    create_client: Client,
-    #[future] create_server: EasyHttpMock<VetisAdapter>,
-    protocol_version: http::Version,
-) -> TestResult<()> {
-    deboa_test_utils::base::get::test_skip_cert_verification(
-        &create_client,
-        &mut create_server.await,
-        protocol_version,
-        false,
-    )
-    .await
-}
-
-#[cfg(feature = "rust-tls")]
-#[rstest]
-#[tokio::test]
-async fn test_get_http_mutual_authentication(
     #[future] create_server: EasyHttpMock<VetisAdapter>,
     protocol_version: http::Version,
 ) -> TestResult<()> {
@@ -74,6 +43,49 @@ async fn test_get_http_mutual_authentication(
             ContentEncoding::DER,
         ))
         .identity(identity)
+        .skip_cert_verification(true)
+        .build();
+
+    deboa_test_utils::base::get::test_skip_cert_verification(
+        &client,
+        &mut create_server.await,
+        protocol_version,
+        true,
+    )
+    .await
+}
+
+#[rstest]
+#[tokio::test]
+async fn test_get_http_verify(
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    let client = Client::builder()
+        .skip_cert_verification(false)
+        .build();
+
+    deboa_test_utils::base::get::test_skip_cert_verification(
+        &client,
+        &mut create_server.await,
+        protocol_version,
+        false,
+    )
+    .await
+}
+
+#[cfg(feature = "rust-tls")]
+#[rstest]
+#[tokio::test]
+async fn test_get_http_mutual_authentication(
+    #[future] create_server: EasyHttpMock<VetisAdapter>,
+    protocol_version: http::Version,
+) -> TestResult<()> {
+    let client = Client::builder()
+        .certificate(DeboaCertificate::from_slice(
+            deboa_test_utils::common::helpers::CA_CERT,
+            ContentEncoding::DER,
+        ))
         .build();
 
     deboa_test_utils::base::get::test_get_http_mutual_authentication(

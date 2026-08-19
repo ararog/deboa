@@ -1,5 +1,6 @@
 #[cfg(feature = "generic")]
 pub mod generic {
+
     use bytes::Bytes;
     use h3::{client::RequestStream, error::StreamError};
     use h3_quinn::{OpenStreams, RecvStream};

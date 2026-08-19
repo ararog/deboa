@@ -28,7 +28,6 @@ pub(crate) async fn tls_connection<'a>(
 
     if let Err(e) = hostname {
         return Err(DeboaError::Connection(ConnectionError::Tls {
-            host: host.to_string(),
             message: e.to_string(),
         }));
     }
@@ -39,7 +38,6 @@ pub(crate) async fn tls_connection<'a>(
 
     if let Err(e) = stream {
         return Err(DeboaError::Connection(ConnectionError::Tls {
-            host: host.to_string(),
             message: format!("Could not connect to server: {}", e),
         }));
     }
@@ -88,7 +86,6 @@ pub(crate) fn setup_rust_tls<'a>(
             let cert = ca.try_into();
             if let Err(e) = cert {
                 return Err(DeboaError::Connection(ConnectionError::Tls {
-                    host: host.to_string(),
                     message: format!("Invalid CA certificate: {}", e),
                 }));
             }
@@ -96,7 +93,6 @@ pub(crate) fn setup_rust_tls<'a>(
             let result = root_store.add(cert.unwrap());
             if let Err(e) = result {
                 return Err(DeboaError::Connection(ConnectionError::Tls {
-                    host: host.to_string(),
                     message: format!("Could not add CA certificate to the store: {}", e),
                 }));
             }
@@ -122,7 +118,6 @@ pub(crate) fn setup_rust_tls<'a>(
         let pair = id.try_into();
         if let Err(e) = pair {
             return Err(DeboaError::Connection(ConnectionError::Tls {
-                host: host.to_string(),
                 message: format!("Invalid client identity: {}", e),
             }));
         }
