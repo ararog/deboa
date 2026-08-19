@@ -14,7 +14,7 @@ use std::{
     future::Future,
     net::{IpAddr, Ipv4Addr},
     ops::Shl,
-    sync::Arc,
+    time::Duration,
 };
 use tackle::{Chain, Hook, HookFn};
 
@@ -109,9 +109,16 @@ where
     }
 
     /// Set connection timeout
-    pub fn connection_timeout(mut self, connection_timeout: u64) -> Self {
+    pub fn connection_timeout(mut self, connection_timeout: Duration) -> Self {
         self.inner
             .connection_timeout = connection_timeout;
+        self
+    }
+
+    /// Set request timeout
+    pub fn request_timeout(mut self, request_timeout: Duration) -> Self {
+        self.inner
+            .request_timeout = request_timeout;
         self
     }
 
@@ -137,7 +144,7 @@ where
     /// Set dns resolver
     pub fn dns_resolver(mut self, dns_resolver: R) -> Self {
         self.inner
-            .dns_resolver = Arc::new(dns_resolver);
+            .dns_resolver = dns_resolver;
         self
     }
 
@@ -312,13 +319,13 @@ where
 /// - Automatic connection reuse when possible
 /// - Configurable timeouts prevent hanging requests
 pub struct InnerClient<I, C, P, R> {
-    connection_timeout: u64,
-    request_timeout: u64,
+    connection_timeout: Duration,
+    request_timeout: Duration,
     identity: Option<I>,
     certificate: Option<C>,
     skip_cert_verification: bool,
     pool: RwLock<P>,
-    dns_resolver: Arc<R>,
+    dns_resolver: R,
     bind_addr: IpAddr,
 }
 
@@ -338,10 +345,21 @@ impl<I, C, P, R> InnerClient<I, C, P, R> {
     ///
     /// # Returns
     ///
-    /// * `u64` - The timeout.
+    /// * `Duration` - The timeout.
     ///
-    pub fn connection_timeout(&self) -> u64 {
+    pub fn connection_timeout(&self) -> Duration {
         self.connection_timeout
+    }
+
+    #[inline]
+    /// Allow get request request timeout at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `Duration` - The timeout.
+    ///
+    pub fn request_timeout(&self) -> Duration {
+        self.request_timeout
     }
 
     /// Allow get connection pool at any time.
@@ -362,7 +380,7 @@ impl<I, C, P, R> InnerClient<I, C, P, R> {
     /// * `Arc<dyn DnsResolver>` - The DNS resolver.
     ///
     #[inline]
-    pub fn dns_resolver(&self) -> &Arc<R> {
+    pub fn dns_resolver(&self) -> &R {
         &self.dns_resolver
     }
 
@@ -375,17 +393,6 @@ impl<I, C, P, R> InnerClient<I, C, P, R> {
     #[inline]
     pub fn bind_addr(&self) -> IpAddr {
         self.bind_addr
-    }
-
-    /// Allow get request request timeout at any time.
-    ///
-    /// # Returns
-    ///
-    /// * `u64` - The timeout.
-    ///
-    #[inline]
-    pub fn request_timeout(&self) -> u64 {
-        self.request_timeout
     }
 
     /// Allow get certificate at any time.
@@ -420,13 +427,13 @@ where
     fn default() -> Self {
         Self {
             bind_addr: IpAddr::V4(Ipv4Addr::UNSPECIFIED),
-            connection_timeout: 30,
-            request_timeout: 30,
+            connection_timeout: Duration::from_secs(30),
+            request_timeout: Duration::from_secs(30),
             identity: None,
             certificate: None,
             skip_cert_verification: false,
             pool: RwLock::new(P::default()),
-            dns_resolver: Arc::new(R::default()),
+            dns_resolver: R::default(),
         }
     }
 }
@@ -442,74 +449,46 @@ where
     type Error = DeboaError;
 
     async fn call(&self, request: DeboaRequest) -> Result<DeboaResponse> {
-        let resolver = self
-            .dns_resolver
-            .clone();
+        info!("Building request: {} {}", request.method(), request.uri());
 
         let uri = request
             .uri()
             .clone();
-        let method = request.method();
-        let host = uri
-            .host()
-            .unwrap_or("localhost");
-        let port = if let Some(port) = uri.port() { port.as_u16() } else { 80u16 };
 
-        info!("Building request: {} {}", method, uri);
-        let request = request.body();
-        let ips = resolver
-            .resolve(host.to_string(), port)
-            .await?;
-
-        let ips = if self
-            .bind_addr
-            .is_ipv4()
-        {
-            ips.into_iter()
-                .filter(|ip| ip.is_ipv4())
-                .collect::<Vec<_>>()
-        } else {
-            ips.into_iter()
-                .filter(|ip| ip.is_ipv6())
-                .collect::<Vec<_>>()
-        };
-
-        let Some(ip) = ips.first() else {
+        let Some(scheme) = uri.scheme_str() else {
             return Err(DeboaError::Request(RequestError::Send {
-                message: format!("No IP addresses found for hostname: {}", host),
+                message: "Missing scheme".to_string(),
             }));
         };
 
-        let uri = request.uri();
-        let scheme = uri
-            .scheme_str()
-            .unwrap_or("http");
-        let (port, is_secure) = match scheme {
-            "https" | "wss" => (
-                uri.port_u16()
-                    .unwrap_or(443),
-                true,
-            ),
-            _ => (
-                uri.port_u16()
-                    .unwrap_or(80),
-                false,
-            ),
+        let Some(host) = uri.host() else {
+            return Err(DeboaError::Request(RequestError::Send {
+                message: "Missing host".to_string(),
+            }));
         };
 
+        let port = uri
+            .port_u16()
+            .unwrap_or({
+                match scheme {
+                    "http" => 80,
+                    "https" => 443,
+                    _ => 80,
+                }
+            });
+
         let config = ConnectionConfig::builder()
-            .is_secure(is_secure)
-            .ip(*ip)
+            .scheme(scheme)
             .host(host)
             .port(port)
             .protocol_version(request.version())
             .identity(
                 self.identity
-                    .clone(),
+                    .as_ref(),
             )
             .certificate(
                 self.certificate
-                    .clone(),
+                    .as_ref(),
             )
             .skip_cert_verification(self.skip_cert_verification)
             .client_bind_addr(self.bind_addr)
@@ -521,11 +500,13 @@ where
             .await;
 
         let conn = pool
-            .create_connection(&config)
+            .create_connection(&config, &self.dns_resolver)
             .await?;
 
+        let request = request.body();
+
         let response = conn
-            .send_request(request)
+            .send_request(request, self.request_timeout)
             .await?;
 
         Ok(response)

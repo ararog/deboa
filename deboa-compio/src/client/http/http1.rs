@@ -1,19 +1,14 @@
-#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::alpn;
-#[cfg(any(feature = "rust-tls", feature = "native-tls"))]
-use crate::client::http::conn::stream::tls_connection;
-use crate::{
-    cert::{DeboaCertificate, DeboaIdentity},
-    client::http::conn::{stream::plain_connection, BaseHttpConnection, Http1Connection},
-};
+use crate::client::http::conn::{BaseHttpConnection, Http1Connection};
+use compio::net::TcpStream;
+use cyper_core::HyperStream;
 use deboa::{
-    conn::{ConnectionConfig, HttpConnection, ProtoConnection},
+    conn::{HttpConnection, ProtoConnection},
+    errors::{ConnectionError, DeboaError},
     request::Http1Request,
     Result,
 };
 use http::version::Version;
 use hyper::client::conn::http1::handshake;
-use hyper_body_utils::HttpBody;
 
 impl HttpConnection for Http1Connection {
     type Sender = Http1Request;
@@ -23,42 +18,20 @@ impl HttpConnection for Http1Connection {
 }
 
 impl ProtoConnection for Http1Connection {
-    type ReqBody = HttpBody;
-    type ResBody = HttpBody;
     type Connection = Http1Connection;
-    type Identity = DeboaIdentity;
-    type Certificate = DeboaCertificate;
+    type RuntimeStream = HyperStream<TcpStream>;
 
     #[inline]
     fn protocol_version(&self) -> Version {
         Version::HTTP_11
     }
 
-    async fn connect<'a>(
-        config: &ConnectionConfig<'a, Self::Identity, Self::Certificate>,
-    ) -> Result<Self::Connection> {
-        let stream = if config.is_secure() {
-            tls_connection(
-                *config.ip(),
-                config.host(),
-                config.port(),
-                config.identity(),
-                config.certificate(),
-                config.skip_cert_verification(),
-                alpn(),
-            )
+    async fn connect(stream: Self::RuntimeStream) -> Result<Self::Connection> {
+        let (sender, conn) = handshake(stream)
             .await
-        } else {
-            plain_connection(*config.ip(), config.host(), config.port()).await
-        };
-
-        if let Err(e) = stream {
-            return Err(e);
-        }
-
-        let result = handshake(stream.unwrap()).await;
-
-        let (sender, conn) = result.unwrap();
+            .map_err(|e| {
+                DeboaError::Connection(ConnectionError::Handshake { message: e.to_string() })
+            })?;
 
         compio::runtime::spawn(async move {
             match conn
@@ -66,7 +39,9 @@ impl ProtoConnection for Http1Connection {
                 .await
             {
                 Ok(_) => (),
-                Err(_err) => {}
+                Err(err) => {
+                    log::error!("Error: {:#}", err)
+                }
             };
         })
         .detach();

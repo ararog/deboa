@@ -60,7 +60,7 @@ where
 }
 
 pub async fn test_skip_cert_verification<S, I, C, P, R>(
-    _client: &Client<InnerClient<I, C, P, R>>,
+    client: &Client<InnerClient<I, C, P, R>>,
     server: &mut EasyHttpMock<S>,
     protocol_version: http::Version,
     skip: bool,
@@ -83,9 +83,6 @@ where
     server
         .register_mock(mock)
         .await?;
-    let client: Client<InnerClient<I, C, P, R>> = Client::builder()
-        .skip_cert_verification(skip)
-        .build();
 
     let request = DeboaRequest::get(server.url("/posts/1"))?
         .version(protocol_version)
@@ -107,7 +104,6 @@ where
             }
             Version::HTTP_3 => {
                 let error = DeboaError::Connection(ConnectionError::Udp {
-                    host: "localhost".to_string(),
                     message: "Could not connect to server: aborted by peer: the cryptographic handshake failed: error 120: peer doesn't support any known protocol".to_string(),
                 });
                 expect(response.unwrap_err()).to_be(eq(error));

@@ -95,7 +95,7 @@ pub trait Identity {
     /// # Returns
     ///
     /// * `&Option<Vec<u8>>` - The private key
-    fn ket(&self) -> &Option<Vec<u8>>;
+    fn key(&self) -> &Option<Vec<u8>>;
     /// Get the encoding
     ///
     /// # Returns

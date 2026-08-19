@@ -12,7 +12,6 @@ pub(crate) async fn create_stream(addr: IpAddr, host: &str, port: u16) -> Result
         Ok(tcp_stream) => tcp_stream,
         Err(e) => {
             return Err(DeboaError::Connection(ConnectionError::Tcp {
-                host: host.to_string(),
                 message: format!("Could not connect to server: {}", e),
             }));
         }

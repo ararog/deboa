@@ -1220,20 +1220,12 @@ impl DeboaRequest {
     ///
     #[inline]
     pub fn at<T: IntoUrl>(url: T, method: http::Method) -> Result<DeboaRequestBuilder> {
-        let parsed_url = url
-            .into_url()
-            .map_err(|e| {
-                error!("Failed to parse url: {}", e);
-                DeboaError::Request(RequestError::UrlParse { message: e.to_string() })
-            })?;
+        let parsed_url = url.into_url()?;
 
         let uri = parsed_url
             .to_string()
             .parse::<http::Uri>()
-            .map_err(|e| {
-                error!("Failed to parse uri: {}", e);
-                DeboaError::Request(RequestError::UrlParse { message: e.to_string() })
-            })?;
+            .map_err(|e| DeboaError::Request(RequestError::UrlParse { message: e.to_string() }))?;
 
         let request = Request::builder()
             .method(method)

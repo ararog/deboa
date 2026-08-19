@@ -2,9 +2,13 @@ use crate::{
     cert::{DeboaCertificate, DeboaIdentity},
     client::http::conn::{ConnectionConfig, ConnectionFactory, DeboaConnection},
 };
-use deboa::Result;
-use std::collections::HashMap;
-use time::Duration;
+use deboa::{
+    dns::DnsResolver,
+    errors::{ConnectionError, DeboaError},
+    Result,
+};
+use hashbrown::HashMap;
+use std::time::Duration;
 
 /// Struct that represents the HTTP connection pool.
 ///
@@ -27,7 +31,7 @@ impl Default for HttpConnectionPool {
     fn default() -> Self {
         Self {
             max_idle_connections: 5,
-            keep_alive_duration: Duration::minutes(5),
+            keep_alive_duration: Duration::from_mins(5),
             connections: HashMap::new(),
         }
     }
@@ -76,36 +80,48 @@ impl deboa::conn::HttpConnectionPool for HttpConnectionPool {
             .len() as u32
     }
 
-    async fn create_connection<'a>(
-        &'a mut self,
+    async fn create_connection<'a, D>(
+        &mut self,
         config: &ConnectionConfig<'a, Self::Identity, Self::Certificate>,
-    ) -> Result<&'a mut DeboaConnection> {
-        if self.max_idle_connections == 0 {
-            self.connections
-                .clear();
-        }
-
-        let host = config.host();
+        dns_resolver: &D,
+    ) -> Result<&mut DeboaConnection>
+    where
+        D: DnsResolver,
+    {
+        let key = format!("{}:{}", config.host(), config.port());
         if self
             .connections
-            .contains_key(host)
+            .contains_key(&key)
         {
-            log::debug!("Connection already exists for {}, reusing.", host);
+            log::debug!("Connection already exists for {}, reusing.", key);
             return Ok(self
                 .connections
-                .get_mut(host)
+                .get_mut(&key)
                 .unwrap());
         }
 
-        log::debug!("Creating new connection for {}", host);
-        let connection =
-            ConnectionFactory::create_connection(config.protocol_version(), config).await?;
+        log::debug!("Creating new connection for {}", key);
+        let connection = tokio::time::timeout(
+            config.connection_timeout(),
+            ConnectionFactory::create_connection(config, dns_resolver),
+        )
+        .await
+        .map_err(|_| {
+            DeboaError::Connection(ConnectionError::Timeout {
+                message: format!(
+                    "Connection to {} timed out after {:?}",
+                    key,
+                    config.connection_timeout()
+                ),
+            })
+        })??;
 
         self.connections
-            .insert(host.to_string(), connection);
+            .insert(key.clone(), connection);
+
         Ok(self
             .connections
-            .get_mut(host)
+            .get_mut(&key)
             .unwrap())
     }
 }

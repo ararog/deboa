@@ -94,7 +94,7 @@ impl deboa::cert::Identity for DeboaIdentity {
         &self.cert
     }
 
-    fn ket(&self) -> &Option<Vec<u8>> {
+    fn key(&self) -> &Option<Vec<u8>> {
         &self.key
     }
 

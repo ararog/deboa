@@ -158,25 +158,28 @@ pub enum RequestError {
         /// Error message
         message: String,
     },
+
+    /// Request timeout error
+    #[error("Request timeout: {message}")]
+    Timeout {
+        /// Error message
+        message: String,
+    },
 }
 
 /// Connection error
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum ConnectionError {
     /// Tcp connection error
-    #[error("Tcp connection error: {host} {message}")]
+    #[error("Tcp connection error: {message}")]
     Tcp {
-        /// Host
-        host: String,
         /// Error message
         message: String,
     },
 
     /// Tls connection error
-    #[error("Tls connection error: {host} {message}")]
+    #[error("Tls connection error: {message}")]
     Tls {
-        /// Host
-        host: String,
         /// Error message
         message: String,
     },
@@ -184,17 +187,13 @@ pub enum ConnectionError {
     /// Udp connection error
     #[error("Udp connection error: {message}")]
     Udp {
-        /// Host
-        host: String,
         /// Error message
         message: String,
     },
 
     /// Connection handshake error
-    #[error("Connection handshake error: {host} {message}")]
+    #[error("Connection handshake error: {message}")]
     Handshake {
-        /// Host
-        host: String,
         /// Error message
         message: String,
     },
@@ -202,6 +201,13 @@ pub enum ConnectionError {
     /// Connection upgrade error
     #[error("Connection upgrade error: {message}")]
     Upgrade {
+        /// Error message
+        message: String,
+    },
+
+    /// Connection timeout error
+    #[error("Connection timeout: {message}")]
+    Timeout {
         /// Error message
         message: String,
     },

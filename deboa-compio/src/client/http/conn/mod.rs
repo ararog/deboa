@@ -22,6 +22,7 @@ use deboa::request::Http1Request;
 use deboa::request::Http2Request;
 use deboa::{
     conn::{ConnectionConfig, HttpConnectionDispatcher, ProtoConnection},
+    dns::DnsResolver,
     errors::{DeboaError, RequestError},
     response::DeboaResponse,
     Result,
@@ -30,7 +31,7 @@ use deboa::{
 use deboa_h3::compio::Http3Request;
 use http::{Request, Version};
 use hyper_body_utils::HttpBody;
-use std::marker::PhantomData;
+use std::{marker::PhantomData, time::Duration};
 
 /// Connection pooling for efficient HTTP connections.
 ///
@@ -44,11 +45,6 @@ use std::marker::PhantomData;
 /// - Thread-safe operation
 /// - Configurable pool size (coming soon)
 pub mod pool;
-
-/// Stream module for runtime-specific stream implementations.
-///
-/// This module provides stream implementations for different runtimes (Tokio, Smol, etc.).
-pub(crate) mod stream;
 
 #[cfg(feature = "http1")]
 pub(crate) type Http1Connection = BaseHttpConnection<Http1Request, HttpBody, HttpBody>;
@@ -88,20 +84,8 @@ impl DeboaConnection {
     pub fn http3(conn: Http3Connection) -> Self {
         DeboaConnection::Http3(Box::new(conn))
     }
-}
 
-impl HttpConnectionDispatcher for DeboaConnection {
-    /// Send a request over the connection.
-    ///
-    /// # Arguments
-    ///
-    /// * `url` - The URL to send the request to.
-    /// * `request` - The request to send.
-    ///
-    /// # Returns
-    ///
-    /// * `Result<DeboaResponse>` - The response or error.
-    async fn send_request(&mut self, request: Request<HttpBody>) -> Result<DeboaResponse> {
+    async fn send(&mut self, request: Request<HttpBody>) -> Result<DeboaResponse> {
         match self {
             #[cfg(feature = "http1")]
             DeboaConnection::Http1(ref mut conn) => {
@@ -155,6 +139,30 @@ impl HttpConnectionDispatcher for DeboaConnection {
     }
 }
 
+impl HttpConnectionDispatcher for DeboaConnection {
+    /// Send a request over the connection.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - The URL to send the request to.
+    /// * `request` - The request to send.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<DeboaResponse>` - The response or error.
+    async fn send_request(
+        &mut self,
+        request: Request<HttpBody>,
+        timeout: Duration,
+    ) -> Result<DeboaResponse> {
+        compio::time::timeout(timeout, self.send(request))
+            .await
+            .map_err(|_| {
+                DeboaError::Request(RequestError::Send { message: "Request timed out".to_string() })
+            })?
+    }
+}
+
 /// Struct that represents the connection.
 ///
 /// # Fields
@@ -175,24 +183,126 @@ impl<Sender, ReqBody, ResBody> BaseHttpConnection<Sender, ReqBody, ResBody> {
 pub struct ConnectionFactory {}
 
 impl ConnectionFactory {
-    pub async fn create_connection<'a>(
-        protocol: &Version,
+    /// Create a new connection.
+    pub async fn create_connection<'a, D>(
         config: &'a ConnectionConfig<'a, DeboaIdentity, DeboaCertificate>,
-    ) -> Result<DeboaConnection> {
-        let conn = match protocol {
+        dns_resolver: &D,
+    ) -> Result<DeboaConnection>
+    where
+        D: DnsResolver,
+    {
+        let ips = dns_resolver
+            .resolve(
+                config
+                    .host()
+                    .to_string(),
+                config.port(),
+            )
+            .await?;
+        let ips = if config
+            .client_bind_addr()
+            .is_ipv4()
+        {
+            ips.into_iter()
+                .filter(|ip| ip.is_ipv4())
+                .collect::<Vec<_>>()
+        } else {
+            ips.into_iter()
+                .filter(|ip| ip.is_ipv6())
+                .collect::<Vec<_>>()
+        };
+
+        let Some(ip) = ips.first() else {
+            return Err(DeboaError::Request(RequestError::Send {
+                message: format!("No IP addresses found for hostname: {}", config.host()),
+            }));
+        };
+
+        #[cfg(any(feature = "http1", feature = "http2"))]
+        let stream = {
+            use compio::net::TcpStream;
+            use cyper_core::HyperStream;
+            use deboa::errors::ConnectionError;
+
+            let tcp_stream = TcpStream::connect(format!("{}:{}", ip, config.port()))
+                .await
+                .map_err(|e| {
+                    DeboaError::Connection(ConnectionError::Tcp { message: e.to_string() })
+                })?;
+            let use_tls = config.scheme() == "https" || config.scheme() == "wss";
+            if !use_tls {
+                HyperStream::new_plain(tcp_stream)
+            } else {
+                #[cfg(feature = "rust-tls")]
+                {
+                    use crate::client::tls::rustls::tcp::connect;
+                    use crate::client::tls::rustls::TlsConnectionBuilder;
+                    let tls_config = TlsConnectionBuilder::default()
+                        .certificate(config.certificate())
+                        .identity(config.identity())
+                        .build_config()?;
+
+                    HyperStream::new_tls(connect(tls_config, tcp_stream, config.host()).await?)
+                }
+
+                #[cfg(feature = "native-tls")]
+                {
+                    use crate::client::tls::native::TlsConnectionBuilder;
+                    let stream = TlsConnectionBuilder::new(tcp_stream, config.host())
+                        .certificate(config.certificate())
+                        .identity(config.identity())
+                        .connect()
+                        .await?;
+                    HyperStream::new_tls(stream)
+                }
+            }
+        };
+
+        let conn = match config.protocol_version() {
             #[cfg(feature = "http1")]
             &Version::HTTP_11 => {
-                let conn = Http1Connection::connect(config).await?;
+                let conn = Http1Connection::connect(stream).await?;
                 DeboaConnection::http1(conn)
             }
             #[cfg(feature = "http2")]
             &Version::HTTP_2 => {
-                let conn = Http2Connection::connect(config).await?;
+                let conn = Http2Connection::connect(stream).await?;
                 DeboaConnection::http2(conn)
             }
             #[cfg(feature = "http3")]
             &Version::HTTP_3 => {
-                let conn = Http3Connection::connect(config).await?;
+                let stream = {
+                    use crate::client::tls::rustls::udp::connect;
+                    #[cfg(feature = "rust-tls")]
+                    use crate::client::tls::rustls::TlsConnectionBuilder;
+                    use compio_quic::Endpoint;
+                    use deboa::errors::ConnectionError;
+                    use std::net::SocketAddr;
+
+                    let mut client_endpoint =
+                        Endpoint::client(SocketAddr::new(*config.client_bind_addr(), 0))
+                            .await
+                            .map_err(|e| {
+                                DeboaError::Connection(ConnectionError::Udp {
+                                    message: e.to_string(),
+                                })
+                            })?;
+
+                    let tls_config = TlsConnectionBuilder::default()
+                        .certificate(config.certificate())
+                        .identity(config.identity())
+                        .build_config()?;
+
+                    connect(
+                        tls_config,
+                        &mut client_endpoint,
+                        SocketAddr::new(*ip, config.port()),
+                        config.host(),
+                    )
+                    .await?
+                };
+
+                let conn = Http3Connection::connect(stream).await?;
                 DeboaConnection::http3(conn)
             }
             _ => {

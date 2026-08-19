@@ -42,12 +42,9 @@
 //! assert_eq!(cookie.path(), Some(&"/".to_string()));
 //! assert_eq!(cookie.secure(), Some(true));
 //! ```
-
-use std::fmt;
-
-use cookie::{Cookie, Expiration};
-
 use crate::{errors::DeboaError, Result};
+use cookie::{Cookie, Expiration};
+use std::fmt;
 
 /// Represents an HTTP cookie with all its attributes.
 ///

@@ -30,28 +30,22 @@ async fn test_get_http(
 #[rstest]
 #[compio::test]
 async fn test_get_http_skip_verification(
-    create_client: Client,
     #[future] create_server: EasyHttpMock<VetisAdapter>,
     protocol_version: http::Version,
 ) -> TestResult<()> {
-    let identity = DeboaIdentity::from_pkcs8(
-        deboa_test_utils::common::helpers::CLIENT_CERT,
-        deboa_test_utils::common::helpers::CLIENT_KEY,
-        ContentEncoding::DER,
-    );
-
     let client = Client::builder()
         .certificate(DeboaCertificate::from_slice(
             deboa_test_utils::common::helpers::CA_CERT,
             ContentEncoding::DER,
         ))
-        .identity(identity)
+        .skip_cert_verification(true)
         .build();
 
-    deboa_test_utils::base::get::test_get_http_mutual_authentication(
+    deboa_test_utils::base::get::test_skip_cert_verification(
         &client,
         &mut create_server.await,
         protocol_version,
+        true,
     )
     .await
 }
@@ -59,12 +53,15 @@ async fn test_get_http_skip_verification(
 #[rstest]
 #[compio::test]
 async fn test_get_http_verify(
-    create_client: Client,
     #[future] create_server: EasyHttpMock<VetisAdapter>,
     protocol_version: http::Version,
 ) -> TestResult<()> {
+    let client = Client::builder()
+        .skip_cert_verification(false)
+        .build();
+
     deboa_test_utils::base::get::test_skip_cert_verification(
-        &create_client,
+        &client,
         &mut create_server.await,
         protocol_version,
         false,

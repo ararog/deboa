@@ -11,7 +11,7 @@ use async_native_tls::{Certificate as NativeCertificate, Identity as NativeIdent
 use deboa::cert::IdentityNativeExt;
 use deboa::cert::{Certificate as _, CertificateExt, ContentEncoding, IdentityExt};
 #[cfg(feature = "rust-tls")]
-use rustls::pki_types::{CertificateDer, PrivateKeyDer};
+use futures_rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
 /// Represents a client certificate and its associated data for mutual TLS authentication.
 ///
@@ -93,7 +93,7 @@ impl deboa::cert::Identity for DeboaIdentity {
         &self.cert
     }
 
-    fn ket(&self) -> &Option<Vec<u8>> {
+    fn key(&self) -> &Option<Vec<u8>> {
         &self.key
     }
 
