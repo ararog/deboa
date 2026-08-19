@@ -22,6 +22,7 @@ deboa = { version = "0.1.0-beta.23" }
 
 - [tokio](https://github.com/tokio-rs/tokio)
 - [smol](https://github.com/smol-rs/smol)
+- [glommio](https://github.com/DataDog/glommio)
 
 ## Usage
 
@@ -75,6 +76,10 @@ It used to be the home of bora macro, which has been moved to vamo-macros crate.
 ### [deboa-compio](https://github.com/ararog/deboa/tree/develop/deboa-compio)
 
 Deboa implementation for compio runtime.
+
+### [deboa-glommio](https://github.com/ararog/deboa/tree/develop/deboa-glommio)
+
+Deboa implementation for glommio runtime.
 
 ### [deboa-smol](https://github.com/ararog/deboa/tree/develop/deboa-smol)
 
