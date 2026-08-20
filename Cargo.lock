@@ -1322,9 +1322,9 @@ dependencies = [
 
 [[package]]
 name = "easyhttpmock-vetis-smol"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00fd98229ee3aba909f5136035421e30cab1fccabe70a9ec6e25a33b2b4d8e81"
+checksum = "22271cc3b2b8406392d7829c0bc02a45b362c429ab18520ec9ae3a9e172effef"
 dependencies = [
  "caramelo",
  "easyhttpmock",
@@ -2777,6 +2777,7 @@ dependencies = [
  "bytes",
  "futures-util",
  "pin-project-lite",
+ "smallvec",
  "tokio",
 ]
 
@@ -4409,9 +4410,9 @@ dependencies = [
 
 [[package]]
 name = "vetis-smol"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "398c463fd61a9f8ae387e72e5e5d7ccf540c2b0d12c722dd50f7cea1b509eb76"
+checksum = "7266cd40ed5803f7855fa1b179aab0a2c996d28919d1a142384b5975d321e412"
 dependencies = [
  "async-lock",
  "async-net",
