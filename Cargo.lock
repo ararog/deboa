@@ -1932,10 +1932,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "http-serde"
-version = "2.1.1"
+name = "http-serde-ext"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f056c8559e3757392c8d091e796416e4649d8e49e88b8d76df6c002f05027fd"
+checksum = "665c24b8e7e21688dc74edb228f07c1815bbc7ff3b48a3ee72fa20937fbde095"
 dependencies = [
  "http",
  "serde",
@@ -3882,7 +3882,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",
@@ -4350,16 +4350,17 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vetis"
-version = "0.1.4"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41a819a9e8b04d67ae7c84f473e857fdb65e8f0a9a7c39e510b877ec73452d1a"
+checksum = "b408d1909a307d5849cb865f69bd73d44ec02d0035460a5365adfe37ab540fff"
 dependencies = [
  "async-lock",
  "bytes",
  "futures-util",
  "http",
  "http-body-util",
- "http-serde",
+ "http-serde-ext",
+ "hyper",
  "hyper-body-utils",
  "log",
  "radix_trie",
