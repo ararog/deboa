@@ -19,7 +19,10 @@ use hyper::body::Bytes;
 fn serve(addr: SocketAddr, body: &'static str) {
     let listener = glommio::net::TcpListener::bind(addr).expect("bind");
     glommio::spawn_local(async move {
-        while let Ok(stream) = listener.accept().await {
+        while let Ok(stream) = listener
+            .accept()
+            .await
+        {
             glommio::spawn_local(async move {
                 let service = hyper::service::service_fn(move |_req| async move {
                     Ok::<_, Infallible>(hyper::Response::new(Full::new(Bytes::from(body))))
@@ -37,7 +40,9 @@ fn serve(addr: SocketAddr, body: &'static str) {
 /// A free port, bound and released so the server can take it.
 fn ephemeral_addr() -> SocketAddr {
     let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind");
-    listener.local_addr().expect("local_addr")
+    listener
+        .local_addr()
+        .expect("local_addr")
 }
 
 #[test]

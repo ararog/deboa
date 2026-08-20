@@ -46,3 +46,11 @@ opt-level = "z"
 lto = true
 codegen-units = 1
 panic = "abort"
+
+# The bindings depend on the *published* `deboa`, so a change to the core cannot
+# be built or tested locally without this. A patch rather than a path dependency
+# because `deboa-extras`, `vamo` and `deboa-fory` also depend on the published
+# crate — a path dep puts two versions of `deboa` in the graph and their traits
+# stop matching.
+[patch.crates-io]
+deboa = { path = "deboa" }

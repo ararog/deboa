@@ -66,8 +66,7 @@ impl ProtoConnection for Http1Connection {
         let (sender, conn) = result.unwrap();
 
         glommio::spawn_local(async move {
-            match conn.await
-            {
+            match conn.await {
                 Ok(_) => (),
                 Err(_err) => {}
             };

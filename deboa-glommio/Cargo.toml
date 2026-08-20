@@ -51,7 +51,6 @@ smol-hyper = { version = "0.1.0", default-features = false }
 [dependencies]
 async-lock = "3.4.2"
 base64 = "0.23.0"
-blocking = "1.6"
 bytes = { version = "1.11", default-features = false }
 cookie = { version = "0.18.1", default-features = false }
 deboa = { workspace = true }
