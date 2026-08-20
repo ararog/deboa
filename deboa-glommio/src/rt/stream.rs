@@ -1,8 +1,8 @@
 #[cfg(feature = "native-tls")]
 use async_native_tls::TlsStream;
+use futures::io::{self, AsyncRead, AsyncWrite};
 #[cfg(feature = "rust-tls")]
 use futures_rustls::client::TlsStream;
-use futures::io::{self, AsyncRead, AsyncWrite};
 use glommio::net::TcpStream;
 use std::{
     pin::Pin,

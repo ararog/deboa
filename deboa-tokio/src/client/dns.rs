@@ -1,5 +1,5 @@
 use deboa::{
-    dns::{DnsResolver, DnsResolverFuture},
+    dns::DnsResolver,
     errors::{DeboaError::Dns, DnsError},
 };
 use rand::seq::SliceRandom;
@@ -11,21 +11,18 @@ use tokio::net::lookup_host;
 pub struct DefaultDnsResolver;
 
 impl DnsResolver for DefaultDnsResolver {
-    fn resolve(&self, host: String, port: u16) -> DnsResolverFuture {
-        let future = async move {
-            let hostname = format!("{}:{}", host, port);
-            let addrs = lookup_host(hostname).await;
-            if let Err(e) = addrs {
-                return Err(Dns(DnsError::Resolve { host, message: e.to_string() }));
-            }
+    async fn resolve(&self, host: String, port: u16) -> deboa::Result<Vec<IpAddr>> {
+        let hostname = format!("{}:{}", host, port);
+        let addrs = lookup_host(hostname).await;
+        if let Err(e) = addrs {
+            return Err(Dns(DnsError::Resolve { host, message: e.to_string() }));
+        }
 
-            let mut ips: Vec<IpAddr> = addrs
-                .unwrap()
-                .map(|addr| addr.ip())
-                .collect();
-            ips.shuffle(&mut rand::rng());
-            Ok(ips)
-        };
-        Box::pin(future)
+        let mut ips: Vec<IpAddr> = addrs
+            .unwrap()
+            .map(|addr| addr.ip())
+            .collect();
+        ips.shuffle(&mut rand::rng());
+        Ok(ips)
     }
 }

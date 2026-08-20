@@ -29,7 +29,10 @@ fn main() {
             #[cfg(feature = "http2")]
             let request = get(url.as_str()).unwrap();
 
-            match request.send_with(&client).await {
+            match request
+                .send_with(&client)
+                .await
+            {
                 Ok(response) => println!("{}", response.status()),
                 Err(e) => {
                     eprintln!("request failed: {e:?}");

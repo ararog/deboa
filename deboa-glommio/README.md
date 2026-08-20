@@ -71,12 +71,12 @@ the whole machine.
 ## A note on DNS
 
 `getaddrinfo` is blocking in every runtime; the difference is where each one
-puts it. This binding uses the runtime-agnostic
-[`blocking`](https://crates.io/crates/blocking) thread pool rather than
-glommio's own `spawn_blocking`, because `deboa::dns::DnsResolverFuture` is
-`Pin<Box<dyn Future + Send>>` and glommio's blocking handle is bound to its
-local executor, hence `!Send`. compio's is a thread pool and therefore `Send`,
-which is why `deboa-compio` can use its runtime's own.
+puts it. This binding uses glommio's own `spawn_blocking`, so the work stays
+inside the runtime that owns the executor.
 
-Relaxing that boxed future to `?Send` would let this binding use glommio's pool
-and drop the extra threads. Nothing else in deboa needed changing.
+That is possible because `DnsResolver::resolve` returns `impl Future` rather
+than a boxed `dyn Future + Send`. The `Send` bound was more than a resolver can
+promise on every runtime: compio's `spawn_blocking` returns a `Send` future and
+satisfied it, glommio's handle is bound to its local executor and did not, so
+this binding originally had to pull in a second thread pool alongside glommio's
+to work around a bound it could not meet.

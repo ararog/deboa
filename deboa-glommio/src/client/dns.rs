@@ -1,5 +1,5 @@
 use deboa::{
-    dns::{DnsResolver, DnsResolverFuture},
+    dns::DnsResolver,
     errors::{DeboaError::Dns, DnsError},
 };
 use rand::seq::SliceRandom;
@@ -13,39 +13,30 @@ use std::net::IpAddr;
 pub struct DefaultDnsResolver;
 
 impl DnsResolver for DefaultDnsResolver {
-    fn resolve(&self, host: String, port: u16) -> DnsResolverFuture {
-        let future = async move {
-            let hostname = format!("{}:{}", host, port);
-            // `getaddrinfo` is a blocking syscall, so it goes to a thread —
-            // as it does in every runtime, tokio and compio included.
-            //
-            // **Via the `blocking` crate rather than glommio's own pool**, and
-            // that is worth explaining: `DnsResolverFuture` is
-            // `Pin<Box<dyn Future + Send>>`, and glommio's `spawn_blocking`
-            // returns a handle bound to its local executor, which is `!Send`.
-            // compio's is a thread pool and therefore `Send`, which is why
-            // `deboa-compio` can use its runtime's own. `blocking::unblock`
-            // gives a `Send` future and is runtime-agnostic, so it fits the
-            // trait as written. If the boxed future ever loses its `Send`
-            // bound, this becomes `glommio::executor().spawn_blocking(..)` and
-            // the extra thread pool goes away.
-            let addrs = blocking::unblock(move || {
+    async fn resolve(&self, host: String, port: u16) -> deboa::Result<Vec<IpAddr>> {
+        let hostname = format!("{}:{}", host, port);
+        // `getaddrinfo` is a blocking syscall, so it goes to a thread — as it
+        // does in every runtime. glommio's own blocking pool can be used now
+        // that the trait no longer demands a `Send` future: the handle it
+        // returns is bound to this executor, which is exactly what a
+        // thread-per-core runtime wants and what the boxed `dyn Future + Send`
+        // made impossible.
+        let addrs = glommio::executor()
+            .spawn_blocking(move || {
                 std::net::ToSocketAddrs::to_socket_addrs(&hostname[..])
                     .map(|it| it.collect::<Vec<_>>())
             })
             .await;
-            if let Err(e) = addrs {
-                return Err(Dns(DnsError::Resolve { host, message: e.to_string() }));
-            };
-
-            let mut ips: Vec<IpAddr> = addrs
-                .unwrap()
-                .into_iter()
-                .map(|addr| addr.ip())
-                .collect();
-            ips.shuffle(&mut rand::rng());
-            Ok(ips)
+        if let Err(e) = addrs {
+            return Err(Dns(DnsError::Resolve { host, message: e.to_string() }));
         };
-        Box::pin(future)
+
+        let mut ips: Vec<IpAddr> = addrs
+            .unwrap()
+            .into_iter()
+            .map(|addr| addr.ip())
+            .collect();
+        ips.shuffle(&mut rand::rng());
+        Ok(ips)
     }
 }
