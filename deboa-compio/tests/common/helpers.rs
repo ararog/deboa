@@ -72,8 +72,12 @@ pub async fn tls_mock_server() -> EasyHttpMock<VetisAdapter> {
 
     let vetis_adapter_config = VetisAdapterConfig::builder()
         .hostname(&hostname)
-        .interface(&interface)
-        .protocol_version(protocol_version())
+        .interface(
+            interface
+                .parse()
+                .unwrap(),
+        )
+        .protos(vec![protocol_version()])
         .with_random_port()
         .cert(server_cert.to_vec())
         .key(server_key.to_vec())
@@ -102,8 +106,12 @@ pub async fn plain_mock_server() -> EasyHttpMock<VetisAdapter> {
 
     let vetis_adapter_config = VetisAdapterConfig::builder()
         .hostname(&hostname)
-        .interface(&interface)
-        .protocol_version(protocol_version())
+        .interface(
+            interface
+                .parse()
+                .unwrap(),
+        )
+        .protos(vec![protocol_version()])
         .with_random_port()
         .build();
 
