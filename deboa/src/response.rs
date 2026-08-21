@@ -503,6 +503,17 @@ impl DeboaResponse {
         }
     }
 
+    /// Allow get inner response at any time.
+    ///
+    /// # Returns
+    ///
+    /// * `DeboaBody` - The inner response.
+    ///
+    #[inline]
+    pub fn into_inner(self) -> Response<HttpBody> {
+        self.inner
+    }
+
     /// Allow get inner response body at any time.
     ///
     /// # Returns
