@@ -44,8 +44,7 @@
 //!   }
 //!   Ok(())
 //! }
-//! ```
-
+//! ``
 use http::StatusCode;
 use thiserror::Error;
 
@@ -171,28 +170,28 @@ pub enum RequestError {
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum ConnectionError {
     /// Tcp connection error
-    #[error("Tcp connection error: {message}")]
+    #[error("Tcp error: {message}")]
     Tcp {
         /// Error message
         message: String,
     },
 
     /// Tls connection error
-    #[error("Tls connection error: {message}")]
+    #[error("Tls error: {message}")]
     Tls {
         /// Error message
         message: String,
     },
 
     /// Udp connection error
-    #[error("Udp connection error: {message}")]
+    #[error("Udp error: {message}")]
     Udp {
         /// Error message
         message: String,
     },
 
     /// Connection handshake error
-    #[error("Connection handshake error: {message}")]
+    #[error("Handshake error: {message}")]
     Handshake {
         /// Error message
         message: String,
@@ -234,6 +233,24 @@ pub enum ContentError {
     #[error("Failed to deserialize data: {message}")]
     Deserialization {
         /// Error message
+        message: String,
+    },
+}
+
+/// WebSocket errors
+#[derive(Debug, Clone, Error, PartialEq)]
+pub enum WebSocketError {
+    /// Failed to send message
+    #[error("Failed to send message: {message}")]
+    SendMessage {
+        /// The error message
+        message: String,
+    },
+
+    /// Failed to receive message
+    #[error("Failed to receive message: {message}")]
+    ReceiveMessage {
+        /// The error message
         message: String,
     },
 }

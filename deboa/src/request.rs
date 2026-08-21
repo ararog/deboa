@@ -240,6 +240,7 @@ impl MethodExt for Method {
         match self {
             Method::GET => DeboaRequest::get(url),
             Method::POST => DeboaRequest::post(url),
+            Method::QUERY => DeboaRequest::query(url),
             Method::PUT => DeboaRequest::put(url),
             Method::DELETE => DeboaRequest::delete(url),
             Method::PATCH => DeboaRequest::patch(url),
@@ -258,6 +259,7 @@ impl MethodExt for &str {
         match self {
             "GET" | "get" => DeboaRequest::get(url),
             "POST" | "post" => DeboaRequest::post(url),
+            "QUERY" | "query" => DeboaRequest::query(url),
             "PUT" | "put" => DeboaRequest::put(url),
             "DELETE" | "delete" => DeboaRequest::delete(url),
             "PATCH" | "patch" => DeboaRequest::patch(url),
@@ -432,6 +434,36 @@ pub fn get<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
 #[inline]
 pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
     DeboaRequest::post(url)
+}
+
+/// A utility function to create a QUERY request within DeboaRequest.
+///
+/// # Arguments
+///
+/// * `url` - The url to connect.
+///
+/// # Returns
+///
+/// * `Result<DeboaRequestBuilder>` - The request builder.
+///
+/// # Examples
+///
+/// ```rust,compile_fail
+/// use deboa::{request::query};
+/// use deboa_tokio::Client;
+///
+/// let client = Client::new();
+///
+/// let request = query("https://jsonplaceholder.typicode.com/posts")?
+///   .raw_body(b"{\"title\": \"foo\", \"body\": \"bar\", \"userId\": 1}")
+///   .build()?;
+/// let response = request.send_with(&client).await?;
+/// assert_eq!(response.status(), 201);
+/// ```
+///
+#[inline]
+pub fn query<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
+    DeboaRequest::query(url)
 }
 
 /// A utility function to create a PUT request within DeboaRequest.
@@ -1050,7 +1082,7 @@ impl FromStr for DeboaRequest {
         let mut is_reading_body = false;
 
         let method_url_regex =
-            Regex::new(r"(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+(https?://[^\s]+)");
+            Regex::new(r"(GET|POST|QUERY|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+(https?://[^\s]+)");
         if let Err(e) = method_url_regex {
             error!("Failed to parse request: {}", e);
             return Err(DeboaError::Request(RequestError::Parse { message: e.to_string() }));
@@ -1312,6 +1344,25 @@ impl DeboaRequest {
     #[inline]
     pub fn post<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
         Ok(DeboaRequest::to(url)?.method(Method::POST))
+    }
+
+    /// Allow make a QUERY request.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - The url to be requested.
+    ///
+    /// # Returns
+    ///
+    /// * `DeboaRequestBuilder` - The request builder.
+    ///
+    /// # Panics
+    ///
+    /// * If URL is invalid
+    ///
+    #[inline]
+    pub fn query<T: IntoUrl>(url: T) -> Result<DeboaRequestBuilder> {
+        Ok(DeboaRequest::to(url)?.method(Method::QUERY))
     }
 
     /// Allow make a PUT request.
