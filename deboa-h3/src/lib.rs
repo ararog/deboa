@@ -5,7 +5,8 @@ pub mod generic {
     use h3::{client::RequestStream, error::StreamError};
     use h3_quinn::{OpenStreams, RecvStream};
     use http::{Request, Response};
-    use hyper_body_utils::{BodyExt, HttpBody};
+    use http_body_util::BodyExt as _;
+    use hyper_body_utils::HttpBody;
     use std::marker::PhantomData;
 
     pub type QuicRequest = h3::client::SendRequest<OpenStreams, Bytes>;
@@ -70,7 +71,8 @@ pub mod compio {
     use compio_quic::{h3::OpenStreams, RecvStream};
     use h3::{client::RequestStream, error::StreamError};
     use http::{Request, Response};
-    use hyper_body_utils::{BodyExt, HttpBody};
+    use http_body_util::BodyExt as _;
+    use hyper_body_utils::HttpBody;
     use std::marker::PhantomData;
 
     pub type QuicRequest = h3::client::SendRequest<OpenStreams, Bytes>;

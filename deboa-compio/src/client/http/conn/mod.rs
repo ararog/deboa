@@ -16,6 +16,10 @@
 //! - Thread-safe connection handling
 //! ```
 use crate::cert::{DeboaCertificate, DeboaIdentity};
+#[cfg(feature = "rust-tls")]
+use compio::net::TcpStream;
+#[cfg(any(feature = "http1", feature = "http2"))]
+use cyper_core::HyperStream;
 #[cfg(feature = "http1")]
 use deboa::request::Http1Request;
 #[cfg(feature = "http2")]
@@ -23,7 +27,7 @@ use deboa::request::Http2Request;
 use deboa::{
     conn::{ConnectionConfig, HttpConnectionDispatcher, ProtoConnection},
     dns::DnsResolver,
-    errors::{DeboaError, RequestError},
+    errors::{ConnectionError, DeboaError, RequestError},
     response::DeboaResponse,
     Result,
 };
@@ -31,6 +35,9 @@ use deboa::{
 use deboa_h3::compio::Http3Request;
 use http::{Request, Version};
 use hyper_body_utils::HttpBody;
+use log::info;
+#[cfg(feature = "rust-tls")]
+use std::borrow::Cow;
 use std::{marker::PhantomData, time::Duration};
 
 /// Connection pooling for efficient HTTP connections.
@@ -180,6 +187,75 @@ impl<Sender, ReqBody, ResBody> BaseHttpConnection<Sender, ReqBody, ResBody> {
     }
 }
 
+#[cfg(feature = "rust-tls")]
+async fn connect_with_rustls<'a>(
+    tcp_stream: TcpStream,
+    config: &ConnectionConfig<'a, DeboaIdentity, DeboaCertificate>,
+) -> Result<(Version, HyperStream<TcpStream>)> {
+    use crate::client::tls::rustls::{tcp::connect, TlsConnectionBuilder};
+    let tls_config = TlsConnectionBuilder::default()
+        .certificate(config.certificate())
+        .identity(config.identity())
+        .build_config()?;
+
+    let stream = connect(tls_config, tcp_stream, config.host()).await?;
+
+    if let Some(alpn) = stream.negotiated_alpn() {
+        let Cow::Borrowed(alpn_code) = String::from_utf8_lossy(&alpn) else {
+            return Err(DeboaError::Connection(ConnectionError::Tcp {
+                message: "Invalid ALPN code".to_string(),
+            }));
+        };
+
+        let version = match alpn_code {
+            "http1.1" => Version::HTTP_11,
+            "h2" => Version::HTTP_2,
+            "h3" => Version::HTTP_3,
+            _ => *config.protocol_version(),
+        };
+
+        info!("ALPN info found, switching connection to {:?}", version);
+        Ok((version, HyperStream::new_tls(stream)))
+    } else {
+        info!("No ALPN info available, falling back to HTTP/1.1");
+        Ok((*config.protocol_version(), HyperStream::new_tls(stream)))
+    }
+}
+
+#[cfg(feature = "native-tls")]
+async fn connect_with_nativels<'a>(
+    tcp_stream: TcpStream,
+    config: &ConnectionConfig<'a, DeboaIdentity, DeboaCertificate>,
+) -> Result<(Version, HyperStream)> {
+    use crate::client::tls::native::TlsConnectionBuilder;
+    let stream = TlsConnectionBuilder::new(tcp_stream, config.host())
+        .certificate(config.certificate())
+        .identity(config.identity())
+        .connect()
+        .await?;
+
+    if let Some(alpn) = stream.negotiated_alpn() {
+        let Cow::Borrowed(alpn_code) = String::from_utf8_lossy(alpn) else {
+            return Err(DeboaError::Connection(ConnectionError::Tcp {
+                message: "Invalid ALPN code".to_string(),
+            }));
+        };
+
+        let version = match alpn_code {
+            "http1.1" => Version::HTTP_11,
+            "h2" => Version::HTTP_2,
+            "h3" => Version::HTTP_3,
+            _ => *config.protocol_version(),
+        };
+
+        info!("ALPN info found, switching connection to {:?}", version);
+        Ok((version, HyperStream::Tls(stream)))
+    } else {
+        info!("No ALPN info available, falling back to HTTP/1.1");
+        Ok((Version::HTTP_11, HyperStream::Tls(stream)))
+    }
+}
+
 pub struct ConnectionFactory {}
 
 impl ConnectionFactory {
@@ -219,10 +295,9 @@ impl ConnectionFactory {
         };
 
         #[cfg(any(feature = "http1", feature = "http2"))]
-        let stream = {
+        let conn_pair = {
             use compio::net::TcpStream;
             use cyper_core::HyperStream;
-            use deboa::errors::ConnectionError;
 
             let tcp_stream = TcpStream::connect(format!("{}:{}", ip, config.port()))
                 .await
@@ -231,50 +306,35 @@ impl ConnectionFactory {
                 })?;
             let use_tls = config.scheme() == "https" || config.scheme() == "wss";
             if !use_tls {
-                HyperStream::new_plain(tcp_stream)
+                (Version::HTTP_11, HyperStream::new_plain(tcp_stream))
             } else {
                 #[cfg(feature = "rust-tls")]
                 {
-                    use crate::client::tls::rustls::tcp::connect;
-                    use crate::client::tls::rustls::TlsConnectionBuilder;
-                    let tls_config = TlsConnectionBuilder::default()
-                        .certificate(config.certificate())
-                        .identity(config.identity())
-                        .build_config()?;
-
-                    HyperStream::new_tls(connect(tls_config, tcp_stream, config.host()).await?)
+                    connect_with_rustls(tcp_stream, config).await?
                 }
 
                 #[cfg(feature = "native-tls")]
                 {
-                    use crate::client::tls::native::TlsConnectionBuilder;
-                    let stream = TlsConnectionBuilder::new(tcp_stream, config.host())
-                        .certificate(config.certificate())
-                        .identity(config.identity())
-                        .connect()
-                        .await?;
-                    HyperStream::new_tls(stream)
+                    connect_with_nativels(tcp_stream, config).await?
                 }
             }
         };
 
-        let conn = match config.protocol_version() {
+        let conn = match conn_pair.0 {
             #[cfg(feature = "http1")]
-            &Version::HTTP_11 => {
-                let conn = Http1Connection::connect(stream).await?;
+            Version::HTTP_11 => {
+                let conn = Http1Connection::connect(conn_pair.1).await?;
                 DeboaConnection::http1(conn)
             }
             #[cfg(feature = "http2")]
-            &Version::HTTP_2 => {
-                let conn = Http2Connection::connect(stream).await?;
+            Version::HTTP_2 => {
+                let conn = Http2Connection::connect(conn_pair.1).await?;
                 DeboaConnection::http2(conn)
             }
             #[cfg(feature = "http3")]
-            &Version::HTTP_3 => {
+            Version::HTTP_3 => {
                 let stream = {
-                    use crate::client::tls::rustls::udp::connect;
-                    #[cfg(feature = "rust-tls")]
-                    use crate::client::tls::rustls::TlsConnectionBuilder;
+                    use crate::client::tls::rustls::{udp::connect, TlsConnectionBuilder};
                     use compio_quic::Endpoint;
                     use deboa::errors::ConnectionError;
                     use std::net::SocketAddr;

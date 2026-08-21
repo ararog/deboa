@@ -33,6 +33,7 @@ use deboa::{
 use deboa_h3::generic::Http3Request;
 use http::{Request, Version};
 use hyper_body_utils::HttpBody;
+use log::info;
 use std::{borrow::Cow, marker::PhantomData, time::Duration};
 #[cfg(any(feature = "http1", feature = "http2"))]
 use tokio::net::TcpStream;
@@ -190,6 +191,82 @@ impl<Sender, ReqBody, ResBody> BaseHttpConnection<Sender, ReqBody, ResBody> {
     }
 }
 
+#[cfg(feature = "rust-tls")]
+async fn connect_with_rustls<'a>(
+    tcp_stream: TcpStream,
+    config: &ConnectionConfig<'a, DeboaIdentity, DeboaCertificate>,
+) -> Result<(Version, TokioStream)> {
+    use crate::client::tls::rustls::{tcp::connect, TlsConnectionBuilder};
+    let tls_config = TlsConnectionBuilder::default()
+        .certificate(config.certificate())
+        .identity(config.identity())
+        .build_config()?;
+
+    let stream = Box::new(connect(tls_config, tcp_stream, config.host()).await?);
+
+    if let Some(alpn) = stream
+        .get_ref()
+        .1
+        .alpn_protocol()
+    {
+        let Cow::Borrowed(alpn_code) = String::from_utf8_lossy(alpn) else {
+            return Err(DeboaError::Connection(ConnectionError::Tcp {
+                message: "Invalid ALPN code".to_string(),
+            }));
+        };
+
+        let version = match alpn_code {
+            "http1.1" => Version::HTTP_11,
+            "h2" => Version::HTTP_2,
+            "h3" => Version::HTTP_3,
+            _ => panic!("Unsupported protocol"),
+        };
+
+        info!("ALPN info found, switching connection to {:?}", version);
+        Ok((version, TokioStream::Tls(stream)))
+    } else {
+        info!("No ALPN info available, falling back to HTTP/1.1");
+        Ok((Version::HTTP_11, TokioStream::Tls(stream)))
+    }
+}
+
+#[cfg(feature = "native-tls")]
+async fn connect_with_nativetls<'a>(
+    tcp_stream: TcpStream,
+    config: &ConnectionConfig<'a, DeboaIdentity, DeboaCertificate>,
+) -> Result<(Version, TokioStream)> {
+    use crate::client::tls::native::TlsConnectionBuilder;
+    let stream = TlsConnectionBuilder::new(tcp_stream, config.host())
+        .certificate(config.certificate())
+        .identity(config.identity())
+        .connect()
+        .await?;
+
+    if let Some(alpn) = stream
+        .get_ref()
+        .alpn_protocol()
+    {
+        let Cow::Borrowed(alpn_code) = String::from_utf8_lossy(alpn) else {
+            return Err(DeboaError::Connection(ConnectionError::Tcp {
+                message: "Invalid ALPN code".to_string(),
+            }));
+        };
+
+        let version = match alpn_code {
+            "http1.1" => Version::HTTP_11,
+            "h2" => Version::HTTP_2,
+            "h3" => Version::HTTP_3,
+            _ => panic!("Unsupported protocol"),
+        };
+
+        info!("ALPN info found, switching connection to {:?}", version);
+        Ok((version, TokioStream::Tls(stream)))
+    } else {
+        info!("No ALPN info available, falling back to HTTP/1.1");
+        Ok((Version::HTTP_11, TokioStream::Tls(stream)))
+    }
+}
+
 /// Factory for creating connections.
 pub(crate) struct ConnectionFactory {}
 
@@ -244,49 +321,12 @@ impl ConnectionFactory {
             } else {
                 #[cfg(feature = "rust-tls")]
                 {
-                    use crate::client::tls::rustls::{tcp::connect, TlsConnectionBuilder};
-                    let tls_config = TlsConnectionBuilder::default()
-                        .certificate(config.certificate())
-                        .identity(config.identity())
-                        .build_config()?;
-
-                    let stream = Box::new(connect(tls_config, tcp_stream, config.host()).await?);
-
-                    let Some(alpn) = stream
-                        .get_ref()
-                        .1
-                        .alpn_protocol()
-                    else {
-                        return Err(DeboaError::Connection(ConnectionError::Tcp {
-                            message: "No protocols available".to_string(),
-                        }));
-                    };
-
-                    let Cow::Borrowed(alpn_code) = String::from_utf8_lossy(alpn) else {
-                        return Err(DeboaError::Connection(ConnectionError::Tcp {
-                            message: "Invalid ALPN code".to_string(),
-                        }));
-                    };
-
-                    let version = match alpn_code {
-                        "http1.1" => Version::HTTP_11,
-                        "h2" => Version::HTTP_2,
-                        "h3" => Version::HTTP_3,
-                        _ => panic!("Unsupported protocol"),
-                    };
-
-                    (version, TokioStream::Tls(stream))
+                    connect_with_rustls(tcp_stream, config).await?
                 }
 
                 #[cfg(feature = "native-tls")]
                 {
-                    use crate::client::tls::native::TlsConnectionBuilder;
-                    let stream = TlsConnectionBuilder::new(tcp_stream, config.host())
-                        .certificate(config.certificate())
-                        .identity(config.identity())
-                        .connect()
-                        .await?;
-                    TokioStream::Tls(stream)
+                    connect_with_nativels(tcp_stream, config).await?
                 }
             }
         };
