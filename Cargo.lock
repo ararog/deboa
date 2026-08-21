@@ -1864,9 +1864,9 @@ checksum = "e4eba85ea1d0a966a983acd07deee566e67395d2d96b6fb39e62b5a833f1eb0b"
 
 [[package]]
 name = "glommio-ng"
-version = "0.10.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d6c9b99577dfaf726e575122b026fef3b57e2c39f03ae042460fdb5be7a1cc8"
+checksum = "95bccf930e7b78d67c6466cb1e585c6045da72b5e39c79d56bef2e5a8b3e4511"
 dependencies = [
  "ahash",
  "backtrace",
@@ -1874,12 +1874,12 @@ dependencies = [
  "bitflags 2.13.1",
  "bitmaps",
  "buddy-alloc",
- "cc",
  "concurrent-queue",
  "crossbeam",
  "enclose",
  "flume",
  "futures-lite",
+ "glommio-ng-macros",
  "intrusive-collections",
  "io-uring",
  "lazy_static",
@@ -1897,6 +1897,17 @@ dependencies = [
  "socket2",
  "tracing",
  "typenum",
+]
+
+[[package]]
+name = "glommio-ng-macros"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fba7f0ed3085a23dcb1c888e8962f7f39a7a15bf893753842c573355e99b15b0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
 ]
 
 [[package]]
