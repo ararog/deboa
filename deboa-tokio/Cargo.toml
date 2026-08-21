@@ -29,6 +29,7 @@ default = [
   "rust-tls",
   "default-rustls-provider",
   "default-rustls-verifier",
+  "websockets"
 ]
 
 # tls
@@ -72,7 +73,7 @@ http3 = [
   "hyper-body-utils/generic-h3",
 ]
 
-websockets = ["ws-framer/http", "ws-framer/alloc"]
+websockets = ["deboa-ws/tokio"]
 
 [dependencies]
 async-executor = { workspace = true, optional = true }
@@ -83,6 +84,8 @@ bytes = { workspace = true }
 cookie = { workspace = true }
 deboa = { workspace = true }
 deboa-h3 = { workspace = true, optional = true }
+deboa-tls = { workspace = true }
+deboa-ws =  { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
 futures-util = { workspace = true, optional = true }
 h3 = { workspace = true, optional = true }
@@ -119,7 +122,7 @@ tokio-util = { version = "0.7.11", features = ["io"], default-features = false }
 url = { workspace = true }
 urlencoding = { workspace = true }
 webpki-roots = { workspace = true, optional = true, default-features = false }
-ws-framer = { workspace = true, optional = true, default-features = false }
+
 
 [dev-dependencies]
 caramelo = { workspace = true }

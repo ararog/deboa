@@ -22,4 +22,5 @@ deboa = { workspace = true }
 h3 = { workspace = true, optional = true }
 h3-quinn = { workspace = true, optional = true }
 http = { workspace = true }
+http-body-util =  { workspace = true }
 hyper-body-utils = { workspace = true, optional = true, default-features = false }
