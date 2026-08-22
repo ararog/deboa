@@ -59,7 +59,7 @@ hyper-util = { version = "0.1.20", features = [
   "client",
   "client-legacy",
 ], default-features = false }
-log = "0.4.28"
+log = "0.4.34"
 minimime = "1.0.0"
 multer = "3.1.0"
 native-tls = { version = "0.2.18" }
