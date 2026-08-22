@@ -27,9 +27,7 @@ pub(crate) async fn tls_connection<'a>(
     let hostname = ServerName::try_from(host.to_string());
 
     if let Err(e) = hostname {
-        return Err(DeboaError::Connection(ConnectionError::Tls {
-            message: e.to_string(),
-        }));
+        return Err(DeboaError::Connection(ConnectionError::Tls { message: e.to_string() }));
     }
 
     let stream = connector
