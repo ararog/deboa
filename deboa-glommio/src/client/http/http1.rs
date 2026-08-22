@@ -1,19 +1,15 @@
-#[cfg(feature = "rust-tls")]
-use crate::alpn;
-#[cfg(feature = "rust-tls")]
-use crate::client::http::conn::stream::tls_connection;
 use crate::{
-    cert::{DeboaCertificate, DeboaIdentity},
-    client::http::conn::{stream::plain_connection, BaseHttpConnection, Http1Connection},
+    client::http::conn::{BaseHttpConnection, Http1Connection},
+    rt::stream::GlommioStream,
 };
 use deboa::{
-    conn::{ConnectionConfig, HttpConnection, ProtoConnection},
+    conn::{HttpConnection, ProtoConnection},
+    errors::{ConnectionError, DeboaError},
     request::Http1Request,
     Result,
 };
 use http::version::Version;
 use hyper::client::conn::http1::handshake;
-use hyper_body_utils::HttpBody;
 use smol_hyper::rt::FuturesIo;
 
 impl HttpConnection for Http1Connection {
@@ -25,41 +21,19 @@ impl HttpConnection for Http1Connection {
 
 impl ProtoConnection for Http1Connection {
     type Connection = Http1Connection;
+    type RuntimeStream = GlommioStream;
 
     #[inline]
     fn protocol_version(&self) -> Version {
         Version::HTTP_11
     }
 
-    async fn connect<'a>(
-        config: &ConnectionConfig<'a, Self::Identity, Self::Certificate>,
-    ) -> Result<Self::Connection> {
-        #[cfg(feature = "rust-tls")]
-        let stream = if config.is_secure() {
-            tls_connection(
-                *config.ip(),
-                config.host(),
-                config.port(),
-                config.identity(),
-                config.certificate(),
-                config.skip_cert_verification(),
-                alpn(),
-            )
+    async fn connect(stream: Self::RuntimeStream) -> Result<Self::Connection> {
+        let (sender, conn) = handshake(FuturesIo::new(stream))
             .await
-        } else {
-            plain_connection(*config.ip(), config.host(), config.port()).await
-        };
-
-        #[cfg(not(feature = "rust-tls"))]
-        let stream = plain_connection(*config.ip(), config.host(), config.port()).await;
-
-        if let Err(e) = stream {
-            return Err(e);
-        }
-
-        let result = handshake(FuturesIo::new(stream.unwrap())).await;
-
-        let (sender, conn) = result.unwrap();
+            .map_err(|e| {
+                DeboaError::Connection(ConnectionError::Handshake { message: e.to_string() })
+            })?;
 
         glommio::spawn_local(async move {
             match conn.await {

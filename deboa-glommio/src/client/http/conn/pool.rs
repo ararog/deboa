@@ -2,9 +2,13 @@ use crate::{
     cert::{DeboaCertificate, DeboaIdentity},
     client::http::conn::{ConnectionConfig, ConnectionFactory, DeboaConnection},
 };
-use deboa::Result;
+use deboa::{
+    dns::DnsResolver,
+    errors::{ConnectionError, DeboaError},
+    Result,
+};
 use hashbrown::HashMap;
-use time::Duration;
+use std::time::Duration;
 
 /// Struct that represents the HTTP connection pool.
 ///
@@ -27,7 +31,7 @@ impl Default for HttpConnectionPool {
     fn default() -> Self {
         Self {
             max_idle_connections: 5,
-            keep_alive_duration: Duration::minutes(5),
+            keep_alive_duration: Duration::from_mins(5),
             connections: HashMap::new(),
         }
     }
@@ -76,15 +80,14 @@ impl deboa::conn::HttpConnectionPool for HttpConnectionPool {
             .len() as u32
     }
 
-    async fn create_connection<'a>(
-        &'a mut self,
+    async fn create_connection<'a, D>(
+        &mut self,
         config: &ConnectionConfig<'a, Self::Identity, Self::Certificate>,
-    ) -> Result<&'a mut Self::ConnectionDispather> {
-        if self.max_idle_connections == 0 {
-            self.connections
-                .clear();
-        }
-
+        dns_resolver: &D,
+    ) -> Result<&mut DeboaConnection>
+    where
+        D: DnsResolver,
+    {
         let host = config.host();
         if self
             .connections
@@ -98,8 +101,20 @@ impl deboa::conn::HttpConnectionPool for HttpConnectionPool {
         }
 
         log::debug!("Creating new connection for {}", host);
-        let connection =
-            ConnectionFactory::create_connection(config.protocol_version(), config).await?;
+        let connection = glommio::future::timeout(
+            config.connection_timeout(),
+            ConnectionFactory::create_connection(config, dns_resolver),
+        )
+        .await
+        .map_err(|_| {
+            DeboaError::Connection(ConnectionError::Timeout {
+                message: format!(
+                    "Connection to {} timed out after {:?}",
+                    host,
+                    config.connection_timeout()
+                ),
+            })
+        })??;
 
         self.connections
             .insert(host.to_string(), connection);
