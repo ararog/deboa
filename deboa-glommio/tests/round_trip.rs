@@ -8,7 +8,7 @@
 use std::convert::Infallible;
 use std::net::SocketAddr;
 
-use deboa::request::{get, FetchWith};
+use deboa::request::get;
 use deboa_glommio::Client;
 use http_body_util::Full;
 use hyper::body::Bytes;

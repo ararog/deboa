@@ -4,7 +4,7 @@
 //! cargo run -p deboa-glommio --example simple -- https://example.com
 //! ```
 
-use deboa::request::{get, FetchWith};
+use deboa::request::get;
 use deboa_glommio::Client;
 
 fn main() {
