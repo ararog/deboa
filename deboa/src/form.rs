@@ -67,9 +67,11 @@
 //!     .await?;
 //! ```
 
+use crate::{errors::DeboaError, request::DeboaRequest};
 use async_fn_stream::StreamEmitter;
 use bytes::{Bytes, BytesMut};
 use futures::StreamExt;
+use http::Method;
 use http_body::Frame;
 use http_body_util::Full;
 use hyper_body_utils::HttpBody;
@@ -79,6 +81,7 @@ use std::{
     io::{Error, ErrorKind::InvalidData},
     pin::Pin,
 };
+use url::Url;
 use urlencoding::encode;
 
 pub(crate) const ENCODED_FORM_TYPE: &str = "application/x-www-form-urlencoded";
@@ -173,6 +176,22 @@ impl From<EncodedForm> for HttpBody {
     #[inline]
     fn from(val: EncodedForm) -> Self {
         HttpBody::Standard(Full::new(val.build()))
+    }
+}
+
+impl TryFrom<(Url, Method, EncodedForm)> for DeboaRequest {
+    type Error = DeboaError;
+
+    fn try_from(value: (Url, Method, EncodedForm)) -> Result<Self, Self::Error> {
+        DeboaRequest::from(value.0)?
+            .method(value.1)
+            .bytes(
+                &value
+                    .2
+                    .build()
+                    .to_vec(),
+            )
+            .build()
     }
 }
 
