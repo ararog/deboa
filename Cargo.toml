@@ -17,19 +17,15 @@ license = "MIT OR Apache-2.0"
 rust-version = "1.85.0"
 
 [workspace.dependencies]
-#deboa = { version = "0.1.5-beta.2" }
-#deboa-extras = "0.1.1-beta.2"
-
-deboa = { git = "https://github.com/deboa-client/deboa.git" }
-deboa-extras = { git = "https://github.com/deboa-client/deboa-contrib.git" }
-deboa-tokio = { git = "https://github.com/deboa-client/deboa-tokio.git" }
-
 async-executor = { version = "1.13.3", default-features = false }
 async-lock = "3.4.2"
 base64 = { version = "0.23.0" }
 bytes = { version = "1.11" }
 caramelo = "0.1.5"
 cookie = { version = "0.18.1" }
+deboa = { version = "0.1.5-beta.2" }
+deboa-extras = "0.1.1-beta.2"
+deboa-tokio = "0.1.4-beta.3"
 hashbrown = "0.17.1"
 http = "1"
 hyper = { version = "1.11.1", features = ["client"], default-features = false }
