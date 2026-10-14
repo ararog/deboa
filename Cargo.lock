@@ -573,7 +573,7 @@ dependencies = [
 
 [[package]]
 name = "deboa"
-version = "0.1.5-beta.4"
+version = "0.1.5-beta.5"
 dependencies = [
  "async-fn-stream",
  "async-lock",
@@ -656,7 +656,6 @@ dependencies = [
  "http",
  "proc-macro2",
  "quote",
- "serde",
  "syn 3.0.9",
  "tokio",
  "trybuild",

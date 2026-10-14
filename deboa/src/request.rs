@@ -88,7 +88,7 @@ use hyper_body_utils::HttpBody;
 use log::error;
 use regex::Regex;
 use serde::Serialize;
-use std::{fmt::Debug, future::Future, str::FromStr, sync::Arc};
+use std::{fmt::Debug, future::Future, str::FromStr};
 use url::Url;
 
 /// Bytes body type
