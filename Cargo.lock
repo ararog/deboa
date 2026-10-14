@@ -545,41 +545,6 @@ checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
 [[package]]
 name = "deboa"
 version = "0.1.5-beta.3"
-dependencies = [
- "async-fn-stream",
- "async-lock",
- "base64",
- "bytes",
- "caramelo",
- "cookie",
- "criterion",
- "futures",
- "hashbrown 0.17.1",
- "http",
- "http-body",
- "http-body-util",
- "hyper",
- "hyper-body-utils",
- "hyper-util",
- "log",
- "mime",
- "multer",
- "rand",
- "regex",
- "serde",
- "tackle",
- "tempfile",
- "thiserror 2.0.21",
- "time",
- "tokio",
- "tokio-util",
- "url",
- "urlencoding",
-]
-
-[[package]]
-name = "deboa"
-version = "0.1.5-beta.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "695df99f6e8a191aa84884124d7bbcff1b65506e947234ac03d722578ba8742b"
 dependencies = [
@@ -607,13 +572,47 @@ dependencies = [
 ]
 
 [[package]]
+name = "deboa"
+version = "0.1.5-beta.4"
+dependencies = [
+ "async-fn-stream",
+ "async-lock",
+ "base64",
+ "bytes",
+ "caramelo",
+ "cookie",
+ "criterion",
+ "futures",
+ "hashbrown 0.17.1",
+ "http",
+ "http-body",
+ "http-body-util",
+ "hyper",
+ "hyper-body-utils",
+ "log",
+ "mime",
+ "multer",
+ "rand",
+ "regex",
+ "serde",
+ "tackle",
+ "tempfile",
+ "thiserror 2.0.21",
+ "time",
+ "tokio",
+ "tokio-util",
+ "url",
+ "urlencoding",
+]
+
+[[package]]
 name = "deboa-extras"
 version = "0.1.1-beta.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e010a6eefb987288370212dfea5542881fe2a419a76259396a40abc654a686d"
 dependencies = [
  "bytes",
- "deboa 0.1.5-beta.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.5-beta.3",
  "futures",
  "http",
  "http-body-util",
@@ -639,7 +638,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65b0668a05f777caaff0748299b342cbb7ef93e0fc1d3de3f3aadf2938a7bcf3"
 dependencies = [
  "bytes",
- "deboa 0.1.5-beta.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.5-beta.3",
  "h3",
  "h3-quinn",
  "http",
@@ -651,7 +650,7 @@ dependencies = [
 name = "deboa-macros"
 version = "0.1.0-beta.8"
 dependencies = [
- "deboa 0.1.5-beta.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.5-beta.3",
  "deboa-extras",
  "deboa-tokio",
  "http",
@@ -669,7 +668,7 @@ version = "0.1.0-beta.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7888362295e39f4965bcbb863e864d6b9e21501ae4851477bcc65df048a82910"
 dependencies = [
- "deboa 0.1.5-beta.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.5-beta.3",
  "futures-io",
  "futures-rustls",
  "rustls",
@@ -689,7 +688,7 @@ dependencies = [
  "base64",
  "bytes",
  "cookie",
- "deboa 0.1.5-beta.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.5-beta.3",
  "deboa-h3",
  "deboa-tls",
  "deboa-ws",
@@ -730,7 +729,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e23ae8a4383a101403c6ed5fef95567c658f4bb592b5af45fbe9bfcecc48f3c9"
 dependencies = [
  "base64",
- "deboa 0.1.5-beta.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.5-beta.3",
  "futures-util",
  "http",
  "hyper",
@@ -848,7 +847,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1937,7 +1936,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2158,14 +2157,14 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
 name = "rustls"
-version = "0.23.45"
+version = "0.23.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d41d731c7d2f962d1ccc364cec258de3c0e93b38c2fb3ba97ac74513048d634"
+checksum = "48e13bd8c0e9365c43cfa5c9e8f9ad49d3c8444926c9aac819e0e4dc503c8fdf"
 dependencies = [
  "aws-lc-rs",
  "once_cell",
@@ -2553,10 +2552,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3006,7 +3005,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
