@@ -675,6 +675,7 @@ where
                 self.certificate
                     .as_ref(),
             )
+            .prior_knowledge(self.prior_knowledge)
             .skip_cert_verification(self.skip_cert_verification)
             .client_bind_addr(self.bind_addr)
             .build();

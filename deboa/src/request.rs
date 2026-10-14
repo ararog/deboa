@@ -1196,12 +1196,18 @@ impl DeboaRequest {
             .parse::<http::Uri>()
             .map_err(|e| DeboaError::Request(RequestError::UrlParse { message: e.to_string() }))?;
 
+        let Some(authority) = uri.authority() else {
+            return Err(DeboaError::Request(RequestError::UrlParse {
+                message: "Missing authority".into(),
+            }));
+        };
+
         let request = Request::builder()
             .method(method)
             .version(Version::HTTP_2)
-            .header(header::HOST, uri.host().unwrap())
+            .header(header::HOST, authority.as_str())
             .uri(uri)
-            .body(HttpBody::bytes(&[]))
+            .body(HttpBody::empty())
             .map_err(|e| DeboaError::Request(RequestError::Prepare { message: e.to_string() }))?;
 
         Ok(DeboaRequestBuilder { inner: request })
