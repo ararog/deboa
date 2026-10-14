@@ -84,7 +84,7 @@ use crate::{
     serde::ResponseBody,
     Result,
 };
-use http::{header, HeaderName, HeaderValue, Response};
+use http::{header, HeaderName, HeaderValue, Response, StatusCode};
 use http_body_util::BodyExt;
 use hyper_body_utils::HttpBody;
 use log::error;
@@ -107,11 +107,18 @@ use std::{fmt::Debug, fs::write};
 /// let response = b"Some bytes"
 ///   .into_body()
 ///   .unwrap();
-/// assert_eq!(response, DeboaBody::Right(Full::<Bytes>::from(b"Some bytes")));
+/// assert_eq!(response, HttpBody:bytes(b"Some bytes"));
 /// ```
 pub trait IntoBody {
     /// Convert self to a HttpBody
     fn into_body(self) -> HttpBody;
+}
+
+impl IntoBody for &str {
+    #[inline]
+    fn into_body(self) -> HttpBody {
+        HttpBody::text(self)
+    }
 }
 
 impl IntoBody for &[u8] {
@@ -125,6 +132,23 @@ impl IntoBody for Vec<u8> {
     #[inline]
     fn into_body(self) -> HttpBody {
         HttpBody::bytes(&self)
+    }
+}
+
+impl From<StatusCode> for DeboaResponse {
+    fn from(value: StatusCode) -> Self {
+        DeboaResponse::builder()
+            .status(value)
+            .build()
+    }
+}
+
+impl From<(StatusCode, &str)> for DeboaResponse {
+    fn from(value: (StatusCode, &str)) -> Self {
+        DeboaResponse::builder()
+            .status(value.0)
+            .body(value.1)
+            .build()
     }
 }
 

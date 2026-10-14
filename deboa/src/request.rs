@@ -88,7 +88,7 @@ use hyper_body_utils::HttpBody;
 use log::error;
 use regex::Regex;
 use serde::Serialize;
-use std::{fmt::Debug, future::Future, str::FromStr};
+use std::{fmt::Debug, future::Future, str::FromStr, sync::Arc};
 use url::Url;
 
 /// Bytes body type
@@ -136,6 +136,15 @@ impl IntoRequest for &str {
     }
 }
 
+impl IntoRequest for (&str, Version) {
+    #[inline]
+    fn into_request(self) -> Result<DeboaRequest> {
+        DeboaRequest::get(self.0)?
+            .version(self.1)
+            .build()
+    }
+}
+
 impl IntoRequest for String {
     #[inline]
     fn into_request(self) -> Result<DeboaRequest> {
@@ -143,10 +152,28 @@ impl IntoRequest for String {
     }
 }
 
+impl IntoRequest for (String, Version) {
+    #[inline]
+    fn into_request(self) -> Result<DeboaRequest> {
+        DeboaRequest::get(self.0)?
+            .version(self.1)
+            .build()
+    }
+}
+
 impl IntoRequest for Url {
     #[inline]
     fn into_request(self) -> Result<DeboaRequest> {
         DeboaRequest::get(self)?.build()
+    }
+}
+
+impl IntoRequest for (Url, Version) {
+    #[inline]
+    fn into_request(self) -> Result<DeboaRequest> {
+        DeboaRequest::get(self.0)?
+            .version(self.1)
+            .build()
     }
 }
 
@@ -189,6 +216,20 @@ impl IntoHeaders for Vec<(HeaderName, String)> {
 }
 
 impl IntoHeaders for Vec<(String, String)> {
+    #[inline]
+    fn into_headers(self) -> Result<HeaderMap> {
+        let mut headers = HeaderMap::new();
+        for (key, value) in self {
+            headers.insert(
+                HeaderName::from_str(&key).expect("Invalid header name"),
+                HeaderValue::from_str(&value).expect("Invalid header value"),
+            );
+        }
+        Ok(headers)
+    }
+}
+
+impl<'a> IntoHeaders for &'a [(&'a str, &'a str)] {
     #[inline]
     fn into_headers(self) -> Result<HeaderMap> {
         let mut headers = HeaderMap::new();
@@ -352,6 +393,25 @@ impl FetchWith for String {
         R: DnsResolver + Send,
     {
         DeboaRequest::get(self)?
+            .send_with(client)
+            .await
+    }
+}
+
+impl FetchWith for (String, Version) {
+    #[inline]
+    async fn fetch_with<I, C, P, R>(
+        &self,
+        client: &Client<InnerClient<I, C, P, R>>,
+    ) -> Result<DeboaResponse>
+    where
+        I: Identity + Send + Clone,
+        C: Certificate + Send + Clone,
+        P: HttpConnectionPool<Identity = I, Certificate = C> + Send,
+        R: DnsResolver + Send,
+    {
+        DeboaRequest::get(self.0.clone())?
+            .version(self.1)
             .send_with(client)
             .await
     }
@@ -1500,9 +1560,15 @@ impl private::IntoRequestSealed for DeboaRequest {}
 
 impl private::IntoRequestSealed for &str {}
 
+impl private::IntoRequestSealed for (&str, Version) {}
+
 impl private::IntoRequestSealed for String {}
 
+impl private::IntoRequestSealed for (String, Version) {}
+
 impl private::IntoRequestSealed for Url {}
+
+impl private::IntoRequestSealed for (Url, Version) {}
 
 impl private::IntoHeadersSealed for HeaderMap {}
 
@@ -1511,6 +1577,8 @@ impl private::IntoHeadersSealed for Vec<(HeaderName, String)> {}
 impl private::IntoHeadersSealed for Vec<(String, String)> {}
 
 impl<'a> private::IntoHeadersSealed for Vec<(&'a str, &'a str)> {}
+
+impl<'a> private::IntoHeadersSealed for &'a [(&'a str, &'a str)] {}
 
 impl private::MethodExtSealed for Method {}
 

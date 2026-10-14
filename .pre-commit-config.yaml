@@ -54,3 +54,8 @@ repos:
     hooks:
       - id: cargo-deny
         args: ["--all-features", "check"]
+
+  - repo: https://github.com/bnjbvr/cargo-machete
+    rev: main  # or a specific tag/commit
+    hooks:
+      - id: cargo-machete
