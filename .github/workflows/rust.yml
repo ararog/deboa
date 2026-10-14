@@ -5,9 +5,9 @@ permissions:
 
 on:
   push:
-    branches: ["**"]
+    branches: ["master"]
   pull_request:
-    branches: ["**"]
+    branches: ["master"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
