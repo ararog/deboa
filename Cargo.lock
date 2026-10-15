@@ -550,19 +550,17 @@ dependencies = [
 
 [[package]]
 name = "deboa-extras"
-version = "0.1.1-beta.3"
+version = "0.1.1-beta.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e010a6eefb987288370212dfea5542881fe2a419a76259396a40abc654a686d"
+checksum = "bac35a0f5ef23a6781ba6c66ae6fb43a73093fedb36838b2614fc30af3a8a3e5"
 dependencies = [
  "bytes",
  "deboa 0.1.5-beta.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures",
  "http",
- "http-body-util",
  "hyper",
  "hyper-body-utils",
  "log",
- "mime",
  "mime_typed",
  "pin-project-lite",
  "rmp-serde",
@@ -2354,7 +2352,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",
