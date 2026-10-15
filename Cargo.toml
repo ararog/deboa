@@ -23,7 +23,7 @@ bytes = { version = "1.11" }
 caramelo = "0.1.5"
 cookie = { version = "0.18.2" }
 deboa = { version = "0.1.5-beta.5" }
-deboa-extras = "0.1.1-beta.3"
+deboa-extras = "0.1.1-beta.4"
 deboa-tokio = "0.1.4-beta.6"
 hashbrown = "0.17.1"
 http = "1"
