@@ -1,15 +1,15 @@
 use crate::{
-    form::EncodedForm,
-    request::{delete, get, patch, post, put, query, DeboaRequest, IntoRequest, MethodExt},
-    tests::{test_uri, test_url, TEST_URL},
     TestResult,
+    form::EncodedForm,
+    request::{DeboaRequest, IntoRequest, MethodExt, delete, get, patch, post, put, query},
+    tests::{TEST_URL, test_uri, test_url},
 };
 use bytes::Bytes;
 use caramelo::{
     expect,
     matchers::{custom, eq},
 };
-use http::{header, HeaderValue, Method, Uri, Version};
+use http::{HeaderValue, Method, Uri, Version, header};
 use hyper_body_utils::HttpBody;
 use std::str::FromStr;
 

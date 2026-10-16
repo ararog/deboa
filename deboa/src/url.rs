@@ -1,7 +1,7 @@
 //! URL module
 //!
 //! This module provides functionality for handling URLs.
-use crate::{errors::RequestError, DeboaError, Result};
+use crate::{DeboaError, Result, errors::RequestError};
 use url::Url;
 
 /// Trait to convert a value into a Url.
