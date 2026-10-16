@@ -65,23 +65,27 @@
 //!     .await?;
 //! ```
 
+#[cfg(feature = "cookie")]
+use crate::cookie::DeboaCookie;
+#[cfg(feature = "multipart")]
+use crate::form::MultiPartFormStream;
 use crate::{
+    Client, HttpClient, InnerClient, Result,
     cert::{Certificate, Identity},
     conn::HttpConnectionPool,
-    cookie::DeboaCookie,
     dns::DnsResolver,
     errors::{DeboaError, RequestError},
     response::DeboaResponse,
     serde::RequestBody,
     url::IntoUrl,
-    Client, HttpClient, InnerClient, Result,
 };
-use base64::{engine::general_purpose::STANDARD, Engine as _};
+use base64::{Engine as _, engine::general_purpose::STANDARD};
 use bytes::Bytes;
+#[cfg(feature = "cookie")]
 use hashbrown::HashMap;
 use http::{
-    header::{self},
     HeaderMap, HeaderName, HeaderValue, Method, Request, Uri, Version,
+    header::{self},
 };
 use http_body_util::combinators::BoxBody;
 use hyper_body_utils::HttpBody;
@@ -756,6 +760,7 @@ impl DeboaRequestBuilder {
         Ok(self)
     }
 
+    #[cfg(feature = "cookie")]
     /// Set the cookies of the request.
     ///
     /// # Arguments
@@ -784,6 +789,7 @@ impl DeboaRequestBuilder {
         Ok(self)
     }
 
+    #[cfg(feature = "cookie")]
     /// Add a cookie to the request.
     ///
     /// # Arguments
@@ -847,6 +853,23 @@ impl DeboaRequestBuilder {
         *self
             .inner
             .body_mut() = HttpBody::bytes(text.as_bytes());
+        self
+    }
+
+    #[cfg(feature = "multipart")]
+    /// Set multipart form as request body
+    ///
+    /// # Arguments
+    ///
+    /// * `form` - A multipart form type
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Self>` - The request builder.
+    pub async fn multipart(mut self, form: impl MultiPartFormStream + 'static) -> Self {
+        *self
+            .inner
+            .body_mut() = HttpBody::stream(form);
         self
     }
 
@@ -1036,11 +1059,21 @@ pub struct DeboaRequest {
 }
 
 impl Debug for DeboaRequest {
+    #[cfg(feature = "cookie")]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("DeboaRequest")
             .field("url", &self.inner.uri())
             .field("headers", &self.inner.headers())
             .field("cookies", &None::<HashMap<String, DeboaCookie>>)
+            .field("version", &self.inner.version())
+            .field("method", &self.inner.method())
+            .finish()
+    }
+    #[cfg(not(feature = "cookie"))]
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DeboaRequest")
+            .field("url", &self.inner.uri())
+            .field("headers", &self.inner.headers())
             .field("version", &self.inner.version())
             .field("method", &self.inner.method())
             .finish()
@@ -1514,6 +1547,7 @@ impl DeboaRequest {
             .headers_mut()
     }
 
+    #[cfg(feature = "cookie")]
     /// Allow get cookies at any time.
     ///
     /// # Returns

@@ -22,6 +22,7 @@ use tackle::{Chain, Hook, HookFn};
 pub mod cache;
 pub mod cert;
 pub mod conn;
+#[cfg(feature = "cookie")]
 pub mod cookie;
 pub mod dns;
 pub mod errors;

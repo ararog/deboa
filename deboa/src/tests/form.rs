@@ -1,12 +1,19 @@
-use crate::{
-    form::{EncodedForm, MultiPartForm},
-    TestResult,
-};
+#[cfg(feature = "multipart")]
+use crate::form::MultiPartForm;
+use crate::{TestResult, form::EncodedForm, request::DeboaRequest};
+#[cfg(feature = "multipart")]
 use bytes::BytesMut;
+use caramelo::{expect, matchers::eq};
+#[cfg(feature = "multipart")]
 use futures::StreamExt;
+use http::{Method, Uri};
+#[cfg(feature = "multipart")]
 use std::{fmt::Write as _, io::Write};
+#[cfg(feature = "multipart")]
 use tempfile::NamedTempFile;
+#[cfg(feature = "multipart")]
 use tokio::fs::File;
+#[cfg(feature = "multipart")]
 use tokio_util::io::ReaderStream;
 
 #[test]
@@ -23,6 +30,22 @@ fn test_encoded_form() -> TestResult<()> {
 }
 
 #[tokio::test]
+async fn test_try_into_request() -> TestResult<()> {
+    let url = url::Url::parse("https://google.com")?;
+    let form = EncodedForm::builder()
+        .field("name", "deboa")
+        .field("version", "0.0.1");
+
+    let request: DeboaRequest = (url, Method::GET, form).try_into()?;
+
+    expect(request.method()).to_be(eq(&Method::GET));
+    expect(request.uri()).to_be(eq(&Uri::from_static("https://google.com")));
+
+    Ok(())
+}
+
+#[cfg(feature = "multipart")]
+#[tokio::test]
 async fn test_multipart_form() -> TestResult<()> {
     let builder = MultiPartForm::builder()
         .field("name", "deboa")
@@ -31,7 +54,11 @@ async fn test_multipart_form() -> TestResult<()> {
     let boundary = builder.boundary();
 
     let mut data = BytesMut::new();
-    write!(&mut data, "--{}\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\ndeboa\r\n--{}\r\nContent-Disposition: form-data; name=\"version\"\r\n\r\n0.0.1\r\n--{}--\r\n", boundary, boundary, boundary)?;
+    write!(
+        &mut data,
+        "--{}\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\ndeboa\r\n--{}\r\nContent-Disposition: form-data; name=\"version\"\r\n\r\n0.0.1\r\n--{}--\r\n",
+        boundary, boundary, boundary
+    )?;
 
     let form = builder
         .build()
@@ -62,6 +89,7 @@ fn test_encoded_form_content_type() -> TestResult<()> {
     Ok(())
 }
 
+#[cfg(feature = "multipart")]
 #[test]
 fn test_multipart_form_content_type() -> TestResult<()> {
     let form = MultiPartForm::builder()
@@ -76,6 +104,7 @@ fn test_multipart_form_content_type() -> TestResult<()> {
     Ok(())
 }
 
+#[cfg(feature = "multipart")]
 #[tokio::test]
 async fn test_multipart_form_with_file() -> TestResult<()> {
     let mut builder = MultiPartForm::builder();
@@ -91,7 +120,11 @@ async fn test_multipart_form_with_file() -> TestResult<()> {
 
     let boundary = builder.boundary();
     let mut bytes = BytesMut::new();
-    write!(&mut bytes, "--{}\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\ndeboa\r\n--{}\r\nContent-Disposition: form-data; name=\"version\"\r\n\r\n0.0.1\r\n--{}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"test.txt\"\r\nContent-Type: text/plain\r\n\r\nHello World!\r\n--{}--\r\n", boundary, boundary, boundary, boundary)?;
+    write!(
+        &mut bytes,
+        "--{}\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\ndeboa\r\n--{}\r\nContent-Disposition: form-data; name=\"version\"\r\n\r\n0.0.1\r\n--{}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"test.txt\"\r\nContent-Type: text/plain\r\n\r\nHello World!\r\n--{}--\r\n",
+        boundary, boundary, boundary, boundary
+    )?;
 
     let form = builder
         .build()

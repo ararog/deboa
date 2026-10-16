@@ -195,9 +195,9 @@ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
 name = "aws-lc-rs"
-version = "1.18.1"
+version = "1.18.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b281d307588d634de920874890732659e2e7672f72b5e10e81badc1a8a83621e"
+checksum = "faac5829c2b74c28f830747e7818ccfb684261b5f48a1118b1e2a13d36dfab13"
 dependencies = [
  "aws-lc-sys",
  "zeroize",
@@ -205,9 +205,9 @@ dependencies = [
 
 [[package]]
 name = "aws-lc-sys"
-version = "0.45.0"
+version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9bff6c3b54fad79a2e60b8102caf565819711497c1f5f092f49508e2f5c31b27"
+checksum = "f1622d8446a2d4b2ce0c7eefc73dd43a99779028d5ee5c2dd8073a658ba8a2bc"
 dependencies = [
  "cc",
  "cmake",
@@ -488,7 +488,7 @@ checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
 
 [[package]]
 name = "deboa"
-version = "0.1.5-beta.5"
+version = "0.1.5-beta.6"
 dependencies = [
  "async-fn-stream",
  "async-lock",
@@ -522,15 +522,14 @@ dependencies = [
 
 [[package]]
 name = "deboa"
-version = "0.1.5-beta.5"
+version = "0.1.5-beta.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "395f954c4cfd84d010b7dc7d02ea67f24dd0af799f231c0c0a0ec293520fec46"
+checksum = "e9a79c8cea89d7621a7b34a6395335646e6d2ead87a3a4291e795da352835308"
 dependencies = [
  "async-fn-stream",
  "async-lock",
  "base64",
  "bytes",
- "cookie",
  "futures",
  "hashbrown 0.17.1",
  "http",
@@ -550,12 +549,12 @@ dependencies = [
 
 [[package]]
 name = "deboa-extras"
-version = "0.1.1-beta.4"
+version = "0.1.1-beta.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bac35a0f5ef23a6781ba6c66ae6fb43a73093fedb36838b2614fc30af3a8a3e5"
+checksum = "f8edf13b55c8c67cbbd76fea332a4eca7641062f813f32963e2bb6f2761ab35d"
 dependencies = [
  "bytes",
- "deboa 0.1.5-beta.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.5-beta.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures",
  "http",
  "hyper",
@@ -573,25 +572,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "deboa-h3"
-version = "0.1.3-beta.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65b0668a05f777caaff0748299b342cbb7ef93e0fc1d3de3f3aadf2938a7bcf3"
-dependencies = [
- "bytes",
- "deboa 0.1.5-beta.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "h3",
- "h3-quinn",
- "http",
- "http-body-util",
- "hyper-body-utils",
-]
-
-[[package]]
 name = "deboa-macros"
-version = "0.1.0-beta.9"
+version = "0.1.0-beta.11"
 dependencies = [
- "deboa 0.1.5-beta.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.5-beta.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-extras",
  "deboa-tokio",
  "http",
@@ -608,7 +592,7 @@ version = "0.1.0-beta.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7888362295e39f4965bcbb863e864d6b9e21501ae4851477bcc65df048a82910"
 dependencies = [
- "deboa 0.1.5-beta.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.5-beta.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures-io",
  "futures-rustls",
  "rustls",
@@ -619,17 +603,13 @@ dependencies = [
 
 [[package]]
 name = "deboa-tokio"
-version = "0.1.4-beta.6"
+version = "0.1.4-beta.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3399ac6486574ef5a15bf0c37223ea0fefed839e6746360591f9966ab6e7350"
+checksum = "ec6455cbecf9c2703fc93d74018eaa5ff34cb4fadcea570d7a83aa28322568bc"
 dependencies = [
- "deboa 0.1.5-beta.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "deboa-h3",
+ "deboa 0.1.5-beta.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "deboa-tls",
  "deboa-ws",
- "futures",
- "h3",
- "h3-quinn",
  "hashbrown 0.17.1",
  "http",
  "hyper",
@@ -653,7 +633,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e23ae8a4383a101403c6ed5fef95567c658f4bb592b5af45fbe9bfcecc48f3c9"
 dependencies = [
  "base64",
- "deboa 0.1.5-beta.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deboa 0.1.5-beta.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures-util",
  "http",
  "hyper",
@@ -1300,9 +1280,9 @@ dependencies = [
 
 [[package]]
 name = "jsonpath-rust"
-version = "1.0.11"
+version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d23892d4caa103325a558250e9f4e406d81cf64f7c01679ae7a64e0413321e51"
+checksum = "b1c4668c489390e66d586fe2238ee8568473f7ac1607b411342f787c5e1bedd7"
 dependencies = [
  "pest",
  "pest_derive",
@@ -1521,9 +1501,9 @@ checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 
 [[package]]
 name = "pest"
-version = "2.9.3"
+version = "2.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b568374ba38b33a6c627141f891faf16902b08d2db26b8ede1bcb0a15b1919fa"
+checksum = "fd47a460a9cbc3b3429c7e22bf0d76653e779319bae45a499ca010c9a990bb23"
 dependencies = [
  "memchr",
  "psm",
@@ -1533,9 +1513,9 @@ dependencies = [
 
 [[package]]
 name = "pest_derive"
-version = "2.9.3"
+version = "2.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b66e184b924cebaaff20ab2256ca52f12332d528a39aa76553b5d96f92aacf7f"
+checksum = "203e46697708f7519ab1608393cf89239cafb46b8e6d08a8ffe359359b11ef44"
 dependencies = [
  "pest",
  "pest_generator",
@@ -1543,9 +1523,9 @@ dependencies = [
 
 [[package]]
 name = "pest_generator"
-version = "2.9.3"
+version = "2.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a87478d267e4de54a626af9754f2f0f58e927aac6ed0575fe89bc05ad6851694"
+checksum = "e84ae6340a458d3d6cfc73cf328cf3cfe90b2484cd0de25eb66aa954615ed4d5"
 dependencies = [
  "pest",
  "pest_meta",
@@ -1556,9 +1536,9 @@ dependencies = [
 
 [[package]]
 name = "pest_meta"
-version = "2.9.3"
+version = "2.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f986f248b4241ac359b831f6139aaa34e03b08a37b6caf7e201a33f95c869e1"
+checksum = "b57f92f32b3dbce6598fd8f5cdf1f06a6072570b8103fa21728fa9036923e710"
 dependencies = [
  "pest",
 ]
@@ -1976,9 +1956,9 @@ dependencies = [
 
 [[package]]
 name = "rustls-native-certs"
-version = "0.8.4"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dab5152771c58876a2146916e53e35057e1a4dfa2b9df0f0305b07f611fdea4d"
+checksum = "4a073f5dc7469f984c52ad2752b63b0807745133b6de880b7b64c1ac4c48aec4"
 dependencies = [
  "openssl-probe",
  "rustls-pki-types",
@@ -2981,18 +2961,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.8.62"
+version = "0.8.63"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86502bf56ac7c77571a32e2647bb2a15894565e981fb2a48d7bde2d91c965a9d"
+checksum = "e5fe1f8f1b06191a00962174c61aa5005e0bb391a6d80d07e24d115c01a92ed8"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.62"
+version = "0.8.63"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5457206954b06561e2608c7e19cf58b1926586d999c246eebe4502f7e2039d1a"
+checksum = "863ad3ac83293fb4d740aedbfdc9240dd8d1a50c1099acd76ce80ce7c7230c7f"
 dependencies = [
  "proc-macro2",
  "quote",

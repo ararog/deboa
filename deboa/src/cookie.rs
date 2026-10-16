@@ -42,7 +42,7 @@
 //! assert_eq!(cookie.path(), Some(&"/".to_string()));
 //! assert_eq!(cookie.secure(), Some(true));
 //! ```
-use crate::{errors::DeboaError, Result};
+use crate::{Result, errors::DeboaError};
 use cookie::{Cookie, Expiration};
 use std::fmt;
 

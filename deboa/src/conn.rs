@@ -2,11 +2,11 @@
 //!
 //! This module provides functionality for managing HTTP connections.
 use crate::{
+    Result,
     cert::{Certificate, Identity},
     dns::DnsResolver,
     proto::ProtocolSettings,
     response::DeboaResponse,
-    Result,
 };
 use http::{Request, Version};
 use hyper_body_utils::HttpBody;

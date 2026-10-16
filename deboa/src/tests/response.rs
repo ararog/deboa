@@ -1,9 +1,10 @@
+#[cfg(feature = "cookie")]
+use crate::cookie::DeboaCookie;
 use crate::{
-    cookie::DeboaCookie,
-    response::{DeboaResponse, IntoBody},
     TestResult,
+    response::{DeboaResponse, IntoBody},
 };
-use http::{header, Response};
+use http::{Response, header};
 use hyper_body_utils::HttpBody;
 
 const SAMPLE_TEST: &[u8] = b"Hello, world!";
@@ -30,6 +31,7 @@ fn test_headers() -> TestResult<()> {
     Ok(())
 }
 
+#[cfg(feature = "cookie")]
 #[test]
 fn test_cookies() -> TestResult<()> {
     let mut headers = http::HeaderMap::new();

@@ -1,4 +1,4 @@
-use crate::{cookie::DeboaCookie, TestResult};
+use crate::{TestResult, cookie::DeboaCookie};
 use caramelo::{
     expect,
     matchers::{eq, truthy},
@@ -64,9 +64,11 @@ fn test_set_secure() {
 
     cookie.set_secure(true);
 
-    assert!(cookie
-        .secure()
-        .unwrap());
+    assert!(
+        cookie
+            .secure()
+            .unwrap()
+    );
 }
 
 #[test]

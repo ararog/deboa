@@ -68,14 +68,21 @@
 //! ```
 
 use crate::{errors::DeboaError, request::DeboaRequest};
+#[cfg(feature = "multipart")]
 use async_fn_stream::StreamEmitter;
-use bytes::{Bytes, BytesMut};
+use bytes::Bytes;
+#[cfg(feature = "multipart")]
+use bytes::BytesMut;
+#[cfg(feature = "multipart")]
 use futures::StreamExt;
 use http::Method;
+#[cfg(feature = "multipart")]
 use http_body::Frame;
 use http_body_util::Full;
 use hyper_body_utils::HttpBody;
+#[cfg(feature = "multipart")]
 use rand::distr::{Alphanumeric, SampleString};
+#[cfg(feature = "multipart")]
 use std::{
     fmt::Write,
     io::{Error, ErrorKind::InvalidData},
@@ -84,9 +91,11 @@ use std::{
 use url::Url;
 use urlencoding::encode;
 
-pub(crate) const ENCODED_FORM_TYPE: &str = "application/x-www-form-urlencoded";
-pub(crate) const MULTIPART_FORM_TYPE: &str = "multipart/form-data";
-pub(crate) const CRLF: &str = "\r\n";
+pub(self) const ENCODED_FORM_TYPE: &str = "application/x-www-form-urlencoded";
+#[cfg(feature = "multipart")]
+pub(self) const MULTIPART_FORM_TYPE: &str = "multipart/form-data";
+#[cfg(feature = "multipart")]
+pub(self) const CRLF: &str = "\r\n";
 
 /// Encoded form
 #[derive(Debug, Clone)]
@@ -195,6 +204,7 @@ impl TryFrom<(Url, Method, EncodedForm)> for DeboaRequest {
     }
 }
 
+#[cfg(feature = "multipart")]
 /// Type to hold a stream of binary content
 pub struct MimeStream {
     name: String,
@@ -203,6 +213,7 @@ pub struct MimeStream {
     inner: Pin<Box<dyn futures::Stream<Item = Result<Bytes, std::io::Error>>>>,
 }
 
+#[cfg(feature = "multipart")]
 /// Form parts
 pub enum Part {
     /// String part
@@ -211,6 +222,7 @@ pub enum Part {
     Stream(MimeStream),
 }
 
+#[cfg(feature = "multipart")]
 async fn render_string(
     emitter: &StreamEmitter<Result<Frame<Bytes>, std::io::Error>>,
     key: &str,
@@ -235,14 +247,16 @@ async fn render_string(
     };
 }
 
+#[cfg(feature = "multipart")]
 async fn render_stream(
     emitter: &StreamEmitter<Result<Frame<Bytes>, std::io::Error>>,
     stream: &mut MimeStream,
 ) {
     let mut bytes = BytesMut::new();
-    match write!(&mut bytes,
-            "Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"{CRLF}Content-Type: {}{CRLF}{CRLF}",
-            stream.name, stream.file_name, stream.mime_type
+    match write!(
+        &mut bytes,
+        "Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"{CRLF}Content-Type: {}{CRLF}{CRLF}",
+        stream.name, stream.file_name, stream.mime_type
     ) {
         Ok(()) => {
             emitter
@@ -270,6 +284,7 @@ async fn render_stream(
         .await;
 }
 
+#[cfg(feature = "multipart")]
 impl Part {
     /// Create a string part
     pub fn string(key: &str, value: &str) -> Part {
@@ -294,12 +309,38 @@ impl Part {
     }
 }
 
+#[cfg(all(feature = "multipart", feature = "multi-threaded"))]
+/// Trait bounds alias for async typed matchers
+pub trait MultiPartFormStream:
+    futures::Stream<Item = std::result::Result<Frame<Bytes>, std::io::Error>> + Send + Sync
+{
+}
+#[cfg(all(feature = "multipart", feature = "multi-threaded"))]
+impl<T> MultiPartFormStream for T where
+    T: futures::Stream<Item = std::result::Result<Frame<Bytes>, std::io::Error>> + Send + Sync
+{
+}
+
+#[cfg(all(feature = "multipart", feature = "single-threaded"))]
+/// Trait bounds alias for async typed matchers
+pub trait MultiPartFormStream:
+    futures::Stream<Item = std::result::Result<Frame<Bytes>, std::io::Error>>
+{
+}
+#[cfg(all(feature = "multipart", feature = "single-threaded"))]
+impl<T> MultiPartFormStream for T where
+    T: futures::Stream<Item = std::result::Result<Frame<Bytes>, std::io::Error>>
+{
+}
+
+#[cfg(feature = "multipart")]
 /// Multipart form
 pub struct MultiPartForm {
     fields: Vec<Part>,
     boundary: String,
 }
 
+#[cfg(feature = "multipart")]
 /// Implement the builder pattern for MultiPartForm.
 ///
 /// # Returns
@@ -368,7 +409,7 @@ impl MultiPartForm {
     /// * `Self` - Form reference for chained calls
     pub fn field(mut self, name: &str, value: &str) -> Self {
         self.fields
-            .push(Part::String((name.into(), value.into())));
+            .push(Part::string(name, value));
         self
     }
 
@@ -389,7 +430,7 @@ impl MultiPartForm {
         S: futures::Stream<Item = Result<Bytes, std::io::Error>> + 'static,
     {
         self.fields
-            .push(Part::Stream(MimeStream {
+            .push(Part::stream(MimeStream {
                 name: name.into(),
                 file_name: file_name.into(),
                 mime_type: mime_type.into(),

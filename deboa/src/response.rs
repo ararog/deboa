@@ -78,13 +78,14 @@
 //!     // Process chunk
 //! }
 //! ```
+#[cfg(feature = "cookie")]
+use crate::cookie::DeboaCookie;
 use crate::{
-    cookie::DeboaCookie,
+    Result,
     errors::{DeboaError, IoError},
     serde::ResponseBody,
-    Result,
 };
-use http::{header, HeaderName, HeaderValue, Response, StatusCode};
+use http::{HeaderName, HeaderValue, Response, StatusCode, header};
 use http_body_util::BodyExt;
 use hyper_body_utils::HttpBody;
 use log::error;
@@ -531,6 +532,7 @@ impl DeboaResponse {
         Ok(header)
     }
 
+    #[cfg(feature = "cookie")]
     /// Retrieves cookies from response headers. If cookies are not found, returns None.
     /// Please note that this method will parse the cookies from the response headers.
     ///
@@ -561,11 +563,7 @@ impl DeboaResponse {
             .collect::<Result<Vec<DeboaCookie>>>()
             .unwrap();
 
-        if cookies.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(cookies))
-        }
+        if cookies.is_empty() { Ok(None) } else { Ok(Some(cookies)) }
     }
 
     /// Allow get inner response at any time.
