@@ -4,8 +4,10 @@ use ::url::Url;
 use http::Uri;
 
 mod cache;
+mod conn;
 #[cfg(feature = "cookie")]
 mod cookie;
+mod dns;
 mod form;
 mod request;
 mod response;
