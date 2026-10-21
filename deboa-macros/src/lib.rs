@@ -1,8 +1,11 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_docs)]
-
-use proc_macro::TokenStream;
-use proc_macro2::{Span, TokenStream as TS2};
+use crate::actions::{
+    delete::DeleteArgs, get::GetArgs, patch::PatchArgs, post::PostArgs, put::PutArgs,
+    query::QueryArgs, submit::SubmitArgs,
+};
+use proc_macro::TokenStream as OldTokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::parse_macro_input;
 
@@ -61,9 +64,12 @@ mod actions;
 ///     Ok(())
 /// }
 /// ```
-pub fn get(item: TokenStream) -> TokenStream {
+pub fn get(item: OldTokenStream) -> OldTokenStream {
     let args = parse_macro_input!(item as actions::get::GetArgs);
+    expanded_get(args).into()
+}
 
+fn expanded_get(args: GetArgs) -> TokenStream {
     let url = match args.url {
         Some(e) => e,
         None => {
@@ -83,7 +89,7 @@ pub fn get(item: TokenStream) -> TokenStream {
 
     let headers = match args.headers {
         Some(headers) => quote! { .headers(#headers) },
-        None => TS2::new(),
+        None => TokenStream::new(),
     };
 
     let body = match (args.res_body_ty, args.res_ty) {
@@ -95,7 +101,7 @@ pub fn get(item: TokenStream) -> TokenStream {
                 .to_compile_error()
                 .into();
         }
-        _ => TS2::new(),
+        _ => TokenStream::new(),
     };
 
     let expanded = quote! {
@@ -215,9 +221,12 @@ pub fn get(item: TokenStream) -> TokenStream {
 ///     Ok(())
 /// }
 /// ```
-pub fn query(item: TokenStream) -> TokenStream {
+pub fn query(item: OldTokenStream) -> OldTokenStream {
     let args = parse_macro_input!(item as actions::query::QueryArgs);
+    expanded_query(args).into()
+}
 
+fn expanded_query(args: QueryArgs) -> TokenStream {
     let url = match args.url {
         Some(e) => e,
         None => {
@@ -237,7 +246,7 @@ pub fn query(item: TokenStream) -> TokenStream {
 
     let headers = match args.headers {
         Some(headers) => quote! { .headers(#headers) },
-        None => TS2::new(),
+        None => TokenStream::new(),
     };
 
     let req_body = match (args.req_body_ty, args.data) {
@@ -247,7 +256,7 @@ pub fn query(item: TokenStream) -> TokenStream {
                 .to_compile_error()
                 .into();
         }
-        _ => TS2::new(),
+        _ => TokenStream::new(),
     };
 
     let res_body = match (args.res_body_ty, args.res_ty) {
@@ -259,7 +268,7 @@ pub fn query(item: TokenStream) -> TokenStream {
                 .to_compile_error()
                 .into();
         }
-        _ => TS2::new(),
+        _ => TokenStream::new(),
     };
 
     // Generate the final token stream
@@ -371,7 +380,7 @@ pub fn query(item: TokenStream) -> TokenStream {
 ///         title: "foo".to_string(),
 ///         body: "bar".to_string(),
 ///         userId: 1,
-/// };
+///     };
 ///     let response = post!(
 ///         data => data,
 ///         req_body_ty => JsonBody,
@@ -384,9 +393,12 @@ pub fn query(item: TokenStream) -> TokenStream {
 ///     Ok(())
 /// }
 /// ```
-pub fn post(item: TokenStream) -> TokenStream {
+pub fn post(item: OldTokenStream) -> OldTokenStream {
     let args = parse_macro_input!(item as actions::post::PostArgs);
+    expanded_post(args).into()
+}
 
+fn expanded_post(args: PostArgs) -> TokenStream {
     let url = match args.url {
         Some(e) => e,
         None => {
@@ -406,7 +418,7 @@ pub fn post(item: TokenStream) -> TokenStream {
 
     let headers = match args.headers {
         Some(headers) => quote! { .headers(#headers) },
-        None => TS2::new(),
+        None => TokenStream::new(),
     };
 
     let req_body = match (args.req_body_ty, args.data) {
@@ -416,7 +428,7 @@ pub fn post(item: TokenStream) -> TokenStream {
                 .to_compile_error()
                 .into();
         }
-        _ => TS2::new(),
+        _ => TokenStream::new(),
     };
 
     let res_body = match (args.res_body_ty, args.res_ty) {
@@ -428,7 +440,7 @@ pub fn post(item: TokenStream) -> TokenStream {
                 .to_compile_error()
                 .into();
         }
-        _ => TS2::new(),
+        _ => TokenStream::new(),
     };
 
     // Generate the final token stream
@@ -498,9 +510,12 @@ pub fn post(item: TokenStream) -> TokenStream {
 ///     Ok(())
 /// }
 /// ```
-pub fn put(item: TokenStream) -> TokenStream {
+pub fn put(item: OldTokenStream) -> OldTokenStream {
     let args = parse_macro_input!(item as actions::put::PutArgs);
+    expanded_put(args).into()
+}
 
+fn expanded_put(args: PutArgs) -> TokenStream {
     let url = match args.url {
         Some(e) => e,
         None => {
@@ -520,7 +535,7 @@ pub fn put(item: TokenStream) -> TokenStream {
 
     let headers = match args.headers {
         Some(headers) => quote! { .headers(#headers) },
-        None => TS2::new(),
+        None => TokenStream::new(),
     };
 
     let req_body = match (args.req_body_ty, args.data) {
@@ -530,7 +545,7 @@ pub fn put(item: TokenStream) -> TokenStream {
                 .to_compile_error()
                 .into();
         }
-        _ => TS2::new(),
+        _ => TokenStream::new(),
     };
 
     let res_body = match (args.res_body_ty, args.res_ty) {
@@ -542,7 +557,7 @@ pub fn put(item: TokenStream) -> TokenStream {
                 .to_compile_error()
                 .into();
         }
-        _ => TS2::new(),
+        _ => TokenStream::new(),
     };
 
     // Generate the final token stream
@@ -612,9 +627,12 @@ pub fn put(item: TokenStream) -> TokenStream {
 ///     Ok(())
 /// }
 /// ```
-pub fn patch(item: TokenStream) -> TokenStream {
+pub fn patch(item: OldTokenStream) -> OldTokenStream {
     let args = parse_macro_input!(item as actions::patch::PatchArgs);
+    expanded_patch(args).into()
+}
 
+fn expanded_patch(args: PatchArgs) -> TokenStream {
     let url = match args.url {
         Some(e) => e,
         None => {
@@ -634,7 +652,7 @@ pub fn patch(item: TokenStream) -> TokenStream {
 
     let headers = match args.headers {
         Some(headers) => quote! { .headers(#headers) },
-        None => TS2::new(),
+        None => TokenStream::new(),
     };
 
     let req_body = match (args.req_body_ty, args.data) {
@@ -644,7 +662,7 @@ pub fn patch(item: TokenStream) -> TokenStream {
                 .to_compile_error()
                 .into();
         }
-        _ => TS2::new(),
+        _ => TokenStream::new(),
     };
 
     let res_body = match (args.res_body_ty, args.res_ty) {
@@ -656,7 +674,7 @@ pub fn patch(item: TokenStream) -> TokenStream {
                 .to_compile_error()
                 .into();
         }
-        _ => TS2::new(),
+        _ => TokenStream::new(),
     };
 
     // Generate the final token stream
@@ -709,9 +727,12 @@ pub fn patch(item: TokenStream) -> TokenStream {
 ///     Ok(())
 /// }
 /// ```
-pub fn delete(item: TokenStream) -> TokenStream {
+pub fn delete(item: OldTokenStream) -> OldTokenStream {
     let args = parse_macro_input!(item as actions::delete::DeleteArgs);
+    expanded_delete(args).into()
+}
 
+fn expanded_delete(args: DeleteArgs) -> TokenStream {
     // Enforce required fields
     let url = match args.url {
         Some(e) => e,
@@ -732,7 +753,7 @@ pub fn delete(item: TokenStream) -> TokenStream {
 
     let headers = match args.headers {
         Some(headers) => quote! { .headers(#headers) },
-        None => TS2::new(),
+        None => TokenStream::new(),
     };
 
     // Generate the final token stream
@@ -799,9 +820,12 @@ pub fn delete(item: TokenStream) -> TokenStream {
 ///     Ok(())
 /// }
 /// ```
-pub fn fetch(item: TokenStream) -> TokenStream {
+pub fn fetch(item: OldTokenStream) -> OldTokenStream {
     let args = parse_macro_input!(item as actions::get::GetArgs);
+    expanded_fetch(args).into()
+}
 
+fn expanded_fetch(args: GetArgs) -> TokenStream {
     // Enforce required fields
     let url = match args.url {
         Some(e) => e,
@@ -822,7 +846,7 @@ pub fn fetch(item: TokenStream) -> TokenStream {
 
     let headers = match args.headers {
         Some(headers) => quote! { .headers(#headers) },
-        None => TS2::new(),
+        None => TokenStream::new(),
     };
 
     let body = match (args.res_body_ty, args.res_ty) {
@@ -834,7 +858,7 @@ pub fn fetch(item: TokenStream) -> TokenStream {
                 .to_compile_error()
                 .into();
         }
-        _ => TS2::new(),
+        _ => TokenStream::new(),
     };
 
     // Generate the final token stream
@@ -892,9 +916,12 @@ pub fn fetch(item: TokenStream) -> TokenStream {
 ///     Ok(())
 /// }
 /// ```
-pub fn submit(item: TokenStream) -> TokenStream {
+pub fn submit(item: OldTokenStream) -> OldTokenStream {
     let args = parse_macro_input!(item as actions::submit::SubmitArgs);
+    expanded_submit(args).into()
+}
 
+fn expanded_submit(args: SubmitArgs) -> TokenStream {
     // Enforce required fields
     let url = match args.url {
         Some(e) => e,
@@ -923,12 +950,12 @@ pub fn submit(item: TokenStream) -> TokenStream {
 
     let headers = match args.headers {
         Some(headers) => quote! { .headers(#headers) },
-        None => TS2::new(),
+        None => TokenStream::new(),
     };
 
     let data = match args.data {
         Some(data) => quote! { .text(#data) },
-        None => TS2::new(),
+        None => TokenStream::new(),
     };
 
     // Generate the final token stream
@@ -977,9 +1004,12 @@ pub fn submit(item: TokenStream) -> TokenStream {
 ///     Ok(())
 /// }
 /// ```
-pub fn stream(item: TokenStream) -> TokenStream {
+pub fn stream(item: OldTokenStream) -> OldTokenStream {
     let args = parse_macro_input!(item as actions::get::GetArgs);
+    expanded_stream(args).into()
+}
 
+fn expanded_stream(args: GetArgs) -> TokenStream {
     // Enforce required fields
     let url = match args.url {
         Some(e) => e,
@@ -1000,7 +1030,7 @@ pub fn stream(item: TokenStream) -> TokenStream {
 
     let headers = match args.headers {
         Some(headers) => quote! { .headers(#headers) },
-        None => TS2::new(),
+        None => TokenStream::new(),
     };
 
     // Generate the final token stream
@@ -1016,4 +1046,112 @@ pub fn stream(item: TokenStream) -> TokenStream {
     };
 
     TokenStream::from(expanded)
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        DeleteArgs, GetArgs, PatchArgs, PostArgs, PutArgs, QueryArgs, SubmitArgs, expanded_delete,
+        expanded_fetch, expanded_get, expanded_patch, expanded_post, expanded_put, expanded_query,
+        expanded_stream, expanded_submit,
+    };
+    use syn::parse_quote;
+
+    #[test]
+    fn test_expand_get() {
+        let args: GetArgs = parse_quote!(
+            url => "https://jsonplaceholder.typicode.com/posts",
+            client => &client,
+            res_body_ty => JsonBody,
+            res_ty => Vec<Post>
+        );
+        expanded_get(args);
+    }
+
+    #[test]
+    fn test_expand_query() {
+        let args: QueryArgs = parse_quote!(
+            data => data,
+            req_body_ty => JsonBody,
+            url => "https://jsonplaceholder.typicode.com/posts",
+            client => &client,
+            res_body_ty => JsonBody,
+            res_ty => CreatedPost
+        );
+        expanded_query(args);
+    }
+
+    #[test]
+    fn test_expand_post() {
+        let args: PostArgs = parse_quote!(
+            data => data,
+            req_body_ty => JsonBody,
+            url => "https://jsonplaceholder.typicode.com/posts",
+            headers => vec!(("Content-Type", "application/json")),
+            client => &client
+        );
+        expanded_post(args);
+    }
+
+    #[test]
+    fn test_expand_put() {
+        let args: PutArgs = parse_quote!(
+            data => data,
+            req_body_ty => JsonBody,
+            url => "https://jsonplaceholder.typicode.com/posts/1",
+            client => &client
+        );
+        expanded_put(args);
+    }
+
+    #[test]
+    fn test_expand_patch() {
+        let args: PatchArgs = parse_quote!(
+            data => data,
+            req_body_ty => JsonBody,
+            url => "https://jsonplaceholder.typicode.com/posts/1",
+            client => &client
+        );
+        expanded_patch(args);
+    }
+
+    #[test]
+    fn test_expand_delete() {
+        let args: DeleteArgs = parse_quote!(
+            url => "https://jsonplaceholder.typicode.com/posts/1",
+            client => &client
+        );
+        expanded_delete(args);
+    }
+
+    #[test]
+    fn test_expand_fetch() {
+        let args: GetArgs = parse_quote!(
+            url => "https://jsonplaceholder.typicode.com/posts",
+            client => &client,
+            res_body_ty => JsonBody,
+            res_ty => Post
+        );
+        expanded_fetch(args);
+    }
+
+    #[test]
+    fn test_expand_submit() {
+        let args: SubmitArgs = parse_quote!(
+            method => http::Method::POST,
+            data => "user=deboa",
+            url => "https://jsonplaceholder.typicode.com/posts",
+            client => &client
+        );
+        expanded_submit(args);
+    }
+
+    #[test]
+    fn test_expand_stream() {
+        let args: GetArgs = parse_quote!(
+            url => "https://jsonplaceholder.typicode.com/posts",
+            client => &client
+        );
+        expanded_stream(args);
+    }
 }
